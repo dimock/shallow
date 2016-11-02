@@ -1,29 +1,15 @@
-
 /*************************************************************
-  shallow.cpp - Copyright (C) 2011 - 2012 by Dmitry Sultanov
+  shallow.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
 #include <iostream>
-#include <string>
-#include <fstream>
-#include "xparser.h"
-#include "xboard.h"
-
-#include <windows.h>
-
-using namespace std;
-
-void main_loop(xBoardMgr & xbrd)
-{
-  cout.setf(ios_base::unitbuf);
-
-  for ( ; xbrd.do_cmd(); );
-}
+#include <xprotocol.h>
 
 int main(int argc, char * argv[])
 {
-  xBoardMgr xbrd;
-  main_loop(xbrd);
+  std::cout.setf(std::ios_base::unitbuf);
+  NShallow::xProtocolMgr xpr;
+  for(; xpr.do_cmd(););
 	return 0;
 }
 

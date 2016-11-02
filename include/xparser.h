@@ -1,26 +1,13 @@
 #pragma once
 
 /*************************************************************
-  xparser.h - Copyright (C) 2011 - 2012 by Dmitry Sultanov
+  xparser.h - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <vector>
 #include <string>
-#include <cstdlib>
+#include <xcommand.h>
 
-#include "xcommands.h"
-
-class xParser
+namespace NShallow
 {
-public:
-
-	xParser();
-
-	xCmd parse(char * str, bool uci);
-
-  static xCmd parseMove(const char * str);
-
-private:
-
-  bool split_str(char * str, std::vector<std::string> & result);
-};
+	xCmd parse(std::string const& line, bool const uci);
+} // NParser

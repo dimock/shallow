@@ -1,133 +1,270 @@
 
 /*************************************************************
-  xparser.cpp - Copyright (C) 2011 - 2012 by Dmitry Sultanov
+  xparser.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include "xparser.h"
-//#include "Helpers.h"
-
+#include <xparser.h>
+#include <Helpers.h>
 #include <iostream>
-#include <string.h>
+#include <string>
+#include <sstream>
+#include <map>
+#include <boost/algorithm/string.hpp>
 
-using namespace std;
-
-xParser::xParser()
+namespace NShallow
 {
 
-}
-
-bool xParser::split_str(char * str, std::vector<std::string> & result)
+namespace
 {
-	if ( !str || strlen(str) == 0 )
-		return false;
-
-	const char * sepr = " \t\n\r";
-	char * s = strtok(str, sepr);
-	for ( ; s; )
-	{
-		result.push_back(s);
-		s = strtok(0, sepr);
-	}
-
-	return !result.empty();
-}
-
-struct CommandLine
-{
-  const char * commandName_;
-  int commandType_;
-};
-
-xCmd xParser::parse(char * str, bool uci)
-{
-	if ( !str || strlen(str) == 0 )
-		return xCmd();
-
-  static CommandLine command_lines [] = {
-    { "xboard", xCmd::xBoard },
-    { "option", xCmd::xOption },
-    { "ping", xCmd::xPing },
-    { "new", xCmd::xNew },
-    { "go", xCmd::xGo },
-    { "undo", xCmd::xUndo},
-    { "remove", xCmd::xRemove },
-    { "force", xCmd::xForce },
-    { "st", xCmd::xSt },
-    { "sd", xCmd::xSd },
-    { "post", xCmd::xPost },
-    { "nopost", xCmd::xNopost },
-    { "analyze", xCmd::xAnalyze },
-    { "exit", xCmd::xExit },
-    { "time", xCmd::xTime },
-    { "otim", xCmd::xOtime },
-    { "level", xCmd::xLevel },
-    { "memory", xCmd::xMemory },
-    { "saveboard", xCmd::xSaveBoard },
-    { "edit", xCmd::xEdit },
-    { "#", xCmd::xClearBoard },
-    { "c", xCmd::xChgColor },
-    { ".", xCmd::xLeaveEdit }, 
-    { "?", xCmd::xGoNow },
-    { "protover", xCmd::xProtover },
-    { "setboard", xCmd::xSetboardFEN },
-    { "quit", xCmd::xQuit },
-
-    // uci commands
-    { "uci", xCmd::UCI },
-    { "setoption", xCmd::SetOption },
-    { "isready", xCmd::IsReady },
-    { "ucinewgame", xCmd::UCInewgame },
-    { "position", xCmd::Position },
-    { "stop", xCmd::xExit },
-  };
-
-  //_strlwr(str);
-
-  vector<string> params;
-  split_str(str, params);
-
-  if ( params.empty() )
-    return xCmd();
-
-  if ( strlen(str) == 3 && isalpha(str[0]) && isalpha(str[1]) && isdigit(str[2]) )
-    return xCmd(xCmd::xSetFigure, str);
-
-	xCmd moveCmd = parseMove(str);
-	if ( moveCmd )
-		return moveCmd;
-
-  for (int i = 0; i < sizeof(command_lines)/sizeof(CommandLine); ++i)
+  int toInt(std::vector<std::string> const& params, size_t i)
   {
-    const CommandLine & cmdLine = command_lines[i];
+    if(params.size() <= i)
+      return 0;
 
-    if ( string(cmdLine.commandName_) == params[0] )
-    {
-      if ( params.size() )
-        params.erase(params.begin());
-
-      if ( uci )
-      {
-        switch ( cmdLine.commandType_ )
-        {
-        case xCmd::xGo:
-          return xCmd(xCmd::UCIgo, params);
-        }
-      }
-
-      return xCmd(cmdLine.commandType_, params);
-    }
+    std::istringstream iss(params[i]);
+    int value{};
+    iss >> value;
+    return iss.good() ? value : 0;
   }
 
-  return xCmd();
-}
+  xCmd parseSetFigure(std::string str)
+  {
+    if(str.size() == 3
+      && std::isalpha(str[0], std::locale{})
+      && std::isalpha(str[1], std::locale{})
+      && std::isdigit(str[2], std::locale{}))
+    {
+      return xCmd(xType::xSetFigure, std::move(str));
+    }
 
-xCmd xParser::parseMove(const char * str)
+    return {};
+  }
+
+  xCmd parseMove(std::string str)
+  {
+    if(NEngine::detectNotation(str) != NEngine::eMoveNotation::mnUnknown)
+    	return xCmd(xType::xMove, std::move(str));
+
+    return {};
+  }
+
+  xCmd fromMoves(std::vector<std::string>&& params)
+  {
+    if(params.size() < 2)
+      return {};
+
+    if(params[1] != "moves")
+      return {};
+
+    auto start = params.begin();
+    start++;
+    if(std::find_if(start, params.end(), [](std::string const& str) { return !parseMove(str); }) != params.end())
+      return {};
+
+    params.erase(params.begin(), start);
+    return xCmd(xType::PositionMoves, std::move(params));
+  }
+
+  xCmd fromFEN(bool uci, std::vector<std::string>&& params)
+  {
+    if(params.size() > 0 && params[0] == "startpos")
+    {
+      return xCmd(xType::PositionFEN);
+    }
+
+    if(params.size() < 2)
+      return{};
+
+    auto iter = params.begin();
+    if(uci)
+    {
+      iter++;
+      params.erase(params.begin(), iter);
+    }
+    return xCmd(uci ? xType::PositionFEN : xType::xSetboardFEN, boost::algorithm::join(params, " "));
+  }
+
+  xCmd parseUCIGo(std::vector<std::string> const& params)
+  {
+    int wtime{};
+    int btime{};
+    int movestogo{};
+    int depth{};
+    int movetime{};
+
+    for(size_t i = 0; i < params.size(); ++i)
+    {
+      auto const& prm = params[i];
+      if(prm == "infinite")
+      {
+        return xCmd{ xType::UCIgo, true };
+      }
+
+      if(i+1 >= params.size())
+        break;
+
+      if(params[i] == "wtime")
+      {
+        wtime = toInt(params, ++i);
+      }
+
+      if(params[i] == "btime")
+      {
+        btime = toInt(params, ++i);
+      }
+
+      if(params[i] == "movestogo")
+      {
+        movestogo = toInt(params, ++i);
+      }
+
+      if(params[i] == "movetime")
+      {
+        movetime = toInt(params, ++i);
+      }
+      
+      if(params[i] == "depth")
+      {
+        depth = toInt(params, ++i);
+      }
+    }
+
+    return xCmd(xType::UCIgo, movetime, movestogo, btime, wtime, depth);
+  }
+
+} // namespace {}
+
+xCmd parse(std::string const& line, bool const uci)
 {
-	if ( !str )
-		return xCmd();
+	if(line.empty())
+    return {};
 
-	//if ( detectNotation(str) != mnUnknown )
-	//	return xCmd(xCmd::xMove, str);
+  static std::map<std::string const, xType> const xcommands {
+    { "xboard",     xType::xBoard },
+    { "option",     xType::xOption },
+    { "ping",       xType::xPing },
+    { "new",        xType::xNew },
+    { "go",         xType::xGo },
+    { "undo",       xType::xUndo},
+    { "remove",     xType::xRemove },
+    { "force",      xType::xForce },
+    { "st",         xType::xSt },
+    { "sd",         xType::xSd },
+    { "post",       xType::xPost },
+    { "nopost",     xType::xNopost },
+    { "analyze",    xType::xAnalyze },
+    { "exit",       xType::xExit },
+    { "time",       xType::xTime },
+    { "otim",       xType::xOtime },
+    { "level",      xType::xLevel },
+    { "memory",     xType::xMemory },
+    { "saveboard",  xType::xSaveBoard },
+    { "edit",       xType::xEdit },
+    { "#",          xType::xClearBoard },
+    { "c",          xType::xChgColor },
+    { ".",          xType::xLeaveEdit }, 
+    { "?",          xType::xGoNow },
+    { "protover",   xType::xProtover },
+    { "setboard",   xType::xSetboardFEN },
+    { "setb",       xType::xSetboardFEN },
+    { "quit",       xType::xQuit },
 
-	return xCmd();
+    // uci commands
+    { "uci",        xType::UCI },
+    { "setoption",  xType::SetOption },
+    { "isready",    xType::IsReady },
+    { "ucinewgame", xType::UCInewgame },
+    { "position",   xType::Position },
+    { "stop",       xType::xExit },
+  };
+
+  if(auto cmd = parseSetFigure(line))
+  {
+    return cmd;
+  }
+
+  if(auto cmd = parseMove(line))
+  {
+    return cmd;
+  }
+
+  std::vector<std::string> params;
+  boost::algorithm::split(params, line, boost::algorithm::is_any_of(" \t\n\r"), boost::algorithm::token_compress_on);
+  if(params.empty())
+  {
+    return {};
+  }
+
+  auto iter = xcommands.find(params[0]);
+  if(iter == xcommands.end())
+  {
+    return {};
+  }
+
+  params.erase(params.begin());
+  auto type = iter->second;
+  if(uci && type == xType::xGo)
+  {
+    type = xType::UCIgo;
+  }
+
+  // UCI position -> FEN/Moves list
+  if(type == xType::Position)
+  {
+    if(auto cmd = fromMoves(std::move(params)))
+      return cmd;
+
+    if(auto cmd = fromFEN(uci, std::move(params)))
+      return cmd;
+
+    return {};
+  }
+
+  if(type == xType::xSetboardFEN)
+  {
+    if(auto cmd = fromFEN(uci, std::move(params)))
+      return cmd;
+
+    return {};
+  }
+
+  switch(type)
+  {
+  case xType::xSt:
+  case xType::xSd:
+  case xType::xLevel:
+  case xType::xMemory:
+  case xType::xPing:
+  case xType::xTime:
+  case xType::xOtime:
+    {
+      if(params.size() > 1)
+      {
+        return xCmd(type, toInt(params, 1));
+      }
+      else
+      {
+        return {};
+      }
+    }
+    break;
+
+  case xType::SetOption:
+    {
+      if(params.size() < 4)
+        return {};
+
+      if(params[0] == "name" && params[1] == "Hash" && params[2] == "value")
+        return xCmd(type, toInt(params, 3));
+    }
+    break;
+
+  case xType::UCIgo:
+    return parseUCIGo(params);
+
+  default:
+    return xCmd(type, std::move(params));
+  }
 }
+
+} // NShallow
