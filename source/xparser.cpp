@@ -53,35 +53,42 @@ namespace
     if(params.size() < 2)
       return {};
 
-    if(params[1] != "moves")
-      return {};
-
     auto start = params.begin();
-    start++;
-    if(std::find_if(start, params.end(), [](std::string const& str) { return !parseMove(str); }) != params.end())
-      return {};
+    if(start == params.end())
+      return{};
 
-    params.erase(params.begin(), start);
-    return xCmd(xType::PositionMoves, std::move(params));
-  }
+    std::string fen;
 
-  xCmd fromFEN(bool uci, std::vector<std::string>&& params)
-  {
-    if(params.size() > 0 && params[0] == "startpos")
+    if(*start == "startpos")
+      ++start;
+    else if(*start == "fen")
     {
-      return xCmd(xType::PositionFEN);
+      ++start;
+      if(start == params.end())
+        return{};
+
+      auto iter = std::find_if(start, params.end(), [](std::string const& str) { return str == "moves";  });
+      fen = boost::algorithm::join(params, " ");
+      start = iter;
     }
 
+    if(start != params.end())
+    {
+      start++;
+      if(std::find_if(start, params.end(), [](std::string const& str) { return !parseMove(str); }) != params.end())
+        return{};
+      params.erase(params.begin(), start);
+    }
+
+    return xCmd(xType::Position, std::move(fen), std::move(params));
+  }
+
+  xCmd fromFEN(std::vector<std::string>&& params)
+  {
     if(params.size() < 2)
       return{};
 
-    auto iter = params.begin();
-    if(uci)
-    {
-      iter++;
-      params.erase(params.begin(), iter);
-    }
-    return xCmd(uci ? xType::PositionFEN : xType::xSetboardFEN, boost::algorithm::join(params, " "));
+    return xCmd(xType::xSetboardFEN, boost::algorithm::join(params, " "));
   }
 
   xCmd parseUCIGo(std::vector<std::string> const& params)
@@ -214,15 +221,12 @@ xCmd parse(std::string const& line, bool const uci)
     if(auto cmd = fromMoves(std::move(params)))
       return cmd;
 
-    if(auto cmd = fromFEN(uci, std::move(params)))
-      return cmd;
-
     return {};
   }
 
   if(type == xType::xSetboardFEN)
   {
-    if(auto cmd = fromFEN(uci, std::move(params)))
+    if(auto cmd = fromFEN(std::move(params)))
       return cmd;
 
     return {};

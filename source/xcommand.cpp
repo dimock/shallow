@@ -22,6 +22,10 @@ xCmd::xCmd(xType type, std::vector<std::string>&& moves) :
   type_(type), moves_(std::move(moves))
 {}
 
+xCmd::xCmd(xType type, std::string&& fen, std::vector<std::string>&& moves) :
+  type_(type), str_(std::move(fen)), moves_(std::move(moves))
+{}
+
 xCmd::xCmd(xType type, int value) :
   type_(type), value_(value)
 {}

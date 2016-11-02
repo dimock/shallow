@@ -166,7 +166,7 @@ void xProtocolMgr::uciPositionFEN(const xCmd & cmd)
 
 void xProtocolMgr::uciPositionMoves(const xCmd & cmd)
 {
-  proc_.fromFEN("");
+  proc_.fromFEN(cmd.fen());
 
   bool moves_found = false;
   for(auto const& mvstr : cmd.moves())
@@ -338,11 +338,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     proc_.init();
     break;
 
-  case xType::PositionFEN:
-    uciPositionFEN(cmd);
-    break;
-
-  case xType::PositionMoves:
+  case xType::Position:
     uciPositionMoves(cmd);
     break;
 

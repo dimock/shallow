@@ -48,8 +48,6 @@ namespace NShallow
     IsReady,
     UCInewgame,
     Position,
-    PositionMoves,
-    PositionFEN,
     UCIgo,
 
     // common
@@ -62,6 +60,7 @@ namespace NShallow
     xCmd(xType type = xType::xNone);
     xCmd(xType type, std::string&& str);
     xCmd(xType type, std::vector<std::string>&& moves);
+    xCmd(xType type, std::string&& fen, std::vector<std::string>&& moves);
     xCmd(xType type, int value);
     xCmd(xType type, int mt, int mtogo, int bt, int wt, int d);
     xCmd(xType type, bool inf);
