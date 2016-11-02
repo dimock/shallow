@@ -9,7 +9,7 @@ int main(int argc, char * argv[])
 {
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
-  for(; xpr.do_cmd(););
+  for(; xpr.doCmd(););
 	return 0;
 }
 

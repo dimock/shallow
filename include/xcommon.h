@@ -73,7 +73,7 @@ const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
 
 namespace nst
 {
-  enum class dirs
+  enum dirs
   {
     no_dir,
     nw, // lsb
@@ -91,14 +91,14 @@ namespace nst
 };
 
 //  //#define LOG_PV
-//#define USE_IID
-//#define USE_FUTILITY_PRUNING
-//#define USE_DELTA_PRUNING
-//#define USE_HASH
-//#define USE_NULL_MOVE
-//#define USE_LMR
-//#define VERIFY_LMR
-//#define SINGULAR_EXT
+#define USE_IID
+#define USE_FUTILITY_PRUNING
+#define USE_DELTA_PRUNING
+#define USE_HASH
+#define USE_NULL_MOVE
+#define USE_LMR
+#define VERIFY_LMR
+#define SINGULAR_EXT
 
   //#define VERIFY_ESCAPE_GENERATOR
   //#define VERIFY_CHECKS_GENERATOR

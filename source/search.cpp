@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <windows.h>
+#include <Helpers.h>
 
 namespace NEngine
 {
@@ -43,9 +44,6 @@ inline int calculateDelta(ScoreType alpha, ScoreType score)
 //////////////////////////////////////////////////////////////////////////
 bool Engine::findMove(SearchResult& sres)
 {
-  if(!sres)
-    return false;
-
   bool ok = false;
   bool leave = false;
   for(; !leave;)
@@ -55,36 +53,36 @@ bool Engine::findMove(SearchResult& sres)
 
     while(!posted_.empty())
     {
-      PostedCommand & cmd = posted_.front();
+      auto& cmd = posted_.front();
 
       switch(cmd.type_)
       {
-      case PostedCommand::ctUPDATE:
+      case xPostType::xpUpdate:
       {
         if(callbacks_.sendStats_)
-          (callbacks_.sendStats_)(&sdata_);
+          (callbacks_.sendStats_)(sdata_);
         break;
       }
 
-      case PostedCommand::ctHINT:
-      case PostedCommand::ctNONE:
+      case xPostType::xpHint:
+      case xPostType::xpNone:
         break;
 
-      case PostedCommand::ctNEW:
+      case xPostType::xpNew:
       {
         fromFEN(0);
         leave = !sparams_.analyze_mode_;
         break;
       }
 
-      case PostedCommand::ctUNDO:
+      case xPostType::xpUndo:
       {
         scontexts_[0].board_.unmakeMove();
         leave = !sparams_.analyze_mode_;
         break;
       }
 
-      case PostedCommand::ctFEN:
+      case xPostType::xpFen:
       {
         fromFEN(cmd.fen_.c_str());
         leave = !sparams_.analyze_mode_;
@@ -118,8 +116,8 @@ void Engine::logPV()
 
   if(sdata_.best_)
   {
-    char strbest[64];
-    if(printSAN(board, sdata_.best_, strbest))
+    auto strbest = printSAN(board, sdata_.best_);
+    if(!strbest.empty())
     {
       (*callbacks_.slog_) << " bm " << strbest << " (" << (int)sdata_.best_.vsort_ - (int)ScoreMax << ") ";
     }
@@ -131,8 +129,8 @@ void Engine::logPV()
     Move move = scontexts_[0].plystack_[0].pv_[i];
     if(!move)
       break;
-    char str[64];
-    if(!printSAN(board, move, str))
+    auto str = printSAN(board, move);
+    if(str.empty())
       break;
     board.makeMove(move);
     (*callbacks_.slog_) << str << " (" << (int)move.vsort_ - (int)ScoreMax << ") ";
@@ -149,8 +147,7 @@ void Engine::logMovies()
   UndoInfo undoStack[Board::GameLength];
   board.set_undoStack(undoStack);
 
-  char fen[1024];
-  board.toFEN(fen);
+  auto fen = board.toFEN();
 
   time_t curtime;
   time(&curtime);
@@ -169,18 +166,16 @@ void Engine::logMovies()
       break;
 
     Move move = scontexts_[0].moves_[i];
-    char str[64];
-    if(!printSAN(board, move, str))
+    auto str = printSAN(board, move);
+    if(str.empty())
       break;
     (*callbacks_.slog_) << str << " {" << (int)move.vsort_ - (int)ScoreMax << "} ";
   }
   (*callbacks_.slog_) << std::endl;
 }
+
 bool Engine::search(SearchResult& sres)
 {
-  if(!sres)
-    return false;
-
 #ifdef USE_HASH
   hash_.inc();
 #endif
@@ -188,7 +183,7 @@ bool Engine::search(SearchResult& sres)
   reset();
 
   // stash board to correctly print status later
-  sres->board_ = scontexts_[0].board_;
+  sres.board_ = scontexts_[0].board_;
   sdata_.board_ = scontexts_[0].board_;
 
   {
@@ -205,7 +200,7 @@ bool Engine::search(SearchResult& sres)
     scontexts_[0].moves_[sdata_.numOfMoves_].clear();
   }
 
-  sres->numOfMoves_ = sdata_.numOfMoves_;
+  sres.numOfMoves_ = sdata_.numOfMoves_;
 
 
   const ScoreType alpha = -ScoreMax;
@@ -222,7 +217,7 @@ bool Engine::search(SearchResult& sres)
     if(sdata_.best_)
     {
       if(stop_ && sdata_.depth_ > 2 &&
-        (abs(score-sres->score_) >= Figure::figureWeight_[Figure::TypePawn]/2 || (sdata_.best_ != sres->best_ /*&& abs(score-sres->score_) >= 5*/)) &&
+        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/2 || (sdata_.best_ != sres.best_ /*&& abs(score-sres->score_) >= 5*/)) &&
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
@@ -241,24 +236,24 @@ bool Engine::search(SearchResult& sres)
       clock_t dt = (t - sdata_.tstart_);
       sdata_.tprev_ = t;
 
-      sres->score_ = score;
-      sres->best_ = sdata_.best_;
-      sres->depth_ = sdata_.depth_;
-      sres->nodesCount_ = sdata_.nodesCount_;
-      sres->totalNodes_ = sdata_.totalNodes_;
-      sres->depthMax_ = 0;
-      sres->dt_ = dt;
-      sres->counter_ = sdata_.counter_;
+      sres.score_ = score;
+      sres.best_ = sdata_.best_;
+      sres.depth_ = sdata_.depth_;
+      sres.nodesCount_ = sdata_.nodesCount_;
+      sres.totalNodes_ = sdata_.totalNodes_;
+      sres.depthMax_ = 0;
+      sres.dt_ = dt;
+      sres.counter_ = sdata_.counter_;
 
       for(int i = 0; i < MaxPly; ++i)
       {
-        sres->depthMax_ = i;
-        sres->pv_[i] = scontexts_[0].plystack_[0].pv_[i];
-        if(!sres->pv_[i])
+        sres.depthMax_ = i;
+        sres.pv_[i] = scontexts_[0].plystack_[0].pv_[i];
+        if(!sres.pv_[i])
           break;
       }
 
-      X_ASSERT(sres->pv_[0] != sdata_.best_, "invalid PV found");
+      X_ASSERT(sres.pv_[0] != sdata_.best_, "invalid PV found");
 
       if(callbacks_.sendOutput_)
         (callbacks_.sendOutput_)(sres);
@@ -288,15 +283,15 @@ bool Engine::search(SearchResult& sres)
     }
   }
 
-  sres->totalNodes_ = sdata_.totalNodes_;
+  sres.totalNodes_ = sdata_.totalNodes_;
 
   clock_t t = clock();
-  sres->dt_ = (t - sdata_.tstart_);
+  sres.dt_ = (t - sdata_.tstart_);
 
   if(sparams_.analyze_mode_ && callbacks_.sendFinished_)
     (callbacks_.sendFinished_)(sres);
 
-  return sres->best_;
+  return sres.best_;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -462,7 +457,7 @@ ScoreType Engine::alphaBetta0()
 
 
     if(callbacks_.sendStats_ && sparams_.analyze_mode_)
-      (callbacks_.sendStats_)(&sdata_);
+      (callbacks_.sendStats_)(sdata_);
   }
 
   // don't need to continue

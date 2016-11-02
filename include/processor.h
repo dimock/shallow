@@ -25,9 +25,6 @@ struct ReplyStruct
 class Processor
 {
 public:
-
-  Processor();
-
   bool init();
   void enableBook(int v);
   void setMemory(int mb);

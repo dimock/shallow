@@ -85,7 +85,7 @@ Engine::~Engine()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void Engine::postCommand(const PostedCommand & cmd)
+void Engine::postCommand(xPostCmd const& cmd)
 {
   posted_.push(cmd);
 }
@@ -126,9 +126,9 @@ bool Engine::fromFEN(std::string const& fen)
   return scontexts_[0].board_.fromFEN(fen);
 }
 
-bool Engine::toFEN(char * fen) const
+std::string Engine::toFEN() const
 {
-  return scontexts_[0].board_.toFEN(fen);
+  return scontexts_[0].board_.toFEN();
 }
 
 void Engine::clearHash()
@@ -149,7 +149,7 @@ void Engine::reset()
     scontexts_[0].plystack_[i].clearKiller();
 }
 
-void Engine::setCallbacks(CallbackStruct cs)
+void Engine::setCallbacks(xCallback cs)
 {
   callbacks_ = cs;
 }
@@ -205,29 +205,29 @@ void Engine::testInput()
 
   while(!posted_.empty())
   {
-    PostedCommand & cmd = posted_.front();
+    auto& cmd = posted_.front();
 
     switch(cmd.type_)
     {
-    case PostedCommand::ctUPDATE:
+    case xPostType::xpUpdate:
     {
       if(callbacks_.sendStats_)
-        (callbacks_.sendStats_)(&sdata_);
+        (callbacks_.sendStats_)(sdata_);
 
       posted_.pop();
       break;
     }
 
-    case PostedCommand::ctHINT:
-    case PostedCommand::ctNONE:
+    case xPostType::xpHint:
+    case xPostType::xpNone:
     {
       posted_.pop();
       break;
     }
 
-    case PostedCommand::ctNEW:
-    case PostedCommand::ctUNDO:
-    case PostedCommand::ctFEN:
+    case xPostType::xpNew:
+    case xPostType::xpUndo:
+    case xPostType::xpFen:
     {
       pleaseStop();
       return;

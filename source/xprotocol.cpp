@@ -1,7 +1,7 @@
- 
+
 /*************************************************************
   xboard.cpp - Copyright (C) 2011 - 2012 by Dmitry Sultanov
- *************************************************************/
+  *************************************************************/
 
 #include <io.h>
 #include <iostream>
@@ -116,10 +116,10 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
 
 void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
 {
-  if (sdata.depth_ <= 0 )
+  if(sdata.depth_ <= 0)
     return;
 
-  if ( isUci_)
+  if(isUci_)
   {
     printUciStat(sdata);
     return;
@@ -140,7 +140,7 @@ void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
   mv.clearFlags();
   mv.capture_ = captured;
 
-  if ( mv && board.validateMove(mv))
+  if(mv && board.validateMove(mv))
   {
     auto str = printSAN(board, mv);
     outstr += " " + str;
@@ -174,7 +174,7 @@ void xProtocolMgr::uciPositionMoves(const xCmd & cmd)
     proc_.makeMove(mvstr);
 
 #ifdef WRITE_LOG_FILE_
-      ofs_log_ << smove << " ";
+    ofs_log_ << smove << " ";
 #endif
   }
 
@@ -188,34 +188,6 @@ void xProtocolMgr::uciPositionMoves(const xCmd & cmd)
 void xProtocolMgr::uciGo(const xCmd & cmd)
 {
   bool white = proc_.color() == NEngine::Figure::ColorWhite;
-  bool analize_mode = false;
-
-  /// read timing params
-  for(size_t i = 0; i < cmd.paramsNum(); ++i)
-  {
-    if(cmd.param(i) == "infinite")
-    {
-      analize_mode = true;
-      break;
-    }
-
-    if(i+1 >= cmd.paramsNum())
-      break;
-
-    if(((cmd.param(i) == "wtime" && white) || (cmd.param(i) == "btime" && !white)))
-    {
-      thk_.setXtime(cmd.asInt(i+1));
-#ifdef WRITE_LOG_FILE_
-      ofs_log_ << "set time: " << cmd.asInt(i+1) << std::endl;
-#endif
-    }
-    else if(cmd.param(i) == "movestogo")
-      thk_.setMovesToGo(cmd.asInt(i+1));
-    else if(cmd.param(i) == "movetime")
-      thk_.setTimePerMove(cmd.asInt(i+1));
-    else if(cmd.param(i) == "depth")
-      thk_.setDepth(cmd.asInt(i+1));
-  }
 
   if(cmd.infinite())
   {
@@ -223,7 +195,7 @@ void xProtocolMgr::uciGo(const xCmd & cmd)
     return;
   }
 
-  proc_.setXtime(white ? cmd.wtime() : cmd.btime);
+  proc_.setXtime(white ? cmd.wtime() : cmd.btime());
   proc_.setMovesToGo(cmd.movestogo());
   proc_.setTimePerMove(cmd.movetime());
   proc_.setDepth(cmd.depth());
@@ -234,105 +206,98 @@ void xProtocolMgr::uciGo(const xCmd & cmd)
   }
 }
 
-void xProtocolMgr::printUciStat(SearchData * sdata)
+void xProtocolMgr::printUciStat(NEngine::SearchData const& sdata)
 {
-  if ( !sdata || !sdata->best_ )
+  if(!sdata.best_)
     return;
 
-  char smove[256];
-  if ( !moveToStr(sdata->best_, smove, false) )
+  auto smove = moveToStr(sdata.best_, false);
+  if(smove.empty())
     return;
 
   os_ << "info ";
   os_ << "currmove " << smove << " ";
-  os_ << "currmovenumber " << sdata->counter_+1 << " ";
-  os_ << "nodes " << sdata->totalNodes_ << " ";
-  os_ << "depth " << sdata->depth_ << std::endl;
+  os_ << "currmovenumber " << sdata.counter_+1 << " ";
+  os_ << "nodes " << sdata.totalNodes_ << " ";
+  os_ << "depth " << sdata.depth_ << std::endl;
 }
 
-void xProtocolMgr::printInfo(SearchResult * sres)
+void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
 {
-  if ( !sres )
-    return;
-
-  Board board = sres->board_;
-  UndoInfo undoStack[Board::GameLength];
+  auto board = sres.board_;
+  NEngine::UndoInfo undoStack[NEngine::Board::GameLength];
   board.set_undoStack(undoStack);
 
   std::string pv_str;
-  for (int i = 0; i < MaxPly && sres->pv_[i]; ++i)
+  for(int i = 0; i < MaxPly && sres.pv_[i]; ++i)
   {
-    if ( i )
+    if(i)
       pv_str += " ";
 
-    Move pv = sres->pv_[i];
+    auto pv = sres.pv_[i];
     uint8 captured = pv.capture_;
     pv.clearFlags();
     pv.capture_ = captured;
 
-    if ( !board.possibleMove(pv) )
+    if(!board.possibleMove(pv))
       break;
 
-    char str[64];
-    if ( !printSAN(board, pv, str) )
+    auto str = printSAN(board, pv);
+    if(str.empty())
       break;
 
-    X_ASSERT( !board.validateMove(pv), "move is invalid but it is not detected by printSAN()");
+    X_ASSERT(!board.validateMove(pv), "move is invalid but it is not detected by printSAN()");
 
     board.makeMove(pv);
 
     pv_str += str;
   }
 
-  double dt = sres->dt_;
-  if ( dt < 1 )
+  double dt = sres.dt_;
+  if(dt < 1)
     dt = 1;
 
-  int nps = (int)((double)(sres->totalNodes_)*1000.0 / dt);
+  int nps = (int)((double)(sres.totalNodes_)*1000.0 / dt);
 
   os_ << "info ";
 
-  os_ << "depth " << sres->depth_ << " ";
-  os_ << "seldepth " << sres->depthMax_ << " ";
+  os_ << "depth " << sres.depth_ << " ";
+  os_ << "seldepth " << sres.depthMax_ << " ";
 
-  if ( sres->score_ >= Figure::MatScore-MaxPly )
+  if(sres.score_ >= NEngine::Figure::MatScore-MaxPly)
   {
-    int n = (Figure::MatScore - sres->score_) / 2;
+    int n = (NEngine::Figure::MatScore - sres.score_) / 2;
     os_ << "score mate " << n << " ";
   }
-  else if ( sres->score_ <= MaxPly-Figure::MatScore )
+  else if(sres.score_ <= MaxPly-NEngine::Figure::MatScore)
   {
-    int n = (-Figure::MatScore - sres->score_) / 2;
+    int n = (-NEngine::Figure::MatScore - sres.score_) / 2;
     os_ << "score mate " << n << " ";
   }
   else
-    os_ << "score cp " << sres->score_ << " ";
+    os_ << "score cp " << sres.score_ << " ";
 
-  os_ << "time " << (int)sres->dt_ << " ";
-  os_ << "nodes " << sres->totalNodes_ << " ";
+  os_ << "time " << static_cast<int>(sres.dt_) << " ";
+  os_ << "nodes " << sres.totalNodes_ << " ";
   os_ << "nps " << nps << " ";
 
-  if ( sres->best_ )
+  if(sres.best_)
   {
-    char smove[256];
-    moveToStr(sres->best_, smove, false);
-    os_ << "currmove " << smove << " ";
+    os_ << "currmove " << moveToStr(sres.best_, false) << " ";
   }
 
-  os_ << "currmovenumber " << sres->counter_+1 << " ";
+  os_ << "currmovenumber " << sres.counter_+1 << " ";
   os_ << "pv " << pv_str;
 
   os_ << std::endl;
 }
 
-void xProtocolMgr::printBM(SearchResult * sres)
+void xProtocolMgr::printBM(NEngine::SearchResult const& sres)
 {
-  if ( !sres || !sres->best_ )
+  if(!sres.best_)
     return;
 
-  char smove[256];
-  if ( moveToStr(sres->best_, smove, false) )
-    os_ << "bestmove " << smove << std::endl;
+  os_ << "bestmove " << moveToStr(sres.best_, false) << std::endl;
 }
 
 bool xProtocolMgr::doCmd()
@@ -394,7 +359,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xOption:
-  break;
+    break;
 
   case xType::xMemory:
     proc_.setMemory(cmd.value());
@@ -533,9 +498,9 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
         {
           outState(rs->state_, rs->white_);
         }
-        else if ( !force_ )
+        else if(!force_)
         {
-          if ( auto rs = proc_.reply(true) )
+          if(auto rs = proc_.reply(true))
           {
             os_ << rs->moveStr_ << std::endl;
             outState(rs->state_, rs->white_);
@@ -545,15 +510,14 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
       else
       {
         os_ << "Illegal move: " << cmd.str() << std::endl;
-      
-  #ifdef WRITE_LOG_FILE_
+
+#ifdef WRITE_LOG_FILE_
         ofs_log_ << " Illegal move: " << cmd.str() << endl;
-  #endif
+#endif
       }
     }
     break;
   }
-
 }
 
 } // NShallow

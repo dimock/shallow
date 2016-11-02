@@ -48,8 +48,6 @@ struct PlyStack
 
 struct SearchParams
 {
-  SearchParams();
-
   void reset();
 
   int  timeLimitMS_{};

@@ -1,11 +1,15 @@
 /*************************************************************
-  UsualGenerator.cpp - Copyright (C) 2011 - 2012 by Dmitry Sultanov
+  UsualGenerator.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include "MovesGenerator.h"
-#include "MovesTable.h"
+#include <MovesGenerator.h>
+#include <MovesTable.h>
+#include <xindex.h>
 
 //////////////////////////////////////////////////////////////////////////
+
+namespace NEngine
+{
 
 UsualGenerator::UsualGenerator(Board & board) :
   MovesGeneratorBase(board)
@@ -139,3 +143,5 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
   moves_[numOfMoves_].clear();
   return numOfMoves_;
 }
+
+} // 

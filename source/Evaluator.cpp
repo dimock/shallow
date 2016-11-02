@@ -5,6 +5,7 @@
 #include <Evaluator.h>
 #include <Board.h>
 #include <HashTable.h>
+#include <xindex.h>
 
 namespace NEngine
 {

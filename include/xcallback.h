@@ -55,7 +55,7 @@ struct SearchData
   Move best_;
 };
 
-using query_input_command    = std::function<void()>;
+using query_input_command    = std::function<bool()>;
 using give_more_time_command = std::function<int()>;
 using send_result_command    = std::function<void(SearchResult const&)>;
 using send_stats_command     = std::function<void(SearchData const&)>;
