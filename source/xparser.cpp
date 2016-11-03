@@ -20,11 +20,11 @@ namespace
   {
     if(params.size() <= i)
       return 0;
-
     std::istringstream iss(params[i]);
     int value{};
-    iss >> value;
-    return iss.good() ? value : 0;
+    if(iss >> value)
+      return value;
+    return 0;
   }
 
   xCmd parseSetFigure(std::string str)
@@ -50,15 +50,11 @@ namespace
 
   xCmd fromMoves(std::vector<std::string>&& params)
   {
-    if(params.size() < 2)
-      return {};
-
     auto start = params.begin();
     if(start == params.end())
       return{};
 
     std::string fen;
-
     if(*start == "startpos")
       ++start;
     else if(*start == "fen")
@@ -68,7 +64,7 @@ namespace
         return{};
 
       auto iter = std::find_if(start, params.end(), [](std::string const& str) { return str == "moves";  });
-      fen = boost::algorithm::join(params, " ");
+      fen = boost::algorithm::join(boost::make_iterator_range(start, iter), " ");
       start = iter;
     }
 
@@ -77,8 +73,8 @@ namespace
       start++;
       if(std::find_if(start, params.end(), [](std::string const& str) { return !parseMove(str); }) != params.end())
         return{};
-      params.erase(params.begin(), start);
     }
+    params.erase(params.begin(), start);
 
     return xCmd(xType::Position, std::move(fen), std::move(params));
   }
@@ -93,11 +89,7 @@ namespace
 
   xCmd parseUCIGo(std::vector<std::string> const& params)
   {
-    int wtime{};
-    int btime{};
-    int movestogo{};
-    int depth{};
-    int movetime{};
+    std::map<std::string, int> pmap;
 
     for(size_t i = 0; i < params.size(); ++i)
     {
@@ -110,33 +102,11 @@ namespace
       if(i+1 >= params.size())
         break;
 
-      if(params[i] == "wtime")
-      {
-        wtime = toInt(params, ++i);
-      }
-
-      if(params[i] == "btime")
-      {
-        btime = toInt(params, ++i);
-      }
-
-      if(params[i] == "movestogo")
-      {
-        movestogo = toInt(params, ++i);
-      }
-
-      if(params[i] == "movetime")
-      {
-        movetime = toInt(params, ++i);
-      }
-      
-      if(params[i] == "depth")
-      {
-        depth = toInt(params, ++i);
-      }
+      int j = i;
+      pmap.emplace(params[j], toInt(params, ++i));
     }
 
-    return xCmd(xType::UCIgo, movetime, movestogo, btime, wtime, depth);
+    return xCmd(xType::UCIgo, std::move(pmap));
   }
 
 } // namespace {}
@@ -269,6 +239,8 @@ xCmd parse(std::string const& line, bool const uci)
   default:
     return xCmd(type, std::move(params));
   }
+
+  return {};
 }
 
 } // NShallow

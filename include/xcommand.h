@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 namespace NShallow
 {
@@ -62,7 +63,7 @@ namespace NShallow
     xCmd(xType type, std::vector<std::string>&& moves);
     xCmd(xType type, std::string&& fen, std::vector<std::string>&& moves);
     xCmd(xType type, int value);
-    xCmd(xType type, int mt, int mtogo, int bt, int wt, int d);
+    xCmd(xType type, std::map<std::string, int>&& params);
     xCmd(xType type, bool inf);
 
     xType type() const;    
@@ -71,24 +72,16 @@ namespace NShallow
     std::string const& fen() const;
     std::vector<std::string> const& moves() const;
     int value() const;
-    int btime() const;
-    int wtime() const;
-    int movestogo() const;
-    int movetime() const;
-    int depth() const;
     bool infinite() const;
+    int param(std::string const& name) const;
 
   private:
     xType type_{xType::xNone};
     std::string str_;
     std::vector<std::string> moves_;
-    int value_{};
-    int movetime_{};
-    int movestogo_{};
-    int btime_{};
-    int wtime_{};
-    int depth_{};
-    bool infinite_{};
+    std::map<std::string, int> params_;
+    int value_{0};
+    bool infinite_{false};
   };
 
 } // NShallow

@@ -286,18 +286,18 @@ std::string printSAN(Board & board, const Move & move)
       else
       {
         // write both
-        str = static_cast<char>('a' + xfrom);
-        str = static_cast<char>('1' + yfrom);
+        str += static_cast<char>('a' + xfrom);
+        str += static_cast<char>('1' + yfrom);
       }
     }
     // capture
     if(move.capture_)
     {
-      str = 'x';
+      str += 'x';
     }
 
-    str = 'a' + xto;
-    str = '1' + yto;
+    str += 'a' + xto;
+    str += '1' + yto;
 
     if(move.new_type_ > 0)
     {

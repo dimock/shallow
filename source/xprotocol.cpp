@@ -154,19 +154,10 @@ void xProtocolMgr::uciSetOption(const xCmd & cmd)
   proc_.setMemory(cmd.value());
 }
 
-void xProtocolMgr::uciPositionFEN(const xCmd & cmd)
+void xProtocolMgr::uciPosition(const xCmd & cmd)
 {
-  proc_.fromFEN(cmd.fen());
-#ifdef WRITE_LOG_FILE_
-  auto fen = proc_.toFEN();
-  ofs_log_ << std::endl;
-  ofs_log_ << "used fen: " << fen << std::endl;
-#endif
-}
-
-void xProtocolMgr::uciPositionMoves(const xCmd & cmd)
-{
-  proc_.fromFEN(cmd.fen());
+  if(!proc_.fromFEN(cmd.fen()))
+    return;
 
   bool moves_found = false;
   for(auto const& mvstr : cmd.moves())
@@ -187,18 +178,30 @@ void xProtocolMgr::uciPositionMoves(const xCmd & cmd)
 
 void xProtocolMgr::uciGo(const xCmd & cmd)
 {
-  bool white = proc_.color() == NEngine::Figure::ColorWhite;
-
   if(cmd.infinite())
   {
     proc_.analyze();
     return;
   }
 
-  proc_.setXtime(white ? cmd.wtime() : cmd.btime());
-  proc_.setMovesToGo(cmd.movestogo());
-  proc_.setTimePerMove(cmd.movetime());
-  proc_.setDepth(cmd.depth());
+  bool const white = proc_.color() == NEngine::Figure::ColorWhite;
+  int xtime = white ? cmd.param("wtime") : cmd.param("btime");
+  if(xtime > 0)
+  {
+    proc_.setXtime(xtime);
+  }
+  if(cmd.param("movestogo") > 0)
+  {
+    proc_.setMovesToGo(cmd.param("movestogo"));
+  }
+  if(cmd.param("movetime") > 0)
+  {
+    proc_.setTimePerMove(cmd.param("movetime"));
+  }
+  if(cmd.param("depth") > 0)
+  {
+    proc_.setDepth(cmd.param("depth"));
+  }
 
   if(auto r = proc_.reply(false))
   {
@@ -339,7 +342,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::Position:
-    uciPositionMoves(cmd);
+    uciPosition(cmd);
     break;
 
   case xType::UCIgo:

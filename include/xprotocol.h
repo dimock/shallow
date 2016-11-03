@@ -30,8 +30,7 @@ private:
 
   void processCmd(xCmd const& cmd);
   void uciSetOption(const xCmd & cmd);
-  void uciPositionFEN(const xCmd & cmd);
-  void uciPositionMoves(const xCmd & cmd);
+  void uciPosition(const xCmd & cmd);
   void uciGo(const xCmd & cmd);
   void outState(NEngine::Board::State state, bool white);
 

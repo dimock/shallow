@@ -31,17 +31,9 @@ xCmd::xCmd(xType type, int value) :
 {}
 
 xCmd::xCmd(xType type,
-           int mt,
-           int mtogo,
-           int bt,
-           int wt,
-           int d) :
+  std::map<std::string, int>&& params) :
   type_(type),
-  movetime_(mt),
-  movestogo_(mtogo),
-  btime_(bt),
-  wtime_(wt),
-  depth_(d)
+  params_(std::move(params))
 {}
 
 xCmd::xCmd(xType type, bool inf) :
@@ -64,29 +56,12 @@ int xCmd::value() const
   return value_;
 }
 
-int xCmd::movetime() const
+int xCmd::param(std::string const& name) const
 {
-  return movetime_;
-}
-
-int xCmd::movestogo() const
-{
-  return movestogo_;
-}
-
-int xCmd::btime() const
-{
-  return btime_;
-}
-
-int xCmd::wtime() const
-{
-  return wtime_;
-}
-
-int xCmd::depth() const
-{
-  return depth_;
+  auto iter = params_.find(name);
+  if(iter != params_.end())
+    return iter->second;
+  return -1;
 }
 
 bool xCmd::infinite() const

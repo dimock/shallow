@@ -749,7 +749,7 @@ private:
   static char fen_[FENsize];
 
   /// for chess draw detector
-  bool can_win_[2] = {};
+  bool can_win_[2];
 
   /// en-passant field index. must be cleared (set to -1) after move
   /// this is the field, where capturing pawn will go, it's written in FEN
