@@ -21,9 +21,12 @@ xProtocolMgr::xProtocolMgr() :
 
   xcbk.queryInput_ = [this]()
   {
-    if(auto cmd = parse(this->input_.peekInput(), this->isUci_))
+    if(auto cmd = cmds_.peek())
     {
-      this->processCmd(cmd);
+      if(!this->processCmd(cmd))
+      {
+        cmds_.push(cmd);
+      }
     }
     return !this->stop_;
   };
@@ -78,7 +81,7 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
   if(!sres.best_ || sres.best_ != sres.pv_[0])
     return;
 
-  if(isUci_)
+  if(cmds_.isUci())
   {
     printInfo(sres);
     return;
@@ -119,7 +122,7 @@ void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
   if(sdata.depth_ <= 0)
     return;
 
-  if(isUci_)
+  if(cmds_.isUci())
   {
     printUciStat(sdata);
     return;
@@ -305,7 +308,7 @@ void xProtocolMgr::printBM(NEngine::SearchResult const& sres)
 
 bool xProtocolMgr::doCmd()
 {
-  if(auto cmd = parse(input_.getInput(), isUci_))
+  if(auto cmd = cmds_.next())
   {
     processCmd(cmd);
   }
@@ -313,12 +316,12 @@ bool xProtocolMgr::doCmd()
   return !stop_;
 }
 
-void xProtocolMgr::processCmd(xCmd const& cmd)
+bool xProtocolMgr::processCmd(xCmd const& cmd)
 {
   switch(cmd.type())
   {
   case xType::UCI:
-    isUci_ = true;
+    cmds_.setUci(true);
     os_ << "id name Shallow" << std::endl;
     os_ << "id author Dmitry Sultanov" << std::endl;
     os_ << "option name Hash type spin default 256 min 1 max 1024" << std::endl;
@@ -326,7 +329,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xBoard:
-    isUci_ = false;
+    cmds_.setUci(false);
     break;
 
   case xType::SetOption:
@@ -338,7 +341,8 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::UCInewgame:
-    proc_.init();
+  case xType::xNew:
+    return proc_.init();
     break;
 
   case xType::Position:
@@ -351,10 +355,6 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
 
   case xType::xPing:
     os_ << "pong " << cmd.value() << std::endl;
-    break;
-
-  case xType::xNew:
-    proc_.init();
     break;
 
   case xType::xOption:
@@ -379,15 +379,23 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xSetboardFEN:
-    if(!(fenOk_ = proc_.fromFEN(cmd)))
     {
+      fenOk_ = false;
+      auto ok = proc_.fromFEN(cmd);
+      if(!ok)
+      {
 #ifdef WRITE_LOG_FILE_
-      if(cmd.paramsNum() > 0)
-        ofs_log_ << "invalid FEN given: " << cmd.packParams() << endl;
-      else
-        ofs_log_ << "there is no FEN in setboard command" << endl;
+        if(cmd.paramsNum() > 0)
+          ofs_log_ << "invalid FEN given: " << cmd.packParams() << endl;
+        else
+          ofs_log_ << "there is no FEN in setboard command" << endl;
 #endif
-      os_ << "tellusererror Illegal position" << std::endl;
+        os_ << "tellusererror Illegal position" << std::endl;
+        return false;
+      }
+      if(!*ok)
+        return false;
+      fenOk_ = true;
     }
     break;
 
@@ -448,11 +456,12 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xUndo:
-    proc_.undo();
+    return proc_.undo();
     break;
 
   case xType::xRemove:
-    proc_.undo();
+    if(!proc_.undo())
+      return false;
     proc_.undo();
     break;
 
@@ -517,6 +526,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     }
     break;
   }
+  return true;
 }
 
 } // NShallow

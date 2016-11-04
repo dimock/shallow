@@ -42,61 +42,6 @@ inline int calculateDelta(ScoreType alpha, ScoreType score)
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool Engine::findMove(SearchResult& sres)
-{
-  bool ok = false;
-  bool leave = false;
-  for(; !leave;)
-  {
-    ok = search(sres);
-    leave = true;
-
-    while(!posted_.empty())
-    {
-      auto& cmd = posted_.front();
-
-      switch(cmd.type_)
-      {
-      case xPostType::xpUpdate:
-      {
-        if(callbacks_.sendStats_)
-          (callbacks_.sendStats_)(sdata_);
-        break;
-      }
-
-      case xPostType::xpHint:
-      case xPostType::xpNone:
-        break;
-
-      case xPostType::xpNew:
-      {
-        fromFEN(0);
-        leave = !sparams_.analyze_mode_;
-        break;
-      }
-
-      case xPostType::xpUndo:
-      {
-        scontexts_[0].board_.unmakeMove();
-        leave = !sparams_.analyze_mode_;
-        break;
-      }
-
-      case xPostType::xpFen:
-      {
-        fromFEN(cmd.fen_.c_str());
-        leave = !sparams_.analyze_mode_;
-        break;
-      }
-      }
-
-      posted_.pop();
-    }
-  }
-
-  return ok;
-}
-
 void Engine::logPV()
 {
   if(!callbacks_.slog_)

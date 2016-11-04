@@ -5,7 +5,7 @@ xprotocol.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #include <xparser.h>
 #include <processor.h>
-#include <xinput.h>
+#include <xcmdqueue.h>
 
 namespace NShallow
 {
@@ -28,19 +28,18 @@ public:
 
 private:
 
-  void processCmd(xCmd const& cmd);
+  bool processCmd(xCmd const& cmd);
   void uciSetOption(const xCmd & cmd);
   void uciPosition(const xCmd & cmd);
   void uciGo(const xCmd & cmd);
   void outState(NEngine::Board::State state, bool white);
 
   Processor proc_;
-  xInput    input_;
+  xCmdQueue cmds_;
  
   bool stop_  = false;
   bool force_ = false;
-  bool fenOk_ = false;
-  bool isUci_ = false;
+  bool fenOk_ = true;
 
   std::ostream& os_;
 };

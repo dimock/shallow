@@ -45,7 +45,7 @@ public:
   std::string toFEN();
 
   bool fromFEN(std::string const& fen);
-  bool fromFEN(xCmd const& cmd);
+  boost::optional<bool> fromFEN(xCmd const& cmd);
   void editCmd(xCmd const& cmd);
 
   boost::optional<ReplyStruct> move(xCmd const& moveCmd);

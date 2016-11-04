@@ -73,13 +73,13 @@ public:
   void setMemory(int mb);
   void setCallbacks(xCallback callback);
 
-  void postCommand(xPostCmd const& cmd);
+  void needUpdate();
 
   bool fromFEN(std::string const& fen);
   std::string toFEN() const;
 
   // call it to start search
-  bool findMove(SearchResult& result);
+  bool search(SearchResult& result);
 
   Board & getBoard() { return scontexts_[0].board_; }
   const Board & getBoard() const { return scontexts_[0].board_; }
@@ -102,9 +102,6 @@ private:
   void testTimer();
   bool stopped() const { return stop_; }
   void testInput();
-
-  // start point of search algorithm
-  bool search(SearchResult& result);
 
   // testing of move generator
   void enumerate();
@@ -130,7 +127,7 @@ private:
 #endif // USE_HASH
 
   // analyze mode support
-  std::queue<xPostCmd> posted_;
+  bool updateRequested_{ false };
   xCallback callbacks_;
 
   // search data

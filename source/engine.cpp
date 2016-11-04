@@ -85,9 +85,9 @@ Engine::~Engine()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void Engine::postCommand(xPostCmd const& cmd)
+void Engine::needUpdate()
 {
-  posted_.push(cmd);
+  updateRequested_ = true;
 }
 
 void Engine::setMemory(int mb)
@@ -203,36 +203,11 @@ void Engine::testInput()
     (callbacks_.queryInput_)();
   }
 
-  while(!posted_.empty())
+  if(updateRequested_)
   {
-    auto& cmd = posted_.front();
-
-    switch(cmd.type_)
-    {
-    case xPostType::xpUpdate:
-    {
-      if(callbacks_.sendStats_)
-        (callbacks_.sendStats_)(sdata_);
-
-      posted_.pop();
-      break;
-    }
-
-    case xPostType::xpHint:
-    case xPostType::xpNone:
-    {
-      posted_.pop();
-      break;
-    }
-
-    case xPostType::xpNew:
-    case xPostType::xpUndo:
-    case xPostType::xpFen:
-    {
-      pleaseStop();
-      return;
-    }
-    }
+    updateRequested_ = false;
+    if(callbacks_.sendStats_)
+      (callbacks_.sendStats_)(sdata_);
   }
 }
 

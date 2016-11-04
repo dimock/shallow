@@ -70,24 +70,4 @@ struct xCallback
   std::ofstream*          slog_{};
 };
 
-enum class xPostType
-{
-  xpNone,
-  xpUndo,
-  xpUpdate,
-  xpHint,
-  xpNew,
-  xpFen
-};
-
-struct xPostCmd
-{
-  xPostType   type_{ xPostType::xpNone };
-  std::string fen_;
-
-  xPostCmd(xPostType t, std::string const& f = std::string{}) :
-    type_(t), fen_(f)
-  {}
-};
-
 } // NEngine

@@ -147,8 +147,7 @@ bool Processor::undo()
 {
   if(is_thinking())
   {
-    NEngine::xPostCmd cmd(NEngine::xPostType::xpUndo);
-    engine_.postCommand(cmd);
+    engine_.pleaseStop();
     return false;
   }
 
@@ -179,8 +178,7 @@ bool Processor::init()
 {
   if(is_thinking())
   {
-    NEngine::xPostCmd cmd(NEngine::xPostType::xpNew);
-    engine_.postCommand(cmd);
+    engine_.pleaseStop();
     return true;
   }
 
@@ -200,7 +198,7 @@ void Processor::analyze()
   NEngine::SearchResult sres;
 
   engine_.setAnalyzeMode(true);
-  engine_.findMove(sres);
+  engine_.search(sres);
   engine_.setAnalyzeMode(false);
 
   engine_.setTimeLimit(timePerMoveMS_);
@@ -233,7 +231,7 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
   thinking_ = true;
   givetimeCounter_ = 0;
   NEngine::SearchResult sres;
-  if(engine_.findMove(sres))
+  if(engine_.search(sres))
   {
     if(board.validateMove(sres.best_))
     {
@@ -360,15 +358,16 @@ void Processor::hash2file(const char * fname)
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool Processor::fromFEN(xCmd const& cmd)
+boost::optional<bool> Processor::fromFEN(xCmd const& cmd)
 {
   if(is_thinking())
   {
-    NEngine::xPostCmd pcmd(NEngine::xPostType::xpFen, cmd.fen());
-    engine_.postCommand(pcmd);
-    return true;
+    engine_.pleaseStop();
+    return false;
   }
-  return fromFEN(cmd.fen());
+  if(fromFEN(cmd.fen()))
+    return true;
+  return boost::none;
 }
 
 bool Processor::fromFEN(std::string const& fen)
@@ -393,8 +392,7 @@ void Processor::editCmd(xCmd const& cmd)
   {
     if(cmd.type() == xType::xLeaveEdit) // command '.'
     {
-      NEngine::xPostCmd pcmd(NEngine::xPostType::xpUpdate);
-      engine_.postCommand(pcmd);
+      engine_.needUpdate();
     }
 
     return;
