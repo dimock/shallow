@@ -102,7 +102,7 @@ namespace
       if(i+1 >= params.size())
         break;
 
-      int j = i;
+      auto j = i;
       pmap.emplace(params[j], toInt(params, ++i));
     }
 
@@ -155,16 +155,6 @@ xCmd parse(std::string const& line, bool const uci)
     { "stop",       xType::xExit },
   };
 
-  if(auto cmd = parseSetFigure(line))
-  {
-    return cmd;
-  }
-
-  if(auto cmd = parseMove(line))
-  {
-    return cmd;
-  }
-
   std::vector<std::string> params;
   boost::algorithm::split(params, line, boost::algorithm::is_any_of(" \t\n\r"), boost::algorithm::token_compress_on);
   if(params.empty())
@@ -175,7 +165,17 @@ xCmd parse(std::string const& line, bool const uci)
   auto iter = xcommands.find(params[0]);
   if(iter == xcommands.end())
   {
-    return {};
+    if(auto cmd = parseSetFigure(line))
+    {
+      return cmd;
+    }
+
+    if(auto cmd = parseMove(line))
+    {
+      return cmd;
+    }
+
+    return{};
   }
 
   params.erase(params.begin());
@@ -212,9 +212,9 @@ xCmd parse(std::string const& line, bool const uci)
   case xType::xTime:
   case xType::xOtime:
     {
-      if(params.size() > 1)
+      if(!params.empty())
       {
-        return xCmd(type, toInt(params, 1));
+        return xCmd(type, toInt(params, 0));
       }
       else
       {

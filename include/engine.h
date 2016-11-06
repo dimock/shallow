@@ -50,7 +50,7 @@ struct SearchParams
 {
   void reset();
 
-  int  timeLimitMS_{};
+  NTime::duration timeLimit_{};
   int  depthMax_{};
   bool analyze_mode_{};
 };
@@ -87,7 +87,7 @@ public:
   void pleaseStop();
 
   void setAnalyzeMode(bool);
-  void setTimeLimit(int ms);
+  void setTimeLimit(NTime::duration const& tm);
   void setMaxDepth(int d);
 
 private:

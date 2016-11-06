@@ -54,7 +54,7 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
   #define TIMING_FLAG 0xFFF
 #else
   #define X_ASSERT(v, msg)
-  #define TIMING_FLAG 0x1FFF
+  #define TIMING_FLAG 0x3FFF
 #endif
 
 using int8    = std::int8_t;

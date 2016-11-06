@@ -91,7 +91,7 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
   NEngine::UndoInfo undoStack[NEngine::Board::GameLength];
   board.set_undoStack(undoStack);
 
-  os_ << sres.depth_ << " " << sres.score_ << " " << (int)(sres.dt_/10) << " " << sres.totalNodes_;
+  os_ << sres.depth_ << " " << sres.score_ << " " << NTime::centi_seconds<int>(sres.dt_) << " " << sres.totalNodes_;
   for(int i = 0; i < sres.depth_ && sres.pv_[i]; ++i)
   {
     os_ << " ";
@@ -132,10 +132,10 @@ void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
   NEngine::UndoInfo undoStack[NEngine::Board::GameLength];
   board.set_undoStack(undoStack);
 
-  clock_t t = clock() - sdata.tstart_;
   int movesLeft = sdata.numOfMoves_ - sdata.counter_;
   std::ostringstream oss;
-  oss << "stat01: " << t/10 << " " << sdata.totalNodes_ << " " << sdata.depth_-1 << " " << movesLeft << " " << sdata.numOfMoves_;
+  oss << "stat01: " << NTime::centi_seconds<int>(NTime::now() - sdata.tstart_)
+    << " " << sdata.totalNodes_ << " " << sdata.depth_-1 << " " << movesLeft << " " << sdata.numOfMoves_;
   std::string outstr = oss.str();
 
   auto mv = sdata.best_;
@@ -191,7 +191,7 @@ void xProtocolMgr::uciGo(const xCmd & cmd)
   int xtime = white ? cmd.param("wtime") : cmd.param("btime");
   if(xtime > 0)
   {
-    proc_.setXtime(xtime);
+    proc_.setXtime(NTime::from_milliseconds(xtime));
   }
   if(cmd.param("movestogo") > 0)
   {
@@ -199,7 +199,7 @@ void xProtocolMgr::uciGo(const xCmd & cmd)
   }
   if(cmd.param("movetime") > 0)
   {
-    proc_.setTimePerMove(cmd.param("movetime"));
+    proc_.setTimePerMove(NTime::from_milliseconds(cmd.param("movetime")));
   }
   if(cmd.param("depth") > 0)
   {
@@ -259,11 +259,8 @@ void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
     pv_str += str;
   }
 
-  double dt = sres.dt_;
-  if(dt < 1)
-    dt = 1;
-
-  int nps = (int)((double)(sres.totalNodes_)*1000.0 / dt);
+  auto dt = NTime::seconds<double>(sres.dt_) + 0.001;
+  int nps = static_cast<int>(sres.totalNodes_ / dt);
 
   os_ << "info ";
 
@@ -283,7 +280,7 @@ void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
   else
     os_ << "score cp " << sres.score_ << " ";
 
-  os_ << "time " << static_cast<int>(sres.dt_) << " ";
+  os_ << "time " << NTime::milli_seconds<int>(sres.dt_) << " ";
   os_ << "nodes " << sres.totalNodes_ << " ";
   os_ << "nps " << nps << " ";
 
@@ -437,7 +434,7 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xSt:
-    proc_.setTimePerMove(cmd.value()*1000);
+    proc_.setTimePerMove(NTime::duration(cmd.value()));
     break;
 
   case xType::xSd:
@@ -445,7 +442,7 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xTime:
-    proc_.setXtime(cmd.value()*10);
+    proc_.setXtime(NTime::from_centiseconds(cmd.value()));
     break;
 
   case xType::xOtime:

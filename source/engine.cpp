@@ -10,7 +10,7 @@ namespace NEngine
 
 void SearchParams::reset()
 {
-  timeLimitMS_ = 0;
+  timeLimit_ = NTime::duration(0);
   depthMax_ = 0;
   analyze_mode_ = false;
 }
@@ -159,9 +159,9 @@ void Engine::setAnalyzeMode(bool analyze)
   sparams_.analyze_mode_ = analyze;
 }
 
-void Engine::setTimeLimit(int ms)
+void Engine::setTimeLimit(NTime::duration const& tm)
 {
-  sparams_.timeLimitMS_ = ms;
+  sparams_.timeLimit_ = tm;
 }
 
 void Engine::setMaxDepth(int d)
@@ -179,7 +179,7 @@ bool Engine::checkForStop()
 {
   if(sdata_.totalNodes_ && !(sdata_.totalNodes_ & TIMING_FLAG))
   {
-    if(sparams_.timeLimitMS_ > 0)
+    if(sparams_.timeLimit_ > NTime::duration(0))
       testTimer();
     else
       testInput();
@@ -189,8 +189,7 @@ bool Engine::checkForStop()
 
 void Engine::testTimer()
 {
-  int t = clock();
-  if((t - sdata_.tstart_) > sparams_.timeLimitMS_)
+  if((NTime::now() - sdata_.tstart_) > sparams_.timeLimit_)
     pleaseStop();
 
   testInput();

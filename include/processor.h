@@ -5,6 +5,7 @@
 
 #include <engine.h>
 #include <xcommand.h>
+#include <xtime.h>
 #include <Windows.h>
 #include <cstdint>
 #include <boost/optional.hpp>
@@ -29,8 +30,8 @@ public:
   void enableBook(int v);
   void setMemory(int mb);
   void setDepth(int depth);
-  void setTimePerMove(int ms);
-  void setXtime(int ms);
+  void setTimePerMove(NTime::duration const& tm);
+  void setXtime(NTime::duration const& xtm);
   void setMovesLeft(int mleft);
   void setMovesToGo(int mtogo);
   void setPost(bool);
@@ -56,7 +57,7 @@ public:
 
   void setCallback(NEngine::xCallback& xcbk);
 
-  int giveMoreTime();
+  NTime::duration giveMoreTime();
 
   bool is_thinking() const { return thinking_; }
 
@@ -76,9 +77,9 @@ private:
   NEngine::Engine engine_;
   int movesLeft_{};
   int movesToGo_{};
-  int xtimeMS_{};
   int maxDepth_{};
-  int timePerMoveMS_{};
+  NTime::duration xtime_{};
+  NTime::duration timePerMove_{};
   bool post_{};
   bool thinking_{};
   unsigned int givetimeCounter_{};

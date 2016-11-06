@@ -166,19 +166,19 @@ bool Engine::search(SearchResult& sres)
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
-        int t_add = (callbacks_.giveTime_)();
-        if(t_add > 0)
+        auto t_add = (callbacks_.giveTime_)();
+        if(NTime::milli_seconds<int>(t_add) > 0)
         {
           stop_ = false;
-          sparams_.timeLimitMS_ += t_add;
+          sparams_.timeLimit_ += t_add;
           if(sdata_.counter_ < sdata_.numOfMoves_)
             sdata_.depth_--;
           continue;
         }
       }
 
-      clock_t t = clock();
-      clock_t dt = (t - sdata_.tstart_);
+      auto t  = NTime::now();
+      auto dt = t - sdata_.tstart_;
       sdata_.tprev_ = t;
 
       sres.score_ = score;
@@ -206,14 +206,14 @@ bool Engine::search(SearchResult& sres)
     // we haven't found move and spend more time for search it than on prev. iteration
     else if(stop_ && sdata_.depth_ > 2 && callbacks_.giveTime_ && !sparams_.analyze_mode_)
     {
-      clock_t t = clock();
+      auto t = NTime::now();
       if((t - sdata_.tprev_) >= (sdata_.tprev_ - sdata_.tstart_))
       {
-        int t_add = (callbacks_.giveTime_)();
-        if(t_add > 0)
+        auto t_add = (callbacks_.giveTime_)();
+        if(t_add > NTime::duration(0))
         {
           stop_ = false;
-          sparams_.timeLimitMS_ += t_add;
+          sparams_.timeLimit_ += t_add;
           sdata_.depth_--;
           continue;
         }
@@ -230,8 +230,7 @@ bool Engine::search(SearchResult& sres)
 
   sres.totalNodes_ = sdata_.totalNodes_;
 
-  clock_t t = clock();
-  sres.dt_ = (t - sdata_.tstart_);
+  sres.dt_ = NTime::now() - sdata_.tstart_;
 
   if(sparams_.analyze_mode_ && callbacks_.sendFinished_)
     (callbacks_.sendFinished_)(sres);

@@ -18,7 +18,7 @@ void SearchData::reset()
   depth_ = 0;
   nodesCount_ = 0;
   totalNodes_ = 0;
-  tprev_ = tstart_ = clock();
+  tprev_ = tstart_ = NTime::now();
   numOfMoves_ = 0;
   best_.clear();
   counter_ = 0;

@@ -5,7 +5,7 @@ xcallback.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #include <Board.h>
 #include <Move.h>
-#include <time.h>
+#include <xtime.h>
 #include <array>
 #include <functional>
 #include <memory>
@@ -18,7 +18,7 @@ public:
   SearchResult();
 
   /// statistic
-  clock_t dt_{};
+  NTime::duration dt_{};
   int nodesCount_{};
   int totalNodes_{};
   int depthMax_{};
@@ -50,13 +50,13 @@ struct SearchData
   int nodesCount_{};
   int totalNodes_{};
   int plyMax_{};
-  clock_t tstart_{};
-  clock_t tprev_{};
+  NTime::point tstart_{};
+  NTime::point tprev_{};
   Move best_;
 };
 
 using query_input_command    = std::function<bool()>;
-using give_more_time_command = std::function<int()>;
+using give_more_time_command = std::function<NTime::duration()>;
 using send_result_command    = std::function<void(SearchResult const&)>;
 using send_stats_command     = std::function<void(SearchData const&)>;
 

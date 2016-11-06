@@ -1,7 +1,9 @@
 
 /*************************************************************
   processor.cpp - Copyright (C) 2016 by Dmitry Sultanov
- *************************************************************/
+  *************************************************************/
+
+#define NOMINMAX
 
 #include <iostream>
 #include <fstream>
@@ -9,15 +11,18 @@
 #include <processor.h>
 #include <Helpers.h>
 #include <xindex.h>
+#include <algorithm>
 
 namespace NShallow
 {
 
+static const NTime::duration minimalXtimeToGive_ = NTime::duration(0.5);
+static const NTime::duration minimalTimePerMove_ = NTime::duration(0.1);
 static const int DepthMaximum = 32;
 
 void Processor::setCallback(NEngine::xCallback& xcbk)
 {
-  xcbk.giveTime_ = [this]() -> int
+  xcbk.giveTime_ = [this]()
   {
     return this->giveMoreTime();
   };
@@ -38,43 +43,39 @@ void Processor::setDepth(int depth)
   if(is_thinking())
     return;
 
-  xtimeMS_ = 0;
+  xtime_ = NTime::duration(0);
   movesLeft_ = 0;
   movesToGo_ = 0;
-  timePerMoveMS_ = -1;
+  timePerMove_ = NTime::duration(0);
   if(depth < 2)
     depth = 2;
   maxDepth_ = depth;
   engine_.setMaxDepth(depth);
-  engine_.setTimeLimit(timePerMoveMS_);
+  engine_.setTimeLimit(timePerMove_);
 }
 
-void Processor::setTimePerMove(int ms)
+void Processor::setTimePerMove(NTime::duration const& tm)
 {
   if(is_thinking())
     return;
 
   maxDepth_ = -1;
-  xtimeMS_ = 0;
+  xtime_ = NTime::duration(0);
   movesLeft_ = 0;
   movesToGo_ = 0;
-  timePerMoveMS_ = ms;
-  if(timePerMoveMS_ < 100)
-    timePerMoveMS_ = 100;
-  engine_.setTimeLimit(timePerMoveMS_);
+  timePerMove_ = std::max(tm, minimalTimePerMove_);
+  engine_.setTimeLimit(timePerMove_);
   engine_.setMaxDepth(DepthMaximum);
 }
 
-void Processor::setXtime(int ms)
+void Processor::setXtime(NTime::duration const& xtm)
 {
   if(is_thinking())
     return;
 
   maxDepth_ = -1;
-  xtimeMS_ = ms;
-  if(xtimeMS_ < 100)
-    xtimeMS_ = 100;
-  timePerMoveMS_ = -1;
+  xtime_ = std::max(xtm, minimalTimePerMove_);
+  timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
 }
 
@@ -86,7 +87,7 @@ void Processor::setMovesLeft(int mleft)
   maxDepth_ = -1;
   movesLeft_ = mleft;
   movesToGo_ = 0;
-  timePerMoveMS_ = -1;
+  timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
 }
 
@@ -98,17 +99,17 @@ void Processor::setMovesToGo(int mtogo)
   maxDepth_ = -1;
   movesLeft_ = 0;
   movesToGo_ = mtogo;
-  timePerMoveMS_ = -1;
+  timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
 }
 
 
-int Processor::giveMoreTime()
+NTime::duration Processor::giveMoreTime()
 {
-  if(timePerMoveMS_ > 0 || xtimeMS_ <= 500 || givetimeCounter_ > 0)
-    return 0;
+  if(timePerMove_ > NTime::duration(0) || xtime_ <= minimalXtimeToGive_ || givetimeCounter_ > 0)
+    return NTime::duration(0);
 
-  int add_t = 0;
+  NTime::duration add_t(0);
   int mcount = 40;
 
   if(movesLeft_ > 0)
@@ -124,9 +125,9 @@ int Processor::giveMoreTime()
   givetimeCounter_++;
 
   if(mcount < 2)
-    return 0;
+    return NTime::duration(0);
 
-  add_t = xtimeMS_/mcount;
+  add_t = xtime_ / mcount;
   if(mcount > 20)
     return add_t;
   else if(mcount > 13)
@@ -152,7 +153,7 @@ bool Processor::undo()
   }
 
   auto& board = engine_.getBoard();
-  if ( board.halfmovesCount() > 0 )
+  if(board.halfmovesCount() > 0)
   {
     board.unmakeMove();
     return true;
@@ -192,7 +193,7 @@ void Processor::analyze()
     return;
 
   thinking_ = true;
-  engine_.setTimeLimit(0);
+  engine_.setTimeLimit(NTime::duration(0));
   engine_.setMaxDepth(DepthMaximum);
 
   NEngine::SearchResult sres;
@@ -201,7 +202,7 @@ void Processor::analyze()
   engine_.search(sres);
   engine_.setAnalyzeMode(false);
 
-  engine_.setTimeLimit(timePerMoveMS_);
+  engine_.setTimeLimit(timePerMove_);
   engine_.setMaxDepth(maxDepth_ < 0 ? DepthMaximum : maxDepth_);
   thinking_ = false;
 }
@@ -295,7 +296,7 @@ bool Processor::makeMove(std::string const& moveStr)
   if(!move)
     return false;
 
-  if ( !board.validateMove(move) )
+  if(!board.validateMove(move))
     return false;
 
   board.makeMove(move);
@@ -462,12 +463,12 @@ void Processor::setFigure(xCmd const& cmd)
     'e' == str[1] && '1' == str[2]) ||
     (NEngine::Figure::ColorBlack == figureColor_ && 'e' == str[1] && '8' == str[2])))
   {
-  	firstStep = true;
+    firstStep = true;
   }
 
   if(NEngine::Figure::TypeRook == ftype)
   {
-  	if ( 'a' == str[1] || 'h' == str[1] )
+    if('a' == str[1] || 'h' == str[1])
       firstStep = NEngine::Figure::ColorWhite == figureColor_ && '1' == str[2] || NEngine::Figure::ColorBlack == figureColor_ && '8' == str[2];
   }
 
@@ -481,36 +482,35 @@ void Processor::updateTiming()
   if(is_thinking())
     return;
 
-  if ( maxDepth_ > 0 )
+  if(maxDepth_ > 0)
   {
-    engine_.setTimeLimit(-1);
+    engine_.setTimeLimit(NTime::duration(0));
     return;
   }
 
-  if ( timePerMoveMS_ > 0 )
+  if(timePerMove_ > NTime::duration(0))
   {
-    engine_.setTimeLimit(timePerMoveMS_);
+    engine_.setTimeLimit(timePerMove_);
     return;
   }
 
-  if ( movesLeft_ <= 0 && movesToGo_ <= 0 && xtimeMS_ > 0 )
+  if(movesLeft_ <= 0 && movesToGo_ <= 0 && xtime_ > NTime::duration(0))
   {
-    engine_.setTimeLimit(xtimeMS_/40);
+    engine_.setTimeLimit(xtime_ / 40);
     return;
   }
 
   int mcount = 2;
 
-  if ( movesLeft_ > 0 )
+  if(movesLeft_ > 0)
     mcount = movesLeft_ - (engine_.getBoard().movesCount()-1) % movesLeft_;
-  else if ( movesToGo_ > 0 )
+  else if(movesToGo_ > 0)
     mcount = movesToGo_;
 
-  if ( mcount < 2 )
+  if(mcount < 2)
     mcount = 2;
 
-  engine_.setTimeLimit(xtimeMS_/mcount);
-
+  engine_.setTimeLimit(xtime_ / mcount);
 }
 
 } // NShallow
