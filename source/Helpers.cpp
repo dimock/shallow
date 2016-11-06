@@ -31,7 +31,8 @@ eMoveNotation detectNotation(std::string const& str)
 
   if(str.size() >= 3 && isalpha(str[0]) && (isalnum(str[1]) || str[1] == '-')) // may be SAN
   {
-    if(strchr("PNBRQK", str[0]))
+    static std::string const figletters{"PNBRQK"};
+    if(figletters.find(str[0]) != std::string::npos)
     {
       if(iscolumn(str[1]) && (isdigit(str[2]) || str[2] == 'x'))
         return eMoveNotation::mnSAN;
@@ -81,19 +82,20 @@ Move parseSAN(const Board & board, std::string const& str)
 
   const char * s = str.c_str();
 
-  if(strchr("PNBRQK", *s))
+  static std::string const figletters{"PNBRQK"};
+  if(figletters.find_first_of(*s) != std::string::npos)
   {
     type = Figure::toFtype(*s);
     s++;
   }
-  else if(strstr(s, "O-O-O")) // long castle
+  else if(std::string(s).find("O-O-O") != std::string::npos) // long castle
   {
     from = board.getColor() ? 4 : 60;
     to = board.getColor() ? 2 : 58;
     s += 5;
     type = Figure::Type::TypeKing;
   }
-  else if(strstr(s, "O-O")) // short castle
+  else if(std::string(s).find("O-O") != std::string::npos) // short castle
   {
     from = board.getColor() ? 4 : 60;
     to = board.getColor() ? 6 : 62;
@@ -104,7 +106,7 @@ Move parseSAN(const Board & board, std::string const& str)
   if(to < 0) // not found yet
   {
     // should be at least 2 chars
-    size_t n = strlen(s);
+    size_t n = std::string(s).length();
     if(n < 2)
       return false;
 
@@ -131,13 +133,13 @@ Move parseSAN(const Board & board, std::string const& str)
       s++;
     }
 
-    n = strlen(s);
+    n = std::string(s).length();
     if(!*s || !iscolumn(s[0]) || n < 2)
       return false;
 
     to = (s[0] - 'a') | ((s[1] - '1') << 3);
     s += 2;
-    n = strlen(s);
+    n = std::string(s).length();
 
     if('=' == s[0])
     {
@@ -147,7 +149,7 @@ Move parseSAN(const Board & board, std::string const& str)
       if(new_type < Figure::Type::TypeKnight || new_type > Figure::Type::TypeQueen)
         return false;
       s += 2;
-      n = strlen(s);
+      n = std::string(s).length();
     }
 
     if('+' == s[0])

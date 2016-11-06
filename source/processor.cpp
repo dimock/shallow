@@ -355,7 +355,7 @@ void Processor::hash2file(const char * fname)
   if(is_thinking() || !fname)
     return;
 
-  engine_.saveHash(fname);
+//  engine_.saveHash(fname);
 }
 
 //////////////////////////////////////////////////////////////////////////

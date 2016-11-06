@@ -14,38 +14,19 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <limits>
 #include <algorithm>
 
-#ifndef _M_X64
-#ifdef _MSC_VER
-#include <intrin.h>
-#elif (defined __GNUC__)
-#include <x86intrin.h>
-#endif
-#else
-#include <intrin.h>
-#endif
-
 
 #ifdef _MSC_VER
 
   #define ALIGN_MSC(bytes) __declspec (align(bytes))
   #define ALIGN_GCC(bytes)
 
-  #ifndef _M_X64
-    #include <intrin.h>
-  #else
-    #include <intrin.h>
-  #endif
+#include <intrin.h>
 
 #elif (defined __GNUC__)
 
   #define ALIGN_GCC(bytes)__attribute__((aligned(bytes)))
   #define ALIGN_MSC(bytes) 
 
-  #ifndef _M_X64
-    #include <x86intrin.h>
-  #else
-    #include <intrin.h>
-  #endif
 
 #endif
 

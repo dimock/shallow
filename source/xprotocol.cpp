@@ -1,9 +1,8 @@
 
 /*************************************************************
-  xboard.cpp - Copyright (C) 2011 - 2012 by Dmitry Sultanov
+  xboard.cpp - Copyright (C) 2016 by Dmitry Sultanov
   *************************************************************/
 
-#include <io.h>
 #include <iostream>
 #include <string>
 #include <fstream>

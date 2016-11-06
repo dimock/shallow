@@ -3,6 +3,15 @@ xInput.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #include <xinput.h>
 
+#ifdef __GNUC__
+
+#include <stdio.h>
+#include <sys/ioctl.h> // For FIONREAD
+#include <termios.h>
+#include <stdbool.h>
+
+#endif
+
 namespace NShallow
 {
 
@@ -22,6 +31,13 @@ xInput::xInput() :
     }
   }
 #elif (defined __GNUC__)
+  // Use termios to turn off line buffering
+  const int STDIN = 0;
+  struct termios term;
+  tcgetattr(STDIN, &term);
+  term.c_lflag &= ~ICANON;
+  tcsetattr(STDIN, TCSANOW, &term);
+  setbuf(stdin, NULL);
 #endif
 }
 
@@ -88,6 +104,13 @@ bool xInput::peek()
   }
 }
 #elif (defined __GNUC__)
+bool xInput::peek()
+{
+  const int STDIN = 0;
+  int nbbytes;
+  ioctl(STDIN, FIONREAD, &nbbytes);  // 0 is STDIN
+  return nbbytes > 0;
+}
 #endif
 
 }

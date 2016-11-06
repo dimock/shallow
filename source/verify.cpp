@@ -4,7 +4,6 @@
 
 #include <engine.h>
 #include <MovesGenerator.h>
-#include <windows.h>
 #include <fstream>
 #include <sstream>
 
@@ -12,39 +11,39 @@ namespace NEngine
 {
 
 //////////////////////////////////////////////////////////////////////////
-void Engine::saveHash(const char * fname) const
-{
-  if ( !fname )
-    return;
-  char gfname[MAX_PATH], cfname[MAX_PATH], bfname[MAX_PATH], hfname[MAX_PATH];
-  sprintf(gfname, "%s_g.hash", fname);
-  sprintf(cfname, "%s_c.hash", fname);
-  sprintf(bfname, "%s_b.hash", fname);
-  sprintf(hfname, "%s_h.hash", fname);
-
-#ifdef USE_HASH
-  hash_.save(gfname);
-#endif
-
-  scontexts_[0].board_.save(bfname);
-  MovesGeneratorBase::save_history(hfname);
-}
-
-void Engine::loadHash(const char * fname)
-{
-  char gfname[MAX_PATH], cfname[MAX_PATH], bfname[MAX_PATH], hfname[MAX_PATH];
-  sprintf(gfname, "%s_g.hash", fname);
-  sprintf(cfname, "%s_c.hash", fname);
-  sprintf(bfname, "%s_b.hash", fname);
-  sprintf(hfname, "%s_h.hash", fname);
-
-#ifdef USE_HASH
-  hash_.load(gfname);
-#endif
-
-  scontexts_[0].board_.load(bfname);
-  MovesGenerator::load_history(hfname);
-}
+//void Engine::saveHash(const char * fname) const
+//{
+//  if ( !fname )
+//    return;
+//  char gfname[MAX_PATH], cfname[MAX_PATH], bfname[MAX_PATH], hfname[MAX_PATH];
+//  sprintf(gfname, "%s_g.hash", fname);
+//  sprintf(cfname, "%s_c.hash", fname);
+//  sprintf(bfname, "%s_b.hash", fname);
+//  sprintf(hfname, "%s_h.hash", fname);
+//
+//#ifdef USE_HASH
+//  hash_.save(gfname);
+//#endif
+//
+//  scontexts_[0].board_.save(bfname);
+//  MovesGeneratorBase::save_history(hfname);
+//}
+//
+//void Engine::loadHash(const char * fname)
+//{
+//  char gfname[MAX_PATH], cfname[MAX_PATH], bfname[MAX_PATH], hfname[MAX_PATH];
+//  sprintf(gfname, "%s_g.hash", fname);
+//  sprintf(cfname, "%s_c.hash", fname);
+//  sprintf(bfname, "%s_b.hash", fname);
+//  sprintf(hfname, "%s_h.hash", fname);
+//
+//#ifdef USE_HASH
+//  hash_.load(gfname);
+//#endif
+//
+//  scontexts_[0].board_.load(bfname);
+//  MovesGenerator::load_history(hfname);
+//}
 //////////////////////////////////////////////////////////////////////////
 #ifdef VERIFY_ESCAPE_GENERATOR
 void Engine::verifyEscapeGen(int ictx, const Move & hmove)

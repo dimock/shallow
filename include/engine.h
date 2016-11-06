@@ -95,9 +95,9 @@ private:
   bool checkForStop();
   void reset();
 
-  // logging
-  void logPV();
-  void logMovies();
+//  // logging
+//  void logPV();
+//  void logMovies();
   // time control
   void testTimer();
   bool stopped() const { return stop_; }
@@ -192,8 +192,8 @@ private:
   void verifyGenerators(int ictx, const Move & hmove);
 
 public:
-  void saveHash(const char * fname) const;
-  void loadHash(const char * fname);
+//  void saveHash(const char * fname) const;
+//  void loadHash(const char * fname);
 };
 
 } // NEngine

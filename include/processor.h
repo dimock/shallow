@@ -6,12 +6,11 @@
 #include <engine.h>
 #include <xcommand.h>
 #include <xtime.h>
-#include <Windows.h>
 #include <cstdint>
 #include <boost/optional.hpp>
 
 #undef  WRITE_LOG_FILE_
-#define WRITE_ERROR_PGN
+#undef WRITE_ERROR_PGN
 
 namespace NShallow
 {

@@ -9,39 +9,10 @@ xbitmath.h - Copyright (C) 2016 by Dmitry Sultanov
 
 namespace NEngine
 {
-
-// got from chessprogramming.wikispaces.com
-inline bool one_bit_set(uint64 n)
-{
-  return (n & (n-1)) == 0ULL;
-}
-
-inline int pop_count(uint64 n)
-{
-  if(n == 0ULL)
-    return 0;
-  else if(one_bit_set(n))
-    return 1;
-  n = n - ((n >> 1)  & 0x5555555555555555ULL);
-  n = (n & 0x3333333333333333ULL) + ((n >> 2) & 0x3333333333333333ULL);
-  n = (n + (n >> 4)) & 0x0f0f0f0f0f0f0f0fULL;
-  n = (n * 0x0101010101010101ULL) >> 56;
-  return static_cast<int>(n);
-}
-
-inline BitMask set_mask_bit(int bit)
-{
-  return 1ULL << bit;
-}
-
-inline int set_bit(int bit)
-{
-  return 1 << bit;
-}
-
-
+    
 
 #ifdef _MSC_VER
+    
 #pragma intrinsic(_BitScanForward)
 #pragma intrinsic(_BitScanReverse)
 
@@ -60,31 +31,11 @@ inline int _msb32(unsigned long n)
   X_ASSERT(!b, "no bit found in nonzero number");
   return i;
 }
-#elif (defined __GNUC__)
-inline int _lsb32(unsigned long n)
-{
-  unsigned long i = __bsfd(n);
-  X_ASSERT(!n, "number should be non-zero in _lsb32");
-  return i;
-}
 
-inline int _msb32(unsigned long n)
-{
-  unsigned long i = __bsrd(n);
-  X_ASSERT(!n, "number should be non-zero in _msb32");
-  return i;
-}
-#endif
 
 #ifdef _M_X64
-
-#ifdef __GNUC__
-#pragma (message "compiling with x64")
-#endif
-
 #pragma intrinsic(_BitScanForward64)
 #pragma intrinsic(_BitScanReverse64)
-#pragma intrinsic(__popcnt64)
 
 inline int _lsb64(const uint64 & mask)
 {
@@ -109,15 +60,7 @@ inline int log2(uint64 n)
     return i;
   return 0;
 }
-//
-//inline int pop_count(uint64 n)
-//{
-//  return (int)__popcnt64(n);
-//}
-
 #else
-
-#ifdef _MSC_VER
 inline int _lsb64(const uint64 & mask)
 {
   unsigned long n;
@@ -157,41 +100,67 @@ inline int log2(uint64 n)
 
   return 0;
 }
-#elif (defined __GNUC__)
-inline int _lsb64(const uint64 & mask)
-{
-  const unsigned * pmask = reinterpret_cast<const unsigned int *>(&mask);
-  if(pmask[0])
-    return __bsfd(pmask[0]);
+#endif // _M_X64
 
-  X_ASSERT(!pmask[1], "number should be non-zero in _lsb64");
-  return __bsfd(pmask[1])+32;
+#elif (defined __GNUC__)
+
+inline int _lsb32(uint32 mask)
+{
+  return __builtin_ctz(mask);
 }
 
-inline int _msb64(const uint64 & mask)
+inline int _msb32(uint32 mask)
 {
-  const unsigned * pmask = reinterpret_cast<const unsigned int * >(&mask);
-  if(pmask[1])
-    return __bsrd(pmask[1])+32;
+  return 31 - __builtin_clz(mask);
+}
 
-  X_ASSERT(!pmask[0], "number should be non-zero in _msb64");
-  return __bsrd(pmask[0]);
+inline int _lsb64(uint64 mask)
+{
+  return __builtin_ctzll(mask);
+}
+
+inline int _msb64(uint64 mask)
+{
+  return 63 - __builtin_clzll(mask);
 }
 
 inline int log2(uint64 n)
 {
-  const unsigned * pn = reinterpret_cast<const unsigned int *>(&n);
-  if(pn[1])
-    return __bsrd(pn[1]) +32;
-
-  if(pn[0])
-    return __bsrd(pn[0]);
-
-  return 0;
+  return 63 - __builtin_clzll(n);
 }
-#endif
 
-#endif
+#endif // __GNUC__
+
+
+
+// got from chessprogramming.wikispaces.com
+inline bool one_bit_set(uint64 n)
+{
+  return (n & (n-1)) == 0ULL;
+}
+
+inline int pop_count(uint64 n)
+{
+  if(n == 0ULL)
+    return 0;
+  else if(one_bit_set(n))
+    return 1;
+  n = n - ((n >> 1)  & 0x5555555555555555ULL);
+  n = (n & 0x3333333333333333ULL) + ((n >> 2) & 0x3333333333333333ULL);
+  n = (n + (n >> 4)) & 0x0f0f0f0f0f0f0f0fULL;
+  n = (n * 0x0101010101010101ULL) >> 56;
+  return static_cast<int>(n);
+}
+
+inline BitMask set_mask_bit(int bit)
+{
+  return 1ULL << bit;
+}
+
+inline int set_bit(int bit)
+{
+  return 1 << bit;
+}
 
 inline int clear_lsb(uint64 & mask)
 {
