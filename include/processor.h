@@ -28,12 +28,12 @@ public:
   bool init();
   void enableBook(int v);
   void setMemory(int mb);
-  void setDepth(int depth);
-  void setTimePerMove(NTime::duration const& tm);
-  void setXtime(NTime::duration const& xtm);
-  void setMovesLeft(int mleft);
-  void setMovesToGo(int mtogo);
-  void setPost(bool);
+  bool setDepth(int depth);
+  bool setTimePerMove(NTime::duration const& tm);
+  bool setXtime(NTime::duration const& xtm);
+  bool setMovesLeft(int mleft);
+  bool setMovesToGo(int mtogo);
+  bool setPost(bool);
   bool undo();
 
   NEngine::Figure::Color color() const;
@@ -51,7 +51,7 @@ public:
   boost::optional<ReplyStruct> move(xCmd const& moveCmd);
   bool makeMove(std::string const& moveStr);
   boost::optional<ReplyStruct> reply(bool winboardFormat);
-  void analyze();
+  bool analyze();
   void stop();
 
   void setCallback(NEngine::xCallback& xcbk);

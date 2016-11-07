@@ -28,10 +28,12 @@ public:
 
 private:
 
-  bool processCmd(xCmd const& cmd);
+  void processCmd(xCmd const& cmd);
+  bool swallowCmd(xCmd const& cmd);
+
   void uciSetOption(const xCmd & cmd);
   void uciPosition(const xCmd & cmd);
-  void uciGo(const xCmd & cmd);
+  bool uciGo(const xCmd & cmd);
   void outState(NEngine::Board::State state, bool white);
 
   Processor proc_;

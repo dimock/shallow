@@ -4,6 +4,7 @@ Helpers.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #pragma once
 
+#undef _USE_LOG
 
 #include <Board.h>
 
@@ -28,5 +29,11 @@ Move strToMove(std::string const& str, Board const& board);
 /// Rxf5+ - Standard algebraic notation
 Move parseSAN(Board const& board, std::string const& str);
 std::string printSAN(Board & board, const Move & move);
+
+#ifdef _USE_LOG
+void addLog(std::string const& str);
+#else
+inline void addLog(std::string const& str) {}
+#endif
 
 } // NEngine

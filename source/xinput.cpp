@@ -31,7 +31,6 @@ xInput::xInput() :
     }
   }
 #elif (defined __GNUC__)
-  // Use termios to turn off line buffering
   const int STDIN = 0;
   struct termios term;
   tcgetattr(STDIN, &term);
@@ -59,11 +58,6 @@ std::string xInput::readInput()
 {
   std::string sline;
   std::getline(is_, sline);
-
-#ifdef WRITE_LOG_FILE_
-  ofs_log_ << string(sline) << endl;
-#endif
-
   return std::move(sline);
 }
 
@@ -108,7 +102,7 @@ bool xInput::peek()
 {
   const int STDIN = 0;
   int nbbytes;
-  ioctl(STDIN, FIONREAD, &nbbytes);  // 0 is STDIN
+  ioctl(STDIN, FIONREAD, &nbbytes);
   return nbbytes > 0;
 }
 #endif

@@ -6,6 +6,11 @@ Helpers.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <xindex.h>
 #include <MovesGenerator.h>
 
+#ifdef _USE_LOG
+#include <fstream>
+#endif
+
+
 // TODO: refactore with std::regex
 
 namespace NEngine
@@ -430,5 +435,14 @@ Move strToMove(std::string const& str, const Board & board)
 
   return board.possibleMove(move) ? move : Move{ 0 };
 }
+
+#ifdef _USE_LOG
+void addLog(std::string const& str)
+{
+  std::ofstream ofs("my_log.txt", std::ios::app);
+  ofs << str << std::endl;
+}
+#endif
+
 
 } // NEngine

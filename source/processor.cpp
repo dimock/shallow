@@ -30,18 +30,19 @@ void Processor::setCallback(NEngine::xCallback& xcbk)
   engine_.setCallbacks(xcbk);
 }
 
-void Processor::setPost(bool p)
+bool Processor::setPost(bool p)
 {
   if(is_thinking())
-    return;
+    return false;
 
   post_ = p;
+  return true;
 }
 
-void Processor::setDepth(int depth)
+bool Processor::setDepth(int depth)
 {
   if(is_thinking())
-    return;
+    return false;
 
   xtime_ = NTime::duration(0);
   movesLeft_ = 0;
@@ -52,12 +53,13 @@ void Processor::setDepth(int depth)
   maxDepth_ = depth;
   engine_.setMaxDepth(depth);
   engine_.setTimeLimit(timePerMove_);
+  return true;
 }
 
-void Processor::setTimePerMove(NTime::duration const& tm)
+bool Processor::setTimePerMove(NTime::duration const& tm)
 {
   if(is_thinking())
-    return;
+    return false;
 
   maxDepth_ = -1;
   xtime_ = NTime::duration(0);
@@ -66,41 +68,45 @@ void Processor::setTimePerMove(NTime::duration const& tm)
   timePerMove_ = std::max(tm, minimalTimePerMove_);
   engine_.setTimeLimit(timePerMove_);
   engine_.setMaxDepth(DepthMaximum);
+  return true;
 }
 
-void Processor::setXtime(NTime::duration const& xtm)
+bool Processor::setXtime(NTime::duration const& xtm)
 {
   if(is_thinking())
-    return;
+    return false;
 
   maxDepth_ = -1;
   xtime_ = std::max(xtm, minimalTimePerMove_);
   timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
+  return true;
 }
 
-void Processor::setMovesLeft(int mleft)
+bool Processor::setMovesLeft(int mleft)
 {
   if(is_thinking())
-    return;
+    return false;
 
   maxDepth_ = -1;
   movesLeft_ = mleft;
   movesToGo_ = 0;
   timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
+  return true;
 }
 
-void Processor::setMovesToGo(int mtogo)
+bool Processor::setMovesToGo(int mtogo)
 {
   if(is_thinking())
-    return;
+    return false;
 
   maxDepth_ = -1;
   movesLeft_ = 0;
   movesToGo_ = mtogo;
   timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
+  return true;
 }
 
 
@@ -187,10 +193,10 @@ bool Processor::init()
   return engine_.fromFEN("");
 }
 
-void Processor::analyze()
+bool Processor::analyze()
 {
   if(is_thinking())
-    return;
+    return false;
 
   thinking_ = true;
   engine_.setTimeLimit(NTime::duration(0));
@@ -205,6 +211,7 @@ void Processor::analyze()
   engine_.setTimeLimit(timePerMove_);
   engine_.setMaxDepth(maxDepth_ < 0 ? DepthMaximum : maxDepth_);
   thinking_ = false;
+  return true;
 }
 
 void Processor::stop()
@@ -246,19 +253,20 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
 
   rep.state_ = static_cast<NEngine::Board::State>(board.getState());
   rep.moveStr_ = moveToStr(sres.best_, winboardFormat);
-  if(rep.moveStr_.empty())
-    return boost::none;
-
   return rep;
 }
 
 boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
 {
   if(is_thinking())
+  {
     return boost::none;
+  }
 
   if(moveCmd.type() != xType::xMove)
+  {
     return boost::none;
+  }
 
   ReplyStruct rep;
   auto& board = engine_.getBoard();
@@ -272,10 +280,14 @@ boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
 
   auto move = strToMove(moveCmd.str(), board);
   if(!move)
+  {
     return boost::none;
+  }
 
   if(!board.validateMove(move))
+  {
     return boost::none;
+  }
 
   board.makeMove(move);
   board.verifyState();

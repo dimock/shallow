@@ -27,8 +27,8 @@ private:
   std::string readInput();
 
 #ifdef _MSC_VER
-  HANDLE hinput_;
-  bool   in_pipe_;
+  HANDLE hinput_{};
+  bool   in_pipe_{};
 #elif (defined __GNUC__)
 #endif
 

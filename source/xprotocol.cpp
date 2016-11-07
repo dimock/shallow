@@ -22,7 +22,7 @@ xProtocolMgr::xProtocolMgr() :
   {
     if(auto cmd = cmds_.peek())
     {
-      if(!this->processCmd(cmd))
+      if(!this->swallowCmd(cmd))
       {
         cmds_.push(cmd);
       }
@@ -165,25 +165,14 @@ void xProtocolMgr::uciPosition(const xCmd & cmd)
   for(auto const& mvstr : cmd.moves())
   {
     proc_.makeMove(mvstr);
-
-#ifdef WRITE_LOG_FILE_
-    ofs_log_ << smove << " ";
-#endif
   }
-
-#ifdef WRITE_LOG_FILE_
-  auto fen = proc_.toFEN();
-  ofs_log_ << std::endl;
-  ofs_log_ << "used fen: " << fen << std::endl;
-#endif
 }
 
-void xProtocolMgr::uciGo(const xCmd & cmd)
+bool xProtocolMgr::uciGo(const xCmd & cmd)
 {
   if(cmd.infinite())
   {
-    proc_.analyze();
-    return;
+    return proc_.analyze();
   }
 
   bool const white = proc_.color() == NEngine::Figure::ColorWhite;
@@ -207,7 +196,13 @@ void xProtocolMgr::uciGo(const xCmd & cmd)
 
   if(auto r = proc_.reply(false))
   {
-    os_ << "bestmove " << r->moveStr_ << std::endl;
+    if(!r->moveStr_.empty())
+      os_ << "bestmove " << r->moveStr_ << std::endl;
+    return true;
+  }
+  else
+  {
+    return false;
   }
 }
 
@@ -220,11 +215,11 @@ void xProtocolMgr::printUciStat(NEngine::SearchData const& sdata)
   if(smove.empty())
     return;
 
-  os_ << "info ";
-  os_ << "currmove " << smove << " ";
-  os_ << "currmovenumber " << sdata.counter_+1 << " ";
-  os_ << "nodes " << sdata.totalNodes_ << " ";
-  os_ << "depth " << sdata.depth_ << std::endl;
+  os_ << "info "
+      << "currmove " << smove << " "
+      << "currmovenumber " << sdata.counter_+1 << " "
+      << "nodes " << sdata.totalNodes_ << " "
+      << "depth " << sdata.depth_ << std::endl;
 }
 
 void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
@@ -260,38 +255,38 @@ void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
 
   auto dt = NTime::seconds<double>(sres.dt_) + 0.001;
   int nps = static_cast<int>(sres.totalNodes_ / dt);
+  std::ostringstream oss;
 
-  os_ << "info ";
-
-  os_ << "depth " << sres.depth_ << " ";
-  os_ << "seldepth " << sres.depthMax_ << " ";
+  oss << "info "
+      << "depth " << sres.depth_ << " "
+      << "seldepth " << sres.depthMax_ << " ";
 
   if(sres.score_ >= NEngine::Figure::MatScore-MaxPly)
   {
     int n = (NEngine::Figure::MatScore - sres.score_) / 2;
-    os_ << "score mate " << n << " ";
+    oss << "score mate " << n << " ";
   }
   else if(sres.score_ <= MaxPly-NEngine::Figure::MatScore)
   {
     int n = (-NEngine::Figure::MatScore - sres.score_) / 2;
-    os_ << "score mate " << n << " ";
+    oss << "score mate " << n << " ";
   }
   else
-    os_ << "score cp " << sres.score_ << " ";
+    oss << "score cp " << sres.score_ << " ";
 
-  os_ << "time " << NTime::milli_seconds<int>(sres.dt_) << " ";
-  os_ << "nodes " << sres.totalNodes_ << " ";
-  os_ << "nps " << nps << " ";
+  oss << "time " << NTime::milli_seconds<int>(sres.dt_) << " ";
+  oss << "nodes " << sres.totalNodes_ << " ";
+  oss << "nps " << nps << " ";
 
   if(sres.best_)
   {
-    os_ << "currmove " << moveToStr(sres.best_, false) << " ";
+    oss << "currmove " << moveToStr(sres.best_, false) << " ";
   }
 
-  os_ << "currmovenumber " << sres.counter_+1 << " ";
-  os_ << "pv " << pv_str;
+  oss << "currmovenumber " << sres.counter_+1 << " ";
+  oss << "pv " << pv_str;
 
-  os_ << std::endl;
+  os_ << oss.str() << std::endl;
 }
 
 void xProtocolMgr::printBM(NEngine::SearchResult const& sres)
@@ -312,7 +307,40 @@ bool xProtocolMgr::doCmd()
   return !stop_;
 }
 
-bool xProtocolMgr::processCmd(xCmd const& cmd)
+bool xProtocolMgr::swallowCmd(xCmd const& cmd)
+{
+  bool swallow = false;
+  bool stop    = true;
+  switch(cmd.type())
+  {
+  case xType::xUndo:
+  case xType::xRemove:
+    stop = true;
+    break;
+
+  case xType::xQuit:
+    stop = stop_ = true;
+    swallow = true;
+    break;
+
+  case xType::xGoNow:
+  case xType::xExit:
+    stop = true;
+    swallow = true;
+    break;
+
+  case xType::xLeaveEdit:
+    proc_.editCmd(cmd);
+    stop = false;
+    swallow = true;
+    break;
+  }
+  if(stop)
+    proc_.stop();
+  return swallow;
+}
+
+void xProtocolMgr::processCmd(xCmd const& cmd)
 {
   switch(cmd.type())
   {
@@ -338,7 +366,7 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
 
   case xType::UCInewgame:
   case xType::xNew:
-    return proc_.init();
+    proc_.init();
     break;
 
   case xType::Position:
@@ -380,18 +408,10 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
       auto ok = proc_.fromFEN(cmd);
       if(!ok)
       {
-#ifdef WRITE_LOG_FILE_
-        if(cmd.paramsNum() > 0)
-          ofs_log_ << "invalid FEN given: " << cmd.packParams() << endl;
-        else
-          ofs_log_ << "there is no FEN in setboard command" << endl;
-#endif
         os_ << "tellusererror Illegal position" << std::endl;
-        return false;
       }
-      if(!*ok)
-        return false;
-      fenOk_ = true;
+      else if(*ok)
+        fenOk_ = true;
     }
     break;
 
@@ -413,9 +433,6 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xGoNow:
-    proc_.stop();
-    break;
-
   case xType::xExit:
     proc_.stop();
     break;
@@ -452,12 +469,11 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xUndo:
-    return proc_.undo();
+    proc_.undo();
     break;
 
   case xType::xRemove:
-    if(!proc_.undo())
-      return false;
+    proc_.undo();
     proc_.undo();
     break;
 
@@ -471,12 +487,11 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
       force_ = false;
       if(auto rs = proc_.reply(true))
       {
-#ifdef WRITE_LOG_FILE_
-        ofs_log_ << " " << str << endl;
-#endif
-
-        os_ << rs->moveStr_ << std::endl;
-        outState(rs->state_, rs->white_);
+        if(!rs->moveStr_.empty())
+        {
+          os_ << rs->moveStr_ << std::endl;
+          outState(rs->state_, rs->white_);
+        }
       }
     }
     break;
@@ -484,18 +499,10 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
   case xType::xMove:
     if(!fenOk_)
     {
-#ifdef WRITE_LOG_FILE_
-      ofs_log_ << " illegal move. fen is invalid" << endl;
-#endif
       os_ << "Illegal move" << std::endl;
     }
     else
     {
-#ifdef WRITE_LOG_FILE_
-      if(thk_.is_thinking())
-        ofs_log_ << " can't move - thinking" << endl;
-#endif
-
       if(auto rs = proc_.move(cmd))
       {
         if(NEngine::Board::isDraw(rs->state_) || NEngine::Board::ChessMat & rs->state_)
@@ -514,15 +521,10 @@ bool xProtocolMgr::processCmd(xCmd const& cmd)
       else
       {
         os_ << "Illegal move: " << cmd.str() << std::endl;
-
-#ifdef WRITE_LOG_FILE_
-        ofs_log_ << " Illegal move: " << cmd.str() << endl;
-#endif
       }
     }
     break;
   }
-  return true;
 }
 
 } // NShallow
