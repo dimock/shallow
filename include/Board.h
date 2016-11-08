@@ -31,6 +31,7 @@ namespace NEngine
 
 /*! board representation
   */
+
 class Board
 {
   friend class MovesGeneratorBase;
@@ -60,9 +61,6 @@ public:
     ChessMat = 128
   };
 
-  static int64 ticks_;
-  static int   tcounter_;
-
   /// constants
   enum { NumOfFields = 64, MovesMax = 256, FENsize = 8192, GameLength = 4096 };
 
@@ -77,9 +75,6 @@ public:
   // only for debugging purposes, saves complete board memory dump
   void save(const char * fname) const;
   void load(const char * fname);
-
-  /// init global data
-  void set_undoStack(UndoInfo * undoStack) { g_undoStack = undoStack; }
 
   /// initialize from FEN
   bool fromFEN(std::string const& i_fen);
@@ -752,14 +747,11 @@ private:
   int8  en_passant_{};
 
   /// current state, i.e check, draw, mat, invalid, etc.
-  uint8 state_{State::Invalid};
+  uint8 state_{ State::Invalid };
 
   /// color to make move from this position
   Figure::Color color_{};
 
-  int fiftyMovesCount_{};
-  int halfmovesCounter_{};
-  int movesCounter_{};
   uint8 repsCounter_{};
 
   // castling possibility flag
@@ -772,19 +764,72 @@ private:
   // check
   uint8 checkingNum_{};
 
+  uint8 fiftyMovesCount_{};
+
+  int32 halfmovesCounter_{};
+  int32 movesCounter_{};
+
   union
   {
     uint8  checking_[2];
     uint16 checking_figs_;
   };
 
-  UndoInfo * g_undoStack{};
-
   /// fields array 8 x 8
   Field fields_[NumOfFields];
 
   /// holds number of figures of each color, hash key, masks etc.
   FiguresManager fmgr_;
+
+protected:
+  UndoInfo* g_undoStack{};
+};
+
+template <int STACK_SIZE>
+class SBoard : public Board
+{
+public:
+  SBoard() :
+    Board()
+  {
+    g_undoStack = undoStackIntr_;
+  }
+
+  template <int OTHER_SIZE>
+  SBoard(SBoard<OTHER_SIZE> const& oboard) :
+    Board(oboard)
+  {
+    g_undoStack = undoStackIntr_;
+  }
+
+  template <int OTHER_SIZE>
+  SBoard(SBoard<OTHER_SIZE> const& oboard, bool cpystack) :
+    Board(oboard)
+  {
+    g_undoStack = undoStackIntr_;
+    copyStack(oboard);
+  }
+
+  SBoard(Board const& oboard) :
+    Board(oboard)
+  {
+    g_undoStack = undoStackIntr_;
+    copyStack(oboard);
+  }
+
+  SBoard(Board const& oboard, bool cpystack) :
+    Board(oboard)
+  {
+    g_undoStack = undoStackIntr_;
+  }
+private:
+  void copyStack(Board const& oboard)
+  {
+    for(int i = 0; i < halfmovesCount(); ++i)
+      g_undoStack[i] = oboard.undoInfo(i);
+  }
+
+  UndoInfo undoStackIntr_[STACK_SIZE];
 };
 
 } // NEngine

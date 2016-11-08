@@ -16,14 +16,6 @@ void SearchParams::reset()
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-Engine::SearchContext::SearchContext()
-{
-  board_.set_undoStack(undoStack_.data());
-}
-
-//////////////////////////////////////////////////////////////////////////
 Engine::Engine() :
   stop_(false)
 #ifdef USE_HASH
@@ -74,9 +66,7 @@ bool Engine::fromFEN(std::string const& fen)
 {
   stop_ = false;
 
-  Board tboard(scontexts_[0].board_);
-  UndoInfo tundo[16];
-  tboard.set_undoStack(tundo);
+  SBoard<16> tboard(scontexts_[0].board_);
 
   // verify FEN first
   if(!tboard.fromFEN(fen))

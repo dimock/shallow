@@ -18,9 +18,6 @@ namespace NEngine
 char Board::fen_[FENsize];
 std::string const Board::stdFEN_ = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-int64 Board::ticks_;
-int   Board::tcounter_;
-
 Board::Board()
 {
   clear();
@@ -802,13 +799,9 @@ bool Board::save(const Board & board, std::ostream & os, bool write_prefix)
   else if ( board.drawState() )
     sres = "1/2-1/2";
 
-  Board sboard = board;
-  UndoInfo tempUndo[Board::GameLength];
+  SBoard<Board::GameLength> sboard(board, true);
 
   int num = sboard.halfmovesCount();
-  for (int i = 0; i < num; ++i)
-    tempUndo[i] = board.undoInfo(i);
-  sboard.set_undoStack(tempUndo);
 
   while ( sboard.halfmovesCount() > 0 )
     sboard.unmakeMove();
