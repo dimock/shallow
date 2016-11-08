@@ -39,13 +39,13 @@ void Board::detectCheck(const UndoInfo & undo)
     const BitMask & king_mask = fmgr_.king_mask(color);
     if ( fto.type() == Figure::TypePawn )
     {
-      const BitMask & pw_mask = g_movesTable->pawnCaps_o(ocolor, undo.to_);
+      const BitMask & pw_mask = movesTable().pawnCaps_o(ocolor, undo.to_);
       if ( pw_mask & king_mask )
         checking_[checkingNum_++] = undo.to_;
     }
     else if ( fto.type() == Figure::TypeKnight )
     {
-      const BitMask & kn_mask = g_movesTable->caps(Figure::TypeKnight, undo.to_);
+      const BitMask & kn_mask = movesTable().caps(Figure::TypeKnight, undo.to_);
       if ( kn_mask & king_mask )
         checking_[checkingNum_++] = undo.to_;
     }
@@ -91,26 +91,26 @@ bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_
 
   {
     // knights
-    const BitMask & n_caps = g_movesTable->caps(Figure::TypeKnight, pos);
+    const BitMask & n_caps = movesTable().caps(Figure::TypeKnight, pos);
     const BitMask & knight_msk = fmgr_.knight_mask(c);
     if ( n_caps & knight_msk )
       return true;
 
     // pawns
-    const BitMask & p_caps = g_movesTable->pawnCaps_o(ocolor, pos);
+    const BitMask & p_caps = movesTable().pawnCaps_o(ocolor, pos);
     const BitMask & pawn_msk = fmgr_.pawn_mask_o(c);
     if ( p_caps & pawn_msk )
       return true;
 
     // king
-    const BitMask & k_caps = g_movesTable->caps(Figure::TypeKing, pos);
+    const BitMask & k_caps = movesTable().caps(Figure::TypeKing, pos);
     const BitMask & king_msk = fmgr_.king_mask(c);
     if ( k_caps & king_msk )
       return true;
   }
 
   // all long-range figures
-  const BitMask & q_caps = g_movesTable->caps(Figure::TypeQueen, pos);
+  const BitMask & q_caps = movesTable().caps(Figure::TypeQueen, pos);
   BitMask mask_brq = fmgr_.bishop_mask(c) | fmgr_.rook_mask(c) | fmgr_.queen_mask(c);
   mask_brq &= q_caps;
 
@@ -121,7 +121,7 @@ bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_
     const BitMask & white = fmgr_.mask(Figure::ColorWhite);
 
     // rooks
-    const BitMask & r_caps = g_movesTable->caps(Figure::TypeRook, pos);
+    const BitMask & r_caps = movesTable().caps(Figure::TypeRook, pos);
     BitMask rook_msk = fmgr_.rook_mask(c) & r_caps;
     for ( ; rook_msk; )
     {
@@ -136,7 +136,7 @@ bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_
     }
 
     // bishops
-    const BitMask & b_caps = g_movesTable->caps(Figure::TypeBishop, pos);
+    const BitMask & b_caps = movesTable().caps(Figure::TypeBishop, pos);
     BitMask bishop_msk = fmgr_.bishop_mask(c) & b_caps;
     for ( ; bishop_msk; )
     {
@@ -184,7 +184,7 @@ int Board::findCheckingFigures(Figure::Color ocolor, int ki_pos)
 
         X_ASSERT( field.color() != ocolor || field.type() != type, "invalid figures mask in check detector" );
 
-        int dir = g_figureDir->dir(field.type(), ocolor, n, ki_pos);
+        int dir = figureDir().dir(field.type(), ocolor, n, ki_pos);
         if ( (dir < 0) || (Figure::TypePawn == type && (2 == dir || 3 == dir)) )
           continue;
 
@@ -199,7 +199,7 @@ int Board::findCheckingFigures(Figure::Color ocolor, int ki_pos)
           continue;
         }
 
-        FPos dp = g_deltaPosCounter->getDeltaPos(n, ki_pos);
+        FPos dp = deltaPosCounter().getDeltaPos(n, ki_pos);
 
         X_ASSERT( FPos(0, 0) == dp, "invalid attacked position" );
 

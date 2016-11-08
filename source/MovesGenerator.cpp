@@ -4,6 +4,7 @@
 
 #include <MovesGenerator.h>
 #include <MovesTable.h>
+#include <fstream>
 
 namespace NEngine
 {
@@ -93,7 +94,7 @@ int MovesGenerator::generate()
       {
         int pw_pos = clear_lsb(pw_mask);
 
-        const int8 * table = board_.g_movesTable->pawn(color, pw_pos);
+        const int8 * table = movesTable().pawn(color, pw_pos);
 
         for (int i = 0; i < 2; ++i, ++table)
         {
@@ -174,7 +175,7 @@ int MovesGenerator::generate()
       {
         int kn_pos = clear_lsb(kn_mask);
 
-        const int8 * table = board_.g_movesTable->knight(kn_pos);
+        const int8 * table = movesTable().knight(kn_pos);
 
         for (; *table >= 0; ++table)
         {
@@ -202,7 +203,7 @@ int MovesGenerator::generate()
       {
         int fg_pos = clear_lsb(fg_mask);
 
-        const uint16 * table = board_.g_movesTable->move(type-Figure::TypeBishop, fg_pos);
+        const uint16 * table = movesTable().move(type-Figure::TypeBishop, fg_pos);
 
         for (; *table; ++table)
         {
@@ -240,7 +241,7 @@ int MovesGenerator::generate()
 
     int ki_pos = clear_lsb(ki_mask);
 
-    const int8 * table = board_.g_movesTable->king(ki_pos);
+    const int8 * table = movesTable().king(ki_pos);
 
     for (; *table >= 0; ++table)
     {
@@ -275,26 +276,20 @@ int MovesGenerator::generate()
 //////////////////////////////////////////////////////////////////////////
 void MovesGeneratorBase::save_history(const char * fname)
 {
-  FILE * f = fopen(fname, "wb");
-  if ( !f )
+  std::ofstream ofs(fname, std::ofstream::binary);
+  if(!ofs)
     return;
-  
 //  fwrite(&History::history_max_, sizeof(History::history_max_), 1, f);
-  fwrite((char*)history_, sizeof(History), 64*64, f);
-
-  fclose(f);
+  ofs.write(reinterpret_cast<char*>(history_), sizeof(history_));
 }
 
 void MovesGeneratorBase::load_history(const char * fname)
 {
-  FILE * f = fopen(fname, "rb");
-  if ( !f )
+  std::ifstream ifs(fname, std::ifstream::binary);
+  if(!ifs)
     return;
-
   //fread(&History::history_max_, sizeof(History::history_max_), 1, f);
-  fread((char*)history_, sizeof(History), 64*64, f);
-
-  fclose(f);
+  ifs.read(reinterpret_cast<char*>(history_), sizeof(history_));
 }
 
 } // NEngine

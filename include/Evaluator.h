@@ -204,13 +204,13 @@ private:
   inline void mobility_masks_LSB(int from, BitMask & mob_mask, const BitMask & di_mask) const
   {
     BitMask mask_from = di_mask & mask_all_;
-    mob_mask |= (mask_from) ? board_->g_betweenMasks->between(from, _lsb64(mask_from)) : di_mask;
+    mob_mask |= (mask_from) ? betweenMasks().between(from, _lsb64(mask_from)) : di_mask;
   }
 
   inline void mobility_masks_MSB(int from, BitMask & mob_mask, const BitMask & di_mask) const
   {
     BitMask mask_from = di_mask & mask_all_;
-    mob_mask |= (mask_from) ? board_->g_betweenMasks->between(from, _msb64(mask_from)) : di_mask;
+    mob_mask |= (mask_from) ? betweenMasks().between(from, _msb64(mask_from)) : di_mask;
   }
 
   // used to find pinned figures

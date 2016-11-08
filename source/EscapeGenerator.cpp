@@ -115,7 +115,7 @@ int EscapeGenerator::generateUsual()
     if ( ep_capture )
     {
       int8 ep_pos = board_.enpassantPos();
-      const uint64 & opawn_caps_ep = board_.g_movesTable->pawnCaps_o(ocolor, board_.en_passant_);
+      const uint64 & opawn_caps_ep = movesTable().pawnCaps_o(ocolor, board_.en_passant_);
       uint64 eat_msk_ep = pawn_msk & opawn_caps_ep;
 
       for ( ; eat_msk_ep; )
@@ -137,7 +137,7 @@ int EscapeGenerator::generateUsual()
     }
 
 
-    const uint64 & opawn_caps = board_.g_movesTable->pawnCaps_o(ocolor, ch_pos);
+    const uint64 & opawn_caps = movesTable().pawnCaps_o(ocolor, ch_pos);
     uint64 eat_msk = pawn_msk & opawn_caps;
 
     bool promotion = ch_pos > 55 || ch_pos < 8; // 1st || last line
@@ -155,7 +155,7 @@ int EscapeGenerator::generateUsual()
         add(m, n, ch_pos, promotion ? Figure::TypeQueen : Figure::TypeNone, true);
         if ( promotion )
         {
-          if ( (board_.g_movesTable->caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) )
+          if ( (movesTable().caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) )
             add(m, n, ch_pos, Figure::TypeKnight, true);
         }
       }
@@ -164,7 +164,7 @@ int EscapeGenerator::generateUsual()
 
   // 2nd - knight's captures
   {
-    const uint64 & knight_caps = board_.g_movesTable->caps(Figure::TypeKnight, ch_pos);
+    const uint64 & knight_caps = movesTable().caps(Figure::TypeKnight, ch_pos);
     const uint64 & knight_msk = board_.fmgr_.knight_mask(color);
     uint64 eat_msk = knight_msk & knight_caps;
 
@@ -183,7 +183,7 @@ int EscapeGenerator::generateUsual()
 
   // 3rd - bishops, rooks and queens
   {
-    const uint64 & queen_caps = board_.g_movesTable->caps(Figure::TypeQueen, ch_pos);
+    const uint64 & queen_caps = movesTable().caps(Figure::TypeQueen, ch_pos);
     uint64 brq_msk = board_.fmgr_.bishop_mask(color) | board_.fmgr_.rook_mask(color) | board_.fmgr_.queen_mask(color);
     uint64 eat_msk = brq_msk & queen_caps;
 
@@ -196,11 +196,11 @@ int EscapeGenerator::generateUsual()
       X_ASSERT( !field || field.color() != board_.color_, "no figure on field we are going to do capture from" );
 
       // can fig go to checking figure field
-      int dir = board_.g_figureDir->dir(field.type(), board_.color_, n, ch_pos);
+      int dir = figureDir().dir(field.type(), board_.color_, n, ch_pos);
       if ( dir < 0 )
         continue;
 
-      const uint64 & btw_msk = board_.g_betweenMasks->between(n, ch_pos);
+      const uint64 & btw_msk = betweenMasks().between(n, ch_pos);
       if ( (btw_msk & mask_all_inv) != btw_msk )
         continue;
 
@@ -210,7 +210,7 @@ int EscapeGenerator::generateUsual()
   }
 
   // now try to protect king - put something between it and checking figure
-  const BitMask & protect_king_msk = board_.g_betweenMasks->between(board_.kingPos(color), ch_pos);
+  const BitMask & protect_king_msk = betweenMasks().between(board_.kingPos(color), ch_pos);
 
   if ( protect_king_msk && Figure::TypePawn != ch_type && Figure::TypeKnight != ch_type )
   {
@@ -224,7 +224,7 @@ int EscapeGenerator::generateUsual()
         continue;
 
       // +2 - skip captures
-      const int8 * table = board_.g_movesTable->pawn(color, pw_pos) + 2;
+      const int8 * table = movesTable().pawn(color, pw_pos) + 2;
 
       for (; *table >= 0 && !board_.getField(*table); ++table)
       {
@@ -240,7 +240,7 @@ int EscapeGenerator::generateUsual()
           Move nmove;
           nmove.set(pw_pos, *table, Figure::TypeKnight, false);
 
-          if ( (board_.g_movesTable->caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) && board_.see(nmove) >= 0 )
+          if ( (movesTable().caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) && board_.see(nmove) >= 0 )
             add(m, pw_pos, *table, Figure::TypeKnight, false);
         }
       }
@@ -256,7 +256,7 @@ int EscapeGenerator::generateUsual()
       if ( board_.discoveredCheck(kn_pos, ocolor, mask_all, brq_mask, ki_pos) )
         continue;
 
-      const uint64 & knight_msk = board_.g_movesTable->caps(Figure::TypeKnight, kn_pos);
+      const uint64 & knight_msk = movesTable().caps(Figure::TypeKnight, kn_pos);
       uint64 msk_protect = protect_king_msk & knight_msk;
       for ( ; msk_protect; )
       {
@@ -281,7 +281,7 @@ int EscapeGenerator::generateUsual()
         if ( board_.discoveredCheck(fg_pos, ocolor, mask_all, brq_mask, ki_pos) )
           continue;
 
-        const uint64 & figure_msk = board_.g_movesTable->caps(type, fg_pos);
+        const uint64 & figure_msk = movesTable().caps(type, fg_pos);
         uint64 msk_protect = protect_king_msk & figure_msk;
 
         for ( ; msk_protect; )
@@ -291,9 +291,9 @@ int EscapeGenerator::generateUsual()
           const Field & field = board_.getField(n);
 
           X_ASSERT( field, "there is something between king and checking figure" );
-          X_ASSERT( board_.g_figureDir->dir((Figure::Type)type, color, fg_pos, n) < 0, "figure can't go to required field" );
+          X_ASSERT( figureDir().dir((Figure::Type)type, color, fg_pos, n) < 0, "figure can't go to required field" );
 
-          const uint64 & btw_msk = board_.g_betweenMasks->between(fg_pos, n);
+          const uint64 & btw_msk = betweenMasks().between(fg_pos, n);
           if ( (btw_msk & mask_all_inv) != btw_msk )
             continue;
 
@@ -320,7 +320,7 @@ int EscapeGenerator::generateKingonly(int m)
   const BitMask & o_mask = board_.fmgr_.mask(ocolor);
 
   // captures
-  BitMask ki_mask = board_.g_movesTable->caps(Figure::TypeKing, from) & o_mask;
+  BitMask ki_mask = movesTable().caps(Figure::TypeKing, from) & o_mask;
   for ( ; ki_mask; )
   {
     int to = clear_lsb(ki_mask);
@@ -331,7 +331,7 @@ int EscapeGenerator::generateKingonly(int m)
   }
 
   // other moves
-  ki_mask = board_.g_movesTable->caps(Figure::TypeKing, from) & ~(mask | o_mask);
+  ki_mask = movesTable().caps(Figure::TypeKing, from) & ~(mask | o_mask);
   for ( ; ki_mask; )
   {
     int to = clear_lsb(ki_mask);

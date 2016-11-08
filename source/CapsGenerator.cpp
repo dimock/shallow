@@ -80,7 +80,7 @@ int CapsGenerator::generate()
   const BitMask & pawn_msk = board_.fmgr_.pawn_mask_o(color);
   {
     static int pw_delta[] = { -8, +8 };
-    BitMask promo_msk = board_.g_movesTable->promote_o(color);
+    BitMask promo_msk = movesTable().promote_o(color);
     promo_msk &= pawn_msk;
 
     for ( ; promo_msk; )
@@ -103,7 +103,7 @@ int CapsGenerator::generate()
       add(m, from, to, Figure::TypeQueen, false);
 
       // add promotion to checking knight
-      if ( board_.g_figureDir->dir(Figure::TypeKnight, color, to, oki_pos) >= 0 )
+      if ( figureDir().dir(Figure::TypeKnight, color, to, oki_pos) >= 0 )
         add(m, from, to, Figure::TypeKnight, false);
     }
   }
@@ -133,7 +133,7 @@ int CapsGenerator::generate()
     {
       int pw_pos = clear_lsb(pw_mask);
 
-      BitMask p_caps = board_.g_movesTable->pawnCaps_o(color, pw_pos) & oppenent_mask;
+      BitMask p_caps = movesTable().pawnCaps_o(color, pw_pos) & oppenent_mask;
 
       for ( ; p_caps; )
       {
@@ -152,7 +152,7 @@ int CapsGenerator::generate()
         add(m, pw_pos, to, promotion ? Figure::TypeQueen : Figure::TypeNone, true);
 
         // add promotion to checking knight
-        if ( promotion && board_.g_figureDir->dir(Figure::TypeKnight, color, to, oki_pos) >= 0 )
+        if ( promotion && figureDir().dir(Figure::TypeKnight, color, to, oki_pos) >= 0 )
           add(m, pw_pos, to, Figure::TypeKnight, true);
       }
     }
@@ -160,7 +160,7 @@ int CapsGenerator::generate()
     if ( board_.en_passant_ >= 0 )
     {
       X_ASSERT( board_.getField(board_.enpassantPos()).type() != Figure::TypePawn || board_.getField(board_.enpassantPos()).color() != ocolor, "there is no en passant pawn" );
-      BitMask ep_mask = board_.g_movesTable->pawnCaps_o(ocolor, board_.en_passant_) & board_.fmgr().pawn_mask_o(color);
+      BitMask ep_mask = movesTable().pawnCaps_o(ocolor, board_.en_passant_) & board_.fmgr().pawn_mask_o(color);
 
       for ( ; ep_mask; )
       {
@@ -177,7 +177,7 @@ int CapsGenerator::generate()
     int kn_pos = clear_lsb(kn_mask);
 
     // don't need to verify capture possibility by mask
-    BitMask f_caps = board_.g_movesTable->caps(Figure::TypeKnight, kn_pos) & oppenent_mask;
+    BitMask f_caps = movesTable().caps(Figure::TypeKnight, kn_pos) & oppenent_mask;
     for ( ; f_caps; )
     {
       int to = clear_lsb(f_caps);
@@ -200,7 +200,7 @@ int CapsGenerator::generate()
     {
       int from = clear_lsb(fg_mask);
 
-      BitMask f_caps = board_.g_movesTable->caps((Figure::Type)type, from) & oppenent_mask;
+      BitMask f_caps = movesTable().caps((Figure::Type)type, from) & oppenent_mask;
       for ( ; f_caps; )
       {
         int8 to = _lsb64(f_caps);
@@ -208,7 +208,7 @@ int CapsGenerator::generate()
         if ( set_mask_bit(pos) & oppenent_mask )
           add(m, from, pos, Figure::TypeNone, true);
 
-        f_caps &= ~board_.g_betweenMasks->from(from, to);
+        f_caps &= ~betweenMasks().from(from, to);
       }
     }
   }
@@ -216,7 +216,7 @@ int CapsGenerator::generate()
   // 4. King
   {
     // don't need to verify capture possibility by mask
-    BitMask f_caps = board_.g_movesTable->caps(Figure::TypeKing, ki_pos) & oppenent_mask;
+    BitMask f_caps = movesTable().caps(Figure::TypeKing, ki_pos) & oppenent_mask;
     for ( ; f_caps; )
     {
       int to = clear_lsb(f_caps);
@@ -259,7 +259,7 @@ bool CapsGenerator::expressCheck(Move & move) const
 
   if ( ffield.type() == Figure::TypePawn )
   {
-    const BitMask & pw_caps = board_.g_movesTable->pawnCaps_o(color, move.to_);
+    const BitMask & pw_caps = movesTable().pawnCaps_o(color, move.to_);
     if ( pw_caps & oki_mask )
       return true;
 
@@ -282,7 +282,7 @@ bool CapsGenerator::expressCheck(Move & move) const
 
     if ( move.new_type_ == Figure::TypeQueen )
     {
-      if ( board_.g_figureDir->dir(Figure::TypeQueen, ffield.color(), move.to_, oking_pos_) < 0 )
+      if ( figureDir().dir(Figure::TypeQueen, ffield.color(), move.to_, oking_pos_) < 0 )
         return false;
 
       return board_.is_nothing_between(move.to_, oking_pos_, ~mask_all_);
@@ -293,14 +293,14 @@ bool CapsGenerator::expressCheck(Move & move) const
 
   if ( ffield.type() == Figure::TypeKnight )
   {
-    const BitMask & kn_caps = board_.g_movesTable->caps(Figure::TypeKnight, move.to_);
+    const BitMask & kn_caps = movesTable().caps(Figure::TypeKnight, move.to_);
     return (kn_caps & oki_mask) != 0;
   }
 
   X_ASSERT( ffield.type() < Figure::TypeBishop || ffield.type() > Figure::TypeQueen, "wrong attacking figure type" );
 
   // at the last bishop + rook + queen
-  if ( board_.g_figureDir->dir(ffield.type(), ffield.color(), move.to_, oking_pos_) < 0 )
+  if ( figureDir().dir(ffield.type(), ffield.color(), move.to_, oking_pos_) < 0 )
     return false;
 
   return board_.is_nothing_between(move.to_, oking_pos_, ~mask_all_);

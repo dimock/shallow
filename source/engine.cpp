@@ -20,14 +20,7 @@ void SearchParams::reset()
 //////////////////////////////////////////////////////////////////////////
 Engine::SearchContext::SearchContext()
 {
-  undoStack_ = new UndoInfo[Board::GameLength];
-  board_.set_undoStack(undoStack_);
-}
-
-Engine::SearchContext::~SearchContext()
-{
-  board_.set_undoStack(0);
-  delete[] undoStack_;
+  board_.set_undoStack(undoStack_.data());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -40,12 +33,7 @@ Engine::Engine() :
 {
   setMemory(256);
 
-  g_deltaPosCounter = new DeltaPosCounter;
-  g_betweenMasks = new BetweenMask(g_deltaPosCounter);
-  g_distanceCounter = new DistanceCounter;
-  g_movesTable = new MovesTable;
-  g_figureDir = new FigureDir;
-  g_pawnMasks_ = new PawnMasks;
+  initGlobals();
 
   for(int i = 0; i < sizeof(scontexts_)/sizeof(SearchContext); ++i)
   {
@@ -54,34 +42,7 @@ Engine::Engine() :
 #else
     scontexts_[i].eval_.initialize(&scontexts_[i].board_, 0);
 #endif
-
-    scontexts_[i].board_.set_MovesTable(g_movesTable);
-    scontexts_[i].board_.set_FigureDir(g_figureDir);
-    scontexts_[i].board_.set_DeltaPosCounter(g_deltaPosCounter);
-    scontexts_[i].board_.set_DistanceCounter(g_distanceCounter);
-    scontexts_[i].board_.set_BetweenMask(g_betweenMasks);
-    scontexts_[i].board_.set_PawnMasks(g_pawnMasks_);
   }
-}
-
-Engine::~Engine()
-{
-  for(int i = 0; i < sizeof(scontexts_)/sizeof(SearchContext); ++i)
-  {
-    scontexts_[i].board_.set_MovesTable(0);
-    scontexts_[i].board_.set_FigureDir(0);
-    scontexts_[i].board_.set_DeltaPosCounter(0);
-    scontexts_[i].board_.set_DistanceCounter(0);
-    scontexts_[i].board_.set_BetweenMask(0);
-    scontexts_[i].board_.set_PawnMasks(0);
-  }
-
-  delete g_movesTable;
-  delete g_figureDir;
-  delete g_betweenMasks;
-  delete g_deltaPosCounter;
-  delete g_distanceCounter;
-  delete g_pawnMasks_;
 }
 
 //////////////////////////////////////////////////////////////////////////

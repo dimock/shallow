@@ -8,6 +8,7 @@
 #include <Evaluator.h>
 #include <xindex.h>
 #include <Helpers.h>
+#include <fstream>
 #include <boost/algorithm/string/trim.hpp>
 
 namespace NEngine
@@ -77,7 +78,7 @@ bool Board::isDangerPawn(Move & move) const
   Figure::Color ocolor = Figure::otherColor(color);
 
   // attacking
-  const uint64 & p_caps = g_movesTable->pawnCaps_o(ffrom.color(), move.to_);
+  const uint64 & p_caps = movesTable().pawnCaps_o(ffrom.color(), move.to_);
   const uint64 & o_mask = fmgr_.mask(ocolor);
   if ( p_caps & o_mask )
     return true;
@@ -85,8 +86,8 @@ bool Board::isDangerPawn(Move & move) const
   //// becomes passed
   const uint64 & pmsk = fmgr_.pawn_mask_t(color);
   const uint64 & opmsk = fmgr_.pawn_mask_t(ocolor);
-  const uint64 & passmsk = g_pawnMasks->mask_passed(color, move.to_);
-  const uint64 & blckmsk = g_pawnMasks->mask_blocked(color, move.to_);
+  const uint64 & passmsk = pawnMasks().mask_passed(color, move.to_);
+  const uint64 & blckmsk = pawnMasks().mask_blocked(color, move.to_);
 
   if ( !(opmsk & passmsk) && !(pmsk & blckmsk) )
 		return true;
@@ -112,13 +113,13 @@ bool Board::isDangerQueen(const Move & move) const
   Figure::Color ocolor = Figure::otherColor(color);
 
   int oki_pos = kingPos(ocolor);
-  int dist = g_distanceCounter->getDistance(oki_pos, move.to_);
+  int dist = distanceCounter().getDistance(oki_pos, move.to_);
   if ( dist > 2 )
     return false;
 
   BitMask mask_all = fmgr().mask(Figure::ColorBlack) | fmgr().mask(Figure::ColorWhite);
-  BitMask oki_caps = g_movesTable->caps(Figure::TypeKing, oki_pos);
-  BitMask q_caps = g_movesTable->caps(Figure::TypeQueen, move.to_);
+  BitMask oki_caps = movesTable().caps(Figure::TypeKing, oki_pos);
+  BitMask q_caps = movesTable().caps(Figure::TypeQueen, move.to_);
   BitMask attacked_mask = (oki_caps & q_caps) & ~mask_all;
   BitMask ki_moves = oki_caps & ~(mask_all | attacked_mask);
   int movesN = pop_count(ki_moves);
@@ -138,7 +139,7 @@ bool Board::isKnightFork(const Move & move) const
 	Figure::Color  color = color_;
 	Figure::Color ocolor = Figure::otherColor(color);
 
-	const BitMask & kn_caps = g_movesTable->caps(Figure::TypeKnight, move.to_);
+	const BitMask & kn_caps = movesTable().caps(Figure::TypeKnight, move.to_);
 	BitMask op_mask = fmgr().rook_mask(ocolor) | fmgr().queen_mask(ocolor);
 	op_mask &= kn_caps;
 
@@ -151,7 +152,7 @@ bool Board::isKnightForkAfter(const Move & move) const
 	if ( fto.type() != Figure::TypeKnight )
 		return false;
 
-	const BitMask & kn_caps = g_movesTable->caps(Figure::TypeKnight, move.to_);
+	const BitMask & kn_caps = movesTable().caps(Figure::TypeKnight, move.to_);
 	BitMask op_mask = fmgr().rook_mask(color_) | fmgr().queen_mask(color_);
 	op_mask &= kn_caps;
 
@@ -166,7 +167,7 @@ bool Board::isDoublePawnAttack(const Move & move) const
 
 	Figure::Color ocolor = Figure::otherColor(color_);
 
-	const BitMask & pw_caps = g_movesTable->pawnCaps_o(ocolor, move.to_);
+	const BitMask & pw_caps = movesTable().pawnCaps_o(ocolor, move.to_);
 	BitMask op_mask = fmgr().knight_mask(color_) | fmgr().bishop_mask(color_) | fmgr().rook_mask(color_) | fmgr().queen_mask(color_);
 	op_mask &= pw_caps;
 
@@ -182,7 +183,7 @@ bool Board::isBishopAttack(const Move & move) const
 	Figure::Color  color = color_;
 	Figure::Color ocolor = Figure::otherColor(color);
 
-	const BitMask & bi_caps = g_movesTable->caps(Figure::TypeBishop, move.to_);
+	const BitMask & bi_caps = movesTable().caps(Figure::TypeBishop, move.to_);
 	BitMask op_mask = fmgr().rook_mask(color) | fmgr().queen_mask(color);
 	if ( !(op_mask & bi_caps) )
 		return false;
@@ -208,7 +209,7 @@ bool Board::isBishopAttack(const Move & move) const
 			return true;
 
 		// may be it's pinned
-		BitMask mask_from = g_betweenMasks->from(move.to_, p);
+		BitMask mask_from = betweenMasks().from(move.to_, p);
 		mask_from &= oki_mask;
 		if ( !mask_from )
 			continue;
@@ -933,38 +934,22 @@ void Board::verifyMasks() const
 // only for debugging purposes, saves complete board memory dump
 void Board::save(const char * fname) const
 {
-  FILE * f = fopen(fname, "wb");
-  if ( !f )
+  std::ofstream ofs(fname, std::ofstream::binary);
+  if(!ofs)
     return;
-  fwrite((char*)this, sizeof(*this), 1, f);
-  fwrite((char*)g_undoStack, sizeof(UndoInfo), GameLength, f);
-  fclose(f);
+  ofs.write(reinterpret_cast<char*>(const_cast<Board*>(this)), sizeof(*this));
+  ofs.write(reinterpret_cast<char*>(g_undoStack), sizeof(UndoInfo)*GameLength);
 }
 
 void Board::load(const char * fname)
 {
-  FILE * f = fopen(fname, "rb");
-  if ( !f )
+  std::ifstream ifs(fname, std::ifstream::binary);
+  if(!ifs)
     return;
   UndoInfo * undoStack = g_undoStack;
-  const MovesTable * movesTable = g_movesTable;
-  const FigureDir * figuresDir = g_figureDir;
-  const PawnMasks * pawnMask = g_pawnMasks;
-  const BetweenMask * betweenMask = g_betweenMasks;
-  const DeltaPosCounter * deltaPos = g_deltaPosCounter;
-  const DistanceCounter * distCounter = g_distanceCounter;
-
-  fread((char*)this, sizeof(*this), 1, f);
+  ifs.read(reinterpret_cast<char*>(const_cast<Board*>(this)), sizeof(*this));
   g_undoStack = undoStack;
-  fread((char*)g_undoStack, sizeof(UndoInfo), GameLength, f);
-  fclose(f);
-
-  g_movesTable = movesTable;
-  g_figureDir = figuresDir;
-  g_pawnMasks = pawnMask;
-  g_betweenMasks = betweenMask;
-  g_deltaPosCounter = deltaPos;
-  g_distanceCounter = distCounter;
+  ifs.read(reinterpret_cast<char*>(g_undoStack), sizeof(UndoInfo)*GameLength);
 }
 
 } // NEngine

@@ -1,5 +1,5 @@
 /*************************************************************
-  Board.h - Copyright (C) 2011 - 2012 by Dmitry Sultanov
+  Board.h - Copyright (C) 2016 by Dmitry Sultanov
   *************************************************************/
 #pragma once
 
@@ -8,6 +8,7 @@
 #include <Move.h>
 #include <MovesTable.h>
 #include <FigureDirs.h>
+#include <globals.h>
 
 namespace NEngine
 {
@@ -79,12 +80,6 @@ public:
 
   /// init global data
   void set_undoStack(UndoInfo * undoStack) { g_undoStack = undoStack; }
-  void set_MovesTable(const MovesTable * movesTable) { g_movesTable = movesTable; }
-  void set_FigureDir(const FigureDir * figureDir) { g_figureDir = figureDir; }
-  void set_PawnMasks(const PawnMasks * pawnMasks) { g_pawnMasks = pawnMasks; }
-  void set_BetweenMask(const BetweenMask * betweenMask) { g_betweenMasks = betweenMask; }
-  void set_DeltaPosCounter(const DeltaPosCounter * deltaPosCounter) { g_deltaPosCounter = deltaPosCounter; }
-  void set_DistanceCounter(const DistanceCounter * distanceCounter) { g_distanceCounter = distanceCounter; }
 
   /// initialize from FEN
   bool fromFEN(std::string const& i_fen);
@@ -199,8 +194,8 @@ public:
     Figure::Color ocolor = Figure::otherColor(color_);
     const uint64 & pmsk = fmgr_.pawn_mask_t(ocolor);
     const uint64 & opmsk = fmgr_.pawn_mask_t(color_);
-    const uint64 & passmsk = g_pawnMasks->mask_passed(ocolor, move.to_);
-    const uint64 & blckmsk = g_pawnMasks->mask_blocked(ocolor, move.to_);
+    const uint64 & passmsk = pawnMasks().mask_passed(ocolor, move.to_);
+    const uint64 & blckmsk = pawnMasks().mask_blocked(ocolor, move.to_);
 
     return !(opmsk & passmsk) && !(pmsk & blckmsk);
   }
@@ -209,14 +204,14 @@ public:
   inline bool ptAttackedBy(int8 pt, int p) const
   {
     const Field & field = getField(p);
-    int dir = g_figureDir->dir(field.type(), field.color(), p, pt);
+    int dir = figureDir().dir(field.type(), field.color(), p, pt);
     if(dir < 0)
       return false;
 
     if(field.type() == Figure::TypeKnight)
       return true;
 
-    const uint64 & mask = g_betweenMasks->between(p, pt);
+    const uint64 & mask = betweenMasks().between(p, pt);
     const uint64 & black = fmgr_.mask(Figure::ColorBlack);
     if((~black & mask) != mask)
       return false;
@@ -235,7 +230,7 @@ public:
   {
     BitMask mask_all = fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite);
     BitMask brq_mask = fmgr_.bishop_mask(acolor) | fmgr_.rook_mask(acolor) | fmgr_.queen_mask(acolor);
-    const BitMask & btw_mask = g_betweenMasks->between(pt, from);
+    const BitMask & btw_mask = betweenMasks().between(pt, from);
     brq_mask &= ~btw_mask; // exclude all figures, that are between 'pt' and 'from'
 
     return findDiscovered(from, acolor, mask_all, brq_mask, pt);
@@ -573,7 +568,7 @@ private:
   inline bool see_check(Figure::Color kc, uint8 from, uint8 ki_pos, const BitMask & all_mask_inv, const BitMask & a_brq_mask) const
   {
     // we need to verify if there is some attacker on line to king
-    const BitMask & from_msk = g_betweenMasks->from(ki_pos, from);
+    const BitMask & from_msk = betweenMasks().from(ki_pos, from);
 
     // no attachers at all
     if(!(a_brq_mask & from_msk))
@@ -602,7 +597,7 @@ private:
     X_ASSERT(field.type() < Figure::TypeBishop || field.type() > Figure::TypeQueen, "see: not appropriate attacker type");
 
     // could figure attack king from it's position
-    if(g_figureDir->dir(field.type(), field.color(), index, ki_pos) >= 0)
+    if(figureDir().dir(field.type(), field.color(), index, ki_pos) >= 0)
       return true;
 
     return false;
@@ -655,7 +650,7 @@ private:
   inline bool isAttackedBy(Figure::Color color, const Figure::Color acolor, const Figure::Type type, int from) const
   {
     int king_pos = kingPos(color);
-    int dir = g_figureDir->dir(type, acolor, from, king_pos);
+    int dir = figureDir().dir(type, acolor, from, king_pos);
     if((dir < 0) || (Figure::TypeKing == type && dir > 7))
       return false;
 
@@ -674,7 +669,7 @@ private:
   // mask gives all interesting figures
   inline int find_first_index(int from, int to, const BitMask & mask) const
   {
-    BitMask mask_from = mask & g_betweenMasks->from(from, to);
+    BitMask mask_from = mask & betweenMasks().from(from, to);
     if(!mask_from)
       return -1;
 
@@ -686,7 +681,7 @@ private:
   // inv_mask - inverted mask of all interesting figures
   inline bool is_something_between(int from, int to, const BitMask & inv_mask) const
   {
-    const BitMask & btw_msk = g_betweenMasks->between(from, to);
+    const BitMask & btw_msk = betweenMasks().between(from, to);
     return (btw_msk & inv_mask) != btw_msk;
   }
 
@@ -694,14 +689,14 @@ private:
   // inv_mask - inverted mask of all interesting figures
   inline bool is_nothing_between(int from, int to, const BitMask & inv_mask) const
   {
-    const BitMask & btw_msk = g_betweenMasks->between(from, to);
+    const BitMask & btw_msk = betweenMasks().between(from, to);
     return (btw_msk & inv_mask) == btw_msk;
   }
 
   // acolor - color of attacking side, ki_pos - attacked king pos
   inline bool discoveredCheck(int pt, Figure::Color acolor, const BitMask & mask_all, const BitMask & brq_mask, int ki_pos) const
   {
-    const BitMask & from_msk = g_betweenMasks->from(ki_pos, pt);
+    const BitMask & from_msk = betweenMasks().from(ki_pos, pt);
     BitMask mask_all_ex = mask_all & ~set_mask_bit(pt);
     mask_all_ex &= from_msk;
     if((mask_all_ex & brq_mask) == 0)
@@ -714,7 +709,7 @@ private:
     const Field & afield = getField(apos);
     X_ASSERT(afield.color() != acolor || afield.type() < Figure::TypeBishop || afield.type() > Figure::TypeQueen, "discoveredCheck() - attacking figure isn't BRQ");
 
-    int dir = g_figureDir->dir(afield.type(), afield.color(), apos, ki_pos);
+    int dir = figureDir().dir(afield.type(), afield.color(), apos, ki_pos);
     return dir >= 0;
   }
 
@@ -722,7 +717,7 @@ private:
   /// mask_all is completely prepared, all figures are on their places
   inline int findDiscovered(int from, Figure::Color acolor, const BitMask & mask_all, const BitMask & brq_mask, int ki_pos) const
   {
-    const BitMask & from_msk = g_betweenMasks->from(ki_pos, from);
+    const BitMask & from_msk = betweenMasks().from(ki_pos, from);
     BitMask mask_all_ex = mask_all & from_msk;
     if((mask_all_ex & brq_mask) == 0)
       return -1;
@@ -734,7 +729,7 @@ private:
     const Field & afield = getField(apos);
     X_ASSERT(afield.color() != acolor || afield.type() < Figure::TypeBishop || afield.type() > Figure::TypeQueen, "findDiscovered() - attacking figure isn't BRQ")
 
-      int dir = g_figureDir->dir(afield.type(), afield.color(), apos, ki_pos);
+      int dir = figureDir().dir(afield.type(), afield.color(), apos, ki_pos);
     if(dir < 0)
       return -1;
 
@@ -762,12 +757,6 @@ private:
   /// color to make move from this position
   Figure::Color color_{};
 
-  /// holds number of figures of each color, hash key, masks etc.
-  FiguresManager fmgr_;
-
-  /// fields array 8 x 8
-  Field fields_[NumOfFields];
-
   int fiftyMovesCount_{};
   int halfmovesCounter_{};
   int movesCounter_{};
@@ -790,12 +779,12 @@ private:
   };
 
   UndoInfo * g_undoStack{};
-  const MovesTable * g_movesTable{};
-  const FigureDir * g_figureDir{};
-  const PawnMasks * g_pawnMasks{};
-  const BetweenMask * g_betweenMasks{};
-  const DeltaPosCounter * g_deltaPosCounter{};
-  const DistanceCounter * g_distanceCounter{};
+
+  /// fields array 8 x 8
+  Field fields_[NumOfFields];
+
+  /// holds number of figures of each color, hash key, masks etc.
+  FiguresManager fmgr_;
 };
 
 } // NEngine

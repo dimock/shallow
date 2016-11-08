@@ -315,7 +315,7 @@ class BetweenMask
 
 public:
 
-  BetweenMask(DeltaPosCounter *);
+  BetweenMask(DeltaPosCounter const&);
 
   // mask contains only bits BETWEEN from & to
   inline const BitMask & between(int8 from, int8 to) const

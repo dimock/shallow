@@ -103,7 +103,7 @@ int Board::see(const Move & move) const
     int & num = figsN[c];
 
     // pawns
-    uint64 pmask = fmgr_.pawn_mask_o((Figure::Color)c) & g_movesTable->pawnCaps_o(Figure::otherColor((Figure::Color)c), move.to_);
+    uint64 pmask = fmgr_.pawn_mask_o((Figure::Color)c) & movesTable().pawnCaps_o(Figure::otherColor((Figure::Color)c), move.to_);
     for ( ; pmask; )
     {
       int n = clear_lsb(pmask);
@@ -125,7 +125,7 @@ int Board::see(const Move & move) const
     }
 
     // knights
-    uint64 nmask = fmgr_.knight_mask((Figure::Color)c) & g_movesTable->caps(Figure::TypeKnight, move.to_);
+    uint64 nmask = fmgr_.knight_mask((Figure::Color)c) & movesTable().caps(Figure::TypeKnight, move.to_);
     for ( ; nmask; )
     {
       int n = clear_lsb(nmask);
@@ -147,7 +147,7 @@ int Board::see(const Move & move) const
     }
 
     // bishops
-    uint64 bmask = fmgr_.bishop_mask((Figure::Color)c) & g_movesTable->caps(Figure::TypeBishop, move.to_);
+    uint64 bmask = fmgr_.bishop_mask((Figure::Color)c) & movesTable().caps(Figure::TypeBishop, move.to_);
     for ( ; bmask; )
     {
       int n = clear_lsb(bmask);
@@ -172,7 +172,7 @@ int Board::see(const Move & move) const
     }
 
     // rooks
-    uint64 rmask = fmgr_.rook_mask((Figure::Color)c) & g_movesTable->caps(Figure::TypeRook, move.to_);
+    uint64 rmask = fmgr_.rook_mask((Figure::Color)c) & movesTable().caps(Figure::TypeRook, move.to_);
     for ( ; rmask; )
     {
       int n = clear_lsb(rmask);
@@ -197,7 +197,7 @@ int Board::see(const Move & move) const
     }
 
     // queens
-    uint64 qmask = fmgr_.queen_mask((Figure::Color)c) & g_movesTable->caps(Figure::TypeQueen, move.to_);
+    uint64 qmask = fmgr_.queen_mask((Figure::Color)c) & movesTable().caps(Figure::TypeQueen, move.to_);
     for ( ; qmask; )
     {
       int n = clear_lsb(qmask);
@@ -206,7 +206,7 @@ int Board::see(const Move & move) const
     }
 
     // king
-    BitMask kmask = fmgr_.king_mask((Figure::Color)c) & g_movesTable->caps(Figure::TypeKing, move.to_);
+    BitMask kmask = fmgr_.king_mask((Figure::Color)c) & movesTable().caps(Figure::TypeKing, move.to_);
     if ( kmask )
     {
       // save kings positions

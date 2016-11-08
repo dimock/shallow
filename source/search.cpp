@@ -411,7 +411,11 @@ ScoreType Engine::alphaBetta0()
   {
     // full sort only on first iterations
     if(bDoSort)
-      std::sort(scontexts_[0].moves_, scontexts_[0].moves_ + sdata_.numOfMoves_);
+    {
+      auto iter = scontexts_[0].moves_.begin();
+      std::advance(iter, sdata_.numOfMoves_);
+      std::sort(scontexts_[0].moves_.begin(), iter);
+    }
     //// then sort all moves but 1st
     //else if ( sdata_.numOfMoves_ > 2 )
     //  std::sort(scontexts_[0].moves_+1, scontexts_[0].moves_ + sdata_.numOfMoves_);

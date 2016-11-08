@@ -7,6 +7,7 @@ engine.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <Evaluator.h>
 #include <xcallback.h>
 #include <queue>
+#include <array>
 
 namespace NEngine
 {
@@ -66,7 +67,6 @@ public:
 
   // initialize global arrays, tables, masks, etc. write them to it's board_
   Engine();
-  ~Engine();
 
   void clearHash();
 
@@ -137,13 +137,12 @@ private:
   struct SearchContext
   {
     SearchContext();
-    ~SearchContext();
 
-    UndoInfo * undoStack_;
+    Board     board_;
     Evaluator eval_;
-    Board board_;
-    PlyStack plystack_[MaxPly+1];
-    Move moves_[Board::MovesMax];
+    std::array<PlyStack, MaxPly+4>    plystack_;
+    std::array<Move, Board::MovesMax> moves_;
+    std::array<UndoInfo, Board::GameLength> undoStack_;
   };
 
   // will be used in multi-threading mode???
@@ -152,13 +151,6 @@ private:
   SearchData sdata_;
   SearchParams sparams_;
 
-  // global data
-  MovesTable * g_movesTable;
-  FigureDir  * g_figureDir;
-  PawnMasks  * g_pawnMasks_;
-  BetweenMask * g_betweenMasks;
-  DeltaPosCounter * g_deltaPosCounter;
-  DistanceCounter * g_distanceCounter;
 
 #ifdef USE_HASH
   GHashTable hash_;

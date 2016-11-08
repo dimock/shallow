@@ -76,7 +76,7 @@ void Engine::verifyEscapeGen(int ictx, const Move & hmove)
         continue;
 
       int ki_pos = scontexts_[ictx].board_.kingPos(Figure::otherColor(scontexts_[ictx].board_.getColor()));
-      int dir = scontexts_[ictx].board_.g_figureDir->dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
+      int dir = scontexts_[ictx].figureDir().dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
       if ( dir < 0 )
         continue;
 
@@ -106,7 +106,7 @@ void Engine::verifyEscapeGen(int ictx, const Move & hmove)
             continue;
 
           int ki_pos = scontexts_[ictx].board_.kingPos(Figure::otherColor(scontexts_[ictx].board_.getColor()));
-          int dir = scontexts_[ictx].board_.g_figureDir->dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
+          int dir = scontexts_[ictx].figureDir().dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
           if ( dir < 0 )
             continue;
 
@@ -339,7 +339,7 @@ void Engine::verifyCapsGenerator(int ictx)
     
     if ( move.new_type_ == Figure::TypeKnight )
     {
-      if ( scontexts_[ictx].board_.g_movesTable->caps(Figure::TypeKnight, move.to_) & scontexts_[ictx].board_.fmgr().king_mask(ocolor) )
+      if ( scontexts_[ictx].movesTable().caps(Figure::TypeKnight, move.to_) & scontexts_[ictx].board_.fmgr().king_mask(ocolor) )
         legal[n++] = move;
     }
   }
@@ -451,7 +451,7 @@ void Engine::verifyFastGenerator(int ictx, const Move & hmove, const Move & kill
         continue;
 
       int ki_pos = scontexts_[ictx].board_.kingPos(Figure::otherColor(scontexts_[ictx].board_.getColor()));
-      int dir = scontexts_[ictx].board_.g_figureDir->dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
+      int dir = scontexts_[ictx].figureDir().dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
       if ( dir < 0 )
         continue;
     }
@@ -577,7 +577,7 @@ void Engine::verifyTacticalGenerator(int ictx)
     if ( move.new_type_ == Figure::TypeKnight )
     {
       int ki_pos = scontexts_[ictx].board_.kingPos(Figure::otherColor(scontexts_[ictx].board_.getColor()));
-      int dir = scontexts_[ictx].board_.g_figureDir->dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
+      int dir = scontexts_[ictx].figureDir().dir(Figure::TypeKnight, scontexts_[ictx].board_.color_, move.to_, ki_pos);
       if ( dir < 0 )
         continue;
     }

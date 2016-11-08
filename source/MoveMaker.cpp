@@ -28,7 +28,7 @@ bool Board::possibleMove(const Move & move) const
   if ( ffrom.type() != Figure::TypePawn && move.new_type_ > 0 )
     return false;
 
-  int dir = g_figureDir->dir(ffrom.type(), color_, move.from_, move.to_);
+  int dir = figureDir().dir(ffrom.type(), color_, move.from_, move.to_);
   if ( dir < 0 )
     return false;
 
@@ -80,7 +80,7 @@ bool Board::possibleMove(const Move & move) const
   case Figure::TypeRook:
   case Figure::TypeQueen:
     {
-      const BitMask & mask  = g_betweenMasks->between(move.from_, move.to_);
+      const BitMask & mask  = betweenMasks().between(move.from_, move.to_);
       const BitMask & black = fmgr_.mask(Figure::ColorBlack);
       const BitMask & white = fmgr_.mask(Figure::ColorWhite);
 
@@ -181,7 +181,7 @@ bool Board::validateMove(const Move & move) const
           return false;
 
         int ki_pos = kingPos(color_);
-        const BitMask & protect_king_msk = g_betweenMasks->between(ki_pos, checking_[0]);
+        const BitMask & protect_king_msk = betweenMasks().between(ki_pos, checking_[0]);
         if ( (protect_king_msk & set_mask_bit(move.to_)) == 0 )
           return false;
 
@@ -415,7 +415,7 @@ void Board::makeMove(const Move & mv)
   // en-passant
   if ( Figure::TypePawn == ffrom.type() )
   {
-    int dir = g_figureDir->dir(ffrom.type(), ffrom.color(), undo.from_, undo.to_);
+    int dir = figureDir().dir(ffrom.type(), ffrom.color(), undo.from_, undo.to_);
     if ( 3 == dir )
     {
       en_passant_ = (undo.to_ + undo.from_) >> 1;
@@ -819,7 +819,7 @@ bool Board::validateValidator(const Move & mv)
   // en-passant
   if ( Figure::TypePawn == ffrom.type() )
   {
-    int dir = g_figureDir->dir(ffrom.type(), ffrom.color(), undo.from_, undo.to_);
+    int dir = figureDir().dir(ffrom.type(), ffrom.color(), undo.from_, undo.to_);
     if ( 3 == dir )
     {
       en_passant_ = (undo.to_ + undo.from_) >> 1;

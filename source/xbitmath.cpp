@@ -186,7 +186,7 @@ DeltaPosCounter::DeltaPosCounter()
 }
 
 //////////////////////////////////////////////////////////////////////////
-BetweenMask::BetweenMask(DeltaPosCounter * deltaPoscounter)
+BetweenMask::BetweenMask(DeltaPosCounter const& deltaPoscounter)
 {
   for(int i = 0; i < 64; ++i)
   {
@@ -197,7 +197,7 @@ BetweenMask::BetweenMask(DeltaPosCounter * deltaPoscounter)
       s_from_[i][j] = 0;
 
       ///  to <- from
-      FPos dp = deltaPoscounter->getDeltaPos(j, i);
+      FPos dp = deltaPoscounter.getDeltaPos(j, i);
       if(FPos(0, 0) == dp)
         continue;
 

@@ -33,13 +33,20 @@ public:
 
   inline void clear()
   {
-    *reinterpret_cast<uint8*>(this) = 0;
+    val_ = 0;
   }
 
 private:
 
-  uint8 color_ : 1,
-        type_  : 3;
+  union
+  {
+    struct
+    {
+      uint8 color_ : 1,
+            type_ : 3;
+    };
+    uint8 val_{};
+  };
 };
 
 #pragma pack (pop)

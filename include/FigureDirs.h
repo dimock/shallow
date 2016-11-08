@@ -1,5 +1,5 @@
 /*************************************************************
-  FigureDirs.h - Copyright (C) 2011 - 2012 by Dmitry Sultanov
+  FigureDirs.h - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 #pragma once
 

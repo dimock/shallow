@@ -40,7 +40,7 @@ int ChecksGenerator::genChecks()
   int oki_pos = board_.kingPos(ocolor);
 
   BitMask brq_mask = board_.fmgr_.bishop_mask(board_.color_) | board_.fmgr_.rook_mask(board_.color_) | board_.fmgr_.queen_mask(board_.color_);
-  const BitMask & knight_check_mask = board_.g_movesTable->caps(Figure::TypeKnight, oki_pos);
+  const BitMask & knight_check_mask = movesTable().caps(Figure::TypeKnight, oki_pos);
   const BitMask & black = board_.fmgr_.mask(Figure::ColorBlack);
   const BitMask & white = board_.fmgr_.mask(Figure::ColorWhite);
   BitMask mask_all = white | black;
@@ -53,11 +53,11 @@ int ChecksGenerator::genChecks()
     // figure opens line between attacker and king
     bool discovered = board_.discoveredCheck(ki_pos, color, mask_all, brq_mask, oki_pos);
 
-    const BitMask & from_mask = board_.g_betweenMasks->from(oki_pos, ki_pos);
+    const BitMask & from_mask = betweenMasks().from(oki_pos, ki_pos);
 
     if ( discovered )
     {
-      const int8 * table = board_.g_movesTable->king(ki_pos);
+      const int8 * table = movesTable().king(ki_pos);
 
       for (; *table >= 0; ++table)
       {
@@ -82,8 +82,8 @@ int ChecksGenerator::genChecks()
       const Field & rfield = board_.getField(r_pos);
       X_ASSERT( rfield.type() != Figure::TypeRook || rfield.color() != board_.color_, "no rook for castling, but castle is possible" );
       int r_pos_to = r_pos - 2;
-      BitMask rk_mask = board_.g_betweenMasks->between(r_pos_to, oki_pos);
-      if ( board_.g_figureDir->dir(Figure::TypeRook, board_.color_, r_pos_to, oki_pos) >= 0 && (rk_mask & all_but_king_mask) == rk_mask )
+      BitMask rk_mask = betweenMasks().between(r_pos_to, oki_pos);
+      if ( figureDir().dir(Figure::TypeRook, board_.color_, r_pos_to, oki_pos) >= 0 && (rk_mask & all_but_king_mask) == rk_mask )
       {
         add(m, ki_pos, ki_pos+2, Figure::TypeNone, discovered);
       }
@@ -97,8 +97,8 @@ int ChecksGenerator::genChecks()
       const Field & rfield = board_.getField(r_pos);
       X_ASSERT( rfield.type() != Figure::TypeRook || rfield.color() != board_.color_, "no rook for castling, but castle is possible" );
       int r_pos_to = r_pos + 3;
-      BitMask rk_mask = board_.g_betweenMasks->between(r_pos_to, oki_pos);
-      if ( board_.g_figureDir->dir(Figure::TypeRook, board_.color_, r_pos_to, oki_pos) >= 0 && (rk_mask & all_but_king_mask) == rk_mask )
+      BitMask rk_mask = betweenMasks().between(r_pos_to, oki_pos);
+      if ( figureDir().dir(Figure::TypeRook, board_.color_, r_pos_to, oki_pos) >= 0 && (rk_mask & all_but_king_mask) == rk_mask )
         add(m, ki_pos, ki_pos-2, Figure::TypeNone, discovered);
     }
   }
@@ -120,7 +120,7 @@ int ChecksGenerator::genChecks()
 
         if ( discovered )
         {
-          const uint16 * table = board_.g_movesTable->move(type-Figure::TypeBishop, fg_pos);
+          const uint16 * table = movesTable().move(type-Figure::TypeBishop, fg_pos);
 
           for (; *table; ++table)
           {
@@ -147,7 +147,7 @@ int ChecksGenerator::genChecks()
         else
         {
           BitMask mask_all_inv_ex = ~(mask_all & ~set_mask_bit(fg_pos));
-          BitMask f_msk = board_.g_movesTable->caps(type, fg_pos) & board_.g_movesTable->caps(type, oki_pos);
+          BitMask f_msk = movesTable().caps(type, fg_pos) & movesTable().caps(type, oki_pos);
           f_msk &= ~mask_all;
 
           for ( ; f_msk; )
@@ -180,7 +180,7 @@ int ChecksGenerator::genChecks()
 
       bool discovered = board_.discoveredCheck(kn_pos, color, mask_all, brq_mask, oki_pos);
 
-      BitMask kn_msk = board_.g_movesTable->caps(Figure::TypeKnight, kn_pos) & ~mask_all;
+      BitMask kn_msk = movesTable().caps(Figure::TypeKnight, kn_pos) & ~mask_all;
       if ( !discovered )
         kn_msk &= knight_check_mask;
 
@@ -196,7 +196,7 @@ int ChecksGenerator::genChecks()
   // 4. Pawn
   {
     // 1st find immediate checks with or without capture
-    BitMask pw_check_mask = board_.g_movesTable->pawnCaps_o(ocolor, oki_pos);
+    BitMask pw_check_mask = movesTable().pawnCaps_o(ocolor, oki_pos);
     BitMask looked_up = 0;
 
     for ( ; pw_check_mask; )
@@ -209,7 +209,7 @@ int ChecksGenerator::genChecks()
       // usual moves
       {
         BitMask inv_mask_all = ~mask_all;
-        BitMask pw_from = board_.g_movesTable->pawnFrom(color, to) & board_.fmgr().pawn_mask_o(color);
+        BitMask pw_from = movesTable().pawnFrom(color, to) & board_.fmgr().pawn_mask_o(color);
         looked_up |= pw_from;
 
         for ( ; pw_from; )
@@ -225,7 +225,7 @@ int ChecksGenerator::genChecks()
 
     // discovered checks
     {
-      BitMask disc_mask = board_.g_movesTable->caps(Figure::TypeQueen, oki_pos) & board_.fmgr().pawn_mask_o(color);
+      BitMask disc_mask = movesTable().caps(Figure::TypeQueen, oki_pos) & board_.fmgr().pawn_mask_o(color);
       disc_mask &= ~looked_up;
 
       for ( ; disc_mask; )
@@ -236,8 +236,8 @@ int ChecksGenerator::genChecks()
           continue;
 
         // usual moves
-        const BitMask & from_oki_mask = board_.g_betweenMasks->from(oki_pos, from);
-        const int8 * table = board_.g_movesTable->pawn(board_.color_, from) + 2;
+        const BitMask & from_oki_mask = betweenMasks().from(oki_pos, from);
+        const int8 * table = movesTable().pawn(board_.color_, from) + 2;
 
         for ( ; *table >= 0 && !board_.getField(*table); ++table)
         {
