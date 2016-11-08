@@ -8,13 +8,48 @@ Board.h - Copyright (C) 2016 by Dmitry Sultanov
 
 namespace NEngine
 {
-  void initGlobals();
 
-  MovesTable      const& movesTable();
-  FigureDir       const& figureDir();
-  PawnMasks       const& pawnMasks();
-  BetweenMask     const& betweenMasks();
-  DeltaPosCounter const& deltaPosCounter();
-  DistanceCounter const& distanceCounter();
+namespace details
+{
+  extern DeltaPosCounter const* g_deltaPosCounter_;
+  extern BetweenMask const*     g_betweenMasks_;
+  extern DistanceCounter const* g_distanceCounter_;
+  extern MovesTable const*      g_movesTable_;
+  extern FigureDir const*       g_figureDir_;
+  extern PawnMasks const*       g_pawnMasks_;
+}
+
+void initGlobals();
+
+
+inline MovesTable const& movesTable()
+{
+  return *details::g_movesTable_;
+}
+
+inline FigureDir const& figureDir()
+{
+  return *details::g_figureDir_;
+}
+
+inline PawnMasks const& pawnMasks()
+{
+  return *details::g_pawnMasks_;
+}
+
+inline BetweenMask const& betweenMasks()
+{
+  return *details::g_betweenMasks_;
+}
+
+inline DeltaPosCounter const& deltaPosCounter()
+{
+  return *details::g_deltaPosCounter_;
+}
+
+inline DistanceCounter const& distanceCounter()
+{
+  return *details::g_distanceCounter_;
+}
 
 } // NEngine

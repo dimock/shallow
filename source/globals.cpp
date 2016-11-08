@@ -8,8 +8,19 @@ Board.h - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
+namespace details
+{
+  DeltaPosCounter const* g_deltaPosCounter_{};
+  BetweenMask const*     g_betweenMasks_{};
+  DistanceCounter const* g_distanceCounter_{};
+  MovesTable const*      g_movesTable_{};
+  FigureDir const*       g_figureDir_{};
+  PawnMasks const*       g_pawnMasks_{};
+}
+
 namespace
 {
+
 class Globals
 {
   std::unique_ptr<DeltaPosCounter> deltaPosCounter_;
@@ -28,36 +39,13 @@ public:
     movesTable_      = std::unique_ptr<MovesTable>(new MovesTable);
     figureDir_       = std::unique_ptr<FigureDir>(new FigureDir);
     pawnMasks_       = std::unique_ptr<PawnMasks>(new PawnMasks);
-  }
 
-  MovesTable const& movesTable()
-  {
-    return *movesTable_;
-  }
-
-  FigureDir const& figureDir()
-  {
-    return *figureDir_;
-  }
-
-  PawnMasks const& pawnMasks()
-  {
-    return *pawnMasks_;
-  }
-
-  BetweenMask const& betweenMasks()
-  {
-    return *betweenMasks_;
-  }
-
-  DeltaPosCounter const& deltaPosCounter()
-  {
-    return *deltaPosCounter_;
-  }
-
-  DistanceCounter const& distanceCounter()
-  {
-    return *distanceCounter_;
+    details::g_deltaPosCounter_ = deltaPosCounter_.get();
+    details::g_betweenMasks_ = betweenMasks_.get();
+    details::g_distanceCounter_ = distanceCounter_.get();
+    details::g_movesTable_ = movesTable_.get();
+    details::g_figureDir_ = figureDir_.get();
+    details::g_pawnMasks_ = pawnMasks_.get();
   }
 };
 
@@ -71,36 +59,6 @@ void initGlobals()
   {
     globals_ = std::unique_ptr<Globals>(new Globals);
   }
-}
-
-MovesTable const& movesTable()
-{
-  return globals_->movesTable();
-}
-
-FigureDir const& figureDir()
-{
-  return globals_->figureDir();
-}
-
-PawnMasks const& pawnMasks()
-{
-  return globals_->pawnMasks();
-}
-
-BetweenMask const& betweenMasks()
-{
-  return globals_->betweenMasks();
-}
-
-DeltaPosCounter const& deltaPosCounter()
-{
-  return globals_->deltaPosCounter();
-}
-
-DistanceCounter const& distanceCounter()
-{
-  return globals_->distanceCounter();
 }
 
 } // NEngine
