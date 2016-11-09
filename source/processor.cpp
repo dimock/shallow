@@ -12,6 +12,7 @@
 #include <Helpers.h>
 #include <xindex.h>
 #include <algorithm>
+#include <boost/algorithm/string.hpp>
 
 namespace NShallow
 {
@@ -443,7 +444,8 @@ void Processor::setFigure(xCmd const& cmd)
   if(cmd.str().size() < 3)
     return;
 
-  char str[16];
+  std::string str = cmd.str();
+  boost::algorithm::to_lower(str);
 
   int x = str[1] - 'a';
   if(x < 0 || x > 7)

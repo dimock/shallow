@@ -383,10 +383,6 @@ Move strToMove(std::string const& str, const Board & board)
   if(str.size() < 4)
     return Move{ 0 };
 
-  //char str[256];
-  //strncpy(str, i_str, sizeof(str));
-  //_strlwr(str);
-
   Move move{ 0 };
 
   Figure::Color color = board.getColor();
