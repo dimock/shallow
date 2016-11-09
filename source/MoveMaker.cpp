@@ -107,7 +107,6 @@ bool Board::validateMove(const Move & move) const
     return true;
 
   const Field & ffrom = getField(move.from_);
-  const Field & fto   = getField(move.to_);
 
   Figure::Color ocolor = Figure::otherColor(color_);
 

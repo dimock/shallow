@@ -257,8 +257,6 @@ void MovesTable::initBishops(int pos)
       continue;
 
     s_tableOther_[Figure::TypeBishop-Figure::TypeBishop][pos][j++] = (d.delta() << 8) | (n);
-
-    int poffset = (p + d).index();
   }
 }
 
@@ -282,8 +280,6 @@ void MovesTable::initRooks(int pos)
       continue;
 
     s_tableOther_[Figure::TypeRook-Figure::TypeBishop][pos][j++] = (d.delta() << 8) | (n);
-
-    int poffset = (p + d).index();
   }
 }
 

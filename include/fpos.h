@@ -12,16 +12,16 @@ namespace NEngine
 #pragma pack (push, 1)
 class FPos
 {
-  int x_, y_;
+  int8 x_, y_;
 
 public:
 
-  FPos(int idx) { x_ = idx & 7; y_ = idx >> 3; }
-  FPos(int x, int y) : x_(x), y_(y) {}
+  FPos(int idx) { x_ = static_cast<int8>(idx & 7); y_ = static_cast<int8>(idx >> 3); }
+  FPos(int x, int y) : x_(static_cast<int8>(x)), y_(static_cast<int8>(y)) {}
   FPos() : x_(0), y_(0) {}
 
-  int x() const { return x_; }
-  int y() const { return y_; }
+  int8 x() const { return x_; }
+  int8 y() const { return y_; }
 
   FPos & operator += (const FPos & p)
   {
@@ -81,7 +81,7 @@ public:
 
   bool is_white() const
   {
-    return (x_ + y_) & 1;
+    return ((x_ + y_) & 1) != 0;
   }
 };
 

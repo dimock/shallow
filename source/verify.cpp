@@ -654,7 +654,7 @@ void Engine::verifyTacticalGenerator(int ictx)
 }
 #endif
 
-void Engine::verifyGenerators(int ictx, const Move & hmove)
+void Engine::verifyGenerators(int /*ictx*/, const Move & /*hmove*/)
 {
 
 #ifdef VERIFY_ESCAPE_GENERATOR
@@ -685,13 +685,13 @@ void Engine::enumerate()
   enumerate(sdata_.depth_);
 }
 
-void Engine::enumerate(int depth)
+void Engine::enumerate(int /*depth*/)
 {
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// for DEBUG
-void Engine::findSequence(int ictx, const Move & move, int ply, int depth, int counter, ScoreType alpha, ScoreType betta) const
+void Engine::findSequence(int ictx, const Move & move, int ply, int depth, int /*counter*/, ScoreType /*alpha*/, ScoreType /*betta*/) const
 {
   struct MOVE { int from_, to_; };
   bool identical = false;
@@ -717,21 +717,21 @@ void Engine::findSequence(int ictx, const Move & move, int ply, int depth, int c
       }
     }
 
-    if ( identical )
-    {
-      if ( sdata_.depth_ == 5*ONE_PLY && ply == 1 )
-      {
-        int ttt = 0;
-      }
-      //std::stringstream sstm;
-      //Board::save(scontexts_[ictx].board_, sstm, false);
-      //std::ofstream ofs("D:\\Projects\\git_tests\\temp\\report.txt", std::ios_base::app);
-      //ofs << "PLY: " << ply << std::endl;
-      //std::string s = sstm.str();
-      //ofs << s;
-      //ofs << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = " << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;
-      //ofs << "===================================================================" << std::endl << std::endl;
-    }
+    //if ( identical )
+    //{
+    //  if ( sdata_.depth_ == 5*ONE_PLY && ply == 1 )
+    //  {
+    //    int ttt = 0;
+    //  }
+    //  //std::stringstream sstm;
+    //  //Board::save(scontexts_[ictx].board_, sstm, false);
+    //  //std::ofstream ofs("D:\\Projects\\git_tests\\temp\\report.txt", std::ios_base::app);
+    //  //ofs << "PLY: " << ply << std::endl;
+    //  //std::string s = sstm.str();
+    //  //ofs << s;
+    //  //ofs << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = " << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;
+    //  //ofs << "===================================================================" << std::endl << std::endl;
+    //}
 }
 
 } // NEngine

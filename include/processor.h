@@ -6,7 +6,6 @@
 #include <engine.h>
 #include <xcommand.h>
 #include <xtime.h>
-#include <cstdint>
 #include <boost/optional.hpp>
 
 #undef  WRITE_LOG_FILE_

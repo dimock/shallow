@@ -38,7 +38,6 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
 
   const Figure::Color & color = board_.color_;
   const Figure::Color ocolor = Figure::otherColor(color);
-  const BitMask & omask = board_.fmgr_.mask(ocolor);
   BitMask mask_all_inv = ~(board_.fmgr_.mask(Figure::ColorWhite) | board_.fmgr_.mask(Figure::ColorBlack));
 
   // pawns movements
@@ -98,7 +97,6 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
         int8 delta = packed[1];
 
         int8 p = fg_pos;
-        bool capture = false;
         for ( ; count; --count)
         {
           p += delta;

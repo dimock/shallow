@@ -33,7 +33,7 @@ std::string printSAN(Board & board, const Move & move);
 #ifdef _USE_LOG
 void addLog(std::string const& str);
 #else
-inline void addLog(std::string const& str) {}
+inline void addLog(std::string const&) {}
 #endif
 
 } // NEngine

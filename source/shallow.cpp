@@ -5,7 +5,7 @@
 #include <iostream>
 #include <xprotocol.h>
 
-int main(int argc, char * argv[])
+int main(int, char *)
 {
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;

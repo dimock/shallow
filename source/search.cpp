@@ -146,10 +146,6 @@ bool Engine::search(SearchResult& sres)
 
   sres.numOfMoves_ = sdata_.numOfMoves_;
 
-
-  const ScoreType alpha = -ScoreMax;
-  const ScoreType betta = +ScoreMax;
-
   for(sdata_.depth_ = depth0_; !stopped() && sdata_.depth_ <= sparams_.depthMax_; ++sdata_.depth_)
   {
     scontexts_[0].plystack_[0].clearPV(sparams_.depthMax_);
@@ -299,7 +295,6 @@ ScoreType Engine::alphaBetta0()
   const int depth = sdata_.depth_ * ONE_PLY;
 
   bool check_escape = scontexts_[0].board_.underCheck();
-  bool null_move = false;
   int sortDepth = 4;
   int numMovesNoReduce = 5;
 
@@ -548,9 +543,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_IID
   if (!hmove && depth >= 6 * ONE_PLY)
   {
-    ScoreType iid_score = alphaBetta(ictx, depth - 2 * ONE_PLY, ply, alpha, betta, pv, false);
-    ScoreType hscr;
-    GHashTable::Flag flg = getHash(ictx, depth, ply, alpha, betta, hmove, hscr, pv);
+    alphaBetta(ictx, depth - 2 * ONE_PLY, ply, alpha, betta, pv, false);
   }
 #endif
 

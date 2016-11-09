@@ -146,7 +146,7 @@ NTime::duration Processor::giveMoreTime()
   return add_t;
 }
 
-void Processor::enableBook(int v)
+void Processor::enableBook(int)
 {
 }
 
@@ -271,7 +271,6 @@ boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
   ReplyStruct rep;
   auto& board = engine_.getBoard();
   auto color = board.getColor();
-  auto ocolor = NEngine::Figure::otherColor(color);
   rep.state_ = static_cast<NEngine::Board::State>(board.getState());
   rep.white_ = NEngine::Figure::ColorWhite == color;
 

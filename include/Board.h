@@ -734,10 +734,6 @@ private:
 
   /// data
 private:
-
-  static std::string const stdFEN_;
-  static char fen_[FENsize];
-
   /// for chess draw detector
   bool can_win_[2];
 
@@ -817,7 +813,7 @@ public:
     copyStack(oboard);
   }
 
-  SBoard(Board const& oboard, bool cpystack) :
+  SBoard(Board const& oboard, bool) :
     Board(oboard)
   {
     g_undoStack = undoStackIntr_;

@@ -71,8 +71,6 @@ int CapsGenerator::generate()
   const BitMask & black = board_.fmgr_.mask(Figure::ColorBlack);
   const BitMask & white = board_.fmgr_.mask(Figure::ColorWhite);
   BitMask mask_all = white | black;
-  BitMask mask_all_inv = ~mask_all;
-  BitMask brq_mask = board_.fmgr_.bishop_mask(color) | board_.fmgr_.rook_mask(color) | board_.fmgr_.queen_mask(color);
   int ki_pos = board_.kingPos(color);
   int oki_pos = board_.kingPos(ocolor);
 
@@ -238,7 +236,6 @@ int CapsGenerator::generate()
 bool CapsGenerator::expressCheck(Move & move) const
 {
   const Field & ffield = board_.getField(move.from_);
-  const Field & tfield = board_.getField(move.to_);
 
   const Figure::Color color = board_.color_;
   const Figure::Color ocolor = Figure::otherColor(color);

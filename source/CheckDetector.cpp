@@ -15,7 +15,6 @@ void Board::detectCheck(const UndoInfo & undo)
   checkingNum_ = 0;
   const Figure::Color color = color_;
   Figure::Color ocolor = Figure::otherColor(color_);
-  const Field & ffrom = getField(undo.from_);
   const Field & fto = getField(undo.to_);
 
   int d = undo.to_ - undo.from_;
@@ -117,9 +116,6 @@ bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_
   // do we have at least 1 attacking figure
   if ( mask_brq )
   {
-    const BitMask & black = fmgr_.mask(Figure::ColorBlack);
-    const BitMask & white = fmgr_.mask(Figure::ColorWhite);
-
     // rooks
     const BitMask & r_caps = movesTable().caps(Figure::TypeRook, pos);
     BitMask rook_msk = fmgr_.rook_mask(c) & r_caps;

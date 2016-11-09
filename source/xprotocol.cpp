@@ -157,7 +157,6 @@ void xProtocolMgr::uciPosition(const xCmd & cmd)
   if(!proc_.fromFEN(cmd.fen()))
     return;
 
-  bool moves_found = false;
   for(auto const& mvstr : cmd.moves())
   {
     proc_.makeMove(mvstr);

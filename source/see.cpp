@@ -59,7 +59,6 @@ int Board::see(const Move & move) const
 
   Figure::Color color = ffield.color();
   Figure::Color ocolor = Figure::otherColor(color);
-  Figure::Type  ftype =  ffield.type();
 
   ScoreType fscore = 0;
 

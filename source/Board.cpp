@@ -15,8 +15,7 @@ namespace NEngine
 {
 
 // static data
-char Board::fen_[FENsize];
-std::string const Board::stdFEN_ = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+static std::string const stdFEN_ = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 Board::Board()
 {
@@ -26,9 +25,6 @@ Board::Board()
 void Board::clear()
 {
   fmgr_.clear();
-
-  // clear global FEN
-  fen_[0] = 0;
 
   can_win_[0] = can_win_[1] = true;
   en_passant_ = -1;
@@ -177,11 +173,8 @@ bool Board::isBishopAttack(const Move & move) const
 	if ( fto.type() != Figure::TypeBishop )
 		return false;
 
-	Figure::Color  color = color_;
-	Figure::Color ocolor = Figure::otherColor(color);
-
 	const BitMask & bi_caps = movesTable().caps(Figure::TypeBishop, move.to_);
-	BitMask op_mask = fmgr().rook_mask(color) | fmgr().queen_mask(color);
+	BitMask op_mask = fmgr().rook_mask(color_) | fmgr().queen_mask(color_);
 	if ( !(op_mask & bi_caps) )
 		return false;
 

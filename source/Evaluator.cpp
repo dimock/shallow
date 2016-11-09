@@ -719,8 +719,6 @@ ScoreType Evaluator::evaluateKnights()
     Figure::Color color = (Figure::Color)c;
     Figure::Color ocolor = Figure::otherColor(color);
     BitMask not_occupied = ~finfo_[ocolor].pw_attack_mask_ & inv_mask_all_;
-    BitMask brq_mask = board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-    const int &  ki_pos = finfo_[ color].king_pos_;
     const int & oki_pos = finfo_[ocolor].king_pos_;
 		const BitMask & oki_mask = movesTable().caps(Figure::TypeKing, oki_pos);
 
@@ -763,8 +761,6 @@ ScoreType Evaluator::evaluateBishops()
     Figure::Color color = (Figure::Color)c;
     Figure::Color ocolor = Figure::otherColor(color);
     BitMask not_attacked = ~finfo_[ocolor].pw_attack_mask_;
-    BitMask rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-    const int &  ki_pos = finfo_[ color].king_pos_;
     const int & oki_pos = finfo_[ocolor].king_pos_;
 		const BitMask & oki_mask = movesTable().caps(Figure::TypeKing, oki_pos);
 
@@ -812,8 +808,6 @@ void Evaluator::evaluateRooks(bool eval_open)
     Figure::Color color = (Figure::Color)c;
     Figure::Color ocolor = Figure::otherColor(color);
     BitMask not_attacked = ~finfo_[ocolor].attack_mask_;
-    const BitMask & q_mask = board_->fmgr().queen_mask(ocolor);
-    const int &  ki_pos = finfo_[ color].king_pos_;
     const int & oki_pos = finfo_[ocolor].king_pos_;
 		const BitMask & oki_mask = movesTable().caps(Figure::TypeKing, oki_pos);
 
@@ -1142,9 +1136,6 @@ ScoreType Evaluator::evaluateMaterialDiff()
 
   const FiguresManager & fmgr = board_->fmgr();
 
-  Figure::Color color = board_->getColor();
-  Figure::Color ocolor = Figure::otherColor(color);
-
   // 1. bonus for bishop. only if we have other figures
   if ( fmgr.bishops(Figure::ColorWhite) + fmgr.knights(Figure::ColorWhite) + fmgr.rooks(Figure::ColorWhite) + fmgr.queens(Figure::ColorWhite) > 1 )
     score += fmgr.bishops(Figure::ColorWhite)*bishopBonus_;
@@ -1248,7 +1239,6 @@ ScoreType Evaluator::evaluatePawnShield(Figure::Color color)
   // in castle
   if ( ctype >= 0 )
   {
-    int dy = delta_y[color];
     static const int pw_x[2][3] = { {5, 6, 7}, {2, 1, 0} };
 
     // first 2 lines empty, full line empty
@@ -1358,8 +1348,6 @@ ScoreType Evaluator::evaluateCastlePenalty(Figure::Color color)
     return score;
 
   const BitMask & obishop_mask = fmgr.bishop_mask(ocolor);
-  const BitMask & oqueen_mask  = fmgr.queen_mask(ocolor);
-  const BitMask & oknight_mask = fmgr.knight_mask(ocolor);
 
   // color, castle type
   static const BitMask opponent_bishop_masks[2][2] = {
@@ -2122,7 +2110,6 @@ bool Evaluator::evaluateWinnerLoserSpecial(ScoreType & score)
 
   Index kpw = board_->kingPos(Figure::ColorWhite);
   Index kpb = board_->kingPos(Figure::ColorBlack);
-  int ki_dist = distanceCounter().getDistance(kpw, kpb);
 
   // 2. special case - one side has 2 knight|bishop and another has only one or zero
   // black wins
@@ -2383,9 +2370,6 @@ ScoreType Evaluator::evaluateTrueWinnerLoser()
 
       int wudist = distanceCounter().getDistance(king_pos_w, pp_under);
       int ludist = distanceCounter().getDistance(king_pos_l, pp_under);
-
-      int xwdist = xkw > x ? xkw-x : x-xkw;
-      int xldist = xkl > x ? xkl-x : x-xkl;
 
       // special case KPK
       if ( (fmgr.weight(win_color) == Figure::figureWeight_[Figure::TypePawn] && fmgr.weight(lose_color) == 0) )

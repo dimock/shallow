@@ -63,9 +63,11 @@ public:
 
   inline void incr(const Figure::Color c, const Figure::Type t, int p)
   {
-    static int8 fcmask[8] = { 0/*None*/, 0/*Pawn*/, 0/*Knight*/, (int8)255/*bishop*/, 0/*rook*/, 0/*queen*/, 0/*king*/ };
+    static int8 fcmask[8] = { 0/*None*/, 0/*Pawn*/, 0/*Knight*/, (int8)(255)/*bishop*/, 0/*rook*/, 0/*queen*/, 0/*king*/ };
     static int8 xincr[8]  = { 0/*None*/, 1/*Pawn*/, 1/*Knight*/, 1/*bishop*/, 1/*rook*/, 1/*queen*/, 0/*king*/ };
-    static ScoreType xscore[8] = { 0/*None*/, (ScoreType)65535/*Pawn*/, (ScoreType)65535/*Knight*/, (ScoreType)65535/*bishop*/, (ScoreType)65535/*rook*/, (ScoreType)65535/*queen*/, 0/*king*/ };
+    static ScoreType xscore[8] = { 0/*None*/, (ScoreType)(65535)/*Pawn*/,
+      (ScoreType)(65535)/*Knight*/, (ScoreType)(65535)/*bishop*/, (ScoreType)(65535)/*rook*/,
+      (ScoreType)(65535)/*queen*/, 0/*king*/ };
     
     int8 field_color = s_whiteColors_[p] & fcmask[t];
     
