@@ -87,11 +87,12 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
   }
 
   NEngine::SBoard<NEngine::Board::GameLength> board(sres.board_);
+  std::ostringstream oss;
 
-  os_ << sres.depth_ << " " << sres.score_ << " " << NTime::centi_seconds<int>(sres.dt_) << " " << sres.totalNodes_;
+  oss << sres.depth_ << " " << sres.score_ << " " << NTime::centi_seconds<int>(sres.dt_) << " " << sres.totalNodes_;
   for(int i = 0; i < sres.depth_ && sres.pv_[i]; ++i)
   {
-    os_ << " ";
+    oss << " ";
 
     auto pv = sres.pv_[i];
     auto captured = pv.capture_;
@@ -109,9 +110,9 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
 
     board.makeMove(pv);
 
-    os_ << str;
+    oss << str;
   }
-  os_ << std::endl;
+  os_ << oss.str() << std::endl;
 }
 
 void xProtocolMgr::printStat(NEngine::SearchData const& sdata)

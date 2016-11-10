@@ -4,26 +4,17 @@
 #pragma once
 
 #include <Board.h>
+#include <fstream>
 
 namespace NEngine
 {
 
 ALIGN_MSC(16) struct ALIGN_GCC(16) HItem
 {
-  HItem() : hkey_(0), score_(0), mask_(0), movesCount_(0)
-  {}
-
   operator bool () const { return hkey_ != 0; }
 
-  void clear()
-  {
-    move_.clear();
-    mask_ = 0;
-    score_ = 0;
-  }
-
-  uint64     hkey_;
-  ScoreType  score_;
+  uint64     hkey_{};
+  ScoreType  score_{};
 
   union {
 
@@ -34,10 +25,10 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HItem
              threat_ : 1;
   };
 
-  uint16     mask_;
+  uint16     mask_{};
   };
 
-  uint8      movesCount_;
+  uint8      movesCount_{};
 
   PackedMove move_;
 };
@@ -64,7 +55,7 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HBucket
       if ( !items_[i].hkey_ || items_[i].hkey_ == hkey )
         return items_ + i;
       
-      if ( !hfar || (int)items_[i].movesCount_ < hfar->movesCount_ )
+      if ( !hfar || items_[i].movesCount_ < hfar->movesCount_ )
         hfar = items_ + i;
     }
 
@@ -80,46 +71,27 @@ class HashTable
 
 public:
 
-  HashTable(int size) : buffer_(0)
+  HashTable(int size)
   {
     resize(size);
   }
 
-  ~HashTable()
-  {
-    delete [] buffer_;
-  }
-
   void resize(size_t sz)
   {
-    delete [] buffer_;
-    buffer_ = 0;
-    szMask_ = 0;
-    size_ = sz;
-    movesCount_ = 0;
-
-    X_ASSERT(sz > 24, "hash table size if too large");
-
-    buffer_ = new ITEM[size()];
+    X_ASSERT(sz > 24, "hash table size is too large");
+    buffer_.resize(1 << sz);
     szMask_ = size() - 1;
+    movesCount_ = 0;
   }
 
   void clear()
   {
-    size_t n = size();
-    if ( n == 0 )
-      return;
-
-    ITEM * buf = buffer_;
-    for (size_t i = 0; i < n; ++i, ++buf)
-    {
-      *buf = ITEM();
-    }
+    std::fill(buffer_.begin(), buffer_.end(), ITEM{});
   }
 
   size_t size() const
   {
-    return (((size_t)1) << size_);
+    return buffer_.size();
   }
 
   void inc()
@@ -127,35 +99,32 @@ public:
     movesCount_++;
   }
 
-  bool load(const char * fname)
+  bool load(std::string const& fname)
   {
-    FILE * f = fopen(fname, "rb");
-    if ( !f )
+    std::ifstream ifs(fname, std::ifstream::binary);
+    if(!ifs)
       return false;
-    size_t n = 0;
-    if ( fread(&size_, sizeof(size_), 1, f) == 1 && size_ > 0 && size_ <= 24 )
-    {
-      delete [] buffer_;
-      buffer_ = new ITEM[size()];
-      szMask_ = size() - 1;
-      n = fread(buffer_, sizeof(ITEM), size(), f);
-    }
-    fclose(f);
-    return n == size();
+    ifs.seekg(0, ifs.end);
+    size_t length = ifs.tellg() / sizeof(ITEM);
+    ifs.seekg(0, ifs.beg);
+    auto sz = log2(length);
+    if(sz == 0)
+      return false;
+    X_ASSERT( (((size_t)1) << sz) != length, "invalid hash size detected");
+    resize(sz);
+    ifs.read(reinterpret_cast<char*>(buffer_.data()), size()*sizeof(ITEM));
+    return (bool)ifs;
   }
 
-  bool save(const char * fname) const
+  bool save(std::string const& fname) const
   {
-    FILE * f = fopen(fname, "wb");
-    if ( !f )
+    if(buffer_.empty())
       return false;
-    size_t n = 0;
-    if ( fwrite(&size_, sizeof(size_), 1, f) == 1 )
-    {
-      n = fwrite(buffer_, sizeof(ITEM), size(), f);
-    }
-    fclose(f);
-    return n == size();
+    std::ofstream ofs(fname, std::ofstream::binary);
+    if(!ofs)
+      return false;
+    ofs.write(reinterpret_cast<char const*>(buffer_.data()), size()*sizeof(ITEM));
+    return (bool)ofs;
   }
 
   void prefetch(const uint64 & code)
@@ -175,10 +144,9 @@ protected:
     return buffer_[code & szMask_];
   }
 
-  ITEM * buffer_;
-  size_t size_;
-  size_t szMask_;
-  uint8 movesCount_;
+  std::vector<ITEM> buffer_;
+  size_t szMask_{0};
+  uint8 movesCount_{0};
 };
 
 class GHashTable : public HashTable<HBucket>

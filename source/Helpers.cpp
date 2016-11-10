@@ -16,6 +16,8 @@ Helpers.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
+static std::string const s_nullmove{"0000"};
+
 bool iscolumn(char c)
 {
   return c >= 'a' && c <= 'h';
@@ -58,7 +60,7 @@ eMoveNotation detectNotation(std::string const& str)
       return eMoveNotation::mnSAN;
 
     /// very special case - null move. used for debugging only!!!
-    if(str == "null")
+    if(str == s_nullmove)
       return eMoveNotation::mnSAN;
   }
 
@@ -71,7 +73,7 @@ Move parseSAN(const Board & board, std::string const& str)
     return Move{0};
 
   // internal feature -> null-move
-  if(str == "null")
+  if(str == s_nullmove)
   {
     return Move{0};
   }
@@ -199,7 +201,7 @@ std::string printSAN(Board & board, const Move & move)
 {
   if(!move) // null-move passed
   {
-    return "null";
+    return s_nullmove;
   }
 
   Field field = board.getField(move.from_);
