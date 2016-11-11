@@ -16,8 +16,8 @@ class FPos
 
 public:
 
-  FPos(int idx) { x_ = static_cast<int8>(idx & 7); y_ = static_cast<int8>(idx >> 3); }
-  FPos(int x, int y) : x_(static_cast<int8>(x)), y_(static_cast<int8>(y)) {}
+  FPos(int idx) { x_ = (idx & 7); y_ = (idx >> 3); }
+  FPos(int x, int y) : x_(x), y_(y) {}
   FPos() : x_(0), y_(0) {}
 
   int8 x() const { return x_; }

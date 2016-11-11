@@ -11,28 +11,21 @@ namespace NEngine
 
 History MovesGeneratorBase::history_[64][64];
 
-//unsigned History::history_max_;
-
-
 void MovesGeneratorBase::clear_history()
 {
   for (int i = 0; i < 64; ++i)
     for (int j = 0; j < 64; ++j)
       history_[i][j].clear();
-  //History::history_max_ = 0;
 }
 
 void MovesGeneratorBase::normalize_history(int n)
 {
-//  History::history_max_ = 0;
   for (int i = 0; i < 64; ++i)
   {
     for (int j = 0; j < 64; ++j)
     {
       History & hist = history_[i][j];
       hist.normalize(n);
-      //if ( hist.score_ > History::history_max_ )
-      //  History::history_max_ = hist.score_;
     }
   }
 }
@@ -274,21 +267,19 @@ int MovesGenerator::generate()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void MovesGeneratorBase::save_history(const char * fname)
+void MovesGeneratorBase::save_history(std::string const& fname)
 {
   std::ofstream ofs(fname, std::ofstream::binary);
   if(!ofs)
     return;
-//  fwrite(&History::history_max_, sizeof(History::history_max_), 1, f);
   ofs.write(reinterpret_cast<char*>(history_), sizeof(history_));
 }
 
-void MovesGeneratorBase::load_history(const char * fname)
+void MovesGeneratorBase::load_history(std::string const& fname)
 {
   std::ifstream ifs(fname, std::ifstream::binary);
   if(!ifs)
     return;
-  //fread(&History::history_max_, sizeof(History::history_max_), 1, f);
   ifs.read(reinterpret_cast<char*>(history_), sizeof(history_));
 }
 

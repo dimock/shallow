@@ -30,6 +30,15 @@ Move strToMove(std::string const& str, Board const& board);
 Move parseSAN(Board const& board, std::string const& str);
 std::string printSAN(Board & board, const Move & move);
 
+bool load(Board &, std::istream &);
+bool save(const Board &, std::ostream &, bool = true);
+
+/// initialize from FEN
+bool fromFEN(std::string const& i_fen, Board& board);
+
+/// save current position to FEN
+std::string toFEN(Board const& board);
+
 #ifdef _USE_LOG
 void addLog(std::string const& str);
 #else

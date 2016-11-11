@@ -37,10 +37,10 @@ public:
 
   NEngine::Figure::Color color() const;
 
-  void save();
-  void fen2file(const char * fname);
-  void pgn2file(const char * fname);
-  void hash2file(const char * fname);
+  void save(std::string const& fname = "game_001.pgn");
+  void fen2file(std::string const& fname);
+  void pgn2file(std::string const& fname);
+  void hash2file(std::string const& fname);
   std::string toFEN();
 
   bool fromFEN(std::string const& fen);

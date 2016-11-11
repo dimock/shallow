@@ -318,28 +318,25 @@ bool Processor::makeMove(std::string const& moveStr)
   return true;
 }
 
-void Processor::save()
+void Processor::save(std::string const& fname)
 {
   if(is_thinking())
     return;
 
-  std::ofstream ofs("game_001.pgn");
-  auto const& board = engine_.getBoard();
-  NEngine::Board::save(board, ofs);
+  pgn2file(fname);
 }
 
-void Processor::fen2file(const char * fname)
+void Processor::fen2file(std::string const& fname)
 {
   if(is_thinking())
-    return;
-
-  if(!fname)
     return;
 
   try
   {
     std::ofstream ofs(fname);
-    auto fen = engine_.getBoard().toFEN();
+    if(!ofs)
+      return;
+    auto fen = NEngine::toFEN(engine_.getBoard());
     ofs << fen << std::endl;
   }
   catch(...)
@@ -347,27 +344,26 @@ void Processor::fen2file(const char * fname)
   }
 }
 
-void Processor::pgn2file(const char * fname)
+void Processor::pgn2file(std::string const& fname)
 {
-  if(!fname)
-    return;
-
   try
   {
     std::ofstream ofs(fname);
-    NEngine::Board::save(engine_.getBoard(), ofs);
+    if(!ofs)
+      return;
+    NEngine::save(engine_.getBoard(), ofs);
   }
   catch(...)
   {
   }
 }
 
-void Processor::hash2file(const char * fname)
+void Processor::hash2file(std::string const& fname)
 {
-  if(is_thinking() || !fname)
+  if(is_thinking())
     return;
 
-//  engine_.saveHash(fname);
+  engine_.saveHash(fname);
 }
 
 //////////////////////////////////////////////////////////////////////////

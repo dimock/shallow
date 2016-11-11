@@ -4,46 +4,49 @@
 
 #include <engine.h>
 #include <MovesGenerator.h>
+#include <Helpers.h>
 #include <fstream>
 #include <sstream>
 
 namespace NEngine
 {
 
-//////////////////////////////////////////////////////////////////////////
-//void Engine::saveHash(const char * fname) const
-//{
-//  if ( !fname )
-//    return;
-//  char gfname[MAX_PATH], cfname[MAX_PATH], bfname[MAX_PATH], hfname[MAX_PATH];
-//  sprintf(gfname, "%s_g.hash", fname);
-//  sprintf(cfname, "%s_c.hash", fname);
-//  sprintf(bfname, "%s_b.hash", fname);
-//  sprintf(hfname, "%s_h.hash", fname);
-//
-//#ifdef USE_HASH
-//  hash_.save(gfname);
-//#endif
-//
-//  scontexts_[0].board_.save(bfname);
-//  MovesGeneratorBase::save_history(hfname);
-//}
-//
-//void Engine::loadHash(const char * fname)
-//{
-//  char gfname[MAX_PATH], cfname[MAX_PATH], bfname[MAX_PATH], hfname[MAX_PATH];
-//  sprintf(gfname, "%s_g.hash", fname);
-//  sprintf(cfname, "%s_c.hash", fname);
-//  sprintf(bfname, "%s_b.hash", fname);
-//  sprintf(hfname, "%s_h.hash", fname);
-//
-//#ifdef USE_HASH
-//  hash_.load(gfname);
-//#endif
-//
-//  scontexts_[0].board_.load(bfname);
-//  MovesGenerator::load_history(hfname);
-//}
+////////////////////////////////////////////////////////////////////////
+void Engine::saveHash(std::string const&  fname) const
+{
+  if(fname.empty())
+    return;
+  std::string gfname, cfname, bfname, hfname;
+  gfname = fname + "_g.hash";
+  cfname = fname + "_c.hash";
+  bfname = fname + "_b.hash";
+  hfname = fname + "_h.hash";
+
+#ifdef USE_HASH
+  hash_.save(gfname);
+#endif
+
+  std::ofstream ofs(bfname, std::ios::out);
+  save(scontexts_[0].board_, ofs);
+  MovesGeneratorBase::save_history(hfname);
+}
+
+void Engine::loadHash(std::string const& fname)
+{
+  std::string gfname, cfname, bfname, hfname;
+  gfname = fname + "_g.hash";
+  cfname = fname + "_c.hash";
+  bfname = fname + "_b.hash";
+  hfname = fname + "_h.hash";
+
+#ifdef USE_HASH
+  hash_.load(gfname);
+#endif
+
+  std::ifstream ifs(bfname, std::ios::in);
+  load(scontexts_[0].board_, ifs);
+  MovesGenerator::load_history(hfname);
+}
 //////////////////////////////////////////////////////////////////////////
 #ifdef VERIFY_ESCAPE_GENERATOR
 void Engine::verifyEscapeGen(int ictx, const Move & hmove)

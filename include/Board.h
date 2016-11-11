@@ -44,6 +44,9 @@ class Board
   friend class Player;
   friend class Evaluator;
 
+  friend bool fromFEN(std::string const&, Board&);
+  friend std::string toFEN(Board const&);
+
 #if ( (defined VERIFY_CHECKS_GENERATOR) || (defined VERIFY_ESCAPE_GENERATOR) || (defined VERIFY_CAPS_GENERATOR) || (defined VERIFY_FAST_GENERATOR) )
   friend class Player;
 #endif
@@ -68,19 +71,6 @@ public:
 
   /// c-tor
   Board();
-
-  static bool load(Board &, std::istream &);
-  static bool save(const Board &, std::ostream &, bool = true);
-
-  // only for debugging purposes, saves complete board memory dump
-  void save(const char * fname) const;
-  void load(const char * fname);
-
-  /// initialize from FEN
-  bool fromFEN(std::string const& i_fen);
-
-  /// save current position to FEN
-  std::string toFEN() const;
 
   /// initialize empty board with given color to move
   bool initEmpty(Figure::Color);
@@ -799,7 +789,7 @@ public:
   }
 
   template <int OTHER_SIZE>
-  SBoard(SBoard<OTHER_SIZE> const& oboard, bool cpystack) :
+  SBoard(SBoard<OTHER_SIZE> const& oboard, bool) :
     Board(oboard)
   {
     g_undoStack = undoStackIntr_;
@@ -810,13 +800,13 @@ public:
     Board(oboard)
   {
     g_undoStack = undoStackIntr_;
-    copyStack(oboard);
   }
 
   SBoard(Board const& oboard, bool) :
     Board(oboard)
   {
     g_undoStack = undoStackIntr_;
+    copyStack(oboard);
   }
 private:
   void copyStack(Board const& oboard)

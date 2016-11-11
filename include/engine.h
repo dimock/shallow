@@ -184,8 +184,8 @@ private:
   void verifyGenerators(int ictx, const Move & hmove);
 
 public:
-//  void saveHash(const char * fname) const;
-//  void loadHash(const char * fname);
+  void saveHash(std::string const& fname) const;
+  void loadHash(std::string const& fname);
 };
 
 } // NEngine

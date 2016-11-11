@@ -87,8 +87,8 @@ public:
 
   static const unsigned int vsort_add_ = 10000;
 
-  static void save_history(const char * fname);
-  static void load_history(const char * fname);
+  static void save_history(std::string const& fname);
+  static void load_history(std::string const& fname);
 
 
   static inline History & history(int from, int to)

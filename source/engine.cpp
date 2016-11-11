@@ -4,6 +4,7 @@
 
 #include <engine.h>
 #include <MovesGenerator.h>
+#include <Helpers.h>
 
 namespace NEngine
 {
@@ -69,17 +70,17 @@ bool Engine::fromFEN(std::string const& fen)
   SBoard<16> tboard(scontexts_[0].board_);
 
   // verify FEN first
-  if(!tboard.fromFEN(fen))
+  if(!NEngine::fromFEN(fen, tboard))
     return false;
 
   MovesGenerator::clear_history();
 
-  return scontexts_[0].board_.fromFEN(fen);
+  return NEngine::fromFEN(fen, scontexts_[0].board_);
 }
 
 std::string Engine::toFEN() const
 {
-  return scontexts_[0].board_.toFEN();
+  return NEngine::toFEN(scontexts_[0].board_);
 }
 
 void Engine::clearHash()
