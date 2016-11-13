@@ -240,7 +240,7 @@ void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
     if(!board.possibleMove(pv))
       break;
 
-    auto str = printSAN(board, pv);
+    auto str = moveToStr(pv, false);//printSAN(board, pv);
     if(str.empty())
       break;
 

@@ -9,5 +9,6 @@
 
 namespace NShallow
 {
-	xCmd parse(std::string const& line, bool const uci);
+  xCmd parse(std::string const& line, bool const uci);
+  std::string to_string(xCmd const& cmd);
 } // NParser

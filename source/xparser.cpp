@@ -113,7 +113,7 @@ namespace
 
 xCmd parse(std::string const& line, bool const uci)
 {
-	if(line.empty())
+  if(line.empty())
     return {};
 
   static std::map<std::string const, xType> const xcommands {
@@ -244,4 +244,60 @@ xCmd parse(std::string const& line, bool const uci)
   return {};
 }
 
+std::string to_string(xCmd const& cmd)
+{
+  static std::vector<std::pair<std::string const, xType>> const xcommands {
+    { "xboard",     xType::xBoard },
+    { "option",     xType::xOption },
+    { "ping",       xType::xPing },
+    { "new",        xType::xNew },
+    { "go",         xType::xGo },
+    { "undo",       xType::xUndo},
+    { "remove",     xType::xRemove },
+    { "force",      xType::xForce },
+    { "st",         xType::xSt },
+    { "sd",         xType::xSd },
+    { "post",       xType::xPost },
+    { "nopost",     xType::xNopost },
+    { "analyze",    xType::xAnalyze },
+    { "exit",       xType::xExit },
+    { "time",       xType::xTime },
+    { "otim",       xType::xOtime },
+    { "level",      xType::xLevel },
+    { "memory",     xType::xMemory },
+    { "saveboard",  xType::xSaveBoard },
+    { "loadboard",  xType::xLoadBoard },
+    { "edit",       xType::xEdit },
+    { "#",          xType::xClearBoard },
+    { "c",          xType::xChgColor },
+    { ".",          xType::xLeaveEdit }, 
+    { "?",          xType::xGoNow },
+    { "protover",   xType::xProtover },
+    { "setboard",   xType::xSetboardFEN },
+    { "setb",       xType::xSetboardFEN },
+    { "quit",       xType::xQuit },
+
+    // uci commands
+    { "uci",        xType::UCI },
+    { "setoption",  xType::SetOption },
+    { "isready",    xType::IsReady },
+    { "ucinewgame", xType::UCInewgame },
+    { "position",   xType::Position },
+    { "stop",       xType::xExit },
+    { "uci go",     xType::UCIgo },
+
+    { "quit",       xType::xQuit }
+  };
+
+  auto iter = std::find_if(xcommands.begin(), xcommands.end(), [cmd] (std::pair<std::string const, xType> p) { return p.second == cmd.type(); });
+  if(iter == xcommands.end())
+    return "command not found: " + std::to_string((int)cmd.type());
+  std::string str;
+  if(cmd.type() == xType::UCIgo)
+  {
+    str = cmd.params_to_str();
+  }
+  return iter->first + str;
+}
+ 
 } // NShallow
