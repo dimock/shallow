@@ -7,7 +7,6 @@
 #include <MovesGenerator.h>
 #include "Evaluator.h"
 #include <algorithm>
-#include <fstream>
 #include <Helpers.h>
 
 namespace NEngine
@@ -39,84 +38,6 @@ inline int calculateDelta(ScoreType alpha, ScoreType score)
   int delta = (int)alpha - (int)score - (int)Evaluator::positionGain_;
   return delta;
 }
-
-////////////////////////////////////////////////////////////////////////////
-//void Engine::logPV()
-//{
-//  if(!callbacks_.slog_)
-//    return;
-//
-//  time_t curtime;
-//  time(&curtime);
-//  tm * t = localtime(&curtime);
-//  char strcurtime[MAX_PATH];
-//  strftime(strcurtime, MAX_PATH, "%d:%m:%Y %H:%M:%S ", t);
-//  (*callbacks_.slog_) << strcurtime;
-//  (*callbacks_.slog_) << "iter " << sdata_.depth_ << " ";
-//
-//  Board board = scontexts_[0].board_;
-//  UndoInfo undoStack[Board::GameLength];
-//  board.set_undoStack(undoStack);
-//
-//  if(sdata_.best_)
-//  {
-//    auto strbest = printSAN(board, sdata_.best_);
-//    if(!strbest.empty())
-//    {
-//      (*callbacks_.slog_) << " bm " << strbest << " (" << (int)sdata_.best_.vsort_ - (int)ScoreMax << ") ";
-//    }
-//  }
-//
-//  (*callbacks_.slog_) << "pv ";
-//  for(int i = 0; i < MaxPly; ++i)
-//  {
-//    Move move = scontexts_[0].plystack_[0].pv_[i];
-//    if(!move)
-//      break;
-//    auto str = printSAN(board, move);
-//    if(str.empty())
-//      break;
-//    board.makeMove(move);
-//    (*callbacks_.slog_) << str << " (" << (int)move.vsort_ - (int)ScoreMax << ") ";
-//  }
-//  (*callbacks_.slog_) << std::endl;
-//}
-//
-//void Engine::logMovies()
-//{
-//  if(!callbacks_.slog_)
-//    return;
-//
-//  Board board = scontexts_[0].board_;
-//  UndoInfo undoStack[Board::GameLength];
-//  board.set_undoStack(undoStack);
-//
-//  auto fen = board.toFEN();
-//
-//  time_t curtime;
-//  time(&curtime);
-//  tm * t = localtime(&curtime);
-//  char strcurtime[MAX_PATH];
-//  strftime(strcurtime, MAX_PATH, "%d:%m:%Y %H:%M:%S ", t);
-//  (*callbacks_.slog_) << strcurtime;
-//  (*callbacks_.slog_) << " position " << fen << " ";
-//  (*callbacks_.slog_) << " halfmovies count " << scontexts_[0].board_.halfmovesCount() << " ";
-//  (*callbacks_.slog_) << "iter " << sdata_.depth_ << " ";
-//  (*callbacks_.slog_) << "movies ";
-//
-//  for(int i = 0; i < sdata_.numOfMoves_; ++i)
-//  {
-//    if(checkForStop())
-//      break;
-//
-//    Move move = scontexts_[0].moves_[i];
-//    auto str = printSAN(board, move);
-//    if(str.empty())
-//      break;
-//    (*callbacks_.slog_) << str << " {" << (int)move.vsort_ - (int)ScoreMax << "} ";
-//  }
-//  (*callbacks_.slog_) << std::endl;
-//}
 
 bool Engine::search(SearchResult& sres)
 {
@@ -303,6 +224,7 @@ ScoreType Engine::alphaBetta0()
 #ifdef LOG_PV
   logMovies();
 #endif
+
   for(sdata_.counter_ = 0; sdata_.counter_ < sdata_.numOfMoves_; ++sdata_.counter_)
   {
     if(checkForStop())

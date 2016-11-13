@@ -41,6 +41,7 @@ namespace NShallow
     xClearBoard,
     xSetFigure,
     xSaveBoard,
+    xLoadBoard,
     xSetboardFEN,
 
     // uci protocol commands
@@ -74,6 +75,7 @@ namespace NShallow
     int value() const;
     bool infinite() const;
     int param(std::string const& name) const;
+    std::string param(size_t i) const;
 
   private:
     xType type_{xType::xNone};

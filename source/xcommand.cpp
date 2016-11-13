@@ -64,6 +64,13 @@ int xCmd::param(std::string const& name) const
   return -1;
 }
 
+std::string xCmd::param(size_t i) const
+{
+  if(i < moves_.size())
+    return moves_[i];
+  return "";
+}
+
 bool xCmd::infinite() const
 {
   return infinite_;

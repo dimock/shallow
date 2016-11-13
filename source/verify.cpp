@@ -5,8 +5,11 @@
 #include <engine.h>
 #include <MovesGenerator.h>
 #include <Helpers.h>
-#include <fstream>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 #include <sstream>
+#include <fstream>
 
 namespace NEngine
 {
@@ -47,6 +50,75 @@ void Engine::loadHash(std::string const& fname)
   load(scontexts_[0].board_, ifs);
   MovesGenerator::load_history(hfname);
 }
+
+////////////////////////////////////////////////////////////////////////////
+void Engine::logPV()
+{
+  if(!callbacks_.slog_)
+    return;
+
+  auto tm = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  std::ostringstream oss;
+  oss << std::put_time(std::localtime(&tm), "%d:%m:%Y %H:%M:%S ");
+
+  SBoard<Board::GameLength> board(scontexts_[0].board_);
+
+  oss << "iter " << sdata_.depth_ << " ";
+  if(sdata_.best_)
+  {
+    auto strbest = printSAN(board, sdata_.best_);
+    if(!strbest.empty())
+    {
+      oss << " bm " << strbest << " (" << (int)sdata_.best_.vsort_ - (int)ScoreMax << ") ";
+    }
+  }
+
+  oss << "pv ";
+  for(int i = 0; i < MaxPly; ++i)
+  {
+    Move move = scontexts_[0].plystack_[0].pv_[i];
+    if(!move)
+      break;
+    auto str = printSAN(board, move);
+    if(str.empty())
+      break;
+    board.makeMove(move);
+    oss << str << " (" << (int)move.vsort_ - (int)ScoreMax << ") ";
+  }
+  (*callbacks_.slog_) << oss.str() << std::endl;
+}
+
+void Engine::logMovies()
+{
+  if(!callbacks_.slog_)
+    return;
+
+  SBoard<Board::GameLength> board(scontexts_[0].board_);
+
+  auto fen = NEngine::toFEN(board);
+
+  auto tm = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  std::ostringstream oss;
+  oss << std::put_time(std::localtime(&tm), "%d:%m:%Y %H:%M:%S ");
+  oss << " position " << fen << " ";
+  oss << " halfmovies count " << scontexts_[0].board_.halfmovesCount() << " ";
+  oss << "iter " << sdata_.depth_ << " ";
+  oss << "movies ";
+
+  for(int i = 0; i < sdata_.numOfMoves_; ++i)
+  {
+    if(checkForStop())
+      break;
+
+    Move move = scontexts_[0].moves_[i];
+    auto str = printSAN(board, move);
+    if(str.empty())
+      break;
+    oss << str << " {" << (int)move.vsort_ - (int)ScoreMax << "} ";
+  }
+  (*callbacks_.slog_) << oss.str() << std::endl;
+}
+
 //////////////////////////////////////////////////////////////////////////
 #ifdef VERIFY_ESCAPE_GENERATOR
 void Engine::verifyEscapeGen(int ictx, const Move & hmove)
@@ -694,7 +766,8 @@ void Engine::enumerate(int /*depth*/)
 
 //////////////////////////////////////////////////////////////////////////
 /// for DEBUG
-void Engine::findSequence(int ictx, const Move & move, int ply, int depth, int /*counter*/, ScoreType /*alpha*/, ScoreType /*betta*/) const
+void Engine::findSequence(int ictx, const Move & move, int ply, int depth,
+  int counter, ScoreType alpha, ScoreType betta) const
 {
   struct MOVE { int from_, to_; };
   bool identical = false;
@@ -720,21 +793,22 @@ void Engine::findSequence(int ictx, const Move & move, int ply, int depth, int /
       }
     }
 
-    //if ( identical )
-    //{
-    //  if ( sdata_.depth_ == 5*ONE_PLY && ply == 1 )
-    //  {
-    //    int ttt = 0;
-    //  }
-    //  //std::stringstream sstm;
-    //  //Board::save(scontexts_[ictx].board_, sstm, false);
-    //  //std::ofstream ofs("D:\\Projects\\git_tests\\temp\\report.txt", std::ios_base::app);
-    //  //ofs << "PLY: " << ply << std::endl;
-    //  //std::string s = sstm.str();
-    //  //ofs << s;
-    //  //ofs << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = " << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;
-    //  //ofs << "===================================================================" << std::endl << std::endl;
-    //}
+    if ( identical )
+    {
+      //if ( sdata_.depth_ == 5*ONE_PLY && ply == 1 )
+      //{
+      //  int ttt = 0;
+      //}
+      std::ostringstream oss;
+      NEngine::save(scontexts_[ictx].board_, oss, false);
+      oss << "PLY: " << ply << std::endl;
+      oss << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = "
+        << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;
+      oss << "===================================================================" << std::endl << std::endl;
+
+      std::ofstream ofs("sequence.txt", std::ios_base::app);
+      ofs << oss.str();
+    }
 }
 
 } // NEngine

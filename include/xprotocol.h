@@ -44,6 +44,7 @@ private:
   bool fenOk_ = true;
 
   std::ostream& os_;
+  std::unique_ptr<std::ofstream> ofs_log_;
 };
 
 } // NShallow

@@ -15,8 +15,12 @@ namespace NShallow
 
 xProtocolMgr::xProtocolMgr() :
   os_(std::cout)
+#ifdef LOG_PV
+  ,ofs_log_(new std::ofstream("log.txt", std::ios::out))
+#endif
 {
   NEngine::xCallback xcbk;
+  xcbk.slog_ = ofs_log_.get();
 
   xcbk.queryInput_ = [this]()
   {
@@ -393,7 +397,11 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xSaveBoard:
-    proc_.save();
+    proc_.save(cmd.param(0));
+    break;
+
+  case xType::xLoadBoard:
+    proc_.load(cmd.param(0));
     break;
 
   case xType::xSetboardFEN:

@@ -96,8 +96,9 @@ private:
   void reset();
 
 //  // logging
-//  void logPV();
-//  void logMovies();
+  void logPV();
+  void logMovies();
+
   // time control
   void testTimer();
   bool stopped() const { return stop_; }

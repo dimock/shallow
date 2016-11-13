@@ -323,7 +323,27 @@ void Processor::save(std::string const& fname)
   if(is_thinking())
     return;
 
-  pgn2file(fname);
+  if(fname.empty())
+    pgn2file("game_001.pgn");
+  else
+    pgn2file(fname);
+}
+
+void Processor::load(std::string const& fname)
+{
+  if(is_thinking())
+    return;
+
+  try
+  {
+    std::ifstream ifs(fname.empty() ? "game_001.pgn" : fname, std::ios::in);
+    if(!ifs)
+      return;
+    NEngine::load(engine_.getBoard(), ifs);
+  }
+  catch(...)
+  {
+  }
 }
 
 void Processor::fen2file(std::string const& fname)

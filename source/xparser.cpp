@@ -136,6 +136,7 @@ xCmd parse(std::string const& line, bool const uci)
     { "level",      xType::xLevel },
     { "memory",     xType::xMemory },
     { "saveboard",  xType::xSaveBoard },
+    { "loadboard",  xType::xLoadBoard },
     { "edit",       xType::xEdit },
     { "#",          xType::xClearBoard },
     { "c",          xType::xChgColor },
