@@ -26,7 +26,7 @@ class Processor
 public:
   bool init();
   void enableBook(int v);
-  void setMemory(int mb);
+  void setOptions(NEngine::xOptions const& opts);
   bool setDepth(int depth);
   bool setTimePerMove(NTime::duration const& tm);
   bool setXtime(NTime::duration const& xtm);

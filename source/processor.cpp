@@ -169,12 +169,12 @@ bool Processor::undo()
   return false;
 }
 
-void Processor::setMemory(int mb)
+void Processor::setOptions(NEngine::xOptions const& opts)
 {
   if(is_thinking())
     return;
 
-  engine_.setMemory(mb);
+  engine_.setOptions(opts);
 }
 
 NEngine::Figure::Color Processor::color() const

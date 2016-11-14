@@ -10,6 +10,7 @@
 #include <sstream>
 #include <map>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace NShallow
 {
@@ -20,10 +21,16 @@ namespace
   {
     if(params.size() <= i)
       return 0;
-    std::istringstream iss(params[i]);
+    auto str = params[i];
+    boost::algorithm::to_lower(str);
+    std::istringstream iss(str);
     int value{};
     if(iss >> value)
       return value;
+    std::istringstream issb(str);
+    bool bvalue{};
+    if(issb >> std::boolalpha >> bvalue)
+      return (int)bvalue;
     return 0;
   }
 
@@ -109,6 +116,28 @@ namespace
     return xCmd(xType::UCIgo, std::move(pmap));
   }
 
+  xCmd parseOptions(std::vector<std::string> const& params)
+  {
+    std::map<std::string, int> pmap;
+    for(size_t i = 0; i < params.size(); i += 4)
+    {
+      if(i+3 >= params.size())
+        break;
+      if(params[i] == "name" && params[i+2] == "value")
+      {
+        pmap.emplace(params[i+1], toInt(params, i+3));
+      }
+    }
+
+    return xCmd(xType::SetOption, std::move(pmap));
+  }
+
+  xCmd parseXOptions(std::vector<std::string> const& params)
+  {
+    std::map<std::string, int> pmap;
+    return xCmd(xType::xOption, std::move(pmap));
+  }
+
 } // namespace {}
 
 xCmd parse(std::string const& line, bool const uci)
@@ -116,7 +145,7 @@ xCmd parse(std::string const& line, bool const uci)
   if(line.empty())
     return {};
 
-  static std::map<std::string const, xType> const xcommands {
+  static std::map<std::string, xType> const xcommands {
     { "xboard",     xType::xBoard },
     { "option",     xType::xOption },
     { "ping",       xType::xPing },
@@ -153,7 +182,7 @@ xCmd parse(std::string const& line, bool const uci)
     { "isready",    xType::IsReady },
     { "ucinewgame", xType::UCInewgame },
     { "position",   xType::Position },
-    { "stop",       xType::xExit },
+    { "stop",       xType::xExit }
   };
 
   std::vector<std::string> params;
@@ -226,11 +255,13 @@ xCmd parse(std::string const& line, bool const uci)
 
   case xType::SetOption:
     {
-      if(params.size() < 4)
-        return {};
+      return parseOptions(params);
+    }
+    break;
 
-      if(params[0] == "name" && params[1] == "Hash" && params[2] == "value")
-        return xCmd(type, toInt(params, 3));
+  case xType::xOption:
+    {
+      return parseXOptions(params);
     }
     break;
 
@@ -246,7 +277,7 @@ xCmd parse(std::string const& line, bool const uci)
 
 std::string to_string(xCmd const& cmd)
 {
-  static std::vector<std::pair<std::string const, xType>> const xcommands {
+  static std::vector<std::pair<std::string, xType>> const xcommands {
     { "xboard",     xType::xBoard },
     { "option",     xType::xOption },
     { "ping",       xType::xPing },
@@ -284,7 +315,7 @@ std::string to_string(xCmd const& cmd)
     { "ucinewgame", xType::UCInewgame },
     { "position",   xType::Position },
     { "stop",       xType::xExit },
-    { "uci go",     xType::UCIgo },
+    { "go",         xType::UCIgo },
 
     { "quit",       xType::xQuit }
   };
@@ -292,12 +323,8 @@ std::string to_string(xCmd const& cmd)
   auto iter = std::find_if(xcommands.begin(), xcommands.end(), [cmd] (std::pair<std::string const, xType> p) { return p.second == cmd.type(); });
   if(iter == xcommands.end())
     return "command not found: " + std::to_string((int)cmd.type());
-  std::string str;
-  if(cmd.type() == xType::UCIgo)
-  {
-    str = cmd.params_to_str();
-  }
-  return iter->first + str;
+  std::string str = cmd.params_to_str();
+  return iter->first + ": " + str;
 }
  
 } // NShallow

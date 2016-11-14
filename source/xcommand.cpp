@@ -91,4 +91,40 @@ std::vector<std::string> const& xCmd::moves() const
   return moves_;
 }
 
+std::string xCmd::params_to_str() const
+{
+  std::string str("{");
+  if(params_.size() > 0)
+  {
+    std::vector<std::string> temp;
+    for(auto kv : params_)
+    {
+      temp.push_back(kv.first + ": " + std::to_string(kv.second));
+    }
+    str += boost::algorithm::join(temp, ", ");
+    str += ";";
+  }
+  if(moves_.size() > 0)
+  {
+    str += " moves: " + boost::algorithm::join(moves_, ", ");
+    str += ";";
+  }
+  if(!str_.empty())
+  {
+    str += "str: " + str_;
+    str += ";";
+  }
+  if(value_ > 0)
+  {
+    str += " value: " + std::to_string(value_);
+    str += ";";
+  }
+  if(infinite_)
+  {
+    str += " infinite;";
+  }
+  str += "}";
+  return str;
+}
+
 } // NShallow

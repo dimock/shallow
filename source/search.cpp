@@ -381,63 +381,64 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   UndoInfo & prev = scontexts_[ictx].board_.undoInfoRev(0);
   bool check_escape = scontexts_[ictx].board_.underCheck();
 
-#ifdef USE_NULL_MOVE
-  if ( !pv &&
-    //!nm &&
-    !scontexts_[ictx].board_.underCheck() &&
-    scontexts_[ictx].board_.allowNullMove() &&
-    depth >= scontexts_[ictx].board_.nullMoveDepthMin() &&
-    betta < Figure::MatScore+MaxPly &&
-    betta > -Figure::MatScore-MaxPly )
+  if(options_.use_nullmove_)
   {
-    // if we have much more material than opponent we could skip null-move
-    //ScoreType nullScore = scontexts_[ictx].eval_.express();
-
-    int null_depth = scontexts_[ictx].board_.nullMoveDepth(depth, betta);
-
-    // do null-move
-    //if ( scontexts_[ictx].board_.fmgr().queens(scontexts_[ictx].board_.getColor()) == 0 ||
-    //	   scontexts_[ictx].board_.fmgr().rooks(scontexts_[ictx].board_.getColor()) == 0 ||
-    //		 nullScore < betta+Evaluator::nullMoveMargin_ )
-    //{
-    scontexts_[ictx].board_.makeNullMove();
-
-    ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false, false /* we are in null-move*/);
-
-    scontexts_[ictx].board_.unmakeNullMove();
-    //}
-
-    // verify null-move with shortened depth
-    if ( nullScore >= betta )
+    if(!pv &&
+      //!nm &&
+      !scontexts_[ictx].board_.underCheck() &&
+      scontexts_[ictx].board_.allowNullMove() &&
+      depth >= scontexts_[ictx].board_.nullMoveDepthMin() &&
+      betta < Figure::MatScore+MaxPly &&
+      betta > -Figure::MatScore-MaxPly)
     {
-      //if ( scontexts_[ictx].board_.fmgr().queens(scontexts_[ictx].board_.getColor()) > 0 &&
-      //		 scontexts_[ictx].board_.fmgr().rooks(scontexts_[ictx].board_.getColor()) > 0 &&
-      //		 nullScore > betta+Evaluator::nullMoveVerifyMargin_ )
+      // if we have much more material than opponent we could skip null-move
+      //ScoreType nullScore = scontexts_[ictx].eval_.express();
+
+      int null_depth = scontexts_[ictx].board_.nullMoveDepth(depth, betta);
+
+      // do null-move
+      //if ( scontexts_[ictx].board_.fmgr().queens(scontexts_[ictx].board_.getColor()) == 0 ||
+      //	   scontexts_[ictx].board_.fmgr().rooks(scontexts_[ictx].board_.getColor()) == 0 ||
+      //		 nullScore < betta+Evaluator::nullMoveMargin_ )
       //{
-      //	depth = scontexts_[ictx].board_.nullMoveDepthVerify(depth);
+      scontexts_[ictx].board_.makeNullMove();
+
+      ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false, false /* we are in null-move*/);
+
+      scontexts_[ictx].board_.unmakeNullMove();
       //}
-      //else
-      depth = null_depth;
 
-      nm = true; // don't use null-move in this string
-
-      if ( depth <= 0 )
-        return captures(ictx, depth, ply, alpha, betta, pv);
-    }
-    else // may be we are in danger?
-    {
-      if ( nullScore <= -Figure::MatScore+MaxPly ) // mat threat?
+      // verify null-move with shortened depth
+      if(nullScore >= betta)
       {
-        if ( prev.reduced_ )
-          return betta-1;
-        else
-          mat_threat = true;
-      }
+        //if ( scontexts_[ictx].board_.fmgr().queens(scontexts_[ictx].board_.getColor()) > 0 &&
+        //		 scontexts_[ictx].board_.fmgr().rooks(scontexts_[ictx].board_.getColor()) > 0 &&
+        //		 nullScore > betta+Evaluator::nullMoveVerifyMargin_ )
+        //{
+        //	depth = scontexts_[ictx].board_.nullMoveDepthVerify(depth);
+        //}
+        //else
+        depth = null_depth;
 
-      nm_threat = true;
+        nm = true; // don't use null-move in this string
+
+        if(depth <= 0)
+          return captures(ictx, depth, ply, alpha, betta, pv);
+      }
+      else // may be we are in danger?
+      {
+        if(nullScore <= -Figure::MatScore+MaxPly) // mat threat?
+        {
+          if(prev.reduced_)
+            return betta-1;
+          else
+            mat_threat = true;
+        }
+
+        nm_threat = true;
+      }
     }
-  }
-#endif
+  } // use nullmove
 
 #ifdef USE_FUTILITY_PRUNING
   if ( !pv &&

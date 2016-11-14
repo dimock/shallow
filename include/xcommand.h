@@ -76,16 +76,9 @@ namespace NShallow
     bool infinite() const;
     int param(std::string const& name) const;
     std::string param(size_t i) const;
-    std::string params_to_str() const
-    {
-      std::string str("{");
-      for (auto kv : params_)
-      {
-        str += kv.first + ": " + std::to_string(kv.second);
-      }
-      str += "}";
-      return str;
-    }
+
+    // debug only
+    std::string params_to_str() const;
 
   private:
     xType type_{xType::xNone};

@@ -1,4 +1,3 @@
-
 /*************************************************************
   xboard.cpp - Copyright (C) 2016 by Dmitry Sultanov
   *************************************************************/
@@ -9,6 +8,9 @@
 #include <sstream>
 #include <xprotocol.h>
 #include <Helpers.h>
+#include <xoptions.h>
+#include <algorithm>
+#include <boost/algorithm/string.hpp>
 
 namespace NShallow
 {
@@ -152,9 +154,12 @@ void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
   os_ << outstr << std::endl;
 }
 
-void xProtocolMgr::uciSetOption(const xCmd & cmd)
+void xProtocolMgr::setOption(const xCmd & cmd)
 {
-  proc_.setMemory(cmd.value());
+  NEngine::xOptions xopts;
+  xopts.hash_size_ = cmd.param("Hash");
+  xopts.use_nullmove_ = cmd.param("Nullmove");
+  proc_.setOptions(xopts);
 }
 
 void xProtocolMgr::uciPosition(const xCmd & cmd)
@@ -240,7 +245,7 @@ void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
     if(!board.possibleMove(pv))
       break;
 
-    auto str = moveToStr(pv, false);//printSAN(board, pv);
+    auto str = moveToStr(pv, false);
     if(str.empty())
       break;
 
@@ -346,7 +351,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     cmds_.setUci(true);
     os_ << "id name Shallow" << std::endl;
     os_ << "id author Dmitry Sultanov" << std::endl;
-    os_ << "option name Hash type spin default 256 min 1 max 1024" << std::endl;
+    uciOutputOptions();
     os_ << "uciok" << std::endl;
     break;
 
@@ -354,8 +359,9 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     cmds_.setUci(false);
     break;
 
+  case xType::xOption:
   case xType::SetOption:
-    uciSetOption(cmd);
+    setOption(cmd);
     break;
 
   case xType::IsReady:
@@ -379,11 +385,12 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     os_ << "pong " << cmd.value() << std::endl;
     break;
 
-  case xType::xOption:
-    break;
-
   case xType::xMemory:
-    proc_.setMemory(cmd.value());
+    {
+      NEngine::xOptions xopts;
+      xopts.hash_size_ = cmd.value();
+      proc_.setOptions(xopts);
+    }
     break;
 
   case xType::xProtover:
@@ -527,6 +534,37 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     }
     break;
   }
+}
+
+void xProtocolMgr::uciOutputOptions()
+{
+  for(auto const& oinfo : NEngine::all_options())
+  {
+    std::ostringstream oss;
+    oss << "option name " << oinfo.name
+      << " type " << oinfo.type;
+    if(!oinfo.min_val.empty())
+      oss << " min " << oinfo.min_val;
+    if(!oinfo.max_val.empty())
+      oss << " max " << oinfo.max_val;
+    if(!oinfo.def_val.empty())
+      oss << " default " << oinfo.def_val;
+    if(!oinfo.vars.empty())
+    {
+      std::vector<std::string> temp;
+      std::transform(oinfo.vars.begin(), oinfo.vars.end(), std::back_inserter(temp),
+        [](std::string const& s) { return "var " + s; });
+      auto str = boost::algorithm::join(temp, " ");
+      oss << str;
+    }
+    os_ << oss.str() << std::endl;
+  }
+}
+
+void xProtocolMgr::printCmdDbg(xCmd const& cmd) const
+{
+  std::ofstream ofs("commands.txt", std::ios::app);
+  ofs << to_string(cmd) << std::endl;
 }
 
 } // NShallow

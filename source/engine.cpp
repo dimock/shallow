@@ -20,11 +20,11 @@ void SearchParams::reset()
 Engine::Engine() :
   stop_(false)
 #ifdef USE_HASH
-  , hash_(20)
-  , ehash_(20)
+  , hash_(0)
+  , ehash_(0)
 #endif
 {
-  setMemory(256);
+  setMemory(options_.hash_size_);
 
   initGlobals();
 
@@ -42,6 +42,13 @@ Engine::Engine() :
 void Engine::needUpdate()
 {
   updateRequested_ = true;
+}
+
+void Engine::setOptions(xOptions const& opts)
+{
+  options_ = opts;
+
+  setMemory(options_.hash_size_);
 }
 
 void Engine::setMemory(int mb)

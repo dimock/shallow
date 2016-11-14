@@ -6,6 +6,7 @@ engine.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <HashTable.h>
 #include <Evaluator.h>
 #include <xcallback.h>
+#include <xoptions.h>
 #include <queue>
 #include <array>
 
@@ -70,7 +71,7 @@ public:
 
   void clearHash();
 
-  void setMemory(int mb);
+  void setOptions(xOptions const& opts);
   void setCallbacks(xCallback callback);
 
   void needUpdate();
@@ -91,6 +92,8 @@ public:
   void setMaxDepth(int d);
 
 private:
+
+  void setMemory(int mb);
 
   bool checkForStop();
   void reset();
@@ -151,6 +154,8 @@ private:
 
   SearchData sdata_;
   SearchParams sparams_;
+
+  xOptions options_;
 
 
 #ifdef USE_HASH
