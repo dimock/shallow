@@ -22,8 +22,8 @@ ALIGN_MSC(1) struct ALIGN_GCC(1) PackedMove
     struct
     {
       uint16 from_ : 6,
-      to_ : 6,
-          new_type_ : 4;
+             to_ : 6,
+             new_type_ : 4;
     };
     uint16 mask_;
   };

@@ -7,6 +7,10 @@
 
 int main(int, char *)
 {
+#ifdef _MSC_VER
+  NEngine::init_popcount_ptr();
+#endif
+
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
   for(; xpr.doCmd(););

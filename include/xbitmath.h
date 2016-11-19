@@ -12,7 +12,17 @@ namespace NEngine
     
 
 #ifdef _MSC_VER
-    
+
+typedef int (*FUNC_POP_COUNT64)(uint64);
+extern FUNC_POP_COUNT64 g_func_pop_count64;
+
+void init_popcount_ptr();
+
+inline int pop_count(uint64 n)
+{
+  return g_func_pop_count64(n);
+}
+
 #pragma intrinsic(_BitScanForward)
 #pragma intrinsic(_BitScanReverse)
 
@@ -129,6 +139,11 @@ inline int log2(uint64 n)
   return 63 - __builtin_clzll(n);
 }
 
+inline int pop_count(uint64 n)
+{
+  return __builtin_popcountll(n);
+}
+
 #endif // __GNUC__
 
 
@@ -137,19 +152,6 @@ inline int log2(uint64 n)
 inline bool one_bit_set(uint64 n)
 {
   return (n & (n-1)) == 0ULL;
-}
-
-inline int pop_count(uint64 n)
-{
-  if(n == 0ULL)
-    return 0;
-  else if(one_bit_set(n))
-    return 1;
-  n = n - ((n >> 1)  & 0x5555555555555555ULL);
-  n = (n & 0x3333333333333333ULL) + ((n >> 2) & 0x3333333333333333ULL);
-  n = (n + (n >> 4)) & 0x0f0f0f0f0f0f0f0fULL;
-  n = (n * 0x0101010101010101ULL) >> 56;
-  return static_cast<int>(n);
 }
 
 inline BitMask set_mask_bit(int bit)

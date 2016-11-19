@@ -7,6 +7,57 @@ xbitmath.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
+#ifdef _MSC_VER
+
+FUNC_POP_COUNT64 g_func_pop_count64 = nullptr;
+
+int pop_count_common(uint64 n)
+{
+  if(n == 0ULL)
+    return 0;
+  else if(one_bit_set(n))
+    return 1;
+  n = n - ((n >> 1)  & 0x5555555555555555ULL);
+  n = (n & 0x3333333333333333ULL) + ((n >> 2) & 0x3333333333333333ULL);
+  n = (n + (n >> 4)) & 0x0f0f0f0f0f0f0f0fULL;
+  n = (n * 0x0101010101010101ULL) >> 56;
+  return static_cast<int>(n);
+}
+
+#ifdef _M_X64
+int pop_count64_fast(uint64 n)
+{
+  return __popcnt64(n);
+}
+
+void init_popcount_ptr()
+{
+  int cpuInfo[4] = {};
+  int function_id = 0x00000001;
+  __cpuid(cpuInfo, function_id);
+  if(cpuInfo[2] & (1<<23))
+  {
+    g_func_pop_count64 = pop_count64_fast;
+  }
+  else
+  {
+    g_func_pop_count64 = pop_count_common;
+  }
+}
+
+#else
+
+void init_popcount_ptr()
+{
+  g_func_pop_count64 = pop_count_common;
+}
+
+#endif
+
+
+
+#endif
+
 int8 BitsCounter::s_array_[256] =
 {
   0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
@@ -26,6 +77,7 @@ int8 BitsCounter::s_array_[256] =
   3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
   4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
 };
+
 PawnMasks::PawnMasks()
 {
   for(int pos = 0; pos < 64; ++pos)
