@@ -3,6 +3,8 @@ xbitmath.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
 #include <xbitmath.h>
+#include <xindex.h>
+#include <iostream>
 
 namespace NEngine
 {
@@ -323,6 +325,19 @@ DistanceCounter::DistanceCounter()
   {
     FPos dp = FPosIndexer::get(i >> 6) - FPosIndexer::get(i & 63);
     s_array_[i] = dist_dP(dp);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+void print_bitmask(uint64 mask)
+{
+  for(int i = 7; i >= 0; --i)
+  {
+    for(int j = 0; j < 8; ++j)
+    {
+      std::cout << ((mask & (1ULL << Index(j, i))) ? 1 : 0);
+    }
+    std::cout << std::endl;
   }
 }
 

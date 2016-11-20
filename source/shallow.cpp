@@ -5,15 +5,20 @@
 #include <iostream>
 #include <xprotocol.h>
 
+#include <magicbb.h>
+
 int main(int, char *)
 {
-#ifdef _MSC_VER
-  NEngine::init_popcount_ptr();
-#endif
+//#ifdef _MSC_VER
+//  NEngine::init_popcount_ptr();
+//#endif
 
-  std::cout.setf(std::ios_base::unitbuf);
-  NShallow::xProtocolMgr xpr;
-  for(; xpr.doCmd(););
-	return 0;
+  NEngine::magic_details_ns::calculate();
+  return 0;
+
+ // std::cout.setf(std::ios_base::unitbuf);
+ // NShallow::xProtocolMgr xpr;
+ // for(; xpr.doCmd(););
+	//return 0;
 }
 

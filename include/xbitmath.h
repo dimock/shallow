@@ -146,7 +146,7 @@ inline int pop_count(uint64 n)
 
 #endif // __GNUC__
 
-
+void print_bitmask(uint64 mask);
 
 // got from chessprogramming.wikispaces.com
 inline bool one_bit_set(uint64 n)
