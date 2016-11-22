@@ -7,25 +7,37 @@ magicbb.h - Copyright (C) 2016 by Dmitry Sultanov
 
 namespace NEngine
 {
+
 namespace magic_details_ns
 {
+  template <int shift_>
   struct magic_struct
   {
-    uint64 magic_number;
-    int start_index;
-    int bits_shift;
+    uint64  magic_number;
+    uint64  mask;
+    uint64* moves;
 
-    inline int index(uint64 const& mask) const
+    static const int bits_count = 64 - shift_;
+    static const int bits_shift = shift_;
+
+    inline int index(uint64 const& board) const
     {
-      return start_index + ((mask * magic_number) >> bits_shift);
+      int i = ((mask & board) * magic_number) >> shift_;
+      X_ASSERT(i >= (1 << (64 - bits_shift)), "invalid magic index");
+      return i;
+    }
+
+    inline uint64 move(uint64 const& board) const
+    {
+     return moves[index(board)];
     }
   };
-  extern std::vector<uint64> rook_masks_;
-  extern std::vector<uint64> bishop_masks_;
-  extern std::vector<uint64> rook_moves_;
-  extern std::vector<uint64> bishop_moves_;
-  extern std::vector<magic_struct> rook_magics_;
-  extern std::vector<magic_struct> bishop_magics_;
+
+  using magic_struct_rook   = magic_struct<52>;
+  using magic_struct_bishop = magic_struct<55>;
+
+  extern magic_struct_rook* rook_magics_p;
+  extern magic_struct_bishop* bishop_magics_p;
 
   // do it only once
   void calculate();
@@ -38,19 +50,15 @@ namespace magic_ns
   inline uint64 rook_moves(int pos, uint64 board)
   {
     X_ASSERT(pos < 0 || pos > 63, "invalid rook position for magic bb");
-    auto const& ms = magic_details_ns::rook_magics_[pos];
-    auto magic_index = ms.index(magic_details_ns::rook_masks_[pos] & board);
-    X_ASSERT(magic_index >= magic_details_ns::rook_moves_.size(), "invalid rook magic index");
-    return magic_details_ns::rook_moves_[magic_index];
+    auto const& ms = magic_details_ns::rook_magics_p[pos];
+    return ms.move(board);
   }
 
   inline uint64 bishop_moves(int pos, uint64 board)
   {
     X_ASSERT(pos < 0 || pos > 63, "invalid bishop position for magic bb");
-    auto const& ms = magic_details_ns::bishop_magics_[pos];
-    size_t magic_index = ms.index(magic_details_ns::bishop_masks_[pos] & board);
-    X_ASSERT(magic_index >= magic_details_ns::bishop_moves_.size(), "invalid bishop magic index");
-    return magic_details_ns::bishop_moves_[magic_index];
+    auto const& ms = magic_details_ns::bishop_magics_p[pos];
+    return ms.move(board);
   }
 
   inline uint64 queen_moves(int pos, uint64 board)

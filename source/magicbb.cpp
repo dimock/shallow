@@ -18,63 +18,44 @@ namespace NEngine
 
 namespace magic_details_ns
 {
-  std::vector<uint64> rook_masks_;
-  std::vector<uint64> bishop_masks_;
-  std::vector<uint64> rook_moves_;
-  std::vector<uint64> bishop_moves_;
-  std::vector<magic_struct> rook_magics_;
-  std::vector<magic_struct> bishop_magics_;
+  magic_struct_rook*   rook_magics_p;
+  magic_struct_bishop* bishop_magics_p;
+ 
 } // magic_details_ns
 
 namespace
 {
-  std::vector<magic_details_ns::magic_struct> predefined_rook_magics()
+  std::vector<uint8> rook_moves_arr;
+  std::vector<uint8> bishop_moves_arr;
+  std::vector<uint8> rook_magics_arr;
+  std::vector<uint8> bishop_magics_arr;
+
+  template <class T, size_t SIZE, size_t ALIGN_BYTES=16>
+  inline T* make_aligned_array(std::vector<uint8>& arr)
   {
-    return std::vector<magic_details_ns::magic_struct>
-    {
-      { 72075465399107584, 0, 52}, { 9241386572837814336, 0, 53 }, { 144150925458542664, 0, 53 }, { 72092847134213376, 0, 53 },
-      { 180148384249151872, 0, 53 }, { 72061992219836672, 0, 53 }, { 108105082779730432, 0, 53 }, { 1008814022834913572, 0, 52 },
-      { 1548113445687340, 0, 53 }, { 12141775032860803273, 0, 54 }, { 9224357268001136640, 0, 54 }, { 5066619374559744, 0, 54 },
-      { 1153484497520428049, 0, 54 }, { 2306406268489695744, 0, 54 }, { 2468535708961474561, 0, 54 }, { 432486320028256512, 0, 53 },
-      { 4611828405319516160, 0, 53 }, { 9148487573233664, 0, 54 }, { 11678186777541120256, 0, 54 }, { 2612792021206708224, 0, 54 },
-      { 282574773815296, 0, 54 }, { 1225261673301147672, 0, 54 }, { 36173932587452464, 0, 54 }, { 14375015088673921, 0, 53 },
-      { 146507873554415620, 0, 53 }, { 3463268389399830528, 0, 54 }, { 18150534021696, 0, 54 }, { 571748194975872, 0, 54 },
-      { 74773233664128, 0, 54 }, { 1157988097137856548, 0, 54 }, { 563302141004040, 0, 54 }, { 4785078899081282, 0, 53 },
-      { 31595568895623320, 0, 53 }, { 2810600347666485248, 0, 54 }, { 3747628346125595392, 0, 54 }, { 1769493574971305984, 0, 54 },
-      { 864831883131766784, 0, 54 }, { 604133312625188928, 0, 54 }, { 140746086711552, 0, 54 }, { 703690704945408, 0, 53 },
-      { 234504410129006593, 0, 53 }, { 1153625333816754242, 0, 54 }, { 2306124553446817856, 0, 54 }, { 19149094777815168, 0, 54 },
-      { 45620936593932416, 0, 54 }, { 9232942237741350929, 0, 54 }, { 580965520298475538, 0, 54 }, { 564051633635364, 0, 53 },
-      { 576532231297704192, 0, 53 }, { 4614289666794848320, 0, 54 }, { 140806209929600, 0, 54 }, { 14267456406807904384, 0, 54 },
-      { 5497831293184, 0, 54 }, { 1297601843807125632, 0, 54 }, { 562968259994112, 0, 54 }, { 141085389357568, 0, 53 },
-      { 7353810792022043, 0, 52 }, { 18006667313161, 0, 53 }, { 1738389526495691841, 0, 53 }, { 2018175721128607878, 0, 53 },
-      { 9890467870314598402, 0, 53 }, { 4612249175546397058, 0, 53 }, { 9370302009393381634, 0, 53 }, { 15132376242307858465, 0, 52 }
-    };
+    arr.resize(SIZE*sizeof(T) + ALIGN_BYTES*2);
+    auto buffer = reinterpret_cast<size_t>(arr.data() + ALIGN_BYTES) & (~(ALIGN_BYTES-(size_t)1));
+    return reinterpret_cast<T*>(buffer);
   }
 
-  std::vector<magic_details_ns::magic_struct> predefined_bishop_magics()
+  template <class mstruct>
+  mstruct* initialize_magics(std::vector<uint8>& magics_arr, std::vector<mstruct> const& magic_src)
   {
-    return std::vector<magic_details_ns::magic_struct>
+    auto* magics = make_aligned_array<mstruct, 64>(magics_arr);
+    for(size_t i = 0; i < magic_src.size(); ++i)
     {
-      { 9044651520565380, 0, 58}, { 43911204502372352, 0, 59 }, { 10177086623058432, 0, 59 }, { 9242516769826930688, 0, 59 },
-      { 297536917457608704, 0, 59 }, { 11830762630291718, 0, 59 }, { 585750814348345344, 0, 59 }, { 1153221155902464000, 0, 58 },
-      { 289426653694788099, 0, 59 }, { 720593876179550754, 0, 59 }, { 2305895802960617484, 0, 59 }, { 2882312652103811104, 0, 59 },
-      { 866432884679168, 0, 59 }, { 22635663598092332, 0, 59 }, { 9583945884388823040, 0, 59 }, { 13835130661905760993, 0, 59 },
-      { 18025462412870274, 0, 59 }, { 4503616874660864, 0, 59 }, { 13863205587323464192, 0, 57 }, { 282678171598912, 0, 57 },
-      { 1127001576464385, 0, 57 }, { 1157566541812728064, 0, 57 }, { 591185483026141186, 0, 59 }, { 2305913382274994176, 0, 59 },
-      { 2310356505528369408, 0, 59 }, { 2256335848669760, 0, 59 }, { 291766407727719936, 0, 57 }, { 4621256717525614602, 0, 55 },
-      { 9268553168671760404, 0, 55 }, { 4613938368148930688, 0, 57 }, { 164400079405351424, 0, 59 }, { 576813699835176960, 0, 59 },
-      { 2256268861677574, 0, 59 }, { 121810701370527745, 0, 59 }, { 2360097517177803776, 0, 57 }, { 4613977417844261152, 0, 55 },
-      { 29295542429303040, 0, 55 }, { 1153071630911603456, 0, 57 }, { 9227877837653025928, 0, 59 }, { 74311628509684993, 0, 59 },
-      { 198441027081617473, 0, 59 }, { 147495121783390720, 0, 59 }, { 18084907108573248, 0, 57 }, { 576460890145030404, 0, 57 },
-      { 1442394475094606852, 0, 57 }, { 295579546265059620, 0, 57 }, { 73187909238331456, 0, 59 }, { 298416818811568404, 0, 59 },
-      { 9799987339666128900, 0, 59 }, { 4611827308088559104, 0, 59 }, { 1134979874816040, 0, 59 }, { 1134978793521, 0, 59 },
-      { 36032371241583888, 0, 59 }, { 4701830682677544960, 0, 59 }, { 54329377822893072, 0, 59 }, { 72638140509618178, 0, 59 },
-      { 598323573033088, 0, 58 }, { 22520223097771008, 0, 59 }, { 36067419584202752, 0, 59 }, { 21990241207312, 0, 59 },
-      { 9012149910250500, 0, 59 }, { 9483824791702, 0, 59 }, { 35331206414468, 0, 59 }, { 6922635194671448196, 0, 58 }
-    };
+      magics[i] = magic_src[i];
+    }
+    return magics;
   }
 
-  uint64 rook_moves_from_mask(int pos, uint64 mask_r, bool exclude_border)
+  template <class mstruct>
+  uint64* initialize_moves(std::vector<uint8>& moves_arr)
+  {
+    return make_aligned_array<uint64, 64 * (1 << mstruct::bits_count)>(moves_arr);
+  }
+
+  uint64 rook_moves_from_blockers(int pos, uint64 mask_r, bool exclude_border)
   {
     Index index(pos);
     uint64 moves_x = 0;
@@ -114,7 +95,7 @@ namespace
     return moves_x | moves_y;
   }
 
-  uint64 bishop_moves_from_mask(int pos, uint64 mask_b, bool exclude_border)
+  uint64 bishop_moves_from_blockers(int pos, uint64 mask_b, bool exclude_border)
   {
     std::array<FPos, 4> deltas =
     {
@@ -144,7 +125,7 @@ namespace
   }
 
   std::vector<std::vector<uint64>>
-  calculate_rooks_masks()
+  calculate_rooks_blockers()
   {
     std::vector<std::vector<uint64>> rook_all_masks_(64);
     for(int pos = 0; pos < 64; ++pos)
@@ -185,7 +166,7 @@ namespace
   }
 
   std::vector<std::vector<uint64>>
-  calculate_bishops_masks()
+  calculate_bishops_blockers()
   {
     std::vector<std::vector<uint64>> bishop_all_masks_(64);
     std::array<FPos, 4> deltas =
@@ -225,45 +206,43 @@ namespace
     return bishop_all_masks_;
   }
 
-  std::vector<magic_details_ns::magic_struct>
-  calculate_magic_numbers(std::function<std::vector<std::vector<uint64>>()> const& calculate_masks,
-    std::function<int(int)> const& bits_counter,
-    std::function<uint64(int, uint64, bool)> const& moves_from_mask)
+  template <class mstruct>
+  std::vector<mstruct>
+  calculate_magic_numbers(std::function<std::vector<std::vector<uint64>>()> const& calculate_blockers,
+    std::function<uint64(int, uint64, bool)> const& moves_from_blockers)
   {
-    auto all_masks = calculate_masks();
+    auto blockers = calculate_blockers();
 
     std::random_device rd;
     std::mt19937_64 rgen(rd());
     std::uniform_int_distribution<uint64> dist;
 
-    std::vector<magic_details_ns::magic_struct> magics(64);
+    std::vector<mstruct> magics(64);
     int total_counter = 0;
     for(int pos = 0; pos < 64; ++pos)
     {
-      auto const& xmasks = all_masks[pos];
+      auto const& xblks = blockers[pos];
       Index index(pos);
-      int bits_count = bits_counter(pos);
       //std::cout << "position (" << index.x() << ", " << index.y() << ") needs " << xmasks.size() << " indices" << std::endl;
       for(size_t vcounter = 0;; ++vcounter, ++total_counter)
       {
-        std::vector<uint64> moves(1 << bits_count);
+        std::vector<uint64> moves(1 << mstruct::bits_count);
         int count = 0;
         auto mnum = dist(rgen) & dist(rgen) & dist(rgen);
-        for(size_t i = 0; i < xmasks.size(); ++i)
+        for(auto const blk : xblks)
         {
-          auto xmsk = xmasks[i];
-          auto xmvs = moves_from_mask(pos, xmsk, false);
+          auto xmvs = moves_from_blockers(pos, blk, false);
           X_ASSERT(xmvs == 0ULL, "no moves");
-          size_t index = (xmsk * mnum) >> (64- bits_count);
+          size_t index = (blk * mnum) >> mstruct::bits_shift;
           X_ASSERT(index >= moves.size(), "magic index is too big");
           if(moves[index] && moves[index] != xmvs)
             break;
           moves[index] = xmvs;
           count++;
         }
-        if(count == xmasks.size())
+        if(count == xblks.size())
         {
-          magics[pos] = magic_details_ns::magic_struct{ mnum, 0, 64-bits_count };
+          magics[pos] = { mnum, 0ULL, nullptr };
           std::cout << "magic number for pos " << pos << " found: " << mnum << " ; variants count: " << vcounter << std::endl;
           break;
         }
@@ -273,109 +252,88 @@ namespace
     return magics;
   }
 
-  void fill_masks(std::function<std::vector<std::vector<uint64>>()> const& calculate_masks,
-    std::function<int(int)> const& bits_counter,
-    std::function<uint64(int, uint64, bool)> const& moves_from_mask,
-    std::vector<magic_details_ns::magic_struct> & magics_io,
-    std::vector<uint64>& masks_o,
-    std::vector<uint64>& moves_o)
+  template <class mstruct>  
+  void fill_magics(std::function<std::vector<std::vector<uint64>>()> const& calculate_blockers,
+    std::function<uint64(int, uint64, bool)> const& moves_from_blockers,
+    mstruct* magics_io,
+    uint64* moves_o)
   {
-    masks_o.resize(64);
-    moves_o.reserve(64*512);
-    auto all_masks = calculate_masks();
-    int start_index = 0;
+    auto blockers = calculate_blockers();
+    uint64* moves_ptr = moves_o;
     for(int pos = 0; pos < 64; ++pos)
     {
       auto& ms = magics_io[pos];
-      ms.start_index = start_index;
-      auto const& xmasks = all_masks[pos];
-      masks_o[pos] = moves_from_mask(pos, 0ULL, true);
-      for(size_t i = 0; i < xmasks.size(); ++i)
+      ms.mask = moves_from_blockers(pos, 0ULL, true);
+      ms.moves = moves_ptr;
+      moves_ptr += 1 << mstruct::bits_count;
+      auto const& xblks = blockers[pos];
+      for(auto const blk : xblks)
       {
-        auto xmsk = xmasks[i];
-        auto xmvs = moves_from_mask(pos, xmsk, false);
-        int index = ms.index(xmsk);
-        if(moves_o.size() <= index)
-          moves_o.resize(index + 1);
-        if(moves_o[index] && moves_o[index] != xmvs)
-        {
-          X_ASSERT(true, "already exists");
-        }
-        moves_o[index] = xmvs;
-        X_ASSERT(!moves_o[index], "zero moves mask");
+        auto xmvs = moves_from_blockers(pos, blk, false);
+        int index = ms.index(blk);
+        X_ASSERT(ms.moves[index] && ms.moves[index] != xmvs, "magics collision detected");
+        ms.moves[index] = xmvs;
+        X_ASSERT(!ms.moves[index], "zero moves mask");
       }
-      start_index += 1 << (64 - ms.bits_shift);
     }
   }
 
+  template <class mstruct>
   void verify_magics(std::function<uint64(int, uint64)> const& get_moves,
-    std::function<std::vector<std::vector<uint64>>()> const& calculate_masks,
-    std::function<uint64(int, uint64, bool)> const& moves_from_mask,
-    std::vector<magic_details_ns::magic_struct> const& magics_i,
-    std::vector<uint64> const& masks_i,
-    std::vector<uint64> const& moves_i)
+    std::function<std::vector<std::vector<uint64>>()> const& calculate_blockers,
+    std::function<uint64(int, uint64, bool)> const& moves_from_blockers,
+    mstruct const* magics_i)
   {
     std::random_device rd;
     std::mt19937_64 rgen(rd());
     std::uniform_int_distribution<uint64> dist;
 
-    auto all_masks = calculate_masks();
+    auto blockers = calculate_blockers();
     bool verified_ok = true;
 
-    for(int pos = 0; pos < 64; ++pos)
+    for(int pos = 0; verified_ok && pos < 64; ++pos)
     {
-      for(int i = 0; i < 1000000; ++i)
+      for(int i = 0; verified_ok && i < 100000; ++i)
       {
         auto const& ms = magics_i[pos];
         uint64 board = dist(rgen);
-        uint64 xmsk = board & masks_i[pos];
-        uint64 xmvs = moves_from_mask(pos, xmsk, false);
-        int index = ms.index(xmsk);
-        auto xmoves_from_index = moves_i[index];
-        if(xmvs != get_moves(pos, board)
-          || xmoves_from_index != xmvs)
+        uint64 blk = board & ms.mask;
+        uint64 xmvs = moves_from_blockers(pos, blk, false);
+        if(xmvs != get_moves(pos, board))
         {
           verified_ok = false;
-          auto const& rmasks = all_masks[pos];
-          bool found = false;
-          for(auto rm : rmasks)
+          auto const& xblks = blockers[pos];
+          if(std::find_if(xblks.begin(), xblks.end(), [blk](uint64 const b) { return b == blk; })
+            == xblks.end())
           {
-            if(rm == xmsk)
-            {
-              found = true;
-              break;
-            }
-          }
-          if(!found)
-          {
-            std::cout << "mask not found:" << std::endl;
+            std::cout << "blocker not found in generated array:" << std::endl;
           }
           std::cout << "invalid magic for board:" << std::endl;
           print_bitmask(board);
-          std::cout << "mask:" << std::endl;
-          print_bitmask(xmsk);
+          std::cout << "blocker:" << std::endl;
+          print_bitmask(blk);
           std::cout << "moves:" << std::endl;
           print_bitmask(xmvs);
           std::cout << "magic moves:" << std::endl;
           print_bitmask(get_moves(pos, board));
-          std::cout << "all moves:" << std::endl;
-          print_bitmask(masks_i[pos]);
+          std::cout << "possible moves:" << std::endl;
+          print_bitmask(ms.mask);
           break;
         }
       }
     }
 
-    //for(int i = 0; i < 3; ++i)
-    //{
-    //  uint64 board = dist(rgen);
-    //  int pos = dist(rgen) & 63;
-    //  auto xmoves = get_moves(pos, board);
-    //  std::cout << "for board:" << std::endl;
-    //  print_bitmask(board);
-    //  std::cout << "moves found" << std::endl;
-    //  print_bitmask(xmoves);
-    //  std::cout << std::endl;
-    //}
+    for(int i = 0; i < 3; ++i)
+    {
+      uint64 board = dist(rgen);
+      int pos = dist(rgen) & 63;
+      auto xmoves = get_moves(pos, board);
+      std::cout << "for board:" << std::endl;
+      print_bitmask(board);
+      std::cout << "moves found" << std::endl;
+      print_bitmask(xmoves);
+      std::cout << std::endl;
+    }
 
     if(verified_ok)
     {
@@ -383,13 +341,14 @@ namespace
     }
   }
 
-  void save_magic_numbers(std::vector<magic_details_ns::magic_struct> const& magics, std::string const& fname)
+  template <class mstruct>
+  void save_magic_numbers(std::vector<mstruct> const& magics, std::string const& fname)
   {
     std::ofstream ofs(fname);
     int n = 0;
     for(auto const& ms : magics)
     {
-      ofs << "{" << ms.magic_number << ", 0, " << ms.bits_shift << "}, ";
+      ofs << "{" << ms.magic_number << "ULL, 0ULL, nullptr}, ";
       if(++n >= 4)
       {
         ofs << std::endl;
@@ -397,38 +356,6 @@ namespace
       }
     }
   }
-
-  int rook_bits_counter(int pos)
-  {
-    Index index(pos);
-    int num_x = (index.x() == 0 || index.x() == 7) ? 6 : 5;
-    int num_y = (index.y() == 0 || index.y() == 7) ? 6 : 5;
-    return num_x + num_y;
-  }
-
-  int bishop_bits_counter(int pos)
-  {
-    std::array<FPos, 4> deltas =
-    {
-      FPos{ 1, 1 },
-      FPos{ 1, -1 },
-      FPos{ -1, 1 },
-      FPos{ -1, -1 }
-    };
-    int bits_count = 0;
-    for(auto const& d : deltas)
-    {
-      FPos current(pos);
-      for(current += d;; current += d)
-      {
-        if(current.x() < 1 || current.x() > 6 || current.y() < 1 || current.y() > 6)
-          break;
-        bits_count++;
-      }
-    }
-    return bits_count;
-  }
-
 } // namespace {}
 
 namespace magic_details_ns
@@ -438,64 +365,51 @@ namespace magic_details_ns
   {
     auto t_start = std::chrono::high_resolution_clock::now();
 
-    bool calculate_rooks_magics = true;
-    bool calculate_bishops_magics = true;
+    auto rook_magics =
+    calculate_magic_numbers<magic_details_ns::magic_struct_rook>(
+      calculate_rooks_blockers,
+      rook_moves_from_blockers);
 
-    if(calculate_rooks_magics)
-    {
-      magic_details_ns::rook_magics_ =
-        calculate_magic_numbers(calculate_rooks_masks,
-        rook_bits_counter,
-        rook_moves_from_mask);
+    magic_details_ns::rook_magics_p = initialize_magics<magic_details_ns::magic_struct_rook>(rook_magics_arr, rook_magics);
+    auto* rook_moves_ptr = initialize_moves<magic_details_ns::magic_struct_rook>(rook_moves_arr);
 
-      fill_masks(calculate_rooks_masks,
-        rook_bits_counter,
-        rook_moves_from_mask,
-        magic_details_ns::rook_magics_,
-        magic_details_ns::rook_masks_,
-        magic_details_ns::rook_moves_);
+    fill_magics<magic_details_ns::magic_struct_rook>(calculate_rooks_blockers,
+      rook_moves_from_blockers,
+      magic_details_ns::rook_magics_p,
+      rook_moves_ptr);
 
-      verify_magics([](int pos, uint64 board) { return magic_ns::rook_moves(pos, board); },
-        calculate_rooks_masks,
-        rook_moves_from_mask,
-        magic_details_ns::rook_magics_,
-        magic_details_ns::rook_masks_,
-        magic_details_ns::rook_moves_);
-    }
+    verify_magics([](int pos, uint64 board) { return magic_ns::rook_moves(pos, board); },
+      calculate_rooks_blockers,
+      rook_moves_from_blockers,
+      magic_details_ns::rook_magics_p);
 
-    if(calculate_bishops_magics)
-    {
-      magic_details_ns::bishop_magics_ =
-        calculate_magic_numbers(calculate_bishops_masks,
-        bishop_bits_counter,
-        bishop_moves_from_mask);
+    auto bishop_magics =
+    calculate_magic_numbers<magic_details_ns::magic_struct_bishop>(
+      calculate_bishops_blockers,
+      bishop_moves_from_blockers);
 
-      fill_masks(calculate_bishops_masks,
-        bishop_bits_counter,
-        bishop_moves_from_mask,
-        magic_details_ns::bishop_magics_,
-        magic_details_ns::bishop_masks_,
-        magic_details_ns::bishop_moves_);
+    magic_details_ns::bishop_magics_p = initialize_magics<magic_details_ns::magic_struct_bishop>(bishop_magics_arr, bishop_magics);
+    auto* bishop_moves_ptr = initialize_moves<magic_details_ns::magic_struct_bishop>(bishop_moves_arr);
 
-      verify_magics([](int pos, uint64 board) { return magic_ns::bishop_moves(pos, board); },
-        calculate_bishops_masks,
-        bishop_moves_from_mask,
-        magic_details_ns::bishop_magics_,
-        magic_details_ns::bishop_masks_,
-        magic_details_ns::bishop_moves_);
-    }
+    fill_magics<magic_details_ns::magic_struct_bishop>(calculate_bishops_blockers,
+      bishop_moves_from_blockers,
+      magic_details_ns::bishop_magics_p,
+      bishop_moves_ptr);
+
+    verify_magics([](int pos, uint64 board) { return magic_ns::bishop_moves(pos, board); },
+      calculate_bishops_blockers,
+      bishop_moves_from_blockers,
+      magic_details_ns::bishop_magics_p);
 
     auto t_end = std::chrono::high_resolution_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::seconds>(t_end - t_start);
     std::cout << "magic numbers took: " << dur.count() << " seconds" << std::endl;
 
-    std::cout << "rooks table contains " << magic_details_ns::rook_moves_.size() << " elements" << std::endl;
-    std::cout << "rooks table size is " << magic_details_ns::rook_moves_.size() * sizeof(uint64) << " bytes" << std::endl;
-    save_magic_numbers(magic_details_ns::rook_magics_, "rook_magics.txt");
+    std::cout << "rooks table size is " << rook_moves_arr.size() << " bytes" << std::endl;
+    save_magic_numbers<magic_details_ns::magic_struct_rook>(rook_magics, "rook_magics.txt");
 
-    std::cout << "bishops table contains " << magic_details_ns::bishop_moves_.size() << " elements" << std::endl;
-    std::cout << "bishops table size is " << magic_details_ns::bishop_moves_.size() * sizeof(uint64) << " bytes" << std::endl;
-    save_magic_numbers(magic_details_ns::bishop_magics_, "bishop_magics.txt");
+    std::cout << "bishops table size is " << bishop_moves_arr.size() << " bytes" << std::endl;
+    save_magic_numbers<magic_details_ns::magic_struct_bishop>(bishop_magics, "bishop_magics.txt");
   }
 } // magic_details_ns
 
@@ -503,23 +417,74 @@ namespace magic_ns
 {
   void initialize()
   {
-    magic_details_ns::rook_magics_   = predefined_rook_magics();
-    magic_details_ns::bishop_magics_ = predefined_bishop_magics();
+    std::vector<magic_details_ns::magic_struct_rook> rook_src =
+    {
+      {180146253911457824ULL, 0ULL, nullptr}, {1170975488756158848ULL, 0ULL, nullptr}, {36033263843860480ULL, 0ULL, nullptr}, {36033263793864834ULL, 0ULL, nullptr}, 
+      {1155174403999285272ULL, 0ULL, nullptr}, {72066407311474833ULL, 0ULL, nullptr}, {1450168443058978912ULL, 0ULL, nullptr}, {144118765793092100ULL, 0ULL, nullptr}, 
+      {20336575927812160ULL, 0ULL, nullptr}, {9223451202096730368ULL, 0ULL, nullptr}, {152000889900503040ULL, 0ULL, nullptr}, {1153629590229356548ULL, 0ULL, nullptr}, 
+      {37510939095860484ULL, 0ULL, nullptr}, {4620904413572136974ULL, 0ULL, nullptr}, {81205532400144387ULL, 0ULL, nullptr}, {144159169631487104ULL, 0ULL, nullptr}, 
+      {585469085431832704ULL, 0ULL, nullptr}, {443042171693078784ULL, 0ULL, nullptr}, {4818918190476689425ULL, 0ULL, nullptr}, {4611688217518407717ULL, 0ULL, nullptr}, 
+      {4611705809653596296ULL, 0ULL, nullptr}, {144397350314491905ULL, 0ULL, nullptr}, {1134833463988288ULL, 0ULL, nullptr}, {4611686156038377600ULL, 0ULL, nullptr}, 
+      {4629929115498061824ULL, 0ULL, nullptr}, {2306142780784673792ULL, 0ULL, nullptr}, {567623012059149ULL, 0ULL, nullptr}, {10377999985655687232ULL, 0ULL, nullptr}, 
+      {1174318001994989632ULL, 0ULL, nullptr}, {864704324743236096ULL, 0ULL, nullptr}, {18104566247882756ULL, 0ULL, nullptr}, {4612531130956005632ULL, 0ULL, nullptr}, 
+      {2344405358317930496ULL, 0ULL, nullptr}, {4613940103571046416ULL, 0ULL, nullptr}, {2310346763461984264ULL, 0ULL, nullptr}, {577024252147400960ULL, 0ULL, nullptr}, 
+      {9223662445967704096ULL, 0ULL, nullptr}, {1188950851467612161ULL, 0ULL, nullptr}, {216175050393520192ULL, 0ULL, nullptr}, {3026700699483246600ULL, 0ULL, nullptr}, 
+      {2310487484852109312ULL, 0ULL, nullptr}, {1172063454441246977ULL, 0ULL, nullptr}, {216181581495148546ULL, 0ULL, nullptr}, {293930811399602694ULL, 0ULL, nullptr}, 
+      {2305847441720623232ULL, 0ULL, nullptr}, {1730510906670452752ULL, 0ULL, nullptr}, {598989747972734977ULL, 0ULL, nullptr}, {138648125441ULL, 0ULL, nullptr}, 
+      {18594997022494752ULL, 0ULL, nullptr}, {4621537676989435972ULL, 0ULL, nullptr}, {290491543964629024ULL, 0ULL, nullptr}, {87971667775617ULL, 0ULL, nullptr}, 
+      {77688468834615360ULL, 0ULL, nullptr}, {9259418563632989456ULL, 0ULL, nullptr}, {9295447227474510530ULL, 0ULL, nullptr}, {4616498590571827328ULL, 0ULL, nullptr}, 
+      {1266637935231233ULL, 0ULL, nullptr}, {6938078398526786145ULL, 0ULL, nullptr}, {9024826337463553ULL, 0ULL, nullptr}, {9223381108094427138ULL, 0ULL, nullptr}, 
+      {11818017305723405314ULL, 0ULL, nullptr}, {360749373587457ULL, 0ULL, nullptr}, {4611976291845996610ULL, 0ULL, nullptr}, {288869243949188290ULL, 0ULL, nullptr} 
+    };
 
-    fill_masks(calculate_rooks_masks,
-      rook_bits_counter,
-      rook_moves_from_mask,
-      magic_details_ns::rook_magics_,
-      magic_details_ns::rook_masks_,
-      magic_details_ns::rook_moves_);
+    std::vector<magic_details_ns::magic_struct_bishop> bishop_src =
+    {
+      {5260346202054002179ULL, 0ULL, nullptr}, {37383673901072ULL, 0ULL, nullptr}, {144396920893739012ULL, 0ULL, nullptr}, {72132955012630528ULL, 0ULL, nullptr}, 
+      {20270613557936656ULL, 0ULL, nullptr}, {10139800389584896ULL, 0ULL, nullptr}, {292752154932961920ULL, 0ULL, nullptr}, {13263945365723431168ULL, 0ULL, nullptr}, 
+      {72069173538209797ULL, 0ULL, nullptr}, {108161158452674578ULL, 0ULL, nullptr}, {5669377818624ULL, 0ULL, nullptr}, {4576442549600288ULL, 0ULL, nullptr}, 
+      {2377936888209081152ULL, 0ULL, nullptr}, {1197994094140327938ULL, 0ULL, nullptr}, {22518292348408324ULL, 0ULL, nullptr}, {4632005027752861696ULL, 0ULL, nullptr}, 
+      {4616831803754287617ULL, 0ULL, nullptr}, {584514693239144453ULL, 0ULL, nullptr}, {2306265238992848128ULL, 0ULL, nullptr}, {9296696277953777664ULL, 0ULL, nullptr}, 
+      {772939101476360233ULL, 0ULL, nullptr}, {9223943821564445770ULL, 0ULL, nullptr}, {7355812280550912ULL, 0ULL, nullptr}, {4575105867976704ULL, 0ULL, nullptr}, 
+      {572021998125072ULL, 0ULL, nullptr}, {45149233123657ULL, 0ULL, nullptr}, {4905554692672590848ULL, 0ULL, nullptr}, {16143443135396069633ULL, 0ULL, nullptr}, 
+      {145135811715076ULL, 0ULL, nullptr}, {2252351721197600ULL, 0ULL, nullptr}, {1161359165817856ULL, 0ULL, nullptr}, {291753280267225091ULL, 0ULL, nullptr}, 
+      {4612706436219175936ULL, 0ULL, nullptr}, {9259551539981517840ULL, 0ULL, nullptr}, {20409274455032962ULL, 0ULL, nullptr}, {4791673821855872ULL, 0ULL, nullptr}, 
+      {54044303630338056ULL, 0ULL, nullptr}, {122169099328487440ULL, 0ULL, nullptr}, {576748963936343041ULL, 0ULL, nullptr}, {20325610605792258ULL, 0ULL, nullptr}, 
+      {27039207134594560ULL, 0ULL, nullptr}, {4612249039314911768ULL, 0ULL, nullptr}, {9547638915468100097ULL, 0ULL, nullptr}, {617134711206578322ULL, 0ULL, nullptr}, 
+      {4683761480745616384ULL, 0ULL, nullptr}, {9233514207406719040ULL, 0ULL, nullptr}, {9403603983316097280ULL, 0ULL, nullptr}, {308505510158663690ULL, 0ULL, nullptr}, 
+      {4611840105479671810ULL, 0ULL, nullptr}, {9232520971105076362ULL, 0ULL, nullptr}, {1134767006302224ULL, 0ULL, nullptr}, {150870871052124160ULL, 0ULL, nullptr}, 
+      {3538705332459569152ULL, 0ULL, nullptr}, {6940610559863734312ULL, 0ULL, nullptr}, {2305915304271970432ULL, 0ULL, nullptr}, {1143492770275362ULL, 0ULL, nullptr}, 
+      {19000696955475009ULL, 0ULL, nullptr}, {1130315150182464ULL, 0ULL, nullptr}, {9225623864074059809ULL, 0ULL, nullptr}, {563059543016448ULL, 0ULL, nullptr}, 
+      {144261424196485664ULL, 0ULL, nullptr}, {1207669489271054392ULL, 0ULL, nullptr}, {4613938266566297716ULL, 0ULL, nullptr}, {4612253523327850528ULL, 0ULL, nullptr} 
+    };
 
-    fill_masks(calculate_bishops_masks,
-      bishop_bits_counter,
-      bishop_moves_from_mask,
-      magic_details_ns::bishop_magics_,
-      magic_details_ns::bishop_masks_,
-      magic_details_ns::bishop_moves_);
+    magic_details_ns::rook_magics_p   = initialize_magics<magic_details_ns::magic_struct_rook>(rook_magics_arr, rook_src);
+    magic_details_ns::bishop_magics_p = initialize_magics<magic_details_ns::magic_struct_bishop>(bishop_magics_arr, bishop_src);
+
+    auto* rook_moves_ptr   = initialize_moves<magic_details_ns::magic_struct_rook>(rook_moves_arr);
+    auto* bishop_moves_ptr = initialize_moves<magic_details_ns::magic_struct_bishop>(bishop_moves_arr);
+
+    fill_magics<magic_details_ns::magic_struct_rook>(calculate_rooks_blockers,
+      rook_moves_from_blockers,
+      magic_details_ns::rook_magics_p,
+      rook_moves_ptr);
+
+//    verify_magics([](int pos, uint64 board) { return magic_ns::rook_moves(pos, board); },
+//      calculate_rooks_blockers,
+//      rook_moves_from_blockers,
+//      magic_details_ns::rook_magics_p);
+
+
+    fill_magics<magic_details_ns::magic_struct_bishop>(calculate_bishops_blockers,
+      bishop_moves_from_blockers,
+      magic_details_ns::bishop_magics_p,
+      bishop_moves_ptr);
+
+//    verify_magics([](int pos, uint64 board) { return magic_ns::bishop_moves(pos, board); },
+//      calculate_bishops_blockers,
+//      bishop_moves_from_blockers,
+//      magic_details_ns::bishop_magics_p);
   }
+
 } // magic_ns
 
 } // NEngine
