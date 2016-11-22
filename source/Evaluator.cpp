@@ -6,6 +6,7 @@
 #include <Board.h>
 #include <HashTable.h>
 #include <xindex.h>
+#include <magicbb.h>
 
 namespace NEngine
 {
@@ -769,12 +770,12 @@ ScoreType Evaluator::evaluateBishops()
     {
       int from = clear_lsb(bimask);
 
-      BitMask bmob_mask = 0;
+      BitMask bmob_mask = magic_ns::bishop_moves(from, mask_all_) & inv_mask_all_;
 
-      mobility_masks_LSB(from, bmob_mask, betweenMasks().from_dir(from, nst::nw));
-      mobility_masks_LSB(from, bmob_mask, betweenMasks().from_dir(from, nst::ne));
-      mobility_masks_MSB(from, bmob_mask, betweenMasks().from_dir(from, nst::se));
-      mobility_masks_MSB(from, bmob_mask, betweenMasks().from_dir(from, nst::sw));
+      //mobility_masks_LSB(from, bmob_mask, betweenMasks().from_dir(from, nst::nw));
+      //mobility_masks_LSB(from, bmob_mask, betweenMasks().from_dir(from, nst::ne));
+      //mobility_masks_MSB(from, bmob_mask, betweenMasks().from_dir(from, nst::se));
+      //mobility_masks_MSB(from, bmob_mask, betweenMasks().from_dir(from, nst::sw));
 
       finfo_[c].attack_mask_ |= bmob_mask;
       bmob_mask &= not_attacked;
@@ -822,12 +823,12 @@ void Evaluator::evaluateRooks(bool eval_open)
     {
       int from = clear_lsb(ro_mask);
 
-      BitMask rmob_mask = 0;
+      BitMask rmob_mask = magic_ns::rook_moves(from, mask_all_) & inv_mask_all_;;
 
-      mobility_masks_LSB(from, rmob_mask, betweenMasks().from_dir(from, nst::no));
-      mobility_masks_LSB(from, rmob_mask, betweenMasks().from_dir(from, nst::ea));
-      mobility_masks_MSB(from, rmob_mask, betweenMasks().from_dir(from, nst::so));
-      mobility_masks_MSB(from, rmob_mask, betweenMasks().from_dir(from, nst::we));
+      //mobility_masks_LSB(from, rmob_mask, betweenMasks().from_dir(from, nst::no));
+      //mobility_masks_LSB(from, rmob_mask, betweenMasks().from_dir(from, nst::ea));
+      //mobility_masks_MSB(from, rmob_mask, betweenMasks().from_dir(from, nst::so));
+      //mobility_masks_MSB(from, rmob_mask, betweenMasks().from_dir(from, nst::we));
 
       rattack_mask[c] |= rmob_mask;
       rmob_mask &= not_attacked;
@@ -890,17 +891,17 @@ void Evaluator::evaluateQueens()
     {
       int from = clear_lsb(q_mask);
 
-      BitMask qmob_mask = 0;
+      BitMask qmob_mask = magic_ns::queen_moves(from, mask_all_) & inv_mask_all_;
 
-      mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::nw));
-      mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::ne));
-      mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::se));
-      mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::sw));
+      //mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::nw));
+      //mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::ne));
+      //mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::se));
+      //mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::sw));
 
-      mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::no));
-      mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::ea));
-      mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::so));
-      mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::we));
+      //mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::no));
+      //mobility_masks_LSB(from, qmob_mask, betweenMasks().from_dir(from, nst::ea));
+      //mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::so));
+      //mobility_masks_MSB(from, qmob_mask, betweenMasks().from_dir(from, nst::we));
 
       qattack_mask[c] |= qmob_mask;
       qmob_mask &= not_attacked;

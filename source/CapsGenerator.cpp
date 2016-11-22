@@ -4,6 +4,7 @@
 
 #include <MovesGenerator.h>
 #include <MovesTable.h>
+#include <magicbb.h>
 
 namespace NEngine
 {
@@ -67,7 +68,7 @@ int CapsGenerator::generate()
   const Figure::Color color = board_.color_;
   const Figure::Color ocolor = Figure::otherColor(color);
 
-  BitMask oppenent_mask = board_.fmgr_.mask(ocolor) ^ board_.fmgr_.king_mask(ocolor);
+  BitMask opponent_mask = board_.fmgr_.mask(ocolor) ^ board_.fmgr_.king_mask(ocolor);
   const BitMask & black = board_.fmgr_.mask(Figure::ColorBlack);
   const BitMask & white = board_.fmgr_.mask(Figure::ColorWhite);
   BitMask mask_all = white | black;
@@ -115,7 +116,7 @@ int CapsGenerator::generate()
   else
     pawn_eat_msk = ((pawn_msk >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk >> 9) & Figure::pawnCutoffMasks_[1]);
 
-  pawns_eat = (pawn_eat_msk & oppenent_mask) != 0;
+  pawns_eat = (pawn_eat_msk & opponent_mask) != 0;
 
   if ( !pawns_eat && board_.en_passant_ >= 0 )
     pawns_eat = (pawn_eat_msk & set_mask_bit(board_.en_passant_)) != 0;
@@ -131,7 +132,7 @@ int CapsGenerator::generate()
     {
       int pw_pos = clear_lsb(pw_mask);
 
-      BitMask p_caps = movesTable().pawnCaps_o(color, pw_pos) & oppenent_mask;
+      BitMask p_caps = movesTable().pawnCaps_o(color, pw_pos) & opponent_mask;
 
       for ( ; p_caps; )
       {
@@ -175,7 +176,7 @@ int CapsGenerator::generate()
     int kn_pos = clear_lsb(kn_mask);
 
     // don't need to verify capture possibility by mask
-    BitMask f_caps = movesTable().caps(Figure::TypeKnight, kn_pos) & oppenent_mask;
+    BitMask f_caps = movesTable().caps(Figure::TypeKnight, kn_pos) & opponent_mask;
     for ( ; f_caps; )
     {
       int to = clear_lsb(f_caps);
@@ -190,23 +191,80 @@ int CapsGenerator::generate()
     }
   }
 
-  // 3. Bishops + Rooks + Queens
-  for (int type = Figure::TypeBishop; type <= Figure::TypeQueen; ++type)
+  //// 3. Bishops + Rooks + Queens
+  //for (int type = Figure::TypeBishop; type <= Figure::TypeQueen; ++type)
+  //{
+  //  BitMask fg_mask = board_.fmgr().type_mask((Figure::Type)type, color);
+  //  for ( ; fg_mask; )
+  //  {
+  //    int from = clear_lsb(fg_mask);
+
+  //    BitMask f_caps = movesTable().caps((Figure::Type)type, from) & opponent_mask;
+  //    for ( ; f_caps; )
+  //    {
+  //      int8 to = _lsb64(f_caps);
+  //      int pos = board_.find_first_index(from, to, mask_all);
+  //      if ( set_mask_bit(pos) & oppenent_mask )
+  //        add(m, from, pos, Figure::TypeNone, true);
+
+  //      f_caps &= ~betweenMasks().from(from, to);
+  //    }
+  //  }
+  //}
+
   {
-    BitMask fg_mask = board_.fmgr().type_mask((Figure::Type)type, color);
-    for ( ; fg_mask; )
+    auto bi_mask = board_.fmgr().type_mask(Figure::TypeBishop, color);
+    for(; bi_mask;)
     {
-      int from = clear_lsb(fg_mask);
-
-      BitMask f_caps = movesTable().caps((Figure::Type)type, from) & oppenent_mask;
-      for ( ; f_caps; )
+      int from = clear_lsb(bi_mask);
+      auto f_caps = magic_ns::bishop_moves(from, mask_all) & opponent_mask;
+      for(; f_caps;)
       {
-        int8 to = _lsb64(f_caps);
-        int pos = board_.find_first_index(from, to, mask_all);
-        if ( set_mask_bit(pos) & oppenent_mask )
-          add(m, from, pos, Figure::TypeNone, true);
+        int8 to = clear_lsb(f_caps);
 
-        f_caps &= ~betweenMasks().from(from, to);
+        X_ASSERT((unsigned)to > 63, "invalid field index while capture");
+        const Field & field = board_.getField(to);
+        X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
+
+        add(m, from, to, Figure::TypeNone, true);
+      }
+    }
+  }
+
+  {
+    auto bi_mask = board_.fmgr().type_mask(Figure::TypeRook, color);
+    for(; bi_mask;)
+    {
+      int from = clear_lsb(bi_mask);
+      auto f_caps = magic_ns::rook_moves(from, mask_all) & opponent_mask;
+      for(; f_caps;)
+      {
+        int8 to = clear_lsb(f_caps);
+
+        X_ASSERT((unsigned)to > 63, "invalid field index while capture");
+        const Field & field = board_.getField(to);
+        X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
+
+        add(m, from, to, Figure::TypeNone, true);
+      }
+    }
+  }
+
+  {
+    auto bi_mask = board_.fmgr().type_mask(Figure::TypeQueen, color);
+    for(; bi_mask;)
+    {
+      int from = clear_lsb(bi_mask);
+      auto f_caps = magic_ns::queen_moves(from, mask_all) & opponent_mask;
+      for(; f_caps;)
+      {
+        int8 to = clear_lsb(f_caps);
+
+        X_ASSERT((unsigned)to > 63, "invalid field index while capture");
+        const Field & field = board_.getField(to);
+        X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
+
+        add(m, from, to, Figure::TypeNone, true);
       }
     }
   }
@@ -214,7 +272,7 @@ int CapsGenerator::generate()
   // 4. King
   {
     // don't need to verify capture possibility by mask
-    BitMask f_caps = movesTable().caps(Figure::TypeKing, ki_pos) & oppenent_mask;
+    BitMask f_caps = movesTable().caps(Figure::TypeKing, ki_pos) & opponent_mask;
     for ( ; f_caps; )
     {
       int to = clear_lsb(f_caps);
