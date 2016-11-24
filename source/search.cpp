@@ -35,7 +35,7 @@ inline Figure::Type delta2type(int delta)
 
 inline int calculateDelta(ScoreType alpha, ScoreType score)
 {
-  int delta = (int)alpha - (int)score - (int)Evaluator::positionGain_;
+  int delta = (int)alpha - (int)score - Position_Gain;
   return delta;
 }
 

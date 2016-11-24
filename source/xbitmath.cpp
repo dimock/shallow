@@ -85,148 +85,169 @@ PawnMasks::PawnMasks()
   for(int pos = 0; pos < 64; ++pos)
     clearAll(pos);
 
-  for(int i = 0; i < 8; ++i)
-    pmask_isolated_[i] = 0;
+  //for(int i = 0; i < 8; ++i)
+  //  pmask_isolated_[i] = 0;
 
 
   for(int color = 0; color < 2; ++color)
   {
     for(int i = 0; i < 64; ++i)
     {
-      int dy = color ? -1 : +1;
+      //int dy = color ? -1 : +1;
       int x = i & 7;
       int y = i >> 3;
 
-      if(y > 0 && y < 7)
-      {
-        if(x < 7)
-          pmasks_guarded_[color][i] |= set_mask_bit((y+dy) | ((x+1) << 3));
-        if(x > 0)
-          pmasks_guarded_[color][i] |= set_mask_bit((y+dy) | ((x-1) << 3));
-      }
+      //if(y > 0 && y < 7)
+      //{
+      //  if(x < 7)
+      //    pmasks_guarded_[color][i] |= set_mask_bit((y+dy) | ((x+1) << 3));
+      //  if(x > 0)
+      //    pmasks_guarded_[color][i] |= set_mask_bit((y+dy) | ((x-1) << 3));
+      //}
 
-      uint8 pm = 0;
-      uint8 bm = 0;
-      if(color)
+      auto& pass_msk = pmasks_passed_[color][i];
+      int deltay = color ? 1 : -1;
+      for(int xx = x-1; xx <= x+1 && xx < 8; ++xx)
       {
-        for(int j = y+1; j < 7; ++j)
-          pm |= set_bit(j);
-
-        if(y < 6)
-          bm = set_bit(y) | set_bit(y+1);
-      }
-      else
-      {
-        for(int j = y-1; j > 0; --j)
-          pm |= 1 << j;
-
-        if(y > 1)
-          bm = set_bit(y) | set_bit(y-1);
-      }
-
-      uint8 * ppmask = (uint8*)&pmasks_passed_[color][i];
-      uint8 * blkmask = (uint8*)&pmasks_blocked_[color][i];
-
-      ppmask[x] = pm;
-      blkmask[x] = pm;
-      if(x > 0)
-      {
-        ppmask[x-1] = pm;
-      }
-      if(x < 7)
-      {
-        ppmask[x+1] = pm;
-      }
-
-      uint64 & kpk_mask = pmask_kpk_[color][i];
-      int x0 = x > 0 ? x-1 : 0;
-      int x1 = x < 7 ? x+1 : 7;
-      if(color)
-      {
-        for(int j = y+1; j < 8; ++j)
+        if(xx < 0)
+          continue;
+        for(int yy = y+deltay; yy < 8 && yy >= 0; yy += deltay)
         {
-          for(int l = x0; l <= x1; ++l)
-          {
-            int kp = l | (j<<3);
-            kpk_mask |= set_mask_bit(kp);
-          }
+          pass_msk |= set_mask_bit(Index(xx, yy));
         }
       }
-      else
-      {
-        for(int j = y-1; j >= 0; --j)
-        {
-          for(int l = x0; l <= x1; ++l)
-          {
-            int kp = l | (j<<3);
-            kpk_mask |= set_mask_bit(kp);
-          }
-        }
-      }
+
+      //if(y+deltay >= 0 && y+deltay < 8)
+      //{
+      //  pmasks_blocked_[color][i] |= set_mask_bit(Index(x, y+deltay));
+      //}
+
     }
   }
 
-  for(int i = 0; i < 64; ++i)
-  {
-    int x = i & 7;
-    int y = i >> 3;
 
-    uint8 * dis_mask = (uint8*)&pmasks_disconnected_[i];
+      //uint8 pm = 0;
+      //uint8 bm = 0;
+      //if(color)
+      //{
+      //  for(int j = y+1; j < 7; ++j)
+      //    pm |= set_bit(j);
 
-    if(x > 0)
-    {
-      dis_mask[x-1] |= set_bit(y);
-      if(y > 0)
-        dis_mask[x-1] |= set_bit(y-1);
-      if(y < 7)
-        dis_mask[x-1] |= set_bit(y+1);
-    }
+      //  if(y < 6)
+      //    bm = set_bit(y) | set_bit(y+1);
+      //}
+      //else
+      //{
+      //  for(int j = y-1; j > 0; --j)
+      //    pm |= 1 << j;
 
-    if(x < 7)
-    {
-      dis_mask[x+1] |= set_bit(y);
-      if(y > 0)
-        dis_mask[x+1] |= set_bit(y-1);
-      if(y < 7)
-        dis_mask[x+1] |= set_bit(y+1);
-    }
-  }
+      //  if(y > 1)
+      //    bm = set_bit(y) | set_bit(y-1);
+      //}
 
-  for(int x = 0; x < 8; ++x)
-  {
-    uint8 * ppmask = (uint8*)&pmask_isolated_[x];
-    if(x > 0)
-      ppmask[x-1] = 0xff;
-    if(x < 7)
-      ppmask[x+1] = 0xff;
-  }
+      //uint8 * ppmask = (uint8*)&pmasks_passed_[color][i];
+      //uint8 * blkmask = (uint8*)&pmasks_blocked_[color][i];
 
-  // destination color
-  for(int color = 0; color < 2; ++color)
-  {
-    for(int i = 0; i < 64; ++i)
-    {
-      int x = i & 7;
-      int8 dst_color = 0;
-      if(color) // white
-        dst_color = (x+1) & 1;
-      else
-        dst_color = x & 1;
-      pawn_dst_color_[color][i] = dst_color;
-    }
-  }
+      //ppmask[x] = pm;
+      //blkmask[x] = pm;
+      //if(x > 0)
+      //{
+      //  ppmask[x-1] = pm;
+      //}
+      //if(x < 7)
+      //{
+      //  ppmask[x+1] = pm;
+      //}
+
+  //    uint64 & kpk_mask = pmask_kpk_[color][i];
+  //    int x0 = x > 0 ? x-1 : 0;
+  //    int x1 = x < 7 ? x+1 : 7;
+  //    if(color)
+  //    {
+  //      for(int j = y+1; j < 8; ++j)
+  //      {
+  //        for(int l = x0; l <= x1; ++l)
+  //        {
+  //          int kp = l | (j<<3);
+  //          kpk_mask |= set_mask_bit(kp);
+  //        }
+  //      }
+  //    }
+  //    else
+  //    {
+  //      for(int j = y-1; j >= 0; --j)
+  //      {
+  //        for(int l = x0; l <= x1; ++l)
+  //        {
+  //          int kp = l | (j<<3);
+  //          kpk_mask |= set_mask_bit(kp);
+  //        }
+  //      }
+  //    }
+  //  }
+  //}
+
+  //for(int i = 0; i < 64; ++i)
+  //{
+  //  int x = i & 7;
+  //  int y = i >> 3;
+
+  //  uint8 * dis_mask = (uint8*)&pmasks_disconnected_[i];
+
+  //  if(x > 0)
+  //  {
+  //    dis_mask[x-1] |= set_bit(y);
+  //    if(y > 0)
+  //      dis_mask[x-1] |= set_bit(y-1);
+  //    if(y < 7)
+  //      dis_mask[x-1] |= set_bit(y+1);
+  //  }
+
+  //  if(x < 7)
+  //  {
+  //    dis_mask[x+1] |= set_bit(y);
+  //    if(y > 0)
+  //      dis_mask[x+1] |= set_bit(y-1);
+  //    if(y < 7)
+  //      dis_mask[x+1] |= set_bit(y+1);
+  //  }
+  //}
+
+  //for(int x = 0; x < 8; ++x)
+  //{
+  //  uint8 * ppmask = (uint8*)&pmask_isolated_[x];
+  //  if(x > 0)
+  //    ppmask[x-1] = 0xff;
+  //  if(x < 7)
+  //    ppmask[x+1] = 0xff;
+  //}
+
+  //// destination color
+  //for(int color = 0; color < 2; ++color)
+  //{
+  //  for(int i = 0; i < 64; ++i)
+  //  {
+  //    int x = i & 7;
+  //    int8 dst_color = 0;
+  //    if(color) // white
+  //      dst_color = (x+1) & 1;
+  //    else
+  //      dst_color = x & 1;
+  //    pawn_dst_color_[color][i] = dst_color;
+  //  }
+  //}
 }
 
 void PawnMasks::clearAll(int pos)
 {
   for(int color = 0; color < 2; ++color)
   {
-    pmasks_guarded_[color][pos] = 0;
+    //pmasks_guarded_[color][pos] = 0;
     pmasks_passed_[color][pos] = 0;
-    pmasks_blocked_[color][pos] = 0;
-    pmask_kpk_[color][pos] = 0;
+    //pmasks_blocked_[color][pos] = 0;
+    //pmask_kpk_[color][pos] = 0;
   }
-  pmasks_disconnected_[pos] = 0;
+  //pmasks_disconnected_[pos] = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////

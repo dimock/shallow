@@ -27,7 +27,7 @@ namespace Figure
 
   const char * name(Type type);
 
-  ScoreType positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos);
+  //ScoreType positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos);
 
   Figure::Type toFtype(char c);
 
@@ -51,9 +51,9 @@ public:
   {
     count_ = 0;
     weight_ = 0;
-    eval_[0] = 0;
-    eval_[1] = 0;
-    pmask_t_ = 0;
+    //eval_[0] = 0;
+    //eval_[1] = 0;
+    //pmask_t_ = 0;
     for (int i = 0; i < 8; ++i)
     {
       tcount_[i][0] = tcount_[i][1] = 0;
@@ -77,11 +77,11 @@ public:
 
     tmask_[t] |= set_mask_bit(p);
 
-    if ( t == Figure::Type::TypePawn )
-      pmask_t_ |= set_mask_bit(s_transposeIndex_[p]);
+    //if ( t == Figure::Type::TypePawn )
+    //  pmask_t_ |= set_mask_bit(s_transposeIndex_[p]);
 
-    eval_[0] += Figure::positionEvaluation(0, c, t, p);
-    eval_[1] += Figure::positionEvaluation(1, c, t, p);
+    //eval_[0] += Figure::positionEvaluation(0, c, t, p);
+    //eval_[1] += Figure::positionEvaluation(1, c, t, p);
 
     X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::Type::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop] + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook] + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
     X_ASSERT(count_ != pawns() + bishops() + knights() + rooks() + queens(), "invalid number of figures encountered");
@@ -101,13 +101,13 @@ public:
 
     tmask_[t] ^= set_mask_bit(p);
 
-    if ( t == Figure::TypePawn )
-      pmask_t_ ^= set_mask_bit(s_transposeIndex_[p]);
+    //if ( t == Figure::TypePawn )
+    //  pmask_t_ ^= set_mask_bit(s_transposeIndex_[p]);
 
     X_ASSERT( tmask_[t] & set_mask_bit(p), "invalid mask" );
 
-    eval_[0] -= Figure::positionEvaluation(0, c, t, p);
-    eval_[1] -= Figure::positionEvaluation(1, c, t, p);
+    //eval_[0] -= Figure::positionEvaluation(0, c, t, p);
+    //eval_[1] -= Figure::positionEvaluation(1, c, t, p);
 
     X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop] + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook] + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
     X_ASSERT(count_ != pawns() + bishops() + knights() + rooks() + queens(), "invalid number of figures encountered");
@@ -115,20 +115,20 @@ public:
 
   inline void move(const Figure::Color c, const Figure::Type t, int from, int to)
   {
-    eval_[0] -= Figure::positionEvaluation(0, c, t, from);
-    eval_[0] += Figure::positionEvaluation(0, c, t, to);
+    //eval_[0] -= Figure::positionEvaluation(0, c, t, from);
+    //eval_[0] += Figure::positionEvaluation(0, c, t, to);
 
-    eval_[1] -= Figure::positionEvaluation(1, c, t, from);
-    eval_[1] += Figure::positionEvaluation(1, c, t, to);
+    //eval_[1] -= Figure::positionEvaluation(1, c, t, from);
+    //eval_[1] += Figure::positionEvaluation(1, c, t, to);
 
     tmask_[t] ^= set_mask_bit(from);
     tmask_[t] |= set_mask_bit(to);
 
-    if ( t == Figure::TypePawn )
-    {
-      pmask_t_ ^= set_mask_bit(s_transposeIndex_[from]);
-      pmask_t_ |= set_mask_bit(s_transposeIndex_[to]);
-    }
+    //if ( t == Figure::TypePawn )
+    //{
+    //  pmask_t_ ^= set_mask_bit(s_transposeIndex_[from]);
+    //  pmask_t_ |= set_mask_bit(s_transposeIndex_[to]);
+    //}
   }
 
   inline int tcount(Figure::Type type) const { return type == Figure::TypeBishop ? bishops() : tcount_[type][0]; }
@@ -142,9 +142,9 @@ public:
   inline int rooks() const { return tcount_[Figure::TypeRook][0]; }
   inline int queens() const { return tcount_[Figure::TypeQueen][0]; }
   inline ScoreType weight() const { return weight_; }
-  inline ScoreType eval(int stage) const { return eval_[stage]; }
-  inline const BitMask & pawn_mask_t() const { return pmask_t_; }
-  inline const BitMask & pawn_mask_o() const { return tmask_[Figure::TypePawn]; }
+  //inline ScoreType eval(int stage) const { return eval_[stage]; }
+  //inline const BitMask & pawn_mask_t() const { return pmask_t_; }
+  inline const BitMask & pawn_mask() const { return tmask_[Figure::TypePawn]; }
   inline const BitMask & knight_mask() const { return tmask_[Figure::TypeKnight]; }
   inline const BitMask & bishop_mask() const { return tmask_[Figure::TypeBishop]; }
   inline const BitMask & rook_mask() const { return tmask_[Figure::TypeRook]; }
@@ -158,8 +158,8 @@ private:
   uint8 tcount_[8][2];
   uint8 count_;
   BitMask tmask_[8];
-  BitMask pmask_t_; // transposed pawn's mask
-  ScoreType weight_, eval_[2];
+  //BitMask pmask_t_; // transposed pawn's mask
+  ScoreType weight_;// , eval_[2];
 };
 
 class FiguresManager
@@ -282,10 +282,10 @@ public:
   inline int queens(Figure::Color color) const { return fcounter_[color].queens(); }
   inline ScoreType weight(Figure::Color color) const { return fcounter_[color].weight(); }
   inline ScoreType weight() const { return weight(Figure::ColorWhite) - weight(Figure::ColorBlack); }
-  inline ScoreType eval(Figure::Color color, int stage) const { return fcounter_[color].eval(stage); }
-  inline ScoreType eval(int stage) const { return fcounter_[Figure::ColorWhite].eval(stage) - fcounter_[Figure::ColorBlack].eval(stage); }
-  inline const BitMask & pawn_mask_o(Figure::Color color) const { return fcounter_[color].pawn_mask_o(); }
-  inline const BitMask & pawn_mask_t(Figure::Color color) const { return fcounter_[color].pawn_mask_t(); }
+  //inline ScoreType eval(Figure::Color color, int stage) const { return fcounter_[color].eval(stage); }
+  //inline ScoreType eval(int stage) const { return fcounter_[Figure::ColorWhite].eval(stage) - fcounter_[Figure::ColorBlack].eval(stage); }
+  inline const BitMask & pawn_mask(Figure::Color color) const { return fcounter_[color].pawn_mask(); }
+  //inline const BitMask & pawn_mask_t(Figure::Color color) const { return fcounter_[color].pawn_mask_t(); }
   inline const BitMask & knight_mask(Figure::Color color) const { return fcounter_[color].knight_mask(); }
   inline const BitMask & bishop_mask(Figure::Color color) const { return fcounter_[color].bishop_mask(); }
   inline const BitMask & rook_mask(Figure::Color color) const { return fcounter_[color].rook_mask(); }

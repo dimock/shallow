@@ -196,7 +196,7 @@ int ChecksGenerator::genChecks()
   // 4. Pawn
   {
     // 1st find immediate checks with or without capture
-    BitMask pw_check_mask = movesTable().pawnCaps_o(ocolor, oki_pos);
+    BitMask pw_check_mask = movesTable().pawnCaps(ocolor, oki_pos);
     BitMask looked_up = 0;
 
     for ( ; pw_check_mask; )
@@ -209,7 +209,7 @@ int ChecksGenerator::genChecks()
       // usual moves
       {
         BitMask inv_mask_all = ~mask_all;
-        BitMask pw_from = movesTable().pawnFrom(color, to) & board_.fmgr().pawn_mask_o(color);
+        BitMask pw_from = movesTable().pawnFrom(color, to) & board_.fmgr().pawn_mask(color);
         looked_up |= pw_from;
 
         for ( ; pw_from; )
@@ -225,7 +225,7 @@ int ChecksGenerator::genChecks()
 
     // discovered checks
     {
-      BitMask disc_mask = movesTable().caps(Figure::TypeQueen, oki_pos) & board_.fmgr().pawn_mask_o(color);
+      BitMask disc_mask = movesTable().caps(Figure::TypeQueen, oki_pos) & board_.fmgr().pawn_mask(color);
       disc_mask &= ~looked_up;
 
       for ( ; disc_mask; )

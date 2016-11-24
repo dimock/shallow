@@ -38,7 +38,7 @@ void Board::detectCheck(const UndoInfo & undo)
     const BitMask & king_mask = fmgr_.king_mask(color);
     if ( fto.type() == Figure::TypePawn )
     {
-      const BitMask & pw_mask = movesTable().pawnCaps_o(ocolor, undo.to_);
+      const BitMask & pw_mask = movesTable().pawnCaps(ocolor, undo.to_);
       if ( pw_mask & king_mask )
         checking_[checkingNum_++] = undo.to_;
     }
@@ -96,8 +96,8 @@ bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_
       return true;
 
     // pawns
-    const BitMask & p_caps = movesTable().pawnCaps_o(ocolor, pos);
-    const BitMask & pawn_msk = fmgr_.pawn_mask_o(c);
+    const BitMask & p_caps = movesTable().pawnCaps(ocolor, pos);
+    const BitMask & pawn_msk = fmgr_.pawn_mask(c);
     if ( p_caps & pawn_msk )
       return true;
 

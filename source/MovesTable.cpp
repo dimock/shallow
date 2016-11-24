@@ -62,8 +62,8 @@ void MovesTable::resetAllTables(int pos)
 
   for (int color = 0; color < 2; ++color)
   {
-    s_pawnsCaps_t_[color][pos] = 0;
-    s_pawnsCaps_o_[color][pos] = 0;
+    //s_pawnsCaps_t_[color][pos] = 0;
+    s_pawnsCaps_[color][pos] = 0;
     s_pawnsMoves_[color][pos] = 0;
     s_pawnsFrom_[color][pos] = 0;
   }
@@ -104,8 +104,8 @@ void MovesTable::initPawns(int pos)
       if ( s_tablePawn_[color][pos][i] >= 0 )
       {
         int8 & pp = s_tablePawn_[color][pos][i];
-        s_pawnsCaps_o_[color][pos] |= set_mask_bit(pp);
-        s_pawnsCaps_t_[color][pos] |= set_mask_bit(FiguresCounter::s_transposeIndex_[pp]);
+        s_pawnsCaps_[color][pos] |= set_mask_bit(pp);
+        //s_pawnsCaps_t_[color][pos] |= set_mask_bit(FiguresCounter::s_transposeIndex_[pp]);
       }
     }
 

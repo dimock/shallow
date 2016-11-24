@@ -167,23 +167,23 @@ public:
     return false;
   }
 
-  // becomes passed
-  bool pawnPassed(const UndoInfo & move) const
-  {
-    const Field & fto = getField(move.to_);
-    if(fto.type() != Figure::TypePawn)
-      return false;
+  //// becomes passed
+  //bool pawnPassed(const UndoInfo & move) const
+  //{
+  //  const Field & fto = getField(move.to_);
+  //  if(fto.type() != Figure::TypePawn)
+  //    return false;
 
-    X_ASSERT(color_ == fto.color(), "invalid color of passed pawn");
+  //  X_ASSERT(color_ == fto.color(), "invalid color of passed pawn");
 
-    Figure::Color ocolor = Figure::otherColor(color_);
-    const uint64 & pmsk = fmgr_.pawn_mask_t(ocolor);
-    const uint64 & opmsk = fmgr_.pawn_mask_t(color_);
-    const uint64 & passmsk = pawnMasks().mask_passed(ocolor, move.to_);
-    const uint64 & blckmsk = pawnMasks().mask_blocked(ocolor, move.to_);
+  //  Figure::Color ocolor = Figure::otherColor(color_);
+  //  const uint64 & pmsk = fmgr_.pawn_mask_t(ocolor);
+  //  const uint64 & opmsk = fmgr_.pawn_mask_t(color_);
+  //  const uint64 & passmsk = pawnMasks().mask_passed(ocolor, move.to_);
+  //  const uint64 & blckmsk = pawnMasks().mask_blocked(ocolor, move.to_);
 
-    return !(opmsk & passmsk) && !(pmsk & blckmsk);
-  }
+  //  return !(opmsk & passmsk) && !(pmsk & blckmsk);
+  //}
 
   /// is pt attacked by figure in position 'p'
   inline bool ptAttackedBy(int8 pt, int p) const

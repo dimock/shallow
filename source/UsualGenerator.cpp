@@ -41,9 +41,9 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
   BitMask mask_all_inv = ~(board_.fmgr_.mask(Figure::ColorWhite) | board_.fmgr_.mask(Figure::ColorBlack));
 
   // pawns movements
-  if ( board_.fmgr().pawn_mask_o(color) )
+  if ( board_.fmgr().pawn_mask(color) )
   {
-    BitMask pw_mask = board_.fmgr().pawn_mask_o(color);
+    BitMask pw_mask = board_.fmgr().pawn_mask(color);
     for ( ; pw_mask; )
     {
       int pw_pos = clear_lsb(pw_mask);

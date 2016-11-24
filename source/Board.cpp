@@ -66,18 +66,18 @@ bool Board::isDangerPawn(Move & move) const
   Figure::Color ocolor = Figure::otherColor(color);
 
   // attacking
-  const uint64 & p_caps = movesTable().pawnCaps_o(ffrom.color(), move.to_);
+  const uint64 & p_caps = movesTable().pawnCaps(ffrom.color(), move.to_);
   const uint64 & o_mask = fmgr_.mask(ocolor);
   if ( p_caps & o_mask )
     return true;
 
   //// becomes passed
-  const uint64 & pmsk = fmgr_.pawn_mask_t(color);
-  const uint64 & opmsk = fmgr_.pawn_mask_t(ocolor);
+  //const uint64 & pmsk = fmgr_.pawn_mask(color);
+  const uint64 & opmsk = fmgr_.pawn_mask(ocolor);
   const uint64 & passmsk = pawnMasks().mask_passed(color, move.to_);
-  const uint64 & blckmsk = pawnMasks().mask_blocked(color, move.to_);
+  //const uint64 & blckmsk = pawnMasks().mask_blocked(color, move.to_);
 
-  if ( !(opmsk & passmsk) && !(pmsk & blckmsk) )
+  if ( !(opmsk & passmsk) )//&& !(pmsk & blckmsk) )
 		return true;
 
   if ( !move.seen_ && see(move) >= 0 )
@@ -155,7 +155,7 @@ bool Board::isDoublePawnAttack(const Move & move) const
 
 	Figure::Color ocolor = Figure::otherColor(color_);
 
-	const BitMask & pw_caps = movesTable().pawnCaps_o(ocolor, move.to_);
+	const BitMask & pw_caps = movesTable().pawnCaps(ocolor, move.to_);
 	BitMask op_mask = fmgr().knight_mask(color_) | fmgr().bishop_mask(color_) | fmgr().rook_mask(color_) | fmgr().queen_mask(color_);
 	op_mask &= pw_caps;
 
@@ -341,8 +341,8 @@ void Board::verifyMasks() const
 {
   for (int c = 0; c < 2; ++c)
   {
-    BitMask pawn_mask_o = 0ULL;
-    BitMask pawn_mask_t = 0ULL;
+    BitMask pawn_mask = 0ULL;
+    //BitMask pawn_mask_t = 0ULL;
     BitMask knight_mask = 0ULL;
     BitMask bishop_mask = 0ULL;
     BitMask rook_mask = 0ULL;
@@ -363,8 +363,8 @@ void Board::verifyMasks() const
       {
       case Figure::TypePawn:
         {
-          pawn_mask_t |= set_mask_bit(Index(p).transp());
-          pawn_mask_o |= set_mask_bit(p);
+          //pawn_mask_t |= set_mask_bit(Index(p).transp());
+          pawn_mask |= set_mask_bit(p);
         }
         break;
 
@@ -390,8 +390,8 @@ void Board::verifyMasks() const
       }
     }
 
-    X_ASSERT( pawn_mask_o != fmgr_.pawn_mask_o(color), "pawn mask invalid" );
-    X_ASSERT( pawn_mask_t != fmgr_.pawn_mask_t(color), "pawn mask invalid" );
+    X_ASSERT( pawn_mask != fmgr_.pawn_mask(color), "pawn mask invalid" );
+    //X_ASSERT( pawn_mask_t != fmgr_.pawn_mask_t(color), "pawn mask invalid" );
     X_ASSERT( knight_mask != fmgr_.knight_mask(color), "knight mask invalid" );
     X_ASSERT( bishop_mask != fmgr_.bishop_mask(color), "bishop mask invalid" );
     X_ASSERT( rook_mask != fmgr_.rook_mask(color), "rook mask invalid" );

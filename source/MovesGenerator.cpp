@@ -80,9 +80,9 @@ int MovesGenerator::generate()
   if ( board_.checkingNum_ < 2 )
   {
     // pawns movements
-    if ( board_.fmgr().pawn_mask_o(color) )
+    if ( board_.fmgr().pawn_mask(color) )
     {
-      BitMask pw_mask = board_.fmgr().pawn_mask_o(color);
+      BitMask pw_mask = board_.fmgr().pawn_mask(color);
       for ( ; pw_mask; )
       {
         int pw_pos = clear_lsb(pw_mask);
@@ -202,7 +202,7 @@ int MovesGenerator::generate()
         {
           const int8 * packed = reinterpret_cast<const int8*>(table);
           int8 count = packed[0];
-          int8 delta = packed[1];
+          int8 const& delta = packed[1];
 
           int8 p = fg_pos;
           bool capture = false;

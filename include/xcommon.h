@@ -95,3 +95,4 @@ static const int LMR_MinDepthLimit = 5 * ONE_PLY;
 static const int NullMove_DepthMin = 2 * ONE_PLY;
 static const int NullMove_PlyReduce = 4 * ONE_PLY;
 static const int NullMove_PlyVerify = 5 * ONE_PLY;
+static const int Position_Gain = 100;

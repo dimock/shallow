@@ -76,7 +76,7 @@ int CapsGenerator::generate()
   int oki_pos = board_.kingPos(ocolor);
 
   // generate pawn promotions
-  const BitMask & pawn_msk = board_.fmgr_.pawn_mask_o(color);
+  const BitMask & pawn_msk = board_.fmgr_.pawn_mask(color);
   {
     static int pw_delta[] = { -8, +8 };
     BitMask promo_msk = movesTable().promote_o(color);
@@ -126,13 +126,13 @@ int CapsGenerator::generate()
   // 1. Pawns
   if ( pawns_eat )
   {
-    BitMask pw_mask = board_.fmgr().pawn_mask_o(color);
+    BitMask pw_mask = board_.fmgr().pawn_mask(color);
 
     for ( ; pw_mask; )
     {
       int pw_pos = clear_lsb(pw_mask);
 
-      BitMask p_caps = movesTable().pawnCaps_o(color, pw_pos) & opponent_mask;
+      BitMask p_caps = movesTable().pawnCaps(color, pw_pos) & opponent_mask;
 
       for ( ; p_caps; )
       {
@@ -159,7 +159,7 @@ int CapsGenerator::generate()
     if ( board_.en_passant_ >= 0 )
     {
       X_ASSERT( board_.getField(board_.enpassantPos()).type() != Figure::TypePawn || board_.getField(board_.enpassantPos()).color() != ocolor, "there is no en passant pawn" );
-      BitMask ep_mask = movesTable().pawnCaps_o(ocolor, board_.en_passant_) & board_.fmgr().pawn_mask_o(color);
+      BitMask ep_mask = movesTable().pawnCaps(ocolor, board_.en_passant_) & board_.fmgr().pawn_mask(color);
 
       for ( ; ep_mask; )
       {
@@ -314,7 +314,7 @@ bool CapsGenerator::expressCheck(Move & move) const
 
   if ( ffield.type() == Figure::TypePawn )
   {
-    const BitMask & pw_caps = movesTable().pawnCaps_o(color, move.to_);
+    const BitMask & pw_caps = movesTable().pawnCaps(color, move.to_);
     if ( pw_caps & oki_mask )
       return true;
 

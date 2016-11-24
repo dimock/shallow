@@ -102,7 +102,7 @@ int Board::see(const Move & move) const
     int & num = figsN[c];
 
     // pawns
-    uint64 pmask = fmgr_.pawn_mask_o((Figure::Color)c) & movesTable().pawnCaps_o(Figure::otherColor((Figure::Color)c), move.to_);
+    uint64 pmask = fmgr_.pawn_mask((Figure::Color)c) & movesTable().pawnCaps(Figure::otherColor((Figure::Color)c), move.to_);
     for ( ; pmask; )
     {
       int n = clear_lsb(pmask);

@@ -74,7 +74,7 @@ int EscapeGenerator::generateUsual()
   int ki_pos = board_.kingPos(color);
   const uint64 & black = board_.fmgr_.mask(Figure::ColorBlack);
   const uint64 & white = board_.fmgr_.mask(Figure::ColorWhite);
-  const uint64 & pawn_msk = board_.fmgr_.pawn_mask_o(board_.color_);
+  const uint64 & pawn_msk = board_.fmgr_.pawn_mask(board_.color_);
   BitMask mask_all = white | black;
   uint64 mask_all_inv = ~mask_all;
   BitMask brq_mask = board_.fmgr_.bishop_mask(ocolor) | board_.fmgr_.rook_mask(ocolor) | board_.fmgr_.queen_mask(ocolor);
@@ -115,7 +115,7 @@ int EscapeGenerator::generateUsual()
     if ( ep_capture )
     {
       int8 ep_pos = board_.enpassantPos();
-      const uint64 & opawn_caps_ep = movesTable().pawnCaps_o(ocolor, board_.en_passant_);
+      const uint64 & opawn_caps_ep = movesTable().pawnCaps(ocolor, board_.en_passant_);
       uint64 eat_msk_ep = pawn_msk & opawn_caps_ep;
 
       for ( ; eat_msk_ep; )
@@ -137,7 +137,7 @@ int EscapeGenerator::generateUsual()
     }
 
 
-    const uint64 & opawn_caps = movesTable().pawnCaps_o(ocolor, ch_pos);
+    const uint64 & opawn_caps = movesTable().pawnCaps(ocolor, ch_pos);
     uint64 eat_msk = pawn_msk & opawn_caps;
 
     bool promotion = ch_pos > 55 || ch_pos < 8; // 1st || last line
@@ -215,7 +215,7 @@ int EscapeGenerator::generateUsual()
   if ( protect_king_msk && Figure::TypePawn != ch_type && Figure::TypeKnight != ch_type )
   {
     // 1. Pawns
-    BitMask pw_mask = board_.fmgr().pawn_mask_o(color);
+    BitMask pw_mask = board_.fmgr().pawn_mask(color);
     for ( ; pw_mask; )
     {
       int pw_pos = clear_msb(pw_mask);
