@@ -174,7 +174,22 @@ public:
     X_ASSERT(heap >= N, "invalid xlist heap index");
     if(last >= 0)
       items[last].next = heap;
-    items[heap] = { std::move(t), -1 };
+    items[heap].x = std::move(t);
+    items[heap].next = -1;
+    last = heap;
+    if(first < 0)
+      first = heap;
+    heap++;
+  }
+
+  template <class ...A>
+  void emplace_back(A ...a)
+  {
+    X_ASSERT(heap >= N, "invalid xlist heap index");
+    if(last >= 0)
+      items[last].next = heap;
+    new(&items[heap].x) T{ a... };
+    items[heap].next = -1;
     last = heap;
     if(first < 0)
       first = heap;
