@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <xprotocol.h>
-
 #include <magicbb.h>
 
 int main(int, char *)
@@ -13,7 +12,6 @@ int main(int, char *)
   NEngine::init_popcount_ptr();
 #endif
 
-//  NEngine::magic_details_ns::calculate();
   NEngine::magic_ns::initialize();
 
   std::cout.setf(std::ios_base::unitbuf);
