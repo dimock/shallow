@@ -204,6 +204,43 @@ public:
     count++;
   }
 
+  void push_front(T const& t)
+  {
+    X_ASSERT(heap >= N, "invalid xlist heap index");
+    items[heap] = { t, first };
+    first = heap;
+    if(last < 0)
+      last = heap;
+    heap++;
+    count++;
+  }
+
+  void push_front(T&& t)
+  {
+    X_ASSERT(heap >= N, "invalid xlist heap index");
+    items[heap].x = std::move(t);
+    items[heap].next = first;
+    first = heap;
+    if(last < 0)
+      last = heap;
+    heap++;
+    count++;
+  }
+
+
+  template <class ...A>
+  void emplace_front(A&& ...a)
+  {
+    X_ASSERT(heap >= N, "invalid xlist heap index");
+    new(&items[heap].x) T{ std::forward<A>(a)... };
+    items[heap].next = first;
+    first = heap;
+    if(last < 0)
+      last = heap;
+    heap++;
+    count++;
+  }
+
   T& back()
   {
     X_ASSERT(last < 0 || last >= N, "invalid last xlist index");

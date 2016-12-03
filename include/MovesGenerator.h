@@ -7,6 +7,8 @@
 #include <xlist.h>
 #include <algorithm>
 
+#include <iostream>
+
 namespace NEngine
 {
 
@@ -84,6 +86,8 @@ class MovesGeneratorBase
 
 public:
 
+  using MovesList = xlist<Move, Board::MovesMax>;
+
   static void clear_history();
   static void normalize_history(int n);
 
@@ -112,7 +116,7 @@ public:
     return movesCount_;
   }
 
-  xlist<Move, Board::MovesMax>& moves()
+  MovesList& moves()
   {
     return moves_;
   }
@@ -122,10 +126,16 @@ public:
 
 protected:
 
+  inline unsigned adjust_vsort(unsigned value, unsigned delta) const
+  {
+    value += delta;
+    value |= 1; // to prevent zero value
+    return value;
+  }
+
   inline void adjust_vsort(Move & move, unsigned delta) const
   {
-    move.vsort_ += delta;
-    move.vsort_ |= 1; // to prevent zero value
+    move.vsort_ = adjust_vsort(move.vsort_, delta);
   }
 
   inline void sortValueOfCap(Move & move)
@@ -179,7 +189,7 @@ protected:
 
   int movesCount_ = 0;
   const Board & board_;
-  xlist<Move, Board::MovesMax> moves_;
+  MovesList moves_;
 };
 
 /// generate all movies from this position. don't verify and sort them. only calculate sort weights
@@ -258,15 +268,18 @@ private:
 class UsualGenerator : public MovesGeneratorBase
 {
 public:
-
   UsualGenerator(Board & );
 
   void generate(const Move & hmove, const Move & killer);
 
   inline Move* move()
   {
-    auto iter = std::max_element(moves_.begin(), moves_.end(),
-      [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+    auto iter = count() == moves_.size()
+      ? moves_.begin()
+      : std::max_element(moves_.begin(), moves_.end(), [](Move const& m1, Move const& m2)
+        {
+          return m1.vsort_ < m2.vsort_;
+        });
     if(iter == moves_.end())
       return nullptr;
     auto* move = &*iter;
@@ -283,17 +296,25 @@ private:
     {
       return false;
     }
-    moves_.emplace_back(from, to, new_type, capture);
-    calculateSortValue(moves_.back());
+    auto vsort = calculateSortValue(from, to);
+    if(!moves_.empty() && moves_.front().vsort_ < vsort)
+    {
+      moves_.emplace_front(from, to, new_type, capture);
+      moves_.front().vsort_ = vsort;
+    }
+    else
+    {
+      moves_.emplace_back(from, to, new_type, capture);
+      moves_.back().vsort_ = vsort;
+    }
     return true;
   }
 
-  inline void calculateSortValue(Move & move)
+  inline unsigned calculateSortValue(int8 from, int8 to)
   {
-    X_ASSERT( !board_.getField(move.from_), "no figure on field we move from" );
-    const History & hist = history(move.from_, move.to_);
-    move.vsort_ = hist.score();
-    adjust_vsort(move, 10);
+    X_ASSERT( !board_.getField(from_), "no figure on field we move from" );
+    const History & hist = history(from, to);
+    return adjust_vsort(hist.score(), 10);
   }
 
   Move hmove_, killer_;

@@ -5,8 +5,6 @@
 #include <iostream>
 #include <xprotocol.h>
 #include <magicbb.h>
-#include <xlist.h>
-#include <list>
 
 int main(int, char *)
 {
