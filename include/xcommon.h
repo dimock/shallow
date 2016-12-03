@@ -52,6 +52,14 @@ using BitMask   = uint64;
 
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
 
+template <class T, size_t ALIGN_BYTES = 16>
+inline T* make_aligned_array(std::vector<uint8>& arr, size_t size_)
+{
+  arr.resize(size_*sizeof(T) + ALIGN_BYTES*2);
+  auto buffer = reinterpret_cast<size_t>(arr.data() + ALIGN_BYTES) & (~(ALIGN_BYTES-(size_t)1));
+  return reinterpret_cast<T*>(buffer);
+}
+
 namespace nst
 {
   enum dirs

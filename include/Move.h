@@ -14,9 +14,6 @@ namespace NEngine
 
 ALIGN_MSC(1) struct ALIGN_GCC(1) PackedMove
 {
-  PackedMove() : mask_(0)
-  {}
-
   union
   {
     struct
@@ -25,7 +22,7 @@ ALIGN_MSC(1) struct ALIGN_GCC(1) PackedMove
              to_ : 6,
              new_type_ : 4;
     };
-    uint16 mask_;
+    uint16 mask_{};
   };
 
   operator bool() const

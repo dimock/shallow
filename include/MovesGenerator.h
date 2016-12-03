@@ -312,7 +312,7 @@ private:
 
   inline unsigned calculateSortValue(int8 from, int8 to)
   {
-    X_ASSERT( !board_.getField(from_), "no figure on field we move from" );
+    X_ASSERT( !board_.getField(from), "no figure on field we move from" );
     const History & hist = history(from, to);
     return adjust_vsort(hist.score(), 10);
   }

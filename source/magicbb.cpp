@@ -30,18 +30,10 @@ namespace
   std::vector<uint8> rook_magics_arr;
   std::vector<uint8> bishop_magics_arr;
 
-  template <class T, size_t SIZE, size_t ALIGN_BYTES=16>
-  inline T* make_aligned_array(std::vector<uint8>& arr)
-  {
-    arr.resize(SIZE*sizeof(T) + ALIGN_BYTES*2);
-    auto buffer = reinterpret_cast<size_t>(arr.data() + ALIGN_BYTES) & (~(ALIGN_BYTES-(size_t)1));
-    return reinterpret_cast<T*>(buffer);
-  }
-
   template <class mstruct>
   mstruct* initialize_magics(std::vector<uint8>& magics_arr, std::vector<mstruct> const& magic_src)
   {
-    auto* magics = make_aligned_array<mstruct, 64>(magics_arr);
+    auto* magics = make_aligned_array<mstruct>(magics_arr, 64);
     for(size_t i = 0; i < magic_src.size(); ++i)
     {
       magics[i] = magic_src[i];
@@ -52,7 +44,7 @@ namespace
   template <class mstruct>
   uint64* initialize_moves(std::vector<uint8>& moves_arr)
   {
-    return make_aligned_array<uint64, 64 * (1 << mstruct::bits_count)>(moves_arr);
+    return make_aligned_array<uint64>(moves_arr, 64 * (1 << mstruct::bits_count));
   }
 
   uint64 rook_moves_from_blockers(int pos, uint64 mask_r, bool exclude_border)
