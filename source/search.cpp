@@ -53,11 +53,8 @@ bool Engine::search(SearchResult& sres)
 
   {
     MovesGenerator mg(scontexts_[0].board_);
-    for(int i = 0; i < mg.count(); ++i)
+    for(auto move : mg.moves())
     {
-      Move move = mg[i];
-      if(!move)
-        break;
       move.vsort_ = 0;
       if(scontexts_[0].board_.validateMove(move))
         scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
@@ -492,14 +489,15 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   for(; alpha < betta && !checkForStop();)
   {
-    Move & move = fg.move();
-    if(!move)
+    auto* pmove = fg.move();
+    if(!pmove)
     {
 #ifdef SINGULAR_EXT
       allMovesIterated = true;
 #endif
       break;
     }
+    auto& move = *pmove;
 
     if(!scontexts_[ictx].board_.validateMove(move))
       continue;
@@ -720,10 +718,11 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   for(; alpha < betta && !checkForStop();)
   {
-    Move & move = tg.next();
-    if(!move)
+    auto* pmove = tg.move();
+    if(!pmove)
       break;
 
+    auto& move = *pmove;
     if(!scontexts_[ictx].board_.validateMove(move))
       continue;
 

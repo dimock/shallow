@@ -4,6 +4,8 @@
 #pragma once
 
 #include <Board.h>
+#include <xlist.h>
+#include <algorithm>
 
 namespace NEngine
 {
@@ -97,29 +99,22 @@ public:
     return history_[from][to];
   }
 
-  MovesGeneratorBase(const Board & board) : board_(board),
-    numOfMoves_(0)
+  MovesGeneratorBase(const Board & board) : board_(board)
   {}
 
   operator bool () const
   {
-    return numOfMoves_ > 0;
+    return movesCount_ > 0;
   }
 
   int count() const
   {
-    return numOfMoves_;
+    return movesCount_;
   }
 
-  Move * moves()
+  xlist<Move, Board::MovesMax>& moves()
   {
     return moves_;
-  }
-
-  const Move & operator [] (int i) const
-  {
-    X_ASSERT( (unsigned)i >= (unsigned)numOfMoves_ || numOfMoves_ >= Board::MovesMax, "index of move is out of range" );
-    return moves_[i];
   }
 
   bool find(const Move & m) const;
@@ -182,9 +177,9 @@ protected:
     adjust_vsort(move, 0);
   }
 
-  int numOfMoves_;
+  int movesCount_ = 0;
   const Board & board_;
-  Move moves_[Board::MovesMax];
+  xlist<Move, Board::MovesMax> moves_;
 };
 
 /// generate all movies from this position. don't verify and sort them. only calculate sort weights
@@ -195,26 +190,18 @@ public:
   MovesGenerator(const Board & board, const Move & killer);
   MovesGenerator(const Board & );
 
-  Move & move()
+  Move * move()
   {
-    for ( ;; )
+    for(;;)
     {
-      Move * move = moves_ + numOfMoves_;
-      Move * mv = moves_;
-      for ( ; *mv; ++mv)
-      {
-        if ( mv->alreadyDone_ || mv->vsort_ < move->vsort_ )
-          continue;
-
-        move = mv;
-      }
-      if ( !*move )
-        return *move;
-
+      auto iter = std::max_element(moves_.begin(), moves_.end(),
+        [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      if(iter == moves_.end())
+        return nullptr;
+      auto* move = &*iter;    
       if ( (move->capture_ || move->new_type_ > 0) && !move->seen_ )
       {
         move->seen_ = 1;
-
         int see_gain = 0;
         if ( (see_gain = board_.see(*move)) < 0 )
         {
@@ -222,29 +209,23 @@ public:
             move->vsort_ = see_gain + 3000;
           else
             move->vsort_ = see_gain + 2000;
-
           continue;
         }
-
-        //if ( see_gain >= 0 )
-        //  move->recapture_ = 1;
       }
-
-      move->alreadyDone_ = 1;
-      return *move;
+      moves_.erase(iter);
+      return move;
     }
+    return nullptr;
   }
 
 private:
 
-  /// returns number of moves found
-  int generate();
+  void generate();
 
-  inline void add(int & index, int8 from, int8 to, Figure::Type new_type, bool capture)
+  inline void add(int8 from, int8 to, Figure::Type new_type, bool capture)
   {
-    Move & move = moves_[index++];
-    move.set(from, to, new_type, capture);
-    
+    moves_.emplace_back(from, to, new_type, capture);
+    Move & move = moves_.back();
     calculateSortValue(move);
   }
 
@@ -280,44 +261,30 @@ public:
 
   UsualGenerator(Board & );
 
-  /// returns number of moves found
-  int generate(const Move & hmove, const Move & killer);
+  void generate(const Move & hmove, const Move & killer);
 
-  void restart();
-
-  Move & move()
+  inline Move* move()
   {
-    for ( ;; )
-    {
-      Move * move = moves_ + numOfMoves_;
-      Move * mv = moves_;
-      for ( ; *mv; ++mv)
-      {
-        if ( mv->alreadyDone_ || mv->vsort_ <= move->vsort_ )
-          continue;
-
-        move = mv;
-      }
-      if ( !*move )
-        return *move;
-
-      move->alreadyDone_ = 1;
-      return *move;
-    }
+    auto iter = std::max_element(moves_.begin(), moves_.end(),
+      [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+    if(iter == moves_.end())
+      return nullptr;
+    auto* move = &*iter;
+    moves_.erase(iter);
+    return move; 
   }
 
 private:
 
-  inline bool add(int & index, int8 from, int8 to, Figure::Type new_type, bool capture)
+  inline bool add(int8 from, int8 to, Figure::Type new_type, bool capture)
   {
-    Move & move = moves_[index];
-    move.set(from, to, new_type, capture);
-
-    if ( move == hmove_ || move == killer_ )
+    if((hmove_.from_ == from && hmove_.to_ == to && hmove_.new_type_ == new_type) ||
+       (killer_.from_ == from && killer_.to_ == to && killer_.new_type_ == new_type))
+    {
       return false;
-
-    index++;
-    calculateSortValue(move);
+    }
+    moves_.emplace_back(from, to, new_type, capture);
+    calculateSortValue(moves_.back());
     return true;
   }
 
@@ -340,51 +307,54 @@ public:
   CapsGenerator(Board & );
   CapsGenerator(const Move & hcap, Board & );
 
-  int generate(const Move & hcap, Figure::Type thresholdType);
+  void generate(const Move & hcap, Figure::Type thresholdType);
 
-  void restart();
-
-  inline Move & capture()
+  inline Move* move()
   {
-    for ( ;; )
+    for(;;)
     {
-      Move * move = moves_ + numOfMoves_;
-      Move * mv = moves_;
-      for ( ; *mv; ++mv)
-      {
-        if ( mv->alreadyDone_ || mv->vsort_ <= move->vsort_ )
-          continue;
-
-        move = mv;
-      }
-      if ( !*move )
-        return *move;
-
-      move->alreadyDone_ = 1;
-
-      if ( !filter(*move) )
+      auto iter = std::max_element(moves_.begin(), moves_.end(),
+        [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      if(iter == moves_.end())
+        return nullptr;
+      auto* move = &*iter;
+      moves_.erase(iter);
+      if(!filter(*move))
         continue;
-
-      return *move;
+      return move;
     }
+    return nullptr;
   }
+
+  inline Move* next_move()
+  {
+    auto iter = std::max_element(moves_.begin(), moves_.end(),
+      [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+    if(iter == moves_.end())
+      return nullptr;
+    auto* move = &*iter;
+    moves_.erase(iter);
+    if(!move->seen_)
+    {
+      move->see_good_ = board_.see(*move) >= 0;
+      move->seen_ = 1;
+    }
+    return move;
+  }
+
 
 private:
 
-  /// returns number of moves found
-  int generate();
+  void generate();
 
-  inline void add(int & m, int8 from, int8 to, Figure::Type new_type, bool capture)
+  inline void add(int8 from, int8 to, Figure::Type new_type, bool capture)
   {
     X_ASSERT( !board_.getField(from), "no figure on field we move from" );
-    
-    Move & move = moves_[m];    
-    move.set(from, to, new_type, capture);
-    if ( move == hcap_ )
+    if(hcap_.from_ == from && hcap_.to_ == to && hcap_.new_type_ == new_type)
       return;
-
+    moves_.emplace_back(from, to, new_type, capture);
+    auto& move = moves_.back();
     sortValueOfCap(move);
-    m++;
   }
 
   inline bool filter(Move & move) const
@@ -417,12 +387,12 @@ private:
 
   bool expressCheck(Move & move) const;
 
-  Figure::Type thresholdType_;
+  Figure::Type thresholdType_{Figure::TypeNone};
   Move hcap_;
 
   // for checks detector
   BitMask mask_all_, mask_brq_;
-  int oking_pos_;
+  int oking_pos_{0};
 };
 
 /// generate all moves, that escape from check
@@ -435,13 +405,6 @@ public:
 
   void generate(const Move & hmove);
 
-  void restart();
-
-  int count() const
-  {
-    return movesCount_;
-  }
-
   bool find(const Move & m) const
   {
     if ( m && m == hmove_ )
@@ -450,97 +413,75 @@ public:
     return MovesGeneratorBase::find(m); 
   }
 
-  inline Move & escape()
+  inline Move* move()
   {
-    if ( takeHash_ )
+    if(takeHash_)
     {
       takeHash_ = 0;
-
-      if ( hmove_ )
+      if(hmove_)
       {
         hmove_.see_good_ = (board_.see(hmove_) >= 0);
-        return hmove_;
+        return &hmove_;
       }
     }
 
-    for ( ; !do_weak_; )
+    for(; !do_weak_;)
     {
-      Move * move = moves_ + numOfMoves_;
-      Move * mv = moves_;
-      for ( ; *mv; ++mv)
-      {
-        if ( mv->alreadyDone_ || mv->vsort_ <= move->vsort_ )
-          continue;
-
-        move = mv;
-      }
-      if ( !*move )
+      Move* move = nullptr;
+      auto iter = std::max_element(moves_.begin(), moves_.end(),
+        [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      if(iter == moves_.end())
       {
         do_weak_ = true;
         break;
       }
-
-      if ( move->capture_ && !move->seen_ && numOfMoves_ > 1 )
+      move = &*iter;
+      moves_.erase(iter);
+      if(move->capture_ && !move->seen_ && count() > 1)
       {
         move->seen_ = 1;
         move->see_good_ = board_.see(*move) >= 0;
-        if ( !move->see_good_ )
+        if(!move->see_good_)
         {
-          weak_[weakN_++] = *move;
-          move->alreadyDone_ = 1;
+          weaks_.push_back(*move);
           continue;
         }
       }
-
-      move->alreadyDone_ = 1;
-      return *move;
+      return move;
     }
 
-    if ( do_weak_ && weakN_ > 0 )
+    if(do_weak_)
     {
-      weak_[weakN_].clear();
-      for ( ;; )
-      {
-        Move * move = weak_ + weakN_;
-        Move * mv = weak_;
-        for ( ; *mv; ++mv)
-        {
-          if ( mv->alreadyDone_ || mv->vsort_ <= move->vsort_ )
-            continue;
-
-          move = mv;
-        }
-        if ( !*move )
-          return *move;
-
-        move->alreadyDone_ = 1;
-        return *move;
-      }
+      Move* move = nullptr;
+      auto iter = std::max_element(weaks_.begin(), weaks_.end(),
+        [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      if(iter == weaks_.end())
+        return nullptr;
+      move = &*iter;
+      weaks_.erase(iter);
+      return move;
     }
 
-    return fake_;
+    return nullptr;
   }
 
 protected:
 
-  /// returns number of moves found
-  int generate();
-  int generateUsual();
-  int generateKingonly(int m);
+  void generate();
+  void generateUsual();
+  void generateKingonly();
 
-  inline void add(int & m, int8 from, int8 to, Figure::Type new_type, bool capture)
+  inline void add(int8 from, int8 to, Figure::Type new_type, bool capture)
   {
-    Move & move = moves_[m];
-    move.set(from, to, new_type, capture);
-    move.checkVerified_ = 1;
-
-    if ( move == hmove_ )
+    if(hmove_.from_ == from && hmove_.to_ == to && hmove_.new_type_ == new_type)
     {
       takeHash_ = 1;
       return;
     }
-
-    if ( capture || move.new_type_ )
+    moves_.emplace_back(from, to, new_type, capture);
+    auto& move = moves_.back();
+    move.checkVerified_ = 1;
+    if(capture || move.new_type_)
     {
       sortValueOfCap(move);
       adjust_vsort(move, 10000000);
@@ -549,18 +490,13 @@ protected:
     {
       adjust_vsort(move, 10);
     }
-
-    ++m;
   }
 
   Move hmove_;
-  int takeHash_;
-  int movesCount_;
+  int takeHash_{0};
 
-  Move weak_[Board::MovesMax];
-  int weakN_;
-  bool do_weak_;
-  Move fake_;
+  xlist<Move, 32> weaks_;
+  bool do_weak_{false};
 };
 
 /// first use move from hash, then generate all captures and promotions to queen, at the last generate other moves
@@ -572,14 +508,12 @@ public:
   FastGenerator(Board & board);
   FastGenerator(Board & board, const Move & hmove, const Move & killer);
 
-  Move & move();
+  Move* move();
 
   bool singleReply() const
   {
     return board_.underCheck() && eg_.count() == 1;
   }
-
-  void restart();
 
 private:
 
@@ -592,9 +526,7 @@ private:
   UsualGenerator ug_;
   EscapeGenerator eg_;
 
-  Move weak_[Board::MovesMax];
-  int  weakN_;
-
+  xlist<Move, 32> weaks_;
   Move hmove_, killer_, fake_;
   Board & board_;
 };
@@ -607,47 +539,34 @@ public:
 
   ChecksGenerator(Board & board);
 
-  Move & check()
+  Move* move()
   {
-    for ( ;; )
+    for(;;)
     {
-      Move * move = moves_ + numOfMoves_;
-      Move * mv = moves_;
-      for ( ; *mv; ++mv)
-      {
-        if ( mv->alreadyDone_ || mv->vsort_ <= move->vsort_ )
-          continue;
-
-        move = mv;
-      }
-      if ( !*move )
-        return *move;
-
-      move->alreadyDone_ = 1;
-
-      if ( !move->discoveredCheck_ && board_.see(*move) < 0 )
+      auto iter = std::max_element(moves_.begin(), moves_.end(),
+        [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      if(iter == moves_.end())
+        return nullptr;
+      auto* move = &*iter;
+      moves_.erase(iter);
+      if(!move->discoveredCheck_ && board_.see(*move) < 0)
         continue;
-
-      return *move;
+      return move;
     }
+    return nullptr;
   }
 
-  int generate();
-  int generate(const Move & hmove);
+  void generate();
+  void generate(const Move & hmove);
 
 private:
-
-  int genChecks();
-
-  inline void add(int & m, int8 from, int8 to, Figure::Type new_type, bool discovered)
+  inline void add(int8 from, int8 to, Figure::Type new_type, bool discovered)
   {
-    Move & move = moves_[m];
-    move.set(from, to, new_type, false);
-    if ( move == hmove_ )
+    if(hmove_.from_ == from && hmove_.to_ == to && hmove_.new_type_ == new_type)
       return;
-
+    moves_.emplace_back(from, to, new_type, false); 
+    auto& move = moves_.back();
     move.discoveredCheck_ = discovered;
-
     if ( move.capture_ || move.new_type_ )
     {
       sortValueOfCap(move);
@@ -659,8 +578,6 @@ private:
       move.vsort_ = hist.score();
       adjust_vsort(move, 10);
     }
-
-    m++;
   }
 
   Move hmove_;
@@ -675,7 +592,7 @@ public:
 
   TacticalGenerator(Board & board, Figure::Type thresholdType, int depth);
 
-  Move & next();
+  Move* move();
 
   // valid only under check
   bool singleReply() const
@@ -693,7 +610,6 @@ private:
 
   Board & board_;
   Figure::Type thresholdType_;
-  Move fake_;
   Order order_;
   int depth_;
 };

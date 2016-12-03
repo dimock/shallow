@@ -9,16 +9,21 @@ namespace NEngine
 template <class T, int N>
 class xlist
 {
+public:
+  using size_type = short;
+
+private:
   struct item
   {
     T x;
-    int next;
+    size_type next;
   };
 
   item items[N];
-  int first{ -1 };
-  int last{ -1 };
-  int heap{ 0 };
+  size_type first{ -1 };
+  size_type last{ -1 };
+  size_type heap{ 0 };
+  size_type count{ 0 };
 
 public:
   using value_type = T;
@@ -26,8 +31,8 @@ public:
   class iterator
   {
     xlist<T, N>* ptr;
-    int index;
-    int prev;
+    size_type index;
+    size_type prev;
     friend class xlist<T, N>;
 
   public:
@@ -35,12 +40,12 @@ public:
     using value_type = T;
     using reference = T&;
     using pointer = T*;
-    using difference_type = int;
+    using difference_type = size_type;
 
     iterator() = default;
     iterator(iterator const&) = default;
 
-    iterator(xlist<T, N>* p, int i, int prv) :
+    iterator(xlist<T, N>* p, size_type i, size_type prv) :
       ptr(p), index(i), prev(prv)
     {}
 
@@ -99,8 +104,8 @@ public:
   class const_iterator
   {
     xlist<T, N> const* ptr;
-    int index;
-    int prev;
+    size_type index;
+    size_type prev;
     friend class xlist<T, N>;
 
   public:
@@ -108,12 +113,12 @@ public:
     using value_type = T;
     using reference = T&;
     using pointer = T*;
-    using difference_type = int;
+    using difference_type = size_type;
 
     const_iterator() = default;
     const_iterator(const_iterator const&) = default;
 
-    const_iterator(xlist<T, N> const* p, int i, int prv) :
+    const_iterator(xlist<T, N> const* p, size_type i, size_type prv) :
       ptr(p), index(i), prev(prv)
     {}
 
@@ -162,11 +167,12 @@ public:
     X_ASSERT(heap >= N, "invalid xlist heap index");
     if(last >= 0)
       items[last].next = heap;
+    else
+      first = heap;
     items[heap] = { t, -1 };
     last = heap;
-    if(first < 0)
-      first = heap;
     heap++;
+    count++;
   }
 
   void push_back(T&& t)
@@ -174,26 +180,28 @@ public:
     X_ASSERT(heap >= N, "invalid xlist heap index");
     if(last >= 0)
       items[last].next = heap;
+    else
+      first = heap;
     items[heap].x = std::move(t);
     items[heap].next = -1;
     last = heap;
-    if(first < 0)
-      first = heap;
     heap++;
+    count++;
   }
 
   template <class ...A>
-  void emplace_back(A ...a)
+  void emplace_back(A&& ...a)
   {
     X_ASSERT(heap >= N, "invalid xlist heap index");
     if(last >= 0)
       items[last].next = heap;
-    new(&items[heap].x) T{ a... };
+    else
+      first = heap;
+    new(&items[heap].x) T{ std::forward<A>(a)... };
     items[heap].next = -1;
     last = heap;
-    if(first < 0)
-      first = heap;
     heap++;
+    count++;
   }
 
   T& back()
@@ -239,6 +247,7 @@ public:
       X_ASSERT(iter.index != last, "inconsistent xlist. invalid last index");
       last = prev;
     }
+    count--;
     return iterator{this, next, prev};
   }
 
@@ -249,7 +258,7 @@ public:
 
   const_iterator begin() const
   {
-    return iterator{ this, first, -1 };
+    return const_iterator{ this, first, -1 };
   }
 
   iterator end()
@@ -259,18 +268,29 @@ public:
 
   const_iterator end() const
   {
-    return iterator{ this, -1, last };
+    return const_iterator{ this, -1, last };
   }
 
   bool empty() const
   {
     X_ASSERT(first >= 0 && last < 0, "invalid xlist last index");
+    X_ASSERT(count < 0, "invalid xlist size");
+    X_ASSERT(count == 0 && first >= 0, "xlist size params mismatch");
     return first < 0;
   }
 
-  bool single() const
+  size_type size() const
   {
-    return first >= 0 && first == last;
+    X_ASSERT(count < 0, "invalid xlist size");
+    return count;
+  }
+
+  void clear()
+  {
+    first = -1;
+    last = -1;
+    heap = 0;
+    count = 0;
   }
 };
 

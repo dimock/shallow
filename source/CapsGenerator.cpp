@@ -12,11 +12,10 @@ namespace NEngine
 //////////////////////////////////////////////////////////////////////////
 CapsGenerator::CapsGenerator(const Move & hcap, Board & board) :
   MovesGeneratorBase(board),
-  hcap_(hcap),
-  thresholdType_(Figure::TypeNone)
+  hcap_(hcap)
 {
-  numOfMoves_ = generate();
-  moves_[numOfMoves_].clear();
+  generate();
+  movesCount_ = moves_.size();
 
   const Figure::Color color = board_.color_;
   const Figure::Color ocolor = Figure::otherColor(color);
@@ -26,8 +25,7 @@ CapsGenerator::CapsGenerator(const Move & hcap, Board & board) :
 }
 
 CapsGenerator::CapsGenerator(Board & board) :
-  MovesGeneratorBase(board),
-  thresholdType_(Figure::TypeNone)
+  MovesGeneratorBase(board)
 {
   hcap_.clear();
 
@@ -38,33 +36,20 @@ CapsGenerator::CapsGenerator(Board & board) :
   oking_pos_ = board_.kingPos(ocolor);
 }
 
-void CapsGenerator::restart()
-{
-  if ( !numOfMoves_ )
-    return;
-
-  for (int i = 0; i < numOfMoves_; ++i)
-    moves_[i].alreadyDone_ = 0;
-}
-
-int CapsGenerator::generate(const Move & hcap, Figure::Type thresholdType)
+void CapsGenerator::generate(const Move & hcap, Figure::Type thresholdType)
 {
   hcap_ = hcap;
   thresholdType_ = thresholdType;
 
-  if ( numOfMoves_ > 0 ) // already generated
-    return numOfMoves_;
+  if(count() > 0) // already generated
+    return;
 
-  numOfMoves_ = generate();
-  moves_[numOfMoves_].clear();
-
-  return numOfMoves_;
+  generate();
+  movesCount_ = moves_.size();
 }
 
-int CapsGenerator::generate()
+void CapsGenerator::generate()
 {
-  int m = 0;
-
   const Figure::Color color = board_.color_;
   const Figure::Color ocolor = Figure::otherColor(color);
 
@@ -99,11 +84,11 @@ int CapsGenerator::generate()
       if ( board_.getField(to) )
         continue;
 
-      add(m, from, to, Figure::TypeQueen, false);
+      add(from, to, Figure::TypeQueen, false);
 
       // add promotion to checking knight
       if ( figureDir().dir(Figure::TypeKnight, color, to, oki_pos) >= 0 )
-        add(m, from, to, Figure::TypeKnight, false);
+        add(from, to, Figure::TypeKnight, false);
     }
   }
 
@@ -148,11 +133,11 @@ int CapsGenerator::generate()
         if ( !field || field.color() != ocolor )
           continue;
 
-        add(m, pw_pos, to, promotion ? Figure::TypeQueen : Figure::TypeNone, true);
+        add(pw_pos, to, promotion ? Figure::TypeQueen : Figure::TypeNone, true);
 
         // add promotion to checking knight
         if ( promotion && figureDir().dir(Figure::TypeKnight, color, to, oki_pos) >= 0 )
-          add(m, pw_pos, to, Figure::TypeKnight, true);
+          add(pw_pos, to, Figure::TypeKnight, true);
       }
     }
 
@@ -164,7 +149,7 @@ int CapsGenerator::generate()
       for ( ; ep_mask; )
       {
         int from = clear_lsb(ep_mask);
-        add(m, from, board_.en_passant_, Figure::TypeNone, true);
+        add(from, board_.en_passant_, Figure::TypeNone, true);
       }
     }
   }
@@ -187,7 +172,7 @@ int CapsGenerator::generate()
 
       X_ASSERT( !field || field.color() != ocolor, "there is no opponent's figure on capturing field" );
 
-      add(m, kn_pos, to, Figure::TypeNone, true);
+      add(kn_pos, to, Figure::TypeNone, true);
     }
   }
 
@@ -226,7 +211,7 @@ int CapsGenerator::generate()
         const Field & field = board_.getField(to);
         X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 
-        add(m, from, to, Figure::TypeNone, true);
+        add(from, to, Figure::TypeNone, true);
       }
     }
   }
@@ -245,7 +230,7 @@ int CapsGenerator::generate()
         const Field & field = board_.getField(to);
         X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 
-        add(m, from, to, Figure::TypeNone, true);
+        add(from, to, Figure::TypeNone, true);
       }
     }
   }
@@ -264,7 +249,7 @@ int CapsGenerator::generate()
         const Field & field = board_.getField(to);
         X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 
-        add(m, from, to, Figure::TypeNone, true);
+        add(from, to, Figure::TypeNone, true);
       }
     }
   }
@@ -283,11 +268,9 @@ int CapsGenerator::generate()
 
       X_ASSERT( !field || field.color() != ocolor, "there is no opponent's figure on capturing field" );
 
-      add(m, ki_pos, to, Figure::TypeNone, true);
+      add(ki_pos, to, Figure::TypeNone, true);
     }
   }
-
-  return m;
 }
 
 //////////////////////////////////////////////////////////////////////////

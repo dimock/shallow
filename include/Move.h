@@ -64,6 +64,11 @@ ALIGN_MSC(1) struct ALIGN_GCC(1) Move
 
   Move(int) { clear(); }
 
+  Move(int8 from, int8 to, Figure::Type new_type, bool capture)
+  {
+    set(from, to, new_type, capture);
+  }
+
   /// index of field go from
   int8 from_;
 
@@ -80,7 +85,6 @@ ALIGN_MSC(1) struct ALIGN_GCC(1) Move
     {
       uint8
       checkVerified_ : 1,
-      alreadyDone_ : 1,
       capture_ : 1,
       checkFlag_ : 1,
       threat_ : 1,
@@ -125,14 +129,14 @@ ALIGN_MSC(1) struct ALIGN_GCC(1) Move
     return to_ >= 0;
   }
 
-  // compare only first 4 bytes
+  // compare only first 3 bytes
   inline bool operator == (const Move & other) const
   {
     return *reinterpret_cast<const uint16*>(this) == *reinterpret_cast<const uint16*>(&other) &&
       this->new_type_ == other.new_type_;
   }
 
-  // compare only first 4 bytes
+  // compare only first 3 bytes
   inline bool operator != (const Move & other) const
   {
     return *reinterpret_cast<const uint16*>(this) != *reinterpret_cast<const uint16*>(&other) ||

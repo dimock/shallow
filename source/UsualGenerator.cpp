@@ -18,23 +18,10 @@ UsualGenerator::UsualGenerator(Board & board) :
   killer_.clear();
 }
 
-void UsualGenerator::restart()
+void UsualGenerator::generate(const Move & hmove, const Move & killer)
 {
-  if ( !numOfMoves_ )
-    return;
-
-  for (int i = 0; i < numOfMoves_; ++i)
-    moves_[i].alreadyDone_ = 0;
-}
-
-int UsualGenerator::generate(const Move & hmove, const Move & killer)
-{
-  if ( numOfMoves_ > 0 )
-    return numOfMoves_;
-
   hmove_  = hmove;
   killer_ = killer;
-  numOfMoves_ = 0;
 
   const Figure::Color & color = board_.color_;
   const Figure::Color ocolor = Figure::otherColor(color);
@@ -54,7 +41,7 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
 
       const int8 * table = movesTable().pawn(color, pw_pos) + 2; // skip captures
       for (; *table >= 0 && !board_.getField(*table); ++table)
-        add(numOfMoves_, pw_pos, *table, Figure::TypeNone, false);
+        add(pw_pos, *table, Figure::TypeNone, false);
     }
   }
 
@@ -74,7 +61,7 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
         const Field & field = board_.getField(to);
         X_ASSERT( field, "try to generate capture" );
 
-        add(numOfMoves_, kn_pos, to, Figure::TypeNone, false);
+        add(kn_pos, to, Figure::TypeNone, false);
       }
     }
   }
@@ -105,7 +92,7 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
           if ( field )
             break;
 
-          add(numOfMoves_, fg_pos, p, Figure::TypeNone, false);
+          add(fg_pos, p, Figure::TypeNone, false);
         }
       }
     }
@@ -120,11 +107,11 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
     {
       // short castle
       if ( board_.castling(board_.color_, 0) && !board_.getField(ki_pos+2) && !board_.getField(ki_pos+1) )
-        add(numOfMoves_, ki_pos, ki_pos+2, Figure::TypeNone, false);
+        add(ki_pos, ki_pos+2, Figure::TypeNone, false);
 
       // long castle
       if ( board_.castling(board_.color_, 1) && !board_.getField(ki_pos-2) && !board_.getField(ki_pos-1) && !board_.getField(ki_pos-3) )
-        add(numOfMoves_, ki_pos, ki_pos-2, Figure::TypeNone, false);
+        add(ki_pos, ki_pos-2, Figure::TypeNone, false);
 
       for ( ; ki_mask; )
       {
@@ -133,13 +120,11 @@ int UsualGenerator::generate(const Move & hmove, const Move & killer)
         const Field & field = board_.getField(to);
         X_ASSERT( field, "try to capture by king" );
 
-        add(numOfMoves_, ki_pos, to, Figure::TypeNone, false);
+        add(ki_pos, to, Figure::TypeNone, false);
       }
     }
   }
-
-  moves_[numOfMoves_].clear();
-  return numOfMoves_;
+  movesCount_ = moves_.size();
 }
 
 } // 

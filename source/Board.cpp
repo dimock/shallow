@@ -299,11 +299,11 @@ void Board::verifyState()
   bool found = false;
   for ( ; !found; )
   {
-    const Move & m = mg.move();
+    auto* m = mg.move();
     if ( !m )
       break;
 
-    if ( validateMove(m) )
+    if ( validateMove(*m) )
       found = true;
   }
 

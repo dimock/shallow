@@ -10,55 +10,37 @@ namespace NEngine
 
 //////////////////////////////////////////////////////////////////////////
 EscapeGenerator::EscapeGenerator(Board & board) :
-  MovesGeneratorBase(board), takeHash_(0), movesCount_(0), fake_(0), weakN_(0),do_weak_(0)
+  MovesGeneratorBase(board)
 {
-  weak_[0].clear();
   hmove_.clear();
 }
 
 EscapeGenerator::EscapeGenerator(const Move & hmove, Board & board) :
-  MovesGeneratorBase(board), hmove_(hmove), takeHash_(0), movesCount_(0), fake_(0), weakN_(0),do_weak_(0)
+  MovesGeneratorBase(board), hmove_(hmove) 
 {
-  weak_[0].clear();
-  numOfMoves_ = generate();
-  moves_[numOfMoves_].clear();
-  movesCount_ = numOfMoves_ + takeHash_;
-}
-
-void EscapeGenerator::restart()
-{
-  if ( !numOfMoves_ )
-    return;
-
-  weak_[0].clear();
-  weakN_ = 0;
-
-  for (int i = 0; i < numOfMoves_; ++i)
-    moves_[i].alreadyDone_ = 0;
+  generate();
+  movesCount_ = moves_.size() + takeHash_;
 }
 
 void EscapeGenerator::generate(const Move & hmove)
 {
-  if ( movesCount_ > 0 )
+  if(count() > 0)
     return;
-
   hmove_ = hmove;
-  numOfMoves_ = generate();
-  moves_[numOfMoves_].clear();
-  movesCount_ = numOfMoves_ + takeHash_;
+  generate();
+  movesCount_ = moves_.size() + takeHash_;
 }
 
-int EscapeGenerator::generate()
+void EscapeGenerator::generate()
 {
   if ( board_.checkingNum_ == 1 )
-    return generateUsual();
+    generateUsual();
   else
-    return generateKingonly(numOfMoves_);
+    generateKingonly();
 }
 
-int EscapeGenerator::generateUsual()
+void EscapeGenerator::generateUsual()
 {
-  int m = numOfMoves_;
   const Figure::Color color = board_.color_;
   Figure::Color ocolor = Figure::otherColor(color);
 
@@ -131,7 +113,7 @@ int EscapeGenerator::generateUsual()
         if ( !board_.discoveredCheck(n, ocolor, mask_all, brq_mask, ki_pos) &&
              !board_.discoveredCheck(ep_pos, ocolor, mask_all_ep, brq_mask, ki_pos) )
         {
-          add(m, n, board_.en_passant_, Figure::TypeNone, true);
+          add(n, board_.en_passant_, Figure::TypeNone, true);
         }
       }
     }
@@ -152,11 +134,11 @@ int EscapeGenerator::generateUsual()
 
       if ( !board_.discoveredCheck(n, ocolor, mask_all | set_mask_bit(ch_pos), brq_mask & ~set_mask_bit(ch_pos), ki_pos) )
       {
-        add(m, n, ch_pos, promotion ? Figure::TypeQueen : Figure::TypeNone, true);
+        add(n, ch_pos, promotion ? Figure::TypeQueen : Figure::TypeNone, true);
         if ( promotion )
         {
           if ( (movesTable().caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) )
-            add(m, n, ch_pos, Figure::TypeKnight, true);
+            add(n, ch_pos, Figure::TypeKnight, true);
         }
       }
     }
@@ -177,7 +159,7 @@ int EscapeGenerator::generateUsual()
       X_ASSERT( !fknight || fknight.type() != Figure::TypeKnight || fknight.color() != board_.color_, "no knight on field we are going to do capture from" );
 
       if ( !board_.discoveredCheck(n, ocolor, mask_all | set_mask_bit(ch_pos), brq_mask & ~set_mask_bit(ch_pos), ki_pos) )
-        add(m, n, ch_pos, Figure::TypeNone, true);
+        add(n, ch_pos, Figure::TypeNone, true);
     }
   }
 
@@ -205,7 +187,7 @@ int EscapeGenerator::generateUsual()
         continue;
 
       if ( !board_.discoveredCheck(n, ocolor, mask_all | set_mask_bit(ch_pos), brq_mask & ~set_mask_bit(ch_pos), ki_pos) )
-        add(m, n, ch_pos, Figure::TypeNone, true);
+        add(n, ch_pos, Figure::TypeNone, true);
     }
   }
 
@@ -233,7 +215,7 @@ int EscapeGenerator::generateUsual()
 
         bool promotion = *table > 55 || *table < 8;
 
-        add(m, pw_pos, *table, promotion ? Figure::TypeQueen : Figure::TypeNone, false);
+        add(pw_pos, *table, promotion ? Figure::TypeQueen : Figure::TypeNone, false);
         if ( promotion )
         {
           // add promotion to knight only if it gives check and we don't lost it immediately
@@ -241,7 +223,7 @@ int EscapeGenerator::generateUsual()
           nmove.set(pw_pos, *table, Figure::TypeKnight, false);
 
           if ( (movesTable().caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) && board_.see(nmove) >= 0 )
-            add(m, pw_pos, *table, Figure::TypeKnight, false);
+            add(pw_pos, *table, Figure::TypeKnight, false);
         }
       }
     }
@@ -266,7 +248,7 @@ int EscapeGenerator::generateUsual()
 
         X_ASSERT( field, "there is something between king and checking figure" );
 
-        add(m, kn_pos, n, Figure::TypeNone, false);
+        add(kn_pos, n, Figure::TypeNone, false);
       }
     }
 
@@ -297,19 +279,17 @@ int EscapeGenerator::generateUsual()
           if ( (btw_msk & mask_all_inv) != btw_msk )
             continue;
 
-          add(m, fg_pos, n, Figure::TypeNone, false);
+          add(fg_pos, n, Figure::TypeNone, false);
         }
       }
     }
   }
 
   // at the last generate all king's movements
-  m = generateKingonly(m);
-
-  return m;
+  generateKingonly();
 }
 
-int EscapeGenerator::generateKingonly(int m)
+void EscapeGenerator::generateKingonly()
 {
   const Figure::Color color = board_.color_;
   Figure::Color ocolor = Figure::otherColor(color);
@@ -327,7 +307,7 @@ int EscapeGenerator::generateKingonly(int m)
 
     X_ASSERT( !board_.getField(to) || board_.getField(to).color() == color, "escape generator: try to put king to occupied field" );
     if ( !board_.isAttacked(ocolor, to, from) )
-      add(m, from, to, Figure::TypeNone, true);
+      add(from, to, Figure::TypeNone, true);
   }
 
   // other moves
@@ -338,10 +318,8 @@ int EscapeGenerator::generateKingonly(int m)
 
     X_ASSERT( board_.getField(to), "escape generator: try to put king to occupied field" );
     if ( !board_.isAttacked(ocolor, to, from) )
-      add(m, from, to, Figure::TypeNone, false);
+      add(from, to, Figure::TypeNone, false);
   }
-
-  return m;
 }
 
 } // NEngine

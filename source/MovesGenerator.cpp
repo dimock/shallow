@@ -31,26 +31,23 @@ void MovesGeneratorBase::normalize_history(int n)
 }
 
 //////////////////////////////////////////////////////////////////////////
-bool MovesGeneratorBase::find(const Move & m) const
+bool MovesGeneratorBase::find(const Move & move) const
 {
-  for (int i = 0; i < numOfMoves_; ++i)
-  {
-    const Move & move = moves_[i];
-    if ( m == move )
-      return true;
-  }
-  return false;
+  auto it = std::find_if(moves_.begin(), moves_.end(),
+    [&move](Move const& m) { return m == move; });
+  return it != moves_.end(); 
 }
 
 bool MovesGeneratorBase::has_duplicates() const
 {
-  for (int i = 0; i < numOfMoves_; ++i)
+  for(auto iter = moves_.begin(); iter != moves_.end(); ++iter)
   {
-    for (int j = i+1; j < numOfMoves_; ++j)
-    {
-      if ( moves_[i] == moves_[j] )
-        return true;
-    }
+    auto const& move = *iter;
+    auto iter1 = iter++;
+    auto it = std::find_if(iter, moves_.end(),
+      [&move](Move const& m) { return m == move; });
+    if(it != moves_.end())
+      return true;
   }
   return false;
 }
@@ -59,21 +56,18 @@ bool MovesGeneratorBase::has_duplicates() const
 MovesGenerator::MovesGenerator(const Board & board, const Move & killer) :
   MovesGeneratorBase(board), killer_(killer)
 {
-  numOfMoves_ = generate();
-  moves_[numOfMoves_].clear();
 }
 
 MovesGenerator::MovesGenerator(const Board & board) :
   MovesGeneratorBase(board)
 {
   killer_.clear();
-  numOfMoves_ = generate();
-  moves_[numOfMoves_].clear();
+  generate();
+  movesCount_ = moves_.size();
 }
 //////////////////////////////////////////////////////////////////////////
-int MovesGenerator::generate()
+void MovesGenerator::generate()
 {
-  int m = 0;
   const Figure::Color & color = board_.color_;
   const Figure::Color ocolor = Figure::otherColor(color);
 
@@ -107,26 +101,29 @@ int MovesGenerator::generate()
 
           bool promotion = *table > 55 || *table < 8;
 
-          Move & move = moves_[m++];
-          move.alreadyDone_ = 0;
-          move.set(pw_pos, *table, Figure::TypeNone, capture);
+          Move move(pw_pos, *table, Figure::TypeNone, capture);
           calculateSortValue(move);
 
           if ( promotion )
           {
             move.new_type_ = Figure::TypeQueen;
+            moves_.push_back(move);
 
-            moves_[m] = move;
-            moves_[m].new_type_ = Figure::TypeRook;
-            calculateSortValue(moves_[m++]);
+            move.new_type_ = Figure::TypeRook;
+            calculateSortValue(move);
+            moves_.push_back(move);
 
-            moves_[m] = move;
-            moves_[m].new_type_ = Figure::TypeBishop;
-            calculateSortValue(moves_[m++]);
+            move.new_type_ = Figure::TypeBishop;
+            calculateSortValue(move);
+            moves_.push_back(move);
 
-            moves_[m] = move;
-            moves_[m].new_type_ = Figure::TypeKnight;
-            calculateSortValue(moves_[m++]);
+            move.new_type_ = Figure::TypeKnight;
+            calculateSortValue(move);
+            moves_.push_back(move);
+          }
+          else
+          {
+            moves_.push_back(move);
           }
         }
 
@@ -134,27 +131,29 @@ int MovesGenerator::generate()
         {
           bool promotion = *table > 55 || *table < 8;
 
-          Move & move = moves_[m++];
-
-          move.alreadyDone_ = 0;
-          move.set(pw_pos, *table, Figure::TypeNone, false);
+          Move move(pw_pos, *table, Figure::TypeNone, false);
           calculateSortValue(move);
 
           if ( promotion )
           {
             move.new_type_ = Figure::TypeQueen;
+            moves_.push_back(move);
 
-            moves_[m] = move;
-            moves_[m].new_type_ = Figure::TypeRook;
-            calculateSortValue(moves_[m++]);
+            move.new_type_ = Figure::TypeRook;
+            calculateSortValue(move);
+            moves_.push_back(move);
 
-            moves_[m] = move;
-            moves_[m].new_type_ = Figure::TypeBishop;
-            calculateSortValue(moves_[m++]);
+            move.new_type_ = Figure::TypeBishop;
+            calculateSortValue(move);
+            moves_.push_back(move);
 
-            moves_[m] = move;
-            moves_[m].new_type_ = Figure::TypeKnight;
-            calculateSortValue(moves_[m++]);
+            move.new_type_ = Figure::TypeKnight;
+            calculateSortValue(move);
+            moves_.push_back(move);
+          }
+          else
+          {
+            moves_.push_back(move);
           }
         }
       }
@@ -182,7 +181,7 @@ int MovesGenerator::generate()
             capture = true;
           }
 
-          add(m, kn_pos, *table, Figure::TypeNone, capture);
+          add(kn_pos, *table, Figure::TypeNone, capture);
         }
       }
     }
@@ -219,7 +218,7 @@ int MovesGenerator::generate()
               capture = true;
             }
 
-            add(m, fg_pos, p, Figure::TypeNone, capture);
+            add(fg_pos, p, Figure::TypeNone, capture);
           }
         }
       }
@@ -248,22 +247,20 @@ int MovesGenerator::generate()
         capture = true;
       }
 
-      add(m, ki_pos, *table, Figure::TypeNone, capture);
+      add(ki_pos, *table, Figure::TypeNone, capture);
     }
 
     if ( !board_.underCheck() )
     {
       // short castle
       if ( board_.castling(board_.color_, 0) && !board_.getField(ki_pos+2) && !board_.getField(ki_pos+1) )
-        add(m, ki_pos, ki_pos+2, Figure::TypeNone, false);
+        add(ki_pos, ki_pos+2, Figure::TypeNone, false);
 
       // long castle
       if ( board_.castling(board_.color_, 1) && !board_.getField(ki_pos-2) && !board_.getField(ki_pos-1) && !board_.getField(ki_pos-3) )
-        add(m, ki_pos, ki_pos-2, Figure::TypeNone, false);
+        add(ki_pos, ki_pos-2, Figure::TypeNone, false);
     }
   }
-
-  return m;
 }
 
 //////////////////////////////////////////////////////////////////////////

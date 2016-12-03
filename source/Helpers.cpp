@@ -177,10 +177,11 @@ Move parseSAN(const Board & board, std::string const& str)
   MovesGenerator mg(board);
   for(;;)
   {
-    const Move & m = mg.move();
-    if(!m)
+    auto const* pm = mg.move();
+    if(!pm)
       break;
 
+    auto const& m = *pm;
     if(!board.validateMove(m))
       continue;
 
@@ -225,10 +226,11 @@ std::string printSAN(Board & board, const Move & move)
   MovesGenerator mg(board);
   for(;;)
   {
-    const Move & m = mg.move();
-    if(!m)
+    auto const* pm = mg.move();
+    if(!pm)
       break;
 
+    auto const& m = *pm;
     if(!board.validateMove(m))
     {
       X_ASSERT(move == m, "invalid move given to printSAN");

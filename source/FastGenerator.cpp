@@ -11,11 +11,8 @@ namespace NEngine
 //////////////////////////////////////////////////////////////////////////
 FastGenerator::FastGenerator(Board & board) :
   cg_(board), ug_(board), eg_(board), hmove_(0), killer_(0), order_(oHash),
-  board_(board), weakN_(0)
+  board_(board)
 {
-  fake_.clear();
-  weak_[0].clear();
-
   if(board_.underCheck())
   {
     order_ = oEscapes;
@@ -25,11 +22,8 @@ FastGenerator::FastGenerator(Board & board) :
 
 FastGenerator::FastGenerator(Board & board, const Move & hmove, const Move & killer) :
   cg_(board), ug_(board), eg_(board), hmove_(hmove), killer_(killer), order_(oHash),
-  board_(board), weakN_(0)
+  board_(board)
 {
-  fake_.clear();
-  weak_[0].clear();
-
   if(board_.underCheck())
   {
     order_ = oEscapes;
@@ -37,24 +31,7 @@ FastGenerator::FastGenerator(Board & board, const Move & hmove, const Move & kil
   }
 }
 
-void FastGenerator::restart()
-{
-  if(board_.underCheck())
-  {
-    eg_.restart();
-    order_ = oEscapes;
-    return;
-  }
-
-  order_ = oHash;
-  weak_[0].clear();
-  weakN_ = 0;
-
-  cg_.restart();
-  ug_.restart();
-}
-
-Move & FastGenerator::move()
+Move* FastGenerator::move()
 {
   if(order_ == oHash)
   {
@@ -62,13 +39,13 @@ Move & FastGenerator::move()
     if(hmove_)
     {
       hmove_.see_good_ = hmove_.capture_ || hmove_.new_type_ > 0;
-      return hmove_;
+      return &hmove_;
     }
   }
 
   if(order_ == oEscapes)
   {
-    return eg_.escape();
+    return eg_.move();
   }
 
   if(order_ == oGenCaps)
@@ -81,37 +58,16 @@ Move & FastGenerator::move()
   {
     for(;;)
     {
-      Move * move = cg_.moves() + cg_.count();
-      Move * mv = cg_.moves();
-      for(; *mv; ++mv)
-      {
-        if(mv->alreadyDone_ || mv->vsort_ <= move->vsort_)
-          continue;
-
-        move = mv;
-      }
-      if(!*move)
+      auto* move = cg_.next_move();
+      if(!move)
         break;
-
-
-      if(!move->seen_)
-      {
-        move->see_good_ = board_.see(*move) >= 0;
-        move->seen_ = 1;
-      }
-
       if(!move->see_good_)
       {
-        weak_[weakN_++] = *move;
-        move->alreadyDone_ = 1;
+        weaks_.push_back(*move);
         continue;
       }
-
-      move->alreadyDone_ = 1;
-      return *move;
+      return move;
     }
-
-    weak_[weakN_].clear();
     order_ = oKiller;
   }
 
@@ -119,7 +75,7 @@ Move & FastGenerator::move()
   {
     order_ = oGenUsual;
     if(killer_)
-      return killer_;
+      return &killer_;
   }
 
   if(order_ == oGenUsual)
@@ -130,10 +86,10 @@ Move & FastGenerator::move()
 
   if(order_ == oUsual)
   {
-    Move & move = ug_.move();
-    if(move)
+    if(auto* move = ug_.move())
+    {
       return move;
-
+    }
     order_ = oWeak;
   }
 
@@ -141,31 +97,23 @@ Move & FastGenerator::move()
   {
     for(;;)
     {
-      Move * move = weak_ + weakN_;
-      Move * mv = weak_;
-      for(; *mv; ++mv)
-      {
-        if(mv->alreadyDone_ || mv->vsort_ <= move->vsort_)
-          continue;
-
-        move = mv;
-      }
-      if(!*move)
-        break;
-
-      move->alreadyDone_ = 1;
-      return *move;
+      auto iter = std::max_element(weaks_.begin(), weaks_.end(),
+        [](Move const& m1, Move const& m2) { return m1 < m2; });
+      if(iter == weaks_.end())
+        return nullptr;
+      auto* move = &*iter;
+      weaks_.erase(iter);
+      return move;
     }
   }
-
-  return fake_;
+  return nullptr;
 }
 
 
 //////////////////////////////////////////////////////////////////////////
 TacticalGenerator::TacticalGenerator(Board & board, Figure::Type thresholdType, int depth) :
   eg_(board), cg_(board), chg_(board), thresholdType_(thresholdType), board_(board),
-  order_(oGenCaps), depth_(depth), fake_(0)
+  order_(oGenCaps), depth_(depth)
 {
 
   if(board_.underCheck())
@@ -176,11 +124,11 @@ TacticalGenerator::TacticalGenerator(Board & board, Figure::Type thresholdType, 
   }
 }
 
-Move & TacticalGenerator::next()
+Move* TacticalGenerator::move()
 {
   if(order_ == oEscape)
   {
-    return eg_.escape();
+    return eg_.move();
   }
 
   if(order_ == oGenCaps)
@@ -192,10 +140,9 @@ Move & TacticalGenerator::next()
 
   if(order_ == oCaps)
   {
-    Move & cap = cg_.capture();
+    auto* cap = cg_.move();
     if(cap || depth_ < 0)
       return cap;
-
     order_ = oGenChecks;
   }
 
@@ -207,10 +154,10 @@ Move & TacticalGenerator::next()
 
   if(order_ == oChecks)
   {
-    return chg_.check();
+    return chg_.move();
   }
 
-  return fake_;
+  return nullptr;
 }
 
 } // NEngine

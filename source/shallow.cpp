@@ -5,6 +5,8 @@
 #include <iostream>
 #include <xprotocol.h>
 #include <magicbb.h>
+#include <xlist.h>
+#include <list>
 
 int main(int, char *)
 {
@@ -17,6 +19,7 @@ int main(int, char *)
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
   for(; xpr.doCmd(););
+
 	return 0;
 }
 

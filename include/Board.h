@@ -12,7 +12,6 @@
 
 namespace NEngine
 {
-
   class MovesGeneratorBase;
   class MovesGenerator;
   class CapsGenerator;

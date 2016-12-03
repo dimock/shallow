@@ -12,28 +12,16 @@ namespace NEngine
 ChecksGenerator::ChecksGenerator(Board & board) :
   MovesGeneratorBase(board), hmove_(0)
 {
-  moves_[0].clear();
 }
 
-int ChecksGenerator::generate()
-{
-  numOfMoves_ = genChecks();
-  moves_[numOfMoves_].clear();
-  return numOfMoves_;
-}
-
-int ChecksGenerator::generate(const Move & hmove)
+void ChecksGenerator::generate(const Move & hmove)
 {
   hmove_ = hmove;
-  numOfMoves_ = genChecks();
-  moves_[numOfMoves_].clear();
-  return numOfMoves_;
+  generate();
 }
 
-int ChecksGenerator::genChecks()
+void ChecksGenerator::generate()
 {
-  int m = 0;
-
   Figure::Color color  = board_.getColor();
   Figure::Color ocolor = Figure::otherColor(color);
 
@@ -69,7 +57,7 @@ int ChecksGenerator::genChecks()
         if ( from_mask & set_mask_bit(*table) )
           continue;
 
-        add(m, ki_pos, *table, Figure::TypeNone, discovered);
+        add(ki_pos, *table, Figure::TypeNone, discovered);
       }
     }
 
@@ -85,7 +73,7 @@ int ChecksGenerator::genChecks()
       BitMask rk_mask = betweenMasks().between(r_pos_to, oki_pos);
       if ( figureDir().dir(Figure::TypeRook, board_.color_, r_pos_to, oki_pos) >= 0 && (rk_mask & all_but_king_mask) == rk_mask )
       {
-        add(m, ki_pos, ki_pos+2, Figure::TypeNone, discovered);
+        add(ki_pos, ki_pos+2, Figure::TypeNone, discovered);
       }
     }
 
@@ -99,7 +87,7 @@ int ChecksGenerator::genChecks()
       int r_pos_to = r_pos + 3;
       BitMask rk_mask = betweenMasks().between(r_pos_to, oki_pos);
       if ( figureDir().dir(Figure::TypeRook, board_.color_, r_pos_to, oki_pos) >= 0 && (rk_mask & all_but_king_mask) == rk_mask )
-        add(m, ki_pos, ki_pos-2, Figure::TypeNone, discovered);
+        add(ki_pos, ki_pos-2, Figure::TypeNone, discovered);
     }
   }
 
@@ -137,7 +125,7 @@ int ChecksGenerator::genChecks()
               if ( field )
                 break;
 
-              add(m, fg_pos, p, Figure::TypeNone, discovered);
+              add(fg_pos, p, Figure::TypeNone, discovered);
 
               if ( field )
                 break;
@@ -164,7 +152,7 @@ int ChecksGenerator::genChecks()
             if ( board_.is_something_between(to, fg_pos, mask_all_inv_ex) )
               continue;
 
-            add(m, fg_pos, to, Figure::TypeNone, discovered);
+            add(fg_pos, to, Figure::TypeNone, discovered);
           }
         }
       }
@@ -188,7 +176,7 @@ int ChecksGenerator::genChecks()
       {
         int to = clear_lsb(kn_msk);
         X_ASSERT( board_.getField(to), "field, from that we are going to check is occupied" );
-        add(m, kn_pos, to, Figure::TypeNone, discovered);
+        add(kn_pos, to, Figure::TypeNone, discovered);
       }
     }
   }
@@ -218,7 +206,7 @@ int ChecksGenerator::genChecks()
           if ( board_.is_something_between(from, to, inv_mask_all) )
             continue;
 
-          add(m, from, to, Figure::TypeNone, false);
+          add(from, to, Figure::TypeNone, false);
         }
       }
     }
@@ -250,13 +238,11 @@ int ChecksGenerator::genChecks()
           if ( from_oki_mask & set_mask_bit(*table) )
             break;
 
-          add(m, from, *table, Figure::TypeNone, true /* discovered */);
+          add(from, *table, Figure::TypeNone, true /* discovered */);
         }
       }
     }
   }
-
-  return m;
 }
 
 } // NEngine
