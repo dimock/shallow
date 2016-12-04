@@ -151,14 +151,21 @@ Move parseSAN(const Board & board, std::string const& str)
     s += 2;
     n = std::string(s).length();
 
-    if('=' == s[0])
+    if('=' == s[0] || boost::is_any_of("NBRQ")(s[0]))
     {
-      if(n < 2)
+      if('=' == s[0])
+      {
+        if(n < 2)
+          return false;
+        s++;
+        n = std::string(s).length();
+      }
+      if(n < 1)
         return false;
-      new_type = Figure::toFtype(s[1]);
+      new_type = Figure::toFtype(s[0]);
       if(new_type < Figure::Type::TypeKnight || new_type > Figure::Type::TypeQueen)
         return false;
-      s += 2;
+      s++;
       n = std::string(s).length();
     }
 

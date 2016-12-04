@@ -11,21 +11,22 @@ xtests.h - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
+using xTestFen_Callback = std::function<void(size_t, Board&, Move&)>;
+using xTestFen_ErrorCallback = std::function<void(std::string const&)>;
+
 namespace xtests_details_ns
 {
 using FBoard = SBoard<16>;
 };
 
-class FenTest : public std::list<std::pair<xtests_details_ns::FBoard, Move>>
+class FenTest : public std::vector<std::pair<xtests_details_ns::FBoard, Move>>
 {
 
 public:
-  FenTest(std::string const& ffname);
+  FenTest(std::string const& ffname, xTestFen_ErrorCallback const&);
 };
 
-using xTestFen_Callback = std::function<void(Board&, Move&)>;
-
-void testFen(std::string const& ffname, xTestFen_Callback const&);
-
+void testFen(std::string const& ffname, xTestFen_Callback const&, xTestFen_ErrorCallback const&);
+void testSee(std::string const& ffname);
 
 } // NEngine

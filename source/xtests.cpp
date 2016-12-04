@@ -6,11 +6,12 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <boost/algorithm/string/trim.hpp>
 
 namespace NEngine
 {
 
-FenTest::FenTest(std::string const& ffname)
+FenTest::FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
 {
   std::regex r("([0-9pnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)([0-9a-hpnrqkPNBRQKOx+!\\-]+)([\\s]*[;])");
   std::ifstream ifs(ffname);
@@ -18,28 +19,59 @@ FenTest::FenTest(std::string const& ffname)
   {
     std::string line;
     std::getline(ifs, line);
+    boost::algorithm::trim(line);
+    if(line.empty())
+      continue;
+    if(line[0] == '#')
+      continue;
     std::smatch m;
     if(!std::regex_search(line, m, r) || m.size() < 4)
+    {
+      ecbk("regex failed on line: " + line);
       continue;
-    auto fstr = m[1];
-    auto mstr = m[3];
+    }
+    std::string fstr = m[1];
+    std::string mstr = m[3];
     xtests_details_ns::FBoard board;
     if(!fromFEN(fstr, board))
+    {
+      ecbk("invalid fen: " + fstr);
       continue;
+    }
     Move move = strToMove(mstr, board);
     if(!move)
+    {
+      ecbk("invalid move: " + mstr + " in position: " + fstr);
       continue;
+    }
     emplace_back(board, move);
   }
 }
 
-void testFen(std::string const& ffname, xTestFen_Callback const& cbk)
+void testFen(std::string const& ffname, xTestFen_Callback const& cbk, xTestFen_ErrorCallback const& ecbk)
 {
-  FenTest ft(ffname);
-  for(auto& x : ft)
+  FenTest ft(ffname, ecbk);
+  for(size_t i = 0; i < ft.size(); ++i)
   {
-    cbk(x.first, x.second);
+    auto& x = ft[i];
+    cbk(i, x.first, x.second);
   }
+}
+
+void testSee(std::string const& ffname)
+{
+  NEngine::testFen(ffname, [](size_t i, NEngine::Board& board, NEngine::Move& move)
+  {
+    std::cout << i << ": "
+      << NEngine::toFEN(board) << "  "
+      << NEngine::printSAN(board, move)
+      << "  see: "<< board.see(move)
+      << std::endl;
+  },
+    [](std::string const& err)
+  {
+    std::cout << "error: " << err << std::endl;
+  });
 }
 
 } // NEngine

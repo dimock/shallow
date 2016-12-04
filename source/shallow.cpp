@@ -20,15 +20,7 @@ int main(int argn, char *argv[])
  
   if(argn > 1)
   {
-    NEngine::testFen(argv[1], [](NEngine::Board& board, NEngine::Move& move)
-    {
-      std::cout << NEngine::toFEN(board)
-                << std::endl
-                << NEngine::printSAN(board, move)
-                << std::endl
-                << "see: "<< board.see(move)
-                << std::endl;
-    });
+    NEngine::testSee(argv[1]);
     return 0;
   }
 
