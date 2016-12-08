@@ -6,6 +6,7 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <chrono>
 #include <boost/algorithm/string/trim.hpp>
 
 namespace NEngine
@@ -51,27 +52,32 @@ FenTest::FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
 void testFen(std::string const& ffname, xTestFen_Callback const& cbk, xTestFen_ErrorCallback const& ecbk)
 {
   FenTest ft(ffname, ecbk);
+  auto t = std::chrono::high_resolution_clock::now();
   for(size_t i = 0; i < ft.size(); ++i)
   {
     auto& x = ft[i];
     cbk(i, x.first, x.second);
   }
+  auto dt = std::chrono::high_resolution_clock::now() - t;
+  std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " (ms)" << std::endl;
 }
 
 void testSee(std::string const& ffname)
 {
-  NEngine::testFen(ffname, [](size_t i, NEngine::Board& board, NEngine::Move& move)
-  {
-    std::cout << i << ": "
-      << NEngine::toFEN(board) << "  "
-      << NEngine::printSAN(board, move)
-      << "  see: "<< board.see(move)
-      << std::endl;
-  },
+  NEngine::testFen(ffname,
+    [](size_t i, NEngine::Board& board, NEngine::Move& move)
+    {
+      std::cout << i << ": "
+        << NEngine::toFEN(board) << "  "
+        << NEngine::printSAN(board, move)
+        << "  see: " << board.see(move)
+        << "  see new: " << board.see_new(move)
+        << std::endl;
+    },
     [](std::string const& err)
-  {
-    std::cout << "error: " << err << std::endl;
-  });
+    {
+      std::cout << "error: " << err << std::endl;
+    });
 }
 
 } // NEngine

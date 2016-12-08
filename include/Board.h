@@ -9,6 +9,7 @@
 #include <MovesTable.h>
 #include <FigureDirs.h>
 #include <globals.h>
+#include <magicbb.h>
 
 namespace NEngine
 {
@@ -535,6 +536,7 @@ public:
 
   /// static exchange evaluation, should be called before move
   int see(const Move & move) const;
+  int see_new(const Move & move) const;
 
   /// find king's position
   inline int kingPos(Figure::Color c) const
@@ -543,7 +545,6 @@ public:
   }
 
   /// methods
-private:
 
   /// clear board. reset all fields, number of moves etc...
   void clear();
@@ -586,6 +587,23 @@ private:
 
     return false;
   }
+
+  inline bool see_check_mbb(Figure::Color acolor, uint8 from, uint8 to, uint8 ki_pos, const BitMask & all_mask_inv) const
+  {
+    auto mask_from = set_mask_bit(from);
+    auto mask_to = set_mask_bit(to);
+    auto all_mask = ~(all_mask_inv | mask_from);
+    all_mask |= mask_to;
+    mask_to = ~mask_to;
+    auto bq_mask = (fmgr_.bishop_mask(acolor) | fmgr_.queen_mask(acolor)) & all_mask & mask_to;
+    auto bishop_attack = magic_ns::bishop_moves(ki_pos, all_mask);
+    if(bishop_attack & bq_mask)
+      return true;
+    auto rq_mask = (fmgr_.rook_mask(acolor) | fmgr_.queen_mask(acolor)) & all_mask & mask_to;
+    auto rook_attack = magic_ns::rook_moves(ki_pos, all_mask);
+    return rook_attack & rq_mask;
+  }
+private:
 
   /// return short/long castle possibility
   bool castling() const { return castling_ != 0; }

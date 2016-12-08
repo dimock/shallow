@@ -22,7 +22,8 @@ namespace Figure
 
   inline Figure::Color otherColor(Figure::Color color)
   {
-    return (Figure::Color)((static_cast<int>(color) + 1) & 1);
+    //return (Figure::Color)((static_cast<int>(color) + 1) & 1);
+    return (Figure::Color)(!color);
   }
 
   const char * name(Type type);
