@@ -44,7 +44,7 @@ eMoveNotation detectNotation(std::string const& str)
     static std::string const figletters{"PNBRQK"};
     if(figletters.find(str[0]) != std::string::npos)
     {
-      if(iscolumn(str[1]) && (isdigit(str[2]) || str[2] == 'x'))
+      if(iscolumn(str[1]) && (isdigit(str[2]) || str[2] == 'x' || iscolumn(str[2])))
         return eMoveNotation::mnSAN;
 
       if(isdigit(str[1]) && (iscolumn(str[2]) || str[2] == 'x'))

@@ -70,8 +70,8 @@ void testSee(std::string const& ffname)
       std::cout << i << ": "
         << NEngine::toFEN(board) << "  "
         << NEngine::printSAN(board, move)
-        << "  see: " << board.see(move)
-        << "  see new: " << board.see_new(move)
+        << "  see: " << board.see_old(move)
+        << "  see new: " << board.see(move)
         << std::endl;
     },
     [](std::string const& err)

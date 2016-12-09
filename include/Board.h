@@ -535,8 +535,8 @@ public:
   }
 
   /// static exchange evaluation, should be called before move
+  int see_old(const Move & move) const;
   int see(const Move & move) const;
-  int see_new(const Move & move) const;
 
   /// find king's position
   inline int kingPos(Figure::Color c) const

@@ -29,7 +29,7 @@ inline uint8 see_unpack_p(uint16 v)
 
 // static exchange evaluation
 // have to be called before doing move
-int Board::see(const Move & move) const
+int Board::see_old(const Move & move) const
 {
   if ( state_ == Invalid )
     return 0;
@@ -92,9 +92,9 @@ int Board::see(const Move & move) const
 
 
   // our move is discovered check
-  X_ASSERT(see_check(ocolor, move.from_, ki_pos[ocolor], all_mask_inv, brq_masks[color]) !=
-           see_check_mbb(color, move.from_, move.to_, ki_pos[ocolor], all_mask_inv),
-           "invalid see check");
+  //X_ASSERT(see_check(ocolor, move.from_, ki_pos[ocolor], all_mask_inv, brq_masks[color]) !=
+  //         see_check_mbb(color, move.from_, move.to_, ki_pos[ocolor], all_mask_inv),
+  //         "invalid see check");
   //{
   //  auto a = see_check(ocolor, move.from_, ki_pos[ocolor], all_mask_inv, brq_masks[color]);
   //  auto b = see_check_mbb(color, move.from_, move.to_, ki_pos[ocolor], all_mask_inv);
@@ -103,8 +103,8 @@ int Board::see(const Move & move) const
   //  of << fen;
   //};
 
-  //if(see_check(ocolor, move.from_, ki_pos[ocolor], all_mask_inv, brq_masks[color]))
-  if(see_check_mbb(color, move.from_, move.to_, ki_pos[ocolor], all_mask_inv))
+  if(see_check(ocolor, move.from_, ki_pos[ocolor], all_mask_inv, brq_masks[color]))
+  //if(see_check_mbb(color, move.from_, move.to_, ki_pos[ocolor], all_mask_inv))
     return fscore;
 
   BitMask mask_all_inv_express = all_mask_inv | set_mask_bit(move.from_);
@@ -130,9 +130,9 @@ int Board::see(const Move & move) const
           ScoreType gain = fscore - Figure::figureWeight_[ffield.type()] + Figure::figureWeight_[Figure::TypePawn];
           
           // we loose and opponent's move valid
-          X_ASSERT(see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]) !=
-                   see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express),
-                   "invalid see check");
+          //X_ASSERT(see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]) !=
+          //         see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express),
+          //         "invalid see check");
           //{
           //  auto a = see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]);
           //  auto b = see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express);
@@ -142,8 +142,8 @@ int Board::see(const Move & move) const
 
           //}
 
-          if(gain < 0 && !see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
-            //!see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
+          if(gain < 0 && //!see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
+            !see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
             return gain;
         }
       }
@@ -165,12 +165,12 @@ int Board::see(const Move & move) const
           ScoreType gain = fscore - Figure::figureWeight_[ffield.type()] + Figure::figureWeight_[Figure::TypeKnight];
 
           // we loose and opponent's move valid
-          X_ASSERT(see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]) !=
-                   see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express),
-                   "see_check new invalid");
+          //X_ASSERT(see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]) !=
+          //         see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express),
+          //         "see_check new invalid");
 
-          if(gain < 0 && !see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
-             // !see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
+          if(gain < 0 && //!see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
+             !see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
             return gain;
         }
       }
@@ -192,12 +192,12 @@ int Board::see(const Move & move) const
           ScoreType gain = fscore - Figure::figureWeight_[ffield.type()] + Figure::figureWeight_[Figure::TypeBishop];
 
           // we loose and opponent's move valid
-          X_ASSERT(see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]) !=
-                   see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express),
-                   "see_check new invalid");
+          //X_ASSERT(see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]) !=
+          //         see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express),
+          //         "see_check new invalid");
           if ( gain < 0 && !is_something_between(n, move.to_, all_mask_inv) &&
-              !see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
-              //!see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
+              //!see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
+              !see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
           {
             return gain;
           }
@@ -226,8 +226,8 @@ int Board::see(const Move & move) const
                    "see_check new invalid");
 
           if ( gain < 0 && !is_something_between(n, move.to_, all_mask_inv) &&
-              !see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
-              //!see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
+              //!see_check_mbb(color, n, move.to_, ki_pos[ocolor], mask_all_inv_express))
+              !see_check(ocolor, n, ki_pos[ocolor], mask_all_inv_express, brq_masks[color]))
           {
             return gain;
           }
@@ -294,14 +294,20 @@ int Board::see(const Move & move) const
       case Figure::TypeKnight:
         {
           auto ocol = Figure::otherColor(col);
-          X_ASSERT(see_check(col, see_unpack_p(attackers[col][i]), ki_pos[col], all_mask_inv, brq_masks[ocol]) !=
-                   see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv),
-                   "see_check new invalid");
+          //if(see_check(col, see_unpack_p(attackers[col][i]), ki_pos[col], all_mask_inv, brq_masks[ocol]) !=
+          //   see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv))
+          //{
+          //  auto a = see_check(col, see_unpack_p(attackers[col][i]), ki_pos[col], all_mask_inv, brq_masks[ocol]);
+          //  auto b = see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv);
+          //  auto fen = toFEN(*this);
+          //  std::ofstream of("fen.txt");
+          //  of << fen;
+          //}
 
-          //bool is_checking = see_check(col, see_unpack_p(attackers[col][i]),
-          //  ki_pos[col], all_mask_inv, brq_masks[Figure::otherColor(col)]);
+          bool is_checking = see_check(col, see_unpack_p(attackers[col][i]),
+            ki_pos[col], all_mask_inv, brq_masks[Figure::otherColor(col)]);
 
-          bool is_checking = see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv);
+          //bool is_checking = see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv);
 
           if ( !is_checking )
           {
@@ -324,14 +330,14 @@ int Board::see(const Move & move) const
             continue;
 
           auto ocol = Figure::otherColor(col);
-          X_ASSERT(see_check(col, see_unpack_p(attackers[col][i]), ki_pos[col], all_mask_inv, brq_masks[ocol]) !=
-                   see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv),
-                   "see_check new invalid");
+          //X_ASSERT(see_check(col, see_unpack_p(attackers[col][i]), ki_pos[col], all_mask_inv, brq_masks[ocol]) !=
+          //         see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv),
+          //         "see_check new invalid");
 
-          //bool is_checking = see_check(col, see_unpack_p(attackers[col][i]),
-          //  ki_pos[col], all_mask_inv, brq_masks[Figure::otherColor(col)]);
+          bool is_checking = see_check(col, see_unpack_p(attackers[col][i]),
+            ki_pos[col], all_mask_inv, brq_masks[Figure::otherColor(col)]);
 
-          bool is_checking = see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv);
+          //bool is_checking = see_check_mbb(Figure::otherColor(col), see_unpack_p(attackers[col][i]), move.to_, ki_pos[col], all_mask_inv);
 
           if ( !is_checking )
           {
@@ -399,12 +405,12 @@ int Board::see(const Move & move) const
     // if we discovers check we don't need to continue
     Figure::Color ki_col = Figure::otherColor(col);
 
-    X_ASSERT(see_check(ki_col, pos, ki_pos[ki_col], all_mask_inv, brq_masks[col]) !=
-             see_check_mbb(col, pos, move.to_, ki_pos[ki_col], all_mask_inv),
-             "see_check new invalid");
+    //X_ASSERT(see_check(ki_col, pos, ki_pos[ki_col], all_mask_inv, brq_masks[col]) !=
+    //         see_check_mbb(col, pos, move.to_, ki_pos[ki_col], all_mask_inv),
+    //         "see_check new invalid");
 
-    if(pos != move.from_ && see_check_mbb(col, pos, move.to_, ki_pos[ki_col], all_mask_inv))
-       //see_check(ki_col, pos, ki_pos[ki_col], all_mask_inv, brq_masks[col]))
+    if(pos != move.from_ && //see_check_mbb(col, pos, move.to_, ki_pos[ki_col], all_mask_inv))
+       see_check(ki_col, pos, ki_pos[ki_col], all_mask_inv, brq_masks[col]))
       break;
 
     // remove from (inverted) mask
@@ -435,7 +441,7 @@ namespace
     uint64 all_mask_;
     uint64 mask_to_;
     uint64 brq_masks_[2];
-    uint64 masks_[2][Figure::TypesNum];
+    uint64 masks_[2][Figure::TypesNum] = {};
     Figure::Color color_;
     bool promotion_;
     int ki_pos_[2];
@@ -484,29 +490,34 @@ namespace
           return true;
       }
 
-      masks_[color][Figure::TypeQueen] = {};
-      if(bq_mask_[color] & all_mask_)
+      uint64 mask_b{};
+      if(!masks_[color][Figure::TypeBishop] &&(bq_mask_[color] & all_mask_))
       {
-        masks_[color][Figure::TypeQueen] = magic_ns::bishop_moves(move_.to_, all_mask_)
-          & all_mask_;
-        masks_[color][Figure::TypeBishop] = masks_[color][Figure::TypeQueen]
-          & board_.fmgr().bishop_mask(color);
+        mask_b = magic_ns::bishop_moves(move_.to_, all_mask_) & all_mask_;
+        masks_[color][Figure::TypeBishop] = mask_b & board_.fmgr().bishop_mask(color);
         if(do_move(color, ocolor, Figure::TypeBishop, from, score))
           return true;
       }
 
-      if(rq_mask_[color] & all_mask_)
+      uint64 mask_r{};
+      if(!masks_[color][Figure::TypeRook] && (rq_mask_[color] & all_mask_))
       {
-        auto rook_mask = magic_ns::rook_moves(move_.to_, all_mask_) & all_mask_;
-        masks_[color][Figure::TypeQueen] |= rook_mask;
-        masks_[color][Figure::TypeRook] = rook_mask & board_.fmgr().rook_mask(color);
+        mask_r = magic_ns::rook_moves(move_.to_, all_mask_) & all_mask_;
+        masks_[color][Figure::TypeRook] = mask_r & board_.fmgr().rook_mask(color);
         if(do_move(color, ocolor, Figure::TypeRook, from, score))
           return true;
       }
 
-      masks_[color][Figure::TypeQueen] &= board_.fmgr().queen_mask(color);
-      if(do_move(color, ocolor, Figure::TypeQueen, from, score))
-        return true;
+      if(!masks_[color][Figure::TypeQueen] && (board_.fmgr().queen_mask(color) & all_mask_))
+      {
+        if(!mask_b)
+          mask_b = magic_ns::bishop_moves(move_.to_, all_mask_);
+        if(!mask_r)
+          mask_r = magic_ns::rook_moves(move_.to_, all_mask_);
+        masks_[color][Figure::TypeQueen] = (mask_b | mask_r) & all_mask_ & board_.fmgr().queen_mask(color);
+        if(do_move(color, ocolor, Figure::TypeQueen, from, score))
+          return true;
+      }
 
       if((board_.fmgr().king_mask(color) & movesTable().caps(Figure::TypeKing, move_.to_))
          && !(board_.fmgr().king_mask(ocolor) & movesTable().caps(Figure::TypeKing, move_.to_))
@@ -573,7 +584,7 @@ namespace
   };
 }
 
-int Board::see_new(const Move & move) const
+int Board::see(const Move & move) const
 {
   if(state_ == Invalid)
     return 0;
@@ -619,7 +630,10 @@ int Board::see_new(const Move & move) const
     auto mask_from = set_mask_bit(from);
     auto ocolor = Figure::otherColor(color);
     if(see_calc.discovered_check(ocolor, color, mask_from, from))
-      return 0; // TODO: need more research about return value here
+    {
+      // TODO: steel need more research about return value here
+      return color == color_ ? 0 : score_gain + fscore + score;
+    }
     score_gain += fscore;
     // could not gain something
     if((score_gain < 0 && color == color_) || (score_gain > 0 && color != color_))
