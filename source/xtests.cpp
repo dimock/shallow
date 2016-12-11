@@ -14,7 +14,7 @@ namespace NEngine
 
 FenTest::FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
 {
-  std::regex r("([0-9pnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)([0-9a-hpnrqkPNBRQKOx+!\\-]+)([\\s]*[;])");
+  std::regex r("([0-9pnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)([0-9a-hpnrqkPNBRQKOx+=!\\-]+)([\\s]*)");
   std::ifstream ifs(ffname);
   for(; ifs;)
   {
@@ -59,7 +59,7 @@ void testFen(std::string const& ffname, xTestFen_Callback const& cbk, xTestFen_E
     cbk(i, x.first, x.second);
   }
   auto dt = std::chrono::high_resolution_clock::now() - t;
-  std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " (ms)" << std::endl;
+  std::cout << ft.size() << " moves; time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " (ms)" << std::endl;
 }
 
 void testSee(std::string const& ffname)
@@ -67,11 +67,16 @@ void testSee(std::string const& ffname)
   NEngine::testFen(ffname,
     [](size_t i, NEngine::Board& board, NEngine::Move& move)
     {
+      auto v_old = board.see_old(move);
+      auto v_new = board.see(move);
+      if((v_old < 0) == (v_new < 0))
+      //if(v_old == v_new)
+        return;
       std::cout << i << ": "
         << NEngine::toFEN(board) << "  "
         << NEngine::printSAN(board, move)
-        << "  see: " << board.see_old(move)
-        << "  see new: " << board.see(move)
+        << "  see old: " << v_old
+        << "  see new: " << v_new
         << std::endl;
     },
     [](std::string const& err)

@@ -3,6 +3,7 @@
  *************************************************************/
 
 #include <Board.h>
+#include <Helpers.h>
 #include <fstream>
 
 namespace NEngine
@@ -442,20 +443,25 @@ namespace
     uint64 mask_to_;
     uint64 brq_masks_[2];
     uint64 masks_[2][Figure::TypesNum] = {};
-    Figure::Color color_;
-    bool promotion_;
     int ki_pos_[2];
     uint64 bq_mask_[2];
     uint64 rq_mask_[2];
+    uint64 last_b_[2] = {};
+    uint64 last_r_[2] = {};
+    Figure::Color color_;
+    bool promotion_;
+    bool king_only_;
+    bool illegal_{};
 
     SeeCalc(Board const& board, Move const& move) :
       board_(board),
       move_(move)
     {
-      mask_to_ = set_mask_bit(move.to_);
+      mask_to_ = set_mask_bit(move_.to_);
       all_mask_ = board_.fmgr().mask(Figure::ColorBlack) | board_.fmgr().mask(Figure::ColorWhite) | mask_to_;
+      all_mask_ &= ~set_mask_bit(move_.from_);
       promotion_ = (move_.to_ >> 3) == 0 || (move_.to_ >> 3) == 7;
-      color_ = board_.getField(move.from_).color();
+      color_ = board_.getField(move_.from_).color();
       BitMask to_mask_inv = ~mask_to_;
       brq_masks_[0] = board_.fmgr().bishop_mask(Figure::ColorBlack) | board_.fmgr().rook_mask(Figure::ColorBlack) | board_.fmgr().queen_mask(Figure::ColorBlack);
       brq_masks_[0] &= to_mask_inv;
@@ -463,13 +469,24 @@ namespace
       brq_masks_[1] &= to_mask_inv;
       ki_pos_[0] = board_.kingPos(Figure::ColorBlack);
       ki_pos_[1] = board_.kingPos(Figure::ColorWhite);
+      if(discovered_check(color_, Figure::otherColor(color_), ~all_mask_, move_.from_))
+      {
+        illegal_ = true;
+        return;
+      }
       bq_mask_[0] = board_.fmgr().bishop_mask(Figure::ColorBlack) | board_.fmgr().queen_mask(Figure::ColorBlack);
       bq_mask_[1] = board_.fmgr().bishop_mask(Figure::ColorWhite) | board_.fmgr().queen_mask(Figure::ColorWhite);
       rq_mask_[0] = board_.fmgr().rook_mask(Figure::ColorBlack) | board_.fmgr().queen_mask(Figure::ColorBlack);
       rq_mask_[1] = board_.fmgr().rook_mask(Figure::ColorWhite) | board_.fmgr().queen_mask(Figure::ColorWhite);
+      king_only_ = discovered_check(Figure::otherColor(color_), color_, ~all_mask_, move_.from_);
     }
 
     inline bool next(Figure::Color color, int& from, int& score)
+    {
+      return (!king_only_ && move_figure(color, from, score)) || move_king(color, from, score);
+    }
+
+    inline bool move_figure(Figure::Color color, int& from, int& score)
     {
       auto ocolor = Figure::otherColor(color);
       if(board_.fmgr().pawn_mask(color) & all_mask_)
@@ -481,32 +498,35 @@ namespace
           return true;
       }
 
-      if(board_.fmgr().knight_mask(color) & all_mask_)
+      //for(auto type : {Figure::TypeKnight, Figure::TypeBishop, Figure::TypeRook, Figure::TypeQueen})
       {
-        masks_[color][Figure::TypeKnight] = board_.fmgr().knight_mask(color)
-          & all_mask_
-          & movesTable().caps(Figure::TypeKnight, move_.to_);
-        if(do_move(color, ocolor, Figure::TypeKnight, from, score))
+        Figure::Type const type = Figure::TypeKnight;
+        if(!masks_[color][type]
+           && (board_.fmgr().type_mask(type, color) & all_mask_))
+        {
+          masks_[color][type] = figure_mask(color, type);
+        }
+        if(do_move(color, ocolor, type, from, score))
           return true;
       }
 
       uint64 mask_b{};
       if(!masks_[color][Figure::TypeBishop] &&(bq_mask_[color] & all_mask_))
       {
-        mask_b = magic_ns::bishop_moves(move_.to_, all_mask_) & all_mask_;
+        last_b_[color] = mask_b = magic_ns::bishop_moves(move_.to_, all_mask_) & all_mask_;
         masks_[color][Figure::TypeBishop] = mask_b & board_.fmgr().bishop_mask(color);
-        if(do_move(color, ocolor, Figure::TypeBishop, from, score))
-          return true;
       }
+      if(do_move(color, ocolor, Figure::TypeBishop, from, score))
+        return true;
 
       uint64 mask_r{};
       if(!masks_[color][Figure::TypeRook] && (rq_mask_[color] & all_mask_))
       {
-        mask_r = magic_ns::rook_moves(move_.to_, all_mask_) & all_mask_;
+        last_r_[color] = mask_r = magic_ns::rook_moves(move_.to_, all_mask_) & all_mask_;
         masks_[color][Figure::TypeRook] = mask_r & board_.fmgr().rook_mask(color);
-        if(do_move(color, ocolor, Figure::TypeRook, from, score))
-          return true;
       }
+      if(do_move(color, ocolor, Figure::TypeRook, from, score))
+        return true;
 
       if(!masks_[color][Figure::TypeQueen] && (board_.fmgr().queen_mask(color) & all_mask_))
       {
@@ -515,12 +535,17 @@ namespace
         if(!mask_r)
           mask_r = magic_ns::rook_moves(move_.to_, all_mask_);
         masks_[color][Figure::TypeQueen] = (mask_b | mask_r) & all_mask_ & board_.fmgr().queen_mask(color);
-        if(do_move(color, ocolor, Figure::TypeQueen, from, score))
-          return true;
       }
+      if(do_move(color, ocolor, Figure::TypeQueen, from, score))
+        return true;
 
-      if((board_.fmgr().king_mask(color) & movesTable().caps(Figure::TypeKing, move_.to_))
-         && !(board_.fmgr().king_mask(ocolor) & movesTable().caps(Figure::TypeKing, move_.to_))
+      return false;
+    }
+
+    inline bool move_king(Figure::Color color, int& from, int& score)
+    {
+      auto ocolor = Figure::otherColor(color);
+      if(figure_mask(color, Figure::TypeKing) && !figure_mask(ocolor, Figure::TypeKing)
          && !under_check(color, ocolor))
       {
         // score == 0 means king's attack. it should be the very last one
@@ -528,8 +553,42 @@ namespace
         from = ki_pos_[color];
         return true;
       }
-
       return false;
+    }
+    //inline bool do_move(Figure::Color color, Figure::Color ocolor, Figure::Type const type, int& from, int& score)
+    //{
+    //  auto mask = masks_[color][type];
+    //  while(mask)
+    //  {
+    //    from = clear_lsb(mask);
+    //    if(move_impossible(type, from, all_mask_inv) || discovered_check(color, ocolor, ~all_mask_, from))
+    //    {
+    //      continue;
+    //    }
+    //    auto mask_from_inv = ~set_mask_bit(from);
+    //    masks_[color][type] &= mask_from_inv;
+    //    all_mask_ &= mask_from_inv;
+    //    brq_masks_[ocolor] &= mask_from_inv;
+    //    score = promotion_ && type == Figure::TypePawn
+    //      ? Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypePawn]
+    //      : Figure::figureWeight_[type];
+    //    if(color == color_)
+    //      score = -score;
+    //    return true;
+    //  }
+    //  return false;
+    //}
+
+    //inline bool move_impossible(Figure::Type type, int from, uint64 all_mask_inv) const
+    //{
+    //    if(type == Figure::TypePawn || type == Figure::TypeKnight)
+    //        return false;
+    //    return board_.is_something_between(from, move_.to_, all_mask_inv);
+    //}
+
+    inline uint64 figure_mask(Figure::Color color, Figure::Type type) const
+    {
+        return board_.fmgr().type_mask(type, color) & movesTable().caps(type, move_.to_) & all_mask_;
     }
 
     inline bool do_move(Figure::Color color, Figure::Color ocolor, Figure::Type const type, int& from, int& score)
@@ -537,10 +596,9 @@ namespace
       while(masks_[color][type])
       {
         from = clear_lsb(masks_[color][type]);
-        auto mask_from = set_mask_bit(from);
-        if(discovered_check(color, ocolor, mask_from, from))
+        if(discovered_check(color, ocolor, ~all_mask_, from))
           continue;
-        auto mask_from_inv = ~mask_from;
+        auto mask_from_inv = ~set_mask_bit(from);
         all_mask_ &= mask_from_inv;
         brq_masks_[ocolor] &= mask_from_inv;
         score = promotion_ && type == Figure::TypePawn
@@ -553,9 +611,8 @@ namespace
       return false;
     }
 
-    inline bool discovered_check(Figure::Color color, Figure::Color ocolor, uint64 mask_from, int from) const
+    inline bool discovered_check(Figure::Color color, Figure::Color ocolor, uint64 all_mask_inv, int from) const
     {
-      auto all_mask_inv = (~all_mask_) | mask_from;
       return board_.see_check(color, from, ki_pos_[color], all_mask_inv, brq_masks_[ocolor]);
     }
 
@@ -568,13 +625,13 @@ namespace
         return true;
 
       if((bq_mask_[ocolor] & all_mask_)
-         && (magic_ns::bishop_moves(move_.to_, all_mask_) & all_mask_ & bq_mask_[ocolor]))
+         && ((last_b_[ocolor] & all_mask_ & bq_mask_[ocolor]) || (magic_ns::bishop_moves(move_.to_, all_mask_) & all_mask_ & bq_mask_[ocolor])))
       {
         return true;
       }
 
       if((rq_mask_[ocolor] & all_mask_)
-         && (magic_ns::rook_moves(move_.to_, all_mask_) & all_mask_ & rq_mask_[ocolor]))
+         && ((last_r_[ocolor] & all_mask_ & rq_mask_[ocolor]) || (magic_ns::rook_moves(move_.to_, all_mask_) & all_mask_ & rq_mask_[ocolor])))
       {
         return true;
       }
@@ -584,6 +641,25 @@ namespace
   };
 }
 
+//int Board::see_failed_ = 0;
+//int Board::see(const Move & move) const
+//{
+//  auto s1 = see_old(move);
+//  auto s2 = see_new(move);
+//  if((s1 < 0) && (s2 >= 0))
+//  {
+//    //{
+//    //  auto fen = toFEN(*this);
+//    //  std::ofstream of("fen.txt");
+//    //  auto smv = moveToStr(move, false);
+//    //  of << fen << " bm " << smv;
+//    //}
+//    //exit(0);
+//    see_failed_++;
+//  }
+//  return s2;
+//}
+
 int Board::see(const Move & move) const
 {
   if(state_ == Invalid)
@@ -592,8 +668,7 @@ int Board::see(const Move & move) const
   const Field & ffield = getField(move.from_);
   const Field & tfield = getField(move.to_);
 
-  int score_gain = 0;
-  bool promotion = ((move.to_ >> 3) == 0 || (move.to_ >> 3) == 7) && (ffield.type() == Figure::TypePawn);
+  const bool promotion = ((move.to_ >> 3) == 0 || (move.to_ >> 3) == 7) && (ffield.type() == Figure::TypePawn);
 
   if(tfield.type())
   {
@@ -604,7 +679,9 @@ int Board::see(const Move & move) const
   // en-passant
   else if(!tfield && ffield.type() == Figure::TypePawn && move.to_ == en_passant_)
   {
-    X_ASSERT(getField(enpassantPos()).type() != Figure::TypePawn || getField(enpassantPos()).color() == color_, "no en-passant pawn");
+    X_ASSERT(getField(enpassantPos()).type() != Figure::TypePawn
+             || getField(enpassantPos()).color() == color_,
+             "no en-passant pawn");
     return 0;
   }
   // promotion with capture
@@ -613,34 +690,43 @@ int Board::see(const Move & move) const
     return Figure::figureWeight_[tfield.type()]-Figure::figureWeight_[Figure::TypePawn];
   }
 
-  auto color_ = ffield.color();
-  auto color = color_;
-  ScoreType fscore = 0;
+  int score_gain = (tfield) ? Figure::figureWeight_[tfield.type()] : 0;
+  int fscore = -Figure::figureWeight_[ffield.type()];
 
-  if(tfield)
-    fscore = Figure::figureWeight_[tfield.type()];
-
+  auto color = Figure::otherColor(ffield.color());
   SeeCalc see_calc(*this, move);
+
+  if(see_calc.illegal_)
+    return -Figure::MatScore;
+
+  // assume discovered check is always good
+  if(see_calc.king_only_)
+    return 0;
+
   for(;;)
   {
     int from{};
     int score{};
     if(!see_calc.next(color, from, score))
       break;
-    auto mask_from = set_mask_bit(from);
     auto ocolor = Figure::otherColor(color);
-    if(see_calc.discovered_check(ocolor, color, mask_from, from))
-    {
-      // TODO: steel need more research about return value here
-      return color == color_ ? 0 : score_gain + fscore + score;
-    }
+    see_calc.king_only_ = see_calc.discovered_check(ocolor, color, ~see_calc.all_mask_, from);
+    // assume this move is good if it was mine and I discover check
+    if(see_calc.king_only_ && color == see_calc.color_)
+      return 0;
     score_gain += fscore;
-    // could not gain something
-    if((score_gain < 0 && color == color_) || (score_gain > 0 && color != color_))
-      break;
-    // king's move
+    // king's move always last
     if(score == 0)
       break;
+    // already winner even if loose last moved figure
+    if(score_gain + score >= 0 && color == see_calc.color_)
+      return score_gain + score;
+    // could not gain something or already winner
+    if((score_gain < 0 && color == see_calc.color_)
+       || (score_gain >= 0 && color != see_calc.color_))
+    {
+      return score_gain;
+    }
     fscore = score;
     color = ocolor;
   }

@@ -7,20 +7,8 @@
 #include <magicbb.h>
 #include <xtests.h>
 
-int main(int argn, char *argv[])
+void see_perf_test(std::string const& fname)
 {
-#ifdef _MSC_VER
-  NEngine::init_popcount_ptr();
-#endif
-
-  NEngine::magic_ns::initialize();
-
-  std::cout.setf(std::ios_base::unitbuf);
-  NShallow::xProtocolMgr xpr;
- 
-  if(argn > 1)
-  {
-    NEngine::testSee(argv[1]);
     int N = 1000000;
     auto see_old_cbk = [N](size_t i, NEngine::Board& board, NEngine::Move& move)
     {
@@ -40,16 +28,35 @@ int main(int argn, char *argv[])
       }
       move.seen_ = x != 0;
     };
-    NEngine::testFen(argv[1],
-                     see_old_cbk,
+    NEngine::testFen(fname,
+                     see_new_cbk,
                      [](std::string const& err)
                      {
                        std::cout << "error: " << err << std::endl;
                      });
+}
+
+int main(int argn, char *argv[])
+{
+#ifdef _MSC_VER
+  NEngine::init_popcount_ptr();
+#endif
+
+  NEngine::magic_ns::initialize();
+
+  std::cout.setf(std::ios_base::unitbuf);
+  NShallow::xProtocolMgr xpr;
+ 
+  if(argn > 1)
+  {
+    //NEngine::testSee(argv[1]);
+    see_perf_test(argv[1]);
     return 0;
   }
 
   for(; xpr.doCmd(););
+
+  //std::cout << "see failed: " << NEngine::Board::see_failed_ << std::endl;
 
 	return 0;
 }

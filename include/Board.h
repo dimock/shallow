@@ -537,6 +537,9 @@ public:
   /// static exchange evaluation, should be called before move
   int see_old(const Move & move) const;
   int see(const Move & move) const;
+  //int see(const Move & move) const;
+
+  //static int see_failed_;
 
   /// find king's position
   inline int kingPos(Figure::Color c) const
@@ -678,7 +681,8 @@ private:
     int index = from < to ? _lsb64(mask_from) : _msb64(mask_from);
     return index;
   }
-
+  
+public:
   // check if there is some figure between 'from' and 'to'
   // inv_mask - inverted mask of all interesting figures
   inline bool is_something_between(int from, int to, const BitMask & inv_mask) const
