@@ -56,8 +56,6 @@ int main(int argn, char *argv[])
 
   for(; xpr.doCmd(););
 
-  //std::cout << "see failed: " << NEngine::Board::see_failed_ << std::endl;
-
 	return 0;
 }
 

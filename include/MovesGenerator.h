@@ -403,7 +403,7 @@ private:
     int s = board_.see(move);
 		move.seen_ = 1;
 		move.see_good_ = s >= 0;
-    return move.see_good_;
+    return true;// move.see_good_;
   }
 
   bool expressCheck(Move & move) const;
@@ -615,6 +615,18 @@ public:
 
   Move* move();
 
+  Move* weak()
+  {
+    auto iter = weaks_.begin();
+    if(iter != weaks_.end())
+    {
+      auto* m = &*iter;
+      weaks_.erase(iter);
+      return m;
+    }
+    return nullptr;
+  }
+
   // valid only under check
   bool singleReply() const
   {
@@ -633,6 +645,7 @@ private:
   Figure::Type thresholdType_;
   Order order_;
   int depth_;
+  xlist<Move, 16> weaks_;
 };
 
 } // NEngine

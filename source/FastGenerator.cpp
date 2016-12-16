@@ -140,9 +140,14 @@ Move* TacticalGenerator::move()
 
   if(order_ == oCaps)
   {
-    auto* cap = cg_.move();
-    if(cap || depth_ < 0)
-      return cap;
+    while(auto* cap = cg_.move())
+    {
+      if(cap->see_good_)
+        return cap;
+      weaks_.push_back(*cap);
+    }
+    if(depth_ < 0)
+      return nullptr;
     order_ = oGenChecks;
   }
 

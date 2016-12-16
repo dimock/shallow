@@ -359,6 +359,29 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(stopped() || ply >= MaxPly)
     return scontexts_[ictx].eval_(alpha, betta);
 
+  //if(options_.use_nullmove_
+  //   && !pv
+  //   && !scontexts_[ictx].board_.underCheck()
+  //   && scontexts_[ictx].board_.allowNullMove()
+  //   && depth >= scontexts_[ictx].board_.nullMoveDepthMin()
+  //   && betta < Figure::MatScore+MaxPly
+  //   && betta > -Figure::MatScore-MaxPly)
+  //{
+  //  auto score_x = scontexts_[ictx].board_.fmgr().weight();
+  //  auto my_color = scontexts_[ictx].board_.getColor();
+  //  auto other_color = Figure::otherColor(my_color);
+  //  if(Figure::ColorBlack  == my_color )
+  //    score_x = -score_x;
+  //  if((score_x < alpha - (Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook])) ||
+  //     (scontexts_[ictx].board_.fmgr().queens(my_color) + scontexts_[ictx].board_.fmgr().rooks(my_color) == 0
+  //     && scontexts_[ictx].board_.fmgr().queens(other_color) + scontexts_[ictx].board_.fmgr().rooks(other_color) > 0
+  //     && (score_x < alpha - Figure::figureWeight_[Figure::TypeRook] + Figure::figureWeight_[Figure::TypeKnight])))
+  //  {
+  //    light_null_move_++;
+  //    return alpha;
+  //  }
+  //}
+
   ScoreType alpha0 = alpha;
 
   Move hmove(0);
@@ -408,6 +431,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       // verify null-move with shortened depth
       if(nullScore >= betta)
       {
+        //if(scontexts_[ictx].board_.fmgr().weight(scontexts_[ictx].board_.getColor()) > 0)
+        //  return betta;
         //if ( scontexts_[ictx].board_.fmgr().queens(scontexts_[ictx].board_.getColor()) > 0 &&
         //		 scontexts_[ictx].board_.fmgr().rooks(scontexts_[ictx].board_.getColor()) > 0 &&
         //		 nullScore > betta+Evaluator::nullMoveVerifyMargin_ )
@@ -716,6 +741,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   if(tg.singleReply())
     depthInc += ONE_PLY;
 
+  bool alpha_found = false;
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.move();
@@ -743,14 +769,55 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       best = move;
       scoreBest = score;
       if(score > alpha)
+      {
+        alpha_found = true;
         alpha = score;
+      }
     }
-
     counter++;
   }
 
   if(stopped())
     return scoreBest;
+
+  // no good move found. lets try weak if exist
+  if(/*!alpha_found && */counter == 0)
+  {
+    for(; !alpha_found && alpha < betta && !checkForStop();)
+    {
+      auto* pmove = tg.weak();
+      if(!pmove)
+        break;
+
+      auto& move = *pmove;
+      if(!scontexts_[ictx].board_.validateMove(move))
+        continue;
+
+      ScoreType score = -ScoreMax;
+
+      scontexts_[ictx].board_.makeMove(move);
+      sdata_.inc_nc();
+
+      {
+        int depthInc1 = depthInc + depthIncrement(ictx, move, false);
+        score = -captures(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax);
+      }
+
+      scontexts_[ictx].board_.unmakeMove();
+
+      if(!stopped() && score > scoreBest)
+      {
+        best = move;
+        scoreBest = score;
+        if(score > alpha)
+        {
+          alpha_found = true;
+          alpha = score;
+        }
+      }
+      counter++;
+    }
+  }
 
   if(!counter)
   {
