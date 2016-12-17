@@ -435,7 +435,7 @@ private:
 };
 
 /// generate all moves, that escape from check
-class EscapeGenerator : public MovesGeneratorBase<16>
+class EscapeGenerator : public MovesGeneratorBase<32>
 {
 public:
 
@@ -565,7 +565,7 @@ private:
   UsualGenerator ug_;
   EscapeGenerator eg_;
 
-  xlist<Move, 32> weaks_;
+  xlist<Move, 64> weaks_;
   Move hmove_, killer_, fake_;
   Board & board_;
 };
@@ -663,7 +663,7 @@ private:
   Figure::Type thresholdType_;
   Order order_;
   int depth_;
-  xlist<Move, 32> weaks_;
+  xlist<Move, 64> weaks_;
 };
 
 } // NEngine
