@@ -82,6 +82,7 @@ public:
   // call it to start search
   bool search(SearchResult& result);
 
+  void setBoard(Board const& board);
   Board & getBoard() { return scontexts_[0].board_; }
   const Board & getBoard() const { return scontexts_[0].board_; }
 

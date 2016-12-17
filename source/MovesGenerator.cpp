@@ -9,16 +9,16 @@
 namespace NEngine
 {
 
-History MovesGeneratorBase::history_[64][64];
+History history_[Board::NumOfFields][Board::NumOfFields] = {};
 
-void MovesGeneratorBase::clear_history()
+void clear_history()
 {
   for (int i = 0; i < 64; ++i)
     for (int j = 0; j < 64; ++j)
       history_[i][j].clear();
 }
 
-void MovesGeneratorBase::normalize_history(int n)
+void normalize_history(int n)
 {
   for (int i = 0; i < 64; ++i)
   {
@@ -30,26 +30,20 @@ void MovesGeneratorBase::normalize_history(int n)
   }
 }
 
-//////////////////////////////////////////////////////////////////////////
-bool MovesGeneratorBase::find(const Move & move) const
+void save_history(std::string const& fname)
 {
-  auto it = std::find_if(moves_.begin(), moves_.end(),
-    [&move](Move const& m) { return m == move; });
-  return it != moves_.end(); 
+  std::ofstream ofs(fname, std::ofstream::binary);
+  if(!ofs)
+    return;
+  ofs.write(reinterpret_cast<char*>(history_), sizeof(history_));
 }
 
-bool MovesGeneratorBase::has_duplicates() const
+void load_history(std::string const& fname)
 {
-  for(auto iter = moves_.begin(); iter != moves_.end(); ++iter)
-  {
-    auto const& move = *iter;
-    auto iter1 = iter++;
-    auto it = std::find_if(iter, moves_.end(),
-      [&move](Move const& m) { return m == move; });
-    if(it != moves_.end())
-      return true;
-  }
-  return false;
+  std::ifstream ifs(fname, std::ifstream::binary);
+  if(!ifs)
+    return;
+  ifs.read(reinterpret_cast<char*>(history_), sizeof(history_));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -261,23 +255,6 @@ void MovesGenerator::generate()
         add(ki_pos, ki_pos-2, Figure::TypeNone, false);
     }
   }
-}
-
-//////////////////////////////////////////////////////////////////////////
-void MovesGeneratorBase::save_history(std::string const& fname)
-{
-  std::ofstream ofs(fname, std::ofstream::binary);
-  if(!ofs)
-    return;
-  ofs.write(reinterpret_cast<char*>(history_), sizeof(history_));
-}
-
-void MovesGeneratorBase::load_history(std::string const& fname)
-{
-  std::ifstream ifs(fname, std::ifstream::binary);
-  if(!ifs)
-    return;
-  ifs.read(reinterpret_cast<char*>(history_), sizeof(history_));
 }
 
 } // NEngine

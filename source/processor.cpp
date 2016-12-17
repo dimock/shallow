@@ -253,6 +253,7 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
   thinking_ = false;
 
   rep.state_ = static_cast<NEngine::Board::State>(board.getState());
+  rep.best_ = sres.best_;
   rep.moveStr_ = moveToStr(sres.best_, winboardFormat);
   return rep;
 }
@@ -387,6 +388,11 @@ void Processor::hash2file(std::string const& fname)
 }
 
 //////////////////////////////////////////////////////////////////////////
+void Processor::clear()
+{
+  engine_.clearHash();
+}
+
 boost::optional<bool> Processor::fromFEN(xCmd const& cmd)
 {
   if(is_thinking())
@@ -402,6 +408,11 @@ boost::optional<bool> Processor::fromFEN(xCmd const& cmd)
 bool Processor::fromFEN(std::string const& fen)
 {
   return engine_.fromFEN(fen);
+}
+
+void Processor::setBoard(NEngine::Board& board)
+{
+  engine_.setBoard(board);
 }
 
 std::string Processor::toFEN()

@@ -17,6 +17,7 @@ namespace NShallow
 struct ReplyStruct
 {
   NEngine::Board::State state_{};
+  NEngine::Move best_;
   std::string moveStr_;
   bool white_{ false };
 };
@@ -44,6 +45,9 @@ public:
   void hash2file(std::string const& fname);
   std::string toFEN();
 
+  void clear();
+
+  void setBoard(NEngine::Board&);
   bool fromFEN(std::string const& fen);
   boost::optional<bool> fromFEN(xCmd const& cmd);
   void editCmd(xCmd const& cmd);
@@ -72,7 +76,6 @@ private:
 
   NEngine::Figure::Color boardColor_{};
   NEngine::Figure::Color figureColor_{};
-  NEngine::Board board_;
   NEngine::Engine engine_;
   int movesLeft_{};
   int movesToGo_{};

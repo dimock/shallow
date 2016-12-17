@@ -611,7 +611,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
 #endif
 
-      History & hist = MovesGenerator::history(move.from_, move.to_);
+      History & hist = history(move.from_, move.to_);
 
       if(score > scoreBest)
       {
@@ -674,7 +674,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   if(best)
   {
-    History & hist = MovesGenerator::history(best.from_, best.to_);
+    History & hist = history(best.from_, best.to_);
     hist.inc_score(depth / ONE_PLY);
 
 #if ((defined USE_LMR) && (defined VERIFY_LMR))

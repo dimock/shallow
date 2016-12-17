@@ -78,30 +78,29 @@ protected:
   unsigned good_count_, bad_count_;
 };
 
+extern History history_[Board::NumOfFields][Board::NumOfFields];
+
+void normalize_history(int n);
+void clear_history();
+void save_history(std::string const& fname);
+void load_history(std::string const& fname);
+
+static inline History & history(int from, int to)
+{
+  X_ASSERT((unsigned)from > 63 || (unsigned)to > 63, "invalid history field index");
+  return history_[from][to];
+}
+
 
 // base class for all moves generators
+template <int NumMovesMax>
 class MovesGeneratorBase
 {
-  static History history_[Board::NumOfFields][Board::NumOfFields];
-
 public:
 
-  using MovesList = xlist<Move, Board::MovesMax>;
-
-  static void clear_history();
-  static void normalize_history(int n);
+  using MovesList = xlist<Move, NumMovesMax>;
 
   static const unsigned int vsort_add_ = 10000;
-
-  static void save_history(std::string const& fname);
-  static void load_history(std::string const& fname);
-
-
-  static inline History & history(int from, int to)
-  {
-    X_ASSERT( (unsigned)from > 63 || (unsigned)to > 63, "invalid history field index" );
-    return history_[from][to];
-  }
 
   MovesGeneratorBase(const Board & board) : board_(board)
   {}
@@ -121,8 +120,27 @@ public:
     return moves_;
   }
 
-  bool find(const Move & m) const;
-  bool has_duplicates() const;
+  bool find(const Move & move) const
+  {
+    auto it = std::find_if(moves_.begin(), moves_.end(),
+                           [&move](Move const& m) { return m == move; });
+    return it != moves_.end();
+  }
+
+  bool has_duplicates() const
+  {
+    for(auto iter = moves_.begin(); iter != moves_.end(); ++iter)
+    {
+      auto const& move = *iter;
+      auto iter1 = iter++;
+      auto it = std::find_if(iter, moves_.end(),
+                             [&move](Move const& m) { return m == move; });
+      if(it != moves_.end())
+        return true;
+    }
+    return false;
+  }
+
 
 protected:
 
@@ -193,7 +211,7 @@ protected:
 };
 
 /// generate all movies from this position. don't verify and sort them. only calculate sort weights
-class MovesGenerator : public MovesGeneratorBase
+class MovesGenerator : public MovesGeneratorBase<Board::MovesMax>
 {
 public:
 
@@ -265,7 +283,7 @@ private:
 
 /// generate all moves but captures and promotion to queen. could generate only promotion to knight if it checks
 /// couldn't be called under check !!!
-class UsualGenerator : public MovesGeneratorBase
+class UsualGenerator : public MovesGeneratorBase<Board::MovesMax>
 {
 public:
   UsualGenerator(Board & );
@@ -321,7 +339,7 @@ private:
 };
 
 /// generate captures and promotions to queen only, don't detect checks
-class CapsGenerator : public MovesGeneratorBase
+class CapsGenerator : public MovesGeneratorBase<Board::MovesMax/2>
 {
 public:
 
@@ -417,7 +435,7 @@ private:
 };
 
 /// generate all moves, that escape from check
-class EscapeGenerator : public MovesGeneratorBase
+class EscapeGenerator : public MovesGeneratorBase<16>
 {
 public:
 
@@ -554,7 +572,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 // generate checks without captures
-class ChecksGenerator : public MovesGeneratorBase
+class ChecksGenerator : public MovesGeneratorBase<64>
 {
 public:
 
@@ -645,7 +663,7 @@ private:
   Figure::Type thresholdType_;
   Order order_;
   int depth_;
-  xlist<Move, 16> weaks_;
+  xlist<Move, 32> weaks_;
 };
 
 } // NEngine

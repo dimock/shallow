@@ -31,7 +31,7 @@ void Engine::saveHash(std::string const&  fname) const
 
   std::ofstream ofs(bfname, std::ios::out);
   save(scontexts_[0].board_, ofs);
-  MovesGeneratorBase::save_history(hfname);
+  save_history(hfname);
 }
 
 void Engine::loadHash(std::string const& fname)
@@ -48,7 +48,7 @@ void Engine::loadHash(std::string const& fname)
 
   std::ifstream ifs(bfname, std::ios::in);
   load(scontexts_[0].board_, ifs);
-  MovesGenerator::load_history(hfname);
+  load_history(hfname);
 }
 
 ////////////////////////////////////////////////////////////////////////////

@@ -13,7 +13,9 @@
 
 namespace NEngine
 {
+  template <int>
   class MovesGeneratorBase;
+
   class MovesGenerator;
   class CapsGenerator;
   class EscapeGenerator;
@@ -34,7 +36,9 @@ namespace NEngine
 
 class Board
 {
+  template <int>
   friend class MovesGeneratorBase;
+
   friend class MovesGenerator;
   friend class CapsGenerator;
   friend class EscapeGenerator;
@@ -797,46 +801,58 @@ class SBoard : public Board
 {
 public:
   SBoard() :
-    Board()
+    Board(),
+    undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_;
+    g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
   SBoard(SBoard<OTHER_SIZE> const& oboard) :
-    Board(oboard)
+    Board(oboard),
+    undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_;
+    g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
   SBoard(SBoard<OTHER_SIZE> const& oboard, bool) :
-    Board(oboard)
+    Board(oboard),
+    undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_;
+    g_undoStack = undoStackIntr_.data();
     copyStack(oboard);
   }
 
   SBoard(Board const& oboard) :
-    Board(oboard)
+    Board(oboard),
+    undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_;
+    g_undoStack = undoStackIntr_.data();
+  }
+
+  SBoard& operator = (Board const& oboard)
+  {
+    this->Board::operator = (oboard);
+    g_undoStack = undoStackIntr_.data();
+    return *this;
   }
 
   SBoard(Board const& oboard, bool) :
-    Board(oboard)
+    Board(oboard),
+    undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_;
+    g_undoStack = undoStackIntr_.data();
     copyStack(oboard);
   }
 private:
   void copyStack(Board const& oboard)
   {
-    for(int i = 0; i < halfmovesCount(); ++i)
+    for(int i = 0; i < halfmovesCount() && i < undoStackIntr_.size(); ++i)
       g_undoStack[i] = oboard.undoInfo(i);
   }
 
-  UndoInfo undoStackIntr_[STACK_SIZE];
+  std::vector<UndoInfo> undoStackIntr_;
 };
 
 } // NEngine

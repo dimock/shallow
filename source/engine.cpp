@@ -80,9 +80,16 @@ bool Engine::fromFEN(std::string const& fen)
   if(!NEngine::fromFEN(fen, tboard))
     return false;
 
-  MovesGenerator::clear_history();
+  clear_history();
 
   return NEngine::fromFEN(fen, scontexts_[0].board_);
+}
+
+void Engine::setBoard(Board const& board)
+{
+  stop_ = false;
+  clear_history();
+  scontexts_[0].board_ = board;
 }
 
 std::string Engine::toFEN() const
@@ -102,7 +109,7 @@ void Engine::reset()
 {
   sdata_.reset();
   stop_ = false;
-  MovesGenerator::clear_history();
+  clear_history();
 
   for(int i = 0; i < MaxPly; ++i)
     scontexts_[0].plystack_[i].clearKiller();

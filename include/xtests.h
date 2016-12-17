@@ -11,15 +11,24 @@ xtests.h - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
-using xTestFen_Callback = std::function<void(size_t, Board&, Move&)>;
-using xTestFen_ErrorCallback = std::function<void(std::string const&)>;
-
 namespace xtests_details_ns
 {
 using FBoard = SBoard<16>;
 };
 
-class FenTest : public std::vector<std::pair<xtests_details_ns::FBoard, Move>>
+struct xEPD
+{
+  xtests_details_ns::FBoard board_;
+  std::vector<Move> moves_;
+  int score_{};
+};
+
+using xTestFen_Callback = std::function<void(size_t, xEPD&)>;
+using xTestFen_ErrorCallback = std::function<void(std::string const&)>;
+using xProcessFen_Callback = std::function<int(size_t, xEPD&)>;
+using xDoOptimize_Callback = std::function<bool(int)>;
+
+class FenTest : public std::vector<xEPD>
 {
 
 public:
@@ -28,5 +37,7 @@ public:
 
 void testFen(std::string const& ffname, xTestFen_Callback const&, xTestFen_ErrorCallback const&);
 void testSee(std::string const& ffname);
+void optimizeFen(std::string const& ffname);
+void see_perf_test(std::string const& fname);
 
 } // NEngine
