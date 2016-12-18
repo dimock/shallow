@@ -38,7 +38,9 @@ public:
 
   NEngine::Figure::Color color() const;
 
-  void adjustEval(std::set<std::string> const& exclude, double percent);
+  void adjustEval(std::set<std::string> const& exclude,
+                  std::vector<NEngine::details::Which> const& which, 
+                  double percent);
   void saveEval(std::string const& fname);
 
   void save(std::string const& fname);

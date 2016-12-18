@@ -51,23 +51,40 @@ void EvalCoefficients::save(std::string const& ofname)
   }
 }
 
-void EvalCoefficients::random(std::set<std::string> const& exclude, double percent)
+void EvalCoefficients::random(std::set<std::string> const& exclude,
+                              std::vector<details::Which> const& which,
+                              double percent)
 {
+  auto normalize_if = [&percent, &which](std::string const& name, double& r) -> bool
+  {
+    if(which.empty())
+      return true;
+    auto it = std::find_if(which.begin(), which.end(), [&name](details::Which const& w) { return w.first == name; });
+    if(it == which.end())
+      return false;
+    r *= it->second / percent;
+    return true;
+  };
   std::uniform_real_distribution<> dis(-percent, percent);
   for(auto const& v : vars_)
   {
     if(exclude.count(v.name_) > 0)
       continue;
     auto r = dis(*gen);
+    if(!normalize_if(v.name_, r))
+      continue;
     *v.pvar_ = v.initial_ * (1.0 + r);
   }
   for(auto const& a : arrs_)
   {
     if(exclude.count(a.name_) > 0)
       continue;
+    double f = 1.0;
+    if(!normalize_if(a.name_, f))
+      continue;
     for(size_t i = 0; i < a.initial_.size() && i < a.size_; ++i)
     {
-      auto r = dis(*gen);
+      auto r = dis(*gen) * f;
       a.parr_[i] = a.initial_[i] * (1.0 + r);
     }
   }

@@ -319,9 +319,11 @@ bool Processor::makeMove(std::string const& moveStr)
   return true;
 }
 
-void Processor::adjustEval(std::set<std::string> const& exclude, double percent)
+void Processor::adjustEval(std::set<std::string> const& exclude,
+                           std::vector<NEngine::details::Which> const& which, 
+                           double percent)
 {
-  engine_.adjustEval(exclude, percent);
+  engine_.adjustEval(exclude, which, percent);
 }
 
 void Processor::saveEval(std::string const& fname)

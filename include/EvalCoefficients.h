@@ -29,6 +29,8 @@ namespace details
     int* parr_;
     int  size_;
   };
+
+  using Which = std::pair<std::string, double>;
 }
 
 struct EvalCoefficients
@@ -42,7 +44,9 @@ struct EvalCoefficients
   int passedPawn_[8] = {};
 
   void save(std::string const& ofname);
-  void random(std::set<std::string> const& exclude, double percent);
+  void random(std::set<std::string> const& exclude,
+              std::vector<details::Which> const& which,
+              double percent);
 
 private:
   std::unique_ptr<std::random_device> rd;

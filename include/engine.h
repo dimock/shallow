@@ -69,7 +69,9 @@ public:
   // initialize global arrays, tables, masks, etc. write them to it's board_
   Engine();
 
-  void adjustEval(std::set<std::string> const& exclude, double percent);
+  void adjustEval(std::set<std::string> const& exclude,
+                  std::vector<details::Which> const& which,
+                  double percent);
   void saveEval(std::string const& fname);
 
   void clearHash();

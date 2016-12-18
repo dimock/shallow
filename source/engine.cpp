@@ -39,9 +39,11 @@ Engine::Engine() :
 }
 
 //////////////////////////////////////////////////////////////////////////
-void Engine::adjustEval(std::set<std::string> const& exclude, double percent)
+void Engine::adjustEval(std::set<std::string> const& exclude,
+                        std::vector<details::Which> const& which,
+                        double percent)
 {
-  evalCoeffs_.random(exclude, percent);
+  evalCoeffs_.random(exclude, which, percent);
 }
 
 void Engine::saveEval(std::string const& fname)

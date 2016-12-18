@@ -201,7 +201,7 @@ void optimizeFen(std::string const& ffname)
       summ_min = summ;
       proc.saveEval("eval.txt");
     }
-    proc.adjustEval({}, 0.2);
+    proc.adjustEval({}, { {"doublePawn_", 0.3} }, 10.0);
     return iters_num++ < 5;
   },
     [](std::string const& err)
