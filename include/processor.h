@@ -38,6 +38,9 @@ public:
 
   NEngine::Figure::Color color() const;
 
+  void adjustEval(std::set<std::string> const& exclude, double percent);
+  void saveEval(std::string const& fname);
+
   void save(std::string const& fname);
   void load(std::string const& fname);
   void fen2file(std::string const& fname);

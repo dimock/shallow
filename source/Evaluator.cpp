@@ -272,10 +272,11 @@ namespace NEngine
 //  betta_ = +ScoreMax;
 //}
 
-void Evaluator::initialize(const Board * board, EHashTable * ehash)
+void Evaluator::initialize(Board const* board, EHashTable* ehash, EvalCoefficients const* coeffs)
 {
   board_ = board;
-  //ehash_ = ehash;
+  ehash_ = ehash;
+  coeffs_ = coeffs;
 }
 
 //void Evaluator::prepare()

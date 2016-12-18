@@ -28,17 +28,27 @@ Engine::Engine() :
 
   initGlobals();
 
-  for(int i = 0; i < sizeof(scontexts_)/sizeof(SearchContext); ++i)
+  for(auto& scontext : scontexts_)
   {
 #ifdef USE_HASH
-    scontexts_[i].eval_.initialize(&scontexts_[i].board_, &ehash_);
+    scontext.eval_.initialize(&scontext.board_, &ehash_, &evalCoeffs_);
 #else
-    scontexts_[i].eval_.initialize(&scontexts_[i].board_, 0);
+    scontext.eval_.initialize(&scontext.board_, nullptr, &evalCoeffs_);
 #endif
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
+void Engine::adjustEval(std::set<std::string> const& exclude, double percent)
+{
+  evalCoeffs_.random(exclude, percent);
+}
+
+void Engine::saveEval(std::string const& fname)
+{
+  evalCoeffs_.save(fname);
+}
+
 void Engine::needUpdate()
 {
   updateRequested_ = true;

@@ -69,8 +69,10 @@ public:
   // initialize global arrays, tables, masks, etc. write them to it's board_
   Engine();
 
-  void clearHash();
+  void adjustEval(std::set<std::string> const& exclude, double percent);
+  void saveEval(std::string const& fname);
 
+  void clearHash();
   void setOptions(xOptions const& opts);
   void setCallbacks(xCallback callback);
 
@@ -141,23 +143,19 @@ private:
 
   struct SearchContext
   {
-    //SearchContext();
-
     SBoard<Board::GameLength>     board_;
     Evaluator eval_;
     std::array<PlyStack, MaxPly+4>    plystack_;
     std::array<Move, Board::MovesMax> moves_;
-//    std::array<UndoInfo, Board::GameLength> undoStack_;
   };
 
   // will be used in multi-threading mode???
-  SearchContext scontexts_[1];
+  std::array<SearchContext, 1> scontexts_;
 
   SearchData sdata_;
   SearchParams sparams_;
-
   xOptions options_;
-
+  EvalCoefficients evalCoeffs_;
 
 #ifdef USE_HASH
   GHashTable hash_;

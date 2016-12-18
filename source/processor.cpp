@@ -319,6 +319,16 @@ bool Processor::makeMove(std::string const& moveStr)
   return true;
 }
 
+void Processor::adjustEval(std::set<std::string> const& exclude, double percent)
+{
+  engine_.adjustEval(exclude, percent);
+}
+
+void Processor::saveEval(std::string const& fname)
+{
+  engine_.saveEval(fname);
+}
+
 void Processor::save(std::string const& fname)
 {
   if(is_thinking())

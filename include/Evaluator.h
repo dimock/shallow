@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Board.h>
+#include <EvalCoefficients.h>
 
 namespace NEngine
 {
@@ -87,7 +88,7 @@ public:
   
   //Evaluator();
 
-  void initialize(const Board * board, EHashTable * ehash);
+  void initialize(Board const* board, EHashTable* ehash, EvalCoefficients const* coeffs);
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
 
@@ -222,8 +223,9 @@ private:
  // // sum of weights of all figures
  // int weightMax_;
 
-  const Board * board_{nullptr};
- // EHashTable  * ehash_;
+  Board const* board_{nullptr};
+  EHashTable*  ehash_{ nullptr };
+  EvalCoefficients const* coeffs_{ nullptr };
 
  // BitMask mask_all_;
  // BitMask inv_mask_all_;

@@ -182,7 +182,7 @@ void optimizeFen(std::string const& ffname)
   int iters_num{};
   optimizeFen(ffname, [&proc](size_t i, xEPD& epd)
   {
-    proc.setDepth(10);
+    proc.setDepth(6);
     proc.setBoard(epd.board_);
     proc.clear();
     auto r = proc.reply(false);
@@ -194,13 +194,15 @@ void optimizeFen(std::string const& ffname)
       return 1;
     return 0;
   },
-    [&summ_min, &iters_num](int summ) -> bool
+  [&summ_min, &iters_num, &proc](int summ) -> bool
   {
     if(summ_min < 0 || summ_min > summ)
     {
       summ_min = summ;
+      proc.saveEval("eval.txt");
     }
-    return false;// ++iters_num > 10;
+    proc.adjustEval({}, 0.2);
+    return iters_num++ < 5;
   },
     [](std::string const& err)
   {
