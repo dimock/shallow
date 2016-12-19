@@ -82,12 +82,17 @@ int8 BitsCounter::s_array_[256] =
 
 PawnMasks::PawnMasks()
 {
-  for(int pos = 0; pos < 64; ++pos)
-    clearAll(pos);
+  //for(int pos = 0; pos < 64; ++pos)
+  //  clearAll(pos);
 
   //for(int i = 0; i < 8; ++i)
   //  pmask_isolated_[i] = 0;
 
+  BitMask doubled_msk{};
+  for(int i = 0; i < 8; ++i)
+  {
+    doubled_msk |= set_mask_bit(Index(0, i));
+  }
 
   for(int color = 0; color < 2; ++color)
   {
@@ -116,6 +121,18 @@ PawnMasks::PawnMasks()
           pass_msk |= set_mask_bit(Index(xx, yy));
         }
       }
+
+      pmask_doubled_[x] |= doubled_msk << x;
+
+      if(x > 0)
+      {
+        pmask_isolated_[x] |= doubled_msk << (x-1);
+      }
+      if(x < 7)
+      {
+        pmask_isolated_[x] |= doubled_msk << (x+1);
+      }
+
 
       //if(y+deltay >= 0 && y+deltay < 8)
       //{
@@ -237,18 +254,18 @@ PawnMasks::PawnMasks()
   //  }
   //}
 }
-
-void PawnMasks::clearAll(int pos)
-{
-  for(int color = 0; color < 2; ++color)
-  {
-    //pmasks_guarded_[color][pos] = 0;
-    pmasks_passed_[color][pos] = 0;
-    //pmasks_blocked_[color][pos] = 0;
-    //pmask_kpk_[color][pos] = 0;
-  }
-  //pmasks_disconnected_[pos] = 0;
-}
+//
+//void PawnMasks::clearAll(int pos)
+//{
+//  for(int color = 0; color < 2; ++color)
+//  {
+//    //pmasks_guarded_[color][pos] = 0;
+//    pmasks_passed_[color][pos] = 0;
+//    //pmasks_blocked_[color][pos] = 0;
+//    //pmask_kpk_[color][pos] = 0;
+//  }
+//  //pmasks_disconnected_[pos] = 0;
+//}
 
 //////////////////////////////////////////////////////////////////////////
 DeltaPosCounter::DeltaPosCounter()

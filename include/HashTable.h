@@ -202,9 +202,9 @@ ALIGN_MSC(8) struct ALIGN_GCC(8) HEval
   {
   struct
   {
-    int32  pwscore_  : 10,
-           pwscore_eg_ : 10,
-           score_ps_ : 10,
+    int32  common_  : 10,
+           opening_ : 10,
+           endGame_ : 10,
            initizalized_ : 1;
   };
 

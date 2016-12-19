@@ -182,16 +182,24 @@ void optimizeFen(std::string const& ffname)
   int iters_num{};
   optimizeFen(ffname, [&proc](size_t i, xEPD& epd)
   {
+    std::cout << i << ": ";
     proc.setDepth(6);
     proc.setBoard(epd.board_);
     proc.clear();
     auto r = proc.reply(false);
     if(!r)
+    {
+      std::cout << "-" << std::endl;
       return 1;
+    }
     auto best = r->best_;
     auto iter = std::find_if(epd.moves_.begin(), epd.moves_.end(), [&best](NEngine::Move const& move) { return move == best; });
     if(iter == epd.moves_.end())
+    {
+      std::cout << "-" << std::endl;
       return 1;
+    }
+    std::cout << NEngine::printSAN(epd.board_, r->best_) << std::endl;
     return 0;
   },
   [&summ_min, &iters_num, &proc](int summ) -> bool
@@ -201,7 +209,8 @@ void optimizeFen(std::string const& ffname)
       summ_min = summ;
       proc.saveEval("eval.txt");
     }
-    proc.adjustEval({}, { {"doublePawn_", 0.3} }, 10.0);
+    proc.adjustEval({}, {}, 0.25);
+    std::cout << iters_num << " iteration. current fails = " << summ << ". minimum fails = " << summ_min << std::endl;
     return iters_num++ < 5;
   },
     [](std::string const& err)

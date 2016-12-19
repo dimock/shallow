@@ -11,8 +11,63 @@ namespace NEngine
 
 class Evaluator
 {
+  enum GamePhase { Opening = 0, MiddleGame, EndGame };
 
-  //enum GamePhase { Opening = 0, MiddleGame, EndGame };
+  struct PhaseInfo
+  {
+    int opening_{};
+    int endGame_{};
+    GamePhase phase_{Opening};
+  };
+
+  struct PawnsScore
+  {
+    int common_{};
+    int opening_{};
+    int endGame_{};
+  };
+
+  struct FieldsInfo
+  {
+    //void reset()
+    //{
+    //  king_pos_ = -1;
+
+    //  pw_attack_mask_ = 0;
+    //  kn_attack_mask_ = 0;
+    //  attack_mask_ = 0;
+
+    //  knightMobility_ = 0;
+    //  bishopMobility_ = 0;
+    //  rookMobility_ = 0;
+    //  queenMobility_ = 0;
+
+    //  knightPressure_ = 0;
+    //  bishopPressure_ = 0;
+    //  rookPressure_ = 0;
+    //  queenPressure_ = 0;
+
+    //  rookOpenScore_ = 0;
+
+    //  for(int i = 0; i < Figure::TypesNum; ++i)
+    //    attackersN_[i] = 0;
+    //}
+
+    int king_pos_{-1};
+    int knightMobility_{};
+    int bishopMobility_{};
+    int rookMobility_{};
+    int queenMobility_{};
+    int knightPressure_{};
+    int bishopPressure_{};
+    int rookPressure_{};
+    int queenPressure_{};
+    int rookOpenScore_{};
+    BitMask pw_attack_mask_{};
+    BitMask kn_attack_mask_{};
+    BitMask attack_mask_{};
+    int attackersN_[Figure::TypesNum] = {};
+  } finfo_[2];
 
 public:
 
@@ -25,8 +80,7 @@ public:
  // // position evaluation. 0 - opening, 1 - endgame; color,type,pos
  // static const ScoreType positionEvaluations_[2][8][64];
 
- // static const ScoreType positionGain_;
- // static const ScoreType lazyThreshold_;
+ const int lazyThreshold_ = Figure::figureWeight_[Figure::TypePawn] * 4;
 
  // // evaluation constants
  // static const ScoreType bishopKnightMat_[64];
@@ -37,7 +91,6 @@ public:
  // static const ScoreType fakecastlePenalty_;
  // static const ScoreType castleImpossiblePenalty_;
  // static const ScoreType bishopBonus_;
- // static const ScoreType pawnEndgameBonus_;
  // static const ScoreType unstoppablePawn_;
  // static const ScoreType kingFarBonus_;
  // static const ScoreType pawnPassed_[8], passerCandidate_[8];//, pawnCanGo_[8];
@@ -99,12 +152,18 @@ public:
 
 private:
 
-  //void prepare();
+  void prepare();
 
-  ///// calculates absolute position evaluation
-  //ScoreType evaluate();
+  /// calculates absolute position evaluation
+  ScoreType evaluate();
 
- // ScoreType evaluatePawns(Figure::Color color, ScoreType * score_eg);
+  // multiple coefficients for opening/endgame
+  PhaseInfo detectPhase();
+
+  // calculate or take from hash - pawns structure for middle & end game; king's pawn shield
+  PawnsScore hashedEvaluation();
+
+  PawnsScore evaluatePawns(Figure::Color color);
  // ScoreType evaluatePawnShield(Figure::Color color);
 
  // ScoreType evaluatePassersAdditional(GamePhase phase, int coef_e);
@@ -133,12 +192,6 @@ private:
  // bool evaluateWinnerLoserSpecial(ScoreType & score);
  // ScoreType evaluateTrueWinnerLoser();
 
- // // multiple coefficients for opening/endgame
- // GamePhase detectPhase(int & coef_o, int & coef_e);
-
- // // calculate or take from hash - pawns structure for middle & end game; king's pawn shield
- // void hashedEvaluation(ScoreType & pwscore, ScoreType & pwscore_eg, ScoreType & score_ps);
-
  // // 0 - short, 1 - long, -1 - no castle
  // int getCastleType(Figure::Color color) const;
 
@@ -165,42 +218,6 @@ private:
 
 	//ScoreType evaluateKingPressure() const;
 
- // struct FieldsInfo
- // {
- //   void reset()
- //   {
- //     king_pos_ = -1;
- //     
- //     pw_attack_mask_ = 0;
- //     kn_attack_mask_ = 0;
- //     attack_mask_ = 0;
-
- //     knightMobility_ = 0;
- //     bishopMobility_ = 0;
- //     rookMobility_ = 0;
- //     queenMobility_ = 0;
-
- //     knightPressure_ = 0;
- //     bishopPressure_ = 0;
- //     rookPressure_ = 0;
- //     queenPressure_ = 0;
-
- //     rookOpenScore_ = 0;
-
-	//		for (int i = 0; i < Figure::TypesNum; ++i)
-	//			attackersN_[i] = 0;
- //   }
-
- //   int king_pos_;
- //   ScoreType knightMobility_, bishopMobility_, rookMobility_, queenMobility_;
- //   ScoreType knightPressure_, bishopPressure_, rookPressure_, queenPressure_;
- //   ScoreType rookOpenScore_;
- //   BitMask pw_attack_mask_;
- //   BitMask kn_attack_mask_;
- //   BitMask attack_mask_;
-	//	int attackersN_[Figure::TypesNum];
- // } finfo_[2];
-
 
  // inline void mobility_masks_LSB(int from, BitMask & mob_mask, const BitMask & di_mask) const
  // {
@@ -220,16 +237,26 @@ private:
  // bool discoveredCheck(int pt, Figure::Color acolor, const BitMask & brq_mask, int ki_pos, enum PinType pinType) const;
 
 
- // // sum of weights of all figures
- // int weightMax_;
+  // sum of weights of all figures
+  const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
+                                + 2*Figure::figureWeight_[Figure::TypeRook]
+                                + 2*Figure::figureWeight_[Figure::TypeKnight]
+                                + 6*Figure::figureWeight_[Figure::TypePawn]);
 
-  Board const* board_{nullptr};
+  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
+                                + Figure::figureWeight_[Figure::TypeKnight]
+                                + 3*Figure::figureWeight_[Figure::TypePawn]);
+
+  const int weightOEDiff_ = openingWeight_ - endgameWeight_;
+
+  Board const* board_{ nullptr };
   EHashTable*  ehash_{ nullptr };
   EvalCoefficients const* coeffs_{ nullptr };
 
- // BitMask mask_all_;
- // BitMask inv_mask_all_;
- // ScoreType alpha_, betta_;
+  BitMask mask_all_{};
+  BitMask inv_mask_all_{};
+  ScoreType alpha_{};
+  ScoreType betta_{};
 };
 
 } // NEngine

@@ -38,10 +38,13 @@ struct EvalCoefficients
   EvalCoefficients();
 
   // single vars
-  int doublePawn_{ 10 };
+  int pawnEndgameBonus_{ 15 };
+  int passedPawn_{ 10 * 16 };
+  int doubledPawn_{ -10 };
+  int isolatedPawn_{ -10 };
 
   // arrays
-  int passedPawn_[8] = {};
+  int centerPawn_[8] = {};
 
   void save(std::string const& ofname);
   void random(std::set<std::string> const& exclude,

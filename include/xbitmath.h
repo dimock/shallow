@@ -216,12 +216,17 @@ public:
   //  return pmasks_blocked_[color][pos];
   //}
 
-  //inline const BitMask & mask_isolated(int x) const
-  //{
-  //  X_ASSERT((unsigned)x > 7, "invalid pawn x or color");
-  //  return pmask_isolated_[x];
-  //}
+  inline const BitMask & mask_isolated(int x) const
+  {
+    X_ASSERT((unsigned)x > 7, "invalid pawn x or color");
+    return pmask_isolated_[x];
+  }
 
+  inline const BitMask & mask_doubled(int x) const
+  {
+    X_ASSERT((unsigned)x > 7, "invalid pawn x or color");
+    return pmask_doubled_[x];
+  }
 
   //inline int8 pawn_dst_color(int color, int pos) const
   //{
@@ -237,13 +242,14 @@ public:
 
 private:
 
-  void clearAll(int);
+  //void clearAll(int);
 
   //BitMask pmasks_guarded_[2][64];
-  BitMask pmasks_passed_[2][64];
+  BitMask pmasks_passed_[2][64] = {};
   //BitMask pmasks_blocked_[2][64];
   //BitMask pmasks_disconnected_[64];
-  //BitMask pmask_isolated_[8];
+  BitMask pmask_isolated_[8] = {};
+  BitMask pmask_doubled_[8] = {};
   //BitMask pmask_kpk_[2][64];
   //int8    pawn_dst_color_[2][64];
 };

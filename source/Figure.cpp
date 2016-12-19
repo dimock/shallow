@@ -77,7 +77,7 @@ char Figure::fromFtype(Figure::Type t)
     return 'K';
   }
 
-  return Figure::TypeNone;
+  return ' ';
 }
 
 const char * Figure::name(Type type)

@@ -191,7 +191,7 @@ public:
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
     mask_[c] |= set_mask_bit(p);
-    if ( t == Figure::TypePawn || t == Figure::TypeKing )
+    if(t == Figure::TypePawn)
       pawnCode_ ^= uc;      
   }
 
@@ -201,8 +201,8 @@ public:
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
     mask_[c] ^= set_mask_bit(p);
-    if ( t == Figure::TypePawn || t == Figure::TypeKing )
-      pawnCode_ ^= uc;      
+    if(t == Figure::TypePawn)
+      pawnCode_ ^= uc;
   }
 
   inline void move(const Figure::Color c, const Figure::Type t, int from, int to)
@@ -212,7 +212,7 @@ public:
     hashCode_ ^= uc0;
     hashCode_ ^= uc1;
 
-    if ( t == Figure::TypePawn || t == Figure::TypeKing )
+    if ( t == Figure::TypePawn)
     {
       pawnCode_ ^= uc0;
       pawnCode_ ^= uc1;

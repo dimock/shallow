@@ -16,9 +16,14 @@ EvalCoefficients::EvalCoefficients()
   rd = std::make_unique<std::random_device>();
   gen = std::make_unique<std::mt19937>((*rd)());
 
-  vars_.push_back(details::Var{ "doublePawn_", doublePawn_, &doublePawn_ });
+  // single vars
+  vars_.push_back(details::Var{ "pawnEndgameBonus_", pawnEndgameBonus_, &pawnEndgameBonus_ });
+  vars_.push_back(details::Var{ "passedPawn_", passedPawn_, &passedPawn_ });
+  vars_.push_back(details::Var{ "doubledPawn_", doubledPawn_, &doubledPawn_ });
+  vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
 
-  arrs_.push_back(details::Arr{ "passedPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 50, 60, 70 }, passedPawn_, sizeof(passedPawn_)/sizeof(*passedPawn_) });
+  // arrays
+  arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 10, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
 
   for(auto& arr : arrs_)
   {

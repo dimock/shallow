@@ -18,6 +18,23 @@ using FBoard = SBoard<16>;
 
 struct xEPD
 {
+  xEPD()
+  {}
+
+  xEPD(xEPD&& other) :
+    board_(std::move(other.board_)),
+    moves_(std::move(other.moves_)),
+    score_(other.score_)
+  {
+  }
+
+  xEPD& operator = (xEPD&& other)
+  {
+    board_ = std::move(other.board_);
+    moves_ = std::move(other.moves_);
+    score_ = other.score_;
+  }
+
   xtests_details_ns::FBoard board_;
   std::vector<Move> moves_;
   int score_{};

@@ -226,9 +226,9 @@ std::string printSAN(Board & board, const Move & move)
   int yto = Index(move.to_).y();
   uint8 state = Board::State::Invalid;
 
-#ifndef NDEBUG
-  Board board0(board);
-#endif
+//#ifndef NDEBUG
+//  Board board0(board);
+//#endif
 
   MovesGenerator mg(board);
   for(;;)
@@ -253,7 +253,7 @@ std::string printSAN(Board & board, const Move & move)
       found = true;
     }
 
-    X_ASSERT(board0 != board, "board is not restored by undo move method");
+    //X_ASSERT(board0 != board, "board is not restored by undo move method");
 
     const Field & f = board.getField(m.from_);
 
@@ -271,7 +271,7 @@ std::string printSAN(Board & board, const Move & move)
   }
 
   if(!found)
-    return false;
+    return "";
 
   std::string str;
   if(field.type() == Figure::Type::TypeKing && (2 == move.to_ - move.from_ || -2 == move.to_ - move.from_))// castle
@@ -317,8 +317,8 @@ std::string printSAN(Board & board, const Move & move)
       str += 'x';
     }
 
-    str += 'a' + xto;
-    str += '1' + yto;
+    str += static_cast<char>('a' + xto);
+    str += static_cast<char>('1' + yto);
 
     if(move.new_type_ > 0)
     {
@@ -686,28 +686,28 @@ std::string toFEN(Board const& board)
       if(board.castling_K())
       {
         if(!board.verifyCastling(Figure::ColorWhite, 0))
-          return false;
+          return "";
 
         fen += 'K';
       }
       if(board.castling_Q())
       {
         if(!board.verifyCastling(Figure::ColorWhite, 1))
-          return false;
+          return "";
 
         fen += 'Q';
       }
       if(board.castling_k())
       {
         if(!board.verifyCastling(Figure::ColorBlack, 0))
-          return false;
+          return "";
 
         fen += 'k';
       }
       if(board.castling_q())
       {
         if(!board.verifyCastling(Figure::ColorBlack, 1))
-          return false;
+          return "";
 
         fen += 'q';
       }
@@ -732,7 +732,7 @@ std::string toFEN(Board const& board)
       Index pawn_pos(x, y);
       const Field & ep_field = board.getField(pawn_pos);
       if(ep_field.color() == board.color_ || ep_field.type() != Figure::TypePawn)
-        return false;
+        return "";
 
       char cx = 'a' + ep_pos.x();
       char cy = '1' + ep_pos.y();

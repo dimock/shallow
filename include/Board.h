@@ -807,6 +807,21 @@ public:
     g_undoStack = undoStackIntr_.data();
   }
 
+  SBoard(SBoard&& oboard) :
+    Board(std::move(oboard)),
+    undoStackIntr_(std::move(oboard.undoStackIntr_))
+  {
+    g_undoStack = undoStackIntr_.data();
+  }
+
+  template <int OTHER_SIZE>
+  SBoard(SBoard<OTHER_SIZE>&& oboard) :
+    Board(std::move(oboard)),
+    undoStackIntr_(STACK_SIZE)
+  {
+    g_undoStack = undoStackIntr_.data();
+  }
+
   template <int OTHER_SIZE>
   SBoard(SBoard<OTHER_SIZE> const& oboard) :
     Board(oboard),
@@ -829,6 +844,14 @@ public:
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
+  }
+
+  template <int OTHER_SIZE>
+  SBoard& operator = (SBoard<OTHER_SIZE>&& oboard)
+  {
+    this->Board::operator = (oboard);
+    g_undoStack = undoStackIntr_.data();
+    return *this;
   }
 
   SBoard& operator = (Board const& oboard)
