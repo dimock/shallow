@@ -51,6 +51,16 @@ void Engine::saveEval(std::string const& fname)
   evalCoeffs_.save(fname);
 }
 
+EvalCoefficients const& Engine::getEvals() const
+{
+  return evalCoeffs_;
+}
+
+void Engine::setEvals(EvalCoefficients const& e)
+{
+  evalCoeffs_ = e;
+}
+
 void Engine::needUpdate()
 {
   updateRequested_ = true;

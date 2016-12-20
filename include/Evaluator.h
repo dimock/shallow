@@ -25,6 +25,22 @@ class Evaluator
     int common_{};
     int opening_{};
     int endGame_{};
+
+    PawnsScore& operator -= (PawnsScore const& other)
+    {
+      common_  -= other.common_;
+      opening_ -= other.opening_;
+      endGame_ -= other.endGame_;
+      return *this;
+    }
+
+    PawnsScore& operator >>= (int const shift)
+    {
+      common_  >>= shift;
+      opening_ >>= shift;
+      endGame_ >>= shift;
+      return *this;
+    }
   };
 
   struct FieldsInfo

@@ -331,6 +331,16 @@ void Processor::saveEval(std::string const& fname)
   engine_.saveEval(fname);
 }
 
+NEngine::EvalCoefficients const& Processor::getEvals() const
+{
+  return engine_.getEvals();
+}
+
+void Processor::setEvals(NEngine::EvalCoefficients const& e)
+{
+  engine_.setEvals(e);
+}
+
 void Processor::save(std::string const& fname)
 {
   if(is_thinking())

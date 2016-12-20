@@ -516,10 +516,8 @@ Evaluator::PhaseInfo Evaluator::detectPhase()
 Evaluator::PawnsScore Evaluator::hashedEvaluation()
 {
   HEval * heval = 0;
-
   const uint64 & code = board_->pawnCode();
   uint32 hkey = (uint32)(code >> 32);
-  PawnsScore score;
 
   if(ehash_)
   {
@@ -527,19 +525,17 @@ Evaluator::PawnsScore Evaluator::hashedEvaluation()
 
     if(heval->hkey_ == hkey && heval->initizalized_)
     {
-      score.common_  = heval->common_;
+      PawnsScore score;
+      score.common_ = heval->common_;
       score.opening_ = heval->opening_;
       score.endGame_ = heval->endGame_;
       return score;
     }
   }
 
-  auto score_b = evaluatePawns(Figure::ColorBlack);
-  auto score_w = evaluatePawns(Figure::ColorWhite);
-
-  score.common_  = score_w.common_  - score_b.common_;
-  score.opening_ = score_w.opening_ - score_b.opening_;
-  score.endGame_ = score_w.endGame_ - score_b.endGame_;
+  auto score = evaluatePawns(Figure::ColorWhite);
+  score -= evaluatePawns(Figure::ColorBlack);
+  score >>= EvalCoefficients::shift_divider;
 
   if(heval)
   {
@@ -603,7 +599,7 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
     // 2. passed pawn
     {
       auto const& passmsk = pawnMasks().mask_passed(color, n);
-      score.common_ += (((opmsk & passmsk) == 0ULL) * coeffs_->passedPawn_ * y) >> 4;
+      score.common_ += ((opmsk & passmsk) == 0ULL) * coeffs_->passedPawn_ * y;
     }
 
     // 3. doubled pawn

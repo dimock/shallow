@@ -11,7 +11,7 @@ EvalCoefficients.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
-EvalCoefficients::EvalCoefficients()
+void EvalCoefficients::init()
 {
   rd = std::make_unique<std::random_device>();
   gen = std::make_unique<std::mt19937>((*rd)());
@@ -23,7 +23,8 @@ EvalCoefficients::EvalCoefficients()
   vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
 
   // arrays
-  arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 10, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
+  //arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
+  arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -142, 0, 176, 105, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
 
   for(auto& arr : arrs_)
   {
@@ -32,17 +33,64 @@ EvalCoefficients::EvalCoefficients()
   }
 }
 
+EvalCoefficients::EvalCoefficients()
+{
+  init();
+}
+
+EvalCoefficients::EvalCoefficients(EvalCoefficients const& other)
+{
+  init();
+  this->operator=(other);
+}
+
+EvalCoefficients& EvalCoefficients::operator = (EvalCoefficients const& other)
+{
+  for(size_t i = 0; i < vars_.size(); ++i)
+  {
+    auto& v = vars_[i];
+    auto const& o = other.vars_[i];
+    v.initial_ = o.initial_;
+    *v.pvar_ = *o.pvar_;
+  }
+  for(size_t i = 0; i < arrs_.size(); ++i)
+  {
+    auto& arr = arrs_[i];
+    auto const& orr = other.arrs_[i];
+    for(size_t j = 0; j < arr.size_ && j < arr.initial_.size(); ++j)
+    {
+      arr.initial_[j] = orr.initial_[j];
+      arr.parr_[j] = orr.parr_[j];
+    }
+  }
+  return *this;
+}
+
+void EvalCoefficients::currentToIninital()
+{
+  for(size_t i = 0; i < vars_.size(); ++i)
+  {
+    auto& v = vars_[i];
+    v.initial_ = *v.pvar_;
+  }
+  for(size_t i = 0; i < arrs_.size(); ++i)
+  {
+    auto& arr = arrs_[i];
+    for(size_t j = 0; j < arr.size_ && j < arr.initial_.size(); ++j)
+    {
+      arr.initial_[j] = arr.parr_[j];
+    }
+  }
+}
+
 void EvalCoefficients::save(std::string const& ofname)
 {
   std::ofstream ofs(ofname);
-
   for(auto const& v : vars_)
   {
     ofs << "  int " << v.name_ << "{" << *v.pvar_ << "};" << std::endl;
   }
-
   ofs << std::endl;
-
   for(auto const& a : arrs_)
   {
     std::vector<std::string> values;

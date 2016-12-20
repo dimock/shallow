@@ -42,6 +42,8 @@ public:
                   std::vector<NEngine::details::Which> const& which, 
                   double percent);
   void saveEval(std::string const& fname);
+  NEngine::EvalCoefficients const& getEvals() const;
+  void setEvals(NEngine::EvalCoefficients const&);
 
   void save(std::string const& fname);
   void load(std::string const& fname);

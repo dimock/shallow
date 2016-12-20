@@ -27,7 +27,7 @@ namespace details
     std::string name_;
     std::vector<int> initial_;
     int* parr_;
-    int  size_;
+    size_t size_;
   };
 
   using Which = std::pair<std::string, double>;
@@ -36,12 +36,20 @@ namespace details
 struct EvalCoefficients
 {
   EvalCoefficients();
+  EvalCoefficients(EvalCoefficients const&);
+  EvalCoefficients& operator = (EvalCoefficients const&);
+
+  static int const shift_divider = 4;
 
   // single vars
-  int pawnEndgameBonus_{ 15 };
-  int passedPawn_{ 10 * 16 };
-  int doubledPawn_{ -10 };
-  int isolatedPawn_{ -10 };
+  //int pawnEndgameBonus_{ 15 << shift_divider };
+  //int passedPawn_{ 10 << shift_divider };
+  //int doubledPawn_{ -10 << shift_divider };
+  //int isolatedPawn_{ -10 << shift_divider };
+  int pawnEndgameBonus_{ 301 };
+  int passedPawn_{ 151 };
+  int doubledPawn_{ -119 };
+  int isolatedPawn_{ -158 };
 
   // arrays
   int centerPawn_[8] = {};
@@ -50,8 +58,11 @@ struct EvalCoefficients
   void random(std::set<std::string> const& exclude,
               std::vector<details::Which> const& which,
               double percent);
+  void currentToIninital();
 
 private:
+  void init();
+
   std::unique_ptr<std::random_device> rd;
   std::unique_ptr<std::mt19937> gen;
   std::vector<details::Var> vars_;

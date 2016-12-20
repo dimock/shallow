@@ -5,7 +5,7 @@ project(shallow)
 
 if(UNIX)
   message(status " Setting GCC flags")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -g -Wall -std=c++11 -mpopcnt")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -g -Wall -std=c++14 -mpopcnt")
 elseif(MSVC)
   message(status " Setting MSVC flags")
   # configurations

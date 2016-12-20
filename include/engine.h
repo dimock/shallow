@@ -73,6 +73,8 @@ public:
                   std::vector<details::Which> const& which,
                   double percent);
   void saveEval(std::string const& fname);
+  EvalCoefficients const& getEvals() const;
+  void setEvals(EvalCoefficients const&);
 
   void clearHash();
   void setOptions(xOptions const& opts);

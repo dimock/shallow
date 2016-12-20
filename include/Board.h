@@ -822,6 +822,14 @@ public:
     g_undoStack = undoStackIntr_.data();
   }
 
+  SBoard(SBoard const& oboard) :
+    Board(oboard),
+    undoStackIntr_(STACK_SIZE)
+  {
+    g_undoStack = undoStackIntr_.data();
+  }
+
+
   template <int OTHER_SIZE>
   SBoard(SBoard<OTHER_SIZE> const& oboard) :
     Board(oboard),

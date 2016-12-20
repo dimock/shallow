@@ -53,7 +53,7 @@ void optimizeFen(std::string const& ffname,
 
 FenTest::FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
 {
-  std::regex r("([0-9pnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)([0-9a-hpnrqkPNBRQKOx+=!\\-\\s]+)(;[\\s]*)?([\\-]?[\\d]+)?");
+  std::regex r("([0-9pnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)([0-9a-hpnrqkPNBRQKOx+=!\\s\\-]+)(;[\\s]*)?([\\-]?[\\d]+)?");
   std::ifstream ifs(ffname);
   for(; ifs;)
   {
@@ -64,6 +64,7 @@ FenTest::FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
       continue;
     if(line[0] == '#')
       continue;
+    std::cout << line << std::endl;
     std::smatch m;
     if(!std::regex_search(line, m, r) || m.size() < 4)
     {
@@ -178,12 +179,19 @@ void see_perf_test(std::string const& fname)
 void optimizeFen(std::string const& ffname)
 {
   NShallow::Processor proc;
+  NEngine::EvalCoefficients evals{ proc.getEvals() };
   int summ_min{ -1 };
   int iters_num{};
-  optimizeFen(ffname, [&proc](size_t i, xEPD& epd)
+  int steps_num{};
+  int depth = 8;
+  int Niters = 0;
+  int Nsteps = 0;
+  double r  = 0.35;
+  double dr = 0.7;
+  optimizeFen(ffname, [&proc, depth](size_t i, xEPD& epd)
   {
     std::cout << i << ": ";
-    proc.setDepth(6);
+    proc.setDepth(depth);
     proc.setBoard(epd.board_);
     proc.clear();
     auto r = proc.reply(false);
@@ -202,16 +210,25 @@ void optimizeFen(std::string const& ffname)
     std::cout << NEngine::printSAN(epd.board_, r->best_) << std::endl;
     return 0;
   },
-  [&summ_min, &iters_num, &proc](int summ) -> bool
+  [&](int summ) -> bool
   {
     if(summ_min < 0 || summ_min > summ)
     {
       summ_min = summ;
       proc.saveEval("eval.txt");
+      evals = proc.getEvals();
+      evals.currentToIninital();
     }
-    proc.adjustEval({}, {}, 0.25);
-    std::cout << iters_num << " iteration. current fails = " << summ << ". minimum fails = " << summ_min << std::endl;
-    return iters_num++ < 5;
+    if(++iters_num >= Niters)
+    {
+      iters_num = 0;
+      steps_num++;
+      proc.setEvals(evals);
+      r *= dr;
+    }
+    proc.adjustEval({}, {}, r);
+    std::cout << iters_num << " iteration. " << steps_num << " step. current fails = " << summ << ". minimum fails = " << summ_min << std::endl;
+    return steps_num < Nsteps;
   },
     [](std::string const& err)
   {
