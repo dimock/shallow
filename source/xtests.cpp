@@ -183,7 +183,7 @@ void optimizeFen(std::string const& ffname)
   int summ_min{ -1 };
   int iters_num{};
   int steps_num{};
-  int depth = 8;
+  int depth = 6;
   int Niters = 0;
   int Nsteps = 0;
   double r  = 0.35;

@@ -42,14 +42,10 @@ struct EvalCoefficients
   static int const shift_divider = 4;
 
   // single vars
-  //int pawnEndgameBonus_{ 15 << shift_divider };
-  //int passedPawn_{ 10 << shift_divider };
-  //int doubledPawn_{ -10 << shift_divider };
-  //int isolatedPawn_{ -10 << shift_divider };
-  int pawnEndgameBonus_{ 301 };
-  int passedPawn_{ 151 };
-  int doubledPawn_{ -119 };
-  int isolatedPawn_{ -158 };
+  int pawnEndgameBonus_{ 15 << shift_divider };
+  int passedPawn_{ 10 << shift_divider };
+  int doubledPawn_{ -10 << shift_divider };
+  int isolatedPawn_{ -10 << shift_divider };
 
   // arrays
   int centerPawn_[8] = {};

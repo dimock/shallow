@@ -941,7 +941,7 @@ bool save(const Board & board, std::ostream & os, bool write_prefix)
       os << " ";
   }
 
-  os << sres << std::endl;
+  os << sres << std::endl << std::endl;
 
   return true;
 }

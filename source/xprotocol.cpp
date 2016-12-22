@@ -201,8 +201,12 @@ bool xProtocolMgr::uciGo(const xCmd & cmd)
 
   if(auto r = proc_.reply(false))
   {
+    std::string outstr("bestmove ");
     if(!r->moveStr_.empty())
-      os_ << "bestmove " << r->moveStr_ << std::endl;
+    {
+      outstr += r->moveStr_;
+      os_ << outstr << std::endl;
+    }
     return true;
   }
   else

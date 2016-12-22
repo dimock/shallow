@@ -110,27 +110,26 @@ PawnMasks::PawnMasks()
       //    pmasks_guarded_[color][i] |= set_mask_bit((y+dy) | ((x-1) << 3));
       //}
 
-      auto& pass_msk = pmasks_passed_[color][i];
+      BitMask pass_msk{};
       int deltay = color ? 1 : -1;
-      for(int xx = x-1; xx <= x+1 && xx < 8; ++xx)
+      for(int yy = y+deltay; yy < 8 && yy >= 0; yy += deltay)
       {
-        if(xx < 0)
-          continue;
-        for(int yy = y+deltay; yy < 8 && yy >= 0; yy += deltay)
-        {
-          pass_msk |= set_mask_bit(Index(xx, yy));
-        }
+        pass_msk |= set_mask_bit(Index(0, yy));
       }
 
       pmask_doubled_[x] |= doubled_msk << x;
+      pmasks_line_blocked_[color][i] = pass_msk << x;
+      pmasks_passed_[color][i] = pass_msk << x;
 
       if(x > 0)
       {
         pmask_isolated_[x] |= doubled_msk << (x-1);
+        pmasks_passed_[color][i] |= pass_msk << (x-1);
       }
       if(x < 7)
       {
         pmask_isolated_[x] |= doubled_msk << (x+1);
+        pmasks_passed_[color][i] |= pass_msk << (x+1);
       }
 
 

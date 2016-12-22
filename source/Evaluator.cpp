@@ -414,8 +414,6 @@ ScoreType Evaluator::evaluate()
 {
   const FiguresManager & fmgr = board_->fmgr();
 
-  //std::string sfen = toFEN(*board_);
-
   // 1. evaluate figures weight
   ScoreType score = fmgr.weight();
 
@@ -556,8 +554,9 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
   if(!pmask)
     return{};
 
-  PawnsScore score;
+  //std::string sfen = toFEN(*board_);
 
+  PawnsScore score;
   score.endGame_ = fmgr.pawns(color) * coeffs_->pawnEndgameBonus_;
 
   static int promo_y[] = { 0, 7 };
@@ -585,21 +584,30 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
   for(; pawn_mask;)
   {
     int n = clear_lsb(pawn_mask);
-    Index pidx(n);
+    Index idx(n);
 
-    int x = pidx.x();
-    int y = colored_y[color][pidx.y()];
+    int x  = idx.x();
+    int cy = colored_y[color][idx.y()];
 
     // 1. center pawns
     if(x == 3 || x == 4) // D, E columns
     {
-      score.opening_ += coeffs_->centerPawn_[y];
+      score.opening_ += coeffs_->centerPawn_[cy];
     }
 
     // 2. passed pawn
     {
-      auto const& passmsk = pawnMasks().mask_passed(color, n);
-      score.common_ += ((opmsk & passmsk) == 0ULL) * coeffs_->passedPawn_ * y;
+      auto coeffPassed = coeffs_->passedPawn_ * cy;
+      bool passer = (opmsk & pawnMasks().mask_passed(color, n)) == 0ULL;
+      bool quadpasser = (pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL;
+      score.common_ += passer*coeffPassed;
+      {
+        bool left  = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
+        bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
+        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)) && (!passer) && quadpasser, "passed pawn was not detected");
+        auto scoreSemipasser = ((coeffPassed >> 2) + (left || right) * (coeffPassed >> 2));
+        score.common_ += quadpasser * scoreSemipasser * (!passer);
+      }
     }
 
     // 3. doubled pawn

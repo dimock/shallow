@@ -210,6 +210,12 @@ public:
     return pmasks_passed_[color][pos];
   }
 
+  inline const BitMask & mask_line_blocked(int color, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
+    return pmasks_line_blocked_[color][pos];
+  }
+
   //inline const BitMask & mask_blocked(int color, int pos) const
   //{
   //  X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
@@ -246,6 +252,7 @@ private:
 
   //BitMask pmasks_guarded_[2][64];
   BitMask pmasks_passed_[2][64] = {};
+  BitMask pmasks_line_blocked_[2][64] = {};
   //BitMask pmasks_blocked_[2][64];
   //BitMask pmasks_disconnected_[64];
   BitMask pmask_isolated_[8] = {};

@@ -391,7 +391,7 @@ void Processor::pgn2file(std::string const& fname)
 {
   try
   {
-    std::ofstream ofs(fname);
+    std::ofstream ofs(fname, std::ios::app);
     if(!ofs)
       return;
     NEngine::save(engine_.getBoard(), ofs);
