@@ -21,6 +21,7 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "passedPawn_", passedPawn_, &passedPawn_ });
   vars_.push_back(details::Var{ "doubledPawn_", doubledPawn_, &doubledPawn_ });
   vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
+  vars_.push_back(details::Var{ "backwardPawn_", backwardPawn_, &backwardPawn_ });
 
   // arrays
   arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });

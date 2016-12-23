@@ -620,10 +620,22 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
       score.common_ += (num_dbl - 1) * coeffs_->doubledPawn_;
     }
 
-    // 3. isolated pawn
+    // 4. isolated pawn
     {
       auto const& isomsk = pawnMasks().mask_isolated(x);
       score.common_ += ((pmask & isomsk) == 0ULL) * coeffs_->isolatedPawn_;
+    }
+
+    // 5. backward pawn
+    // TODO: optimization required
+    {
+      int delta_y = (color<<1) - 1;
+      int closest_y = idx.y() + delta_y;
+      X_ASSERT(closest_y < 0 || closest_y > 7, "backward mask calculation error - invalid next y position");
+      BitMask pmask_after = set_mask_bit(Index(x, closest_y));// betweenMasks().between(n, Index(idx.x(), closest_y));
+      bool is_blocked  = (finfo_[ocolor].pw_attack_mask_ | opmsk) & pmask_after;
+      bool is_backward = (pawnMasks().mask_backward(color, n) & pmask) == 0ULL;
+      score.common_ += (is_backward && is_blocked) * coeffs_->backwardPawn_;
     }
   }
 

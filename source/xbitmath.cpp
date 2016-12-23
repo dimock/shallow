@@ -121,23 +121,23 @@ PawnMasks::PawnMasks()
       pmasks_line_blocked_[color][i] = pass_msk << x;
       pmasks_passed_[color][i] = pass_msk << x;
 
+      BitMask back_mask{};
+      for(int yy = y; yy < 8 && yy > 0; yy -= deltay)
+      {
+        back_mask |= set_mask_bit(Index(0, yy));
+      }
       if(x > 0)
       {
         pmask_isolated_[x] |= doubled_msk << (x-1);
         pmasks_passed_[color][i] |= pass_msk << (x-1);
+        pmasks_backward_[color][i] |= back_mask << (x-1);
       }
       if(x < 7)
       {
         pmask_isolated_[x] |= doubled_msk << (x+1);
         pmasks_passed_[color][i] |= pass_msk << (x+1);
+        pmasks_backward_[color][i] |= back_mask << (x+1);
       }
-
-
-      //if(y+deltay >= 0 && y+deltay < 8)
-      //{
-      //  pmasks_blocked_[color][i] |= set_mask_bit(Index(x, y+deltay));
-      //}
-
     }
   }
 
