@@ -179,6 +179,7 @@ private:
   // calculate or take from hash - pawns structure for middle & end game; king's pawn shield
   PawnsScore hashedEvaluation();
 
+  int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   PawnsScore evaluatePawns(Figure::Color color);
  // ScoreType evaluatePawnShield(Figure::Color color);
 

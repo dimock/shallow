@@ -547,6 +547,32 @@ Evaluator::PawnsScore Evaluator::hashedEvaluation()
   return score;
 }
 
+int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const
+{
+  //int delta_y = (color<<1) - 1;
+  BitMask left  = (x != 0) ? (pawnMasks().mask_line_blocked(color, Index(x-1, y)) & pmask) : 0ULL;
+  BitMask right = (x != 7) ? (pawnMasks().mask_line_blocked(color, Index(x+1, y)) & pmask) : 0ULL;
+  int y_closest = y;
+  if(color)
+  {
+    y_closest = 7;
+    if(left)
+        y_closest = (_lsb64(left) >> 3) + 1;
+    if(right)
+        y_closest = std::min(y_closest, ((_lsb64(right) >> 3) + 1));
+  }
+  else
+  {
+    y_closest = 0;
+    if(left)
+        y_closest = (_msb64(left) >> 3)- 1;
+    if(right)
+        y_closest = std::max(y_closest, ((_msb64(right) >> 3) - 1));
+  }
+  return y_closest;
+}
+
+
 Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
 {
   const FiguresManager & fmgr = board_->fmgr();
@@ -629,13 +655,15 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
     // 5. backward pawn
     // TODO: optimization required
     {
-      int delta_y = (color<<1) - 1;
-      int closest_y = idx.y() + delta_y;
-      X_ASSERT(closest_y < 0 || closest_y > 7, "backward mask calculation error - invalid next y position");
-      BitMask pmask_after = set_mask_bit(Index(x, closest_y));// betweenMasks().between(n, Index(idx.x(), closest_y));
-      bool is_blocked  = (finfo_[ocolor].pw_attack_mask_ | opmsk) & pmask_after;
       bool is_backward = (pawnMasks().mask_backward(color, n) & pmask) == 0ULL;
-      score.common_ += (is_backward && is_blocked) * coeffs_->backwardPawn_;
+      if(is_backward)
+      {
+        int closest_y = closestToBackward(idx.x(), idx.y(), pmask, color);
+        X_ASSERT(closest_y < 0 || closest_y > 7, "backward mask calculation error - invalid next y position");
+        BitMask pmask_after = betweenMasks().between(n, Index(idx.x(), closest_y));
+        bool is_blocked  = (finfo_[ocolor].pw_attack_mask_ | opmsk) & pmask_after;
+        score.common_ += is_blocked * coeffs_->backwardPawn_;
+      }
     }
   }
 
