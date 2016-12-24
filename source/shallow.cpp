@@ -10,10 +10,7 @@
 
 int main(int argn, char *argv[])
 {
-#ifdef _MSC_VER
   NEngine::init_popcount_ptr();
-#endif
-
   NEngine::magic_ns::initialize();
 
   std::cout.setf(std::ios_base::unitbuf);

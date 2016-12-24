@@ -67,12 +67,12 @@ int pop_count64_fast(uint64 n)
 void init_popcount_ptr()
 {
   int level = 1;
-  int eax = 0;
-  int ebx = 0;
-  int ecx = 0;
-  int edx = 0;
-  __get_cpuid(level, eax, ebx, ecx, edx);
-  if(ebx & (1<<23))
+  unsigned int eax = 0;
+  unsigned int ebx = 0;
+  unsigned int ecx = 0;
+  unsigned int edx = 0;
+  __get_cpuid(level, &eax, &ebx, &ecx, &edx);
+  if(ecx & (1<<23))
   {
     g_func_pop_count64 = pop_count64_fast;
   }
