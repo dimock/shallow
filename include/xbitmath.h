@@ -10,10 +10,7 @@ xbitmath.h - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
     
-
-#ifdef _MSC_VER
-
-typedef int (*FUNC_POP_COUNT64)(uint64);
+typedef int(*FUNC_POP_COUNT64)(uint64);
 extern FUNC_POP_COUNT64 g_func_pop_count64;
 
 void init_popcount_ptr();
@@ -22,6 +19,8 @@ inline int pop_count(uint64 n)
 {
   return g_func_pop_count64(n);
 }
+
+#ifdef _MSC_VER
 
 #pragma intrinsic(_BitScanForward)
 #pragma intrinsic(_BitScanReverse)
@@ -139,11 +138,6 @@ inline int log2(uint64 n)
   return 63 - __builtin_clzll(n);
 }
 
-inline int pop_count(uint64 n)
-{
-  return __builtin_popcountll(n);
-}
-
 #endif // __GNUC__
 
 void print_bitmask(uint64 mask);
@@ -222,6 +216,12 @@ public:
     return pmasks_backward_[color][pos];
   }
 
+  inline const BitMask & mask_supported(int color, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
+    return pmasks_supported_[color][pos];
+  }
+
   inline const BitMask & mask_isolated(int x) const
   {
     X_ASSERT((unsigned)x > 7, "invalid pawn x or color");
@@ -254,6 +254,7 @@ private:
   BitMask pmasks_passed_[2][64] = {};
   BitMask pmasks_line_blocked_[2][64] = {};
   BitMask pmasks_backward_[2][64] = {};
+  BitMask pmasks_supported_[2][64] = {};
   //BitMask pmasks_disconnected_[64];
   BitMask pmask_isolated_[8] = {};
   BitMask pmask_doubled_[8] = {};

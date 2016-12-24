@@ -46,7 +46,7 @@ struct EvalCoefficients
   int passedPawn_{ 10 << shift_divider };
   int doubledPawn_{ -10 << shift_divider };
   int isolatedPawn_{ -10 << shift_divider };
-  int backwardPawn_{ -8 << shift_divider };
+  int backwardPawn_{ -10 << shift_divider };
 
   // arrays
   int centerPawn_[8] = {};

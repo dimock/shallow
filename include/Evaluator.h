@@ -5,6 +5,7 @@
 
 #include <Board.h>
 #include <EvalCoefficients.h>
+#include <xindex.h>
 
 namespace NEngine
 {
@@ -176,10 +177,12 @@ private:
   // multiple coefficients for opening/endgame
   PhaseInfo detectPhase();
 
-  // calculate or take from hash - pawns structure for middle & end game; king's pawn shield
+  // calculate or take from hash
+  // pawns structure for middle & end game
+  // + king's pawn shield???
   PawnsScore hashedEvaluation();
-
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
+  bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
   PawnsScore evaluatePawns(Figure::Color color);
  // ScoreType evaluatePawnShield(Figure::Color color);
 

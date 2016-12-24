@@ -8,9 +8,6 @@ xbitmath.cpp - Copyright (C) 2016 by Dmitry Sultanov
 
 namespace NEngine
 {
-
-#ifdef _MSC_VER
-
 FUNC_POP_COUNT64 g_func_pop_count64 = nullptr;
 
 int pop_count_common(uint64 n)
@@ -25,6 +22,9 @@ int pop_count_common(uint64 n)
   n = (n * 0x0101010101010101ULL) >> 56;
   return static_cast<int>(n);
 }
+
+#ifdef _MSC_VER
+
 
 #ifdef _M_X64
 int pop_count64_fast(uint64 n)
@@ -53,10 +53,34 @@ void init_popcount_ptr()
 {
   g_func_pop_count64 = pop_count_common;
 }
-
 #endif
 
+#elif (defined __GNUC__)
 
+#include <cpuid.h>
+
+int pop_count64_fast(uint64 n)
+{
+  return __builtin_popcountll(n);
+}
+
+void init_popcount_ptr()
+{
+  int level = 1;
+  int eax = 0;
+  int ebx = 0;
+  int ecx = 0;
+  int edx = 0;
+  __get_cpuid(level, eax, ebx, ecx, edx);
+  if(ebx & (1<<23))
+  {
+    g_func_pop_count64 = pop_count64_fast;
+  }
+  else
+  {
+    g_func_pop_count64 = pop_count_common;
+  }
+}
 
 #endif
 
@@ -126,17 +150,26 @@ PawnMasks::PawnMasks()
       {
         back_mask |= set_mask_bit(Index(0, yy));
       }
+
+      BitMask support_mask = set_mask_bit(Index(0, y));
+      if(y > 0 && y < 7)
+      {
+        support_mask |= set_mask_bit(Index(0, y-deltay));
+      }
+
       if(x > 0)
       {
         pmask_isolated_[x] |= doubled_msk << (x-1);
         pmasks_passed_[color][i] |= pass_msk << (x-1);
         pmasks_backward_[color][i] |= back_mask << (x-1);
+        pmasks_supported_[color][i] |= support_mask << (x-1);
       }
       if(x < 7)
       {
         pmask_isolated_[x] |= doubled_msk << (x+1);
         pmasks_passed_[color][i] |= pass_msk << (x+1);
         pmasks_backward_[color][i] |= back_mask << (x+1);
+        pmasks_supported_[color][i] |= support_mask << (x+1);
       }
     }
   }
