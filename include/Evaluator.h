@@ -175,7 +175,7 @@ private:
   ScoreType evaluate();
 
   // multiple coefficients for opening/endgame
-  PhaseInfo detectPhase();
+  PhaseInfo detectPhase() const;
 
   // calculate or take from hash
   // pawns structure for middle & end game
@@ -183,8 +183,13 @@ private:
   PawnsScore hashedEvaluation();
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
-  PawnsScore evaluatePawns(Figure::Color color);
- // ScoreType evaluatePawnShield(Figure::Color color);
+  PawnsScore evaluatePawns(Figure::Color color) const;
+
+  // 0 - short, 1 - long, -1 - no castle
+  int getCastleType(Figure::Color color) const;
+  PawnsScore evaluateKingSafety(Figure::Color color) const;
+  PawnsScore evaluateKingSafety() const;
+  int evaluateCastle(Figure::Color color, Figure::Color ocolor, int castleType, Index const& ki_pos) const;
 
  // ScoreType evaluatePassersAdditional(GamePhase phase, int coef_e);
  // ScoreType evaluatePasserAdditional(GamePhase phase, Figure::Color color, ScoreType & pw_score_eg, int & most_adv_y);
@@ -193,7 +198,6 @@ private:
  // ScoreType evaluateBlockedKnights();
 
  // ScoreType evaluateMaterialDiff();
- // ScoreType evaluateCastlePenalty(Figure::Color color);
  // ScoreType evaluateFianchetto() const;
 
  // // search path from opponent king to pawn's promotion of given color
@@ -211,9 +215,6 @@ private:
  // ScoreType evaluateWinnerLoser();
  // bool evaluateWinnerLoserSpecial(ScoreType & score);
  // ScoreType evaluateTrueWinnerLoser();
-
- // // 0 - short, 1 - long, -1 - no castle
- // int getCastleType(Figure::Color color) const;
 
  // /// bishops mobility and attacks
  // ScoreType evaluateBishops();
@@ -272,6 +273,8 @@ private:
   Board const* board_{ nullptr };
   EHashTable*  ehash_{ nullptr };
   EvalCoefficients const* coeffs_{ nullptr };
+
+  static const int colored_y_[2][8];
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};

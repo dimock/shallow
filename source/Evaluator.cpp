@@ -11,17 +11,17 @@
 namespace NEngine
 {
 
-  //enum {
-  //  A1, B1, C1, D1, E1, F1, G1, H1,
-  //  A2, B2, C2, D2, E2, F2, G2, H2,
-  //  A3, B3, C3, D3, E3, F3, G3, H3,
-  //  A4, B4, C4, D4, E4, F4, G4, H4,
-  //  A5, B5, C5, D5, E5, F5, G5, H5,
-  //  A6, B6, C6, D6, E6, F6, G6, H6,
-  //  A7, B7, C7, D7, E7, F7, G7, H7,
-  //  A8, B8, C8, D8, E8, F8, G8, H8,
-  //};
-  //
+  enum {
+    A1, B1, C1, D1, E1, F1, G1, H1,
+    A2, B2, C2, D2, E2, F2, G2, H2,
+    A3, B3, C3, D3, E3, F3, G3, H3,
+    A4, B4, C4, D4, E4, F4, G4, H4,
+    A5, B5, C5, D5, E5, F5, G5, H5,
+    A6, B6, C6, D6, E6, F6, G6, H6,
+    A7, B7, C7, D7, E7, F7, G7, H7,
+    A8, B8, C8, D8, E8, F8, G8, H8,
+  };
+  
   //const ScoreType Evaluator::nullMoveMargin_ = 1000;
   //const ScoreType Evaluator::nullMoveVerifyMargin_ = 800;
   //
@@ -269,6 +269,10 @@ namespace NEngine
   //  betta_ = +ScoreMax;
   //}
 
+  const int Evaluator::colored_y_[2][8] = {
+    { 7, 6, 5, 4, 3, 2, 1, 0 },
+    { 0, 1, 2, 3, 4, 5, 6, 7 } };
+
   void Evaluator::initialize(Board const* board, EHashTable* ehash, EvalCoefficients const* coeffs)
   {
     board_ = board;
@@ -422,7 +426,11 @@ namespace NEngine
     // take pawns eval. from hash if possible
     auto pawnScore = hashedEvaluation();
 
+    // basic king safety - pawn shield, castle
+    auto kingScore = evaluateKingSafety();
+
     score += pawnScore.common_;
+    score += kingScore.common_;
 
     //// blocked by opponent pawns
     //score += evaluateBlockedBishops();
@@ -448,6 +456,9 @@ namespace NEngine
 
       // pawns
       score_o += pawnScore.opening_;
+
+      // king
+      score_o += kingScore.opening_;
     }
 
     if(phaseInfo.phase_ != Opening)
@@ -457,6 +468,9 @@ namespace NEngine
 
       // pawns
       score_e += pawnScore.endGame_;
+
+      // king
+      score_e += kingScore.endGame_;
     }
 
     if(phaseInfo.phase_ == Opening)
@@ -483,7 +497,7 @@ namespace NEngine
     return score;
   }
 
-  Evaluator::PhaseInfo Evaluator::detectPhase()
+  Evaluator::PhaseInfo Evaluator::detectPhase() const
   {
     const FiguresManager & fmgr = board_->fmgr();
 
@@ -596,14 +610,14 @@ bool Evaluator::couldBeSupported(Index const& idx, Figure::Color color, Figure::
   return false;
 }
 
-Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
+Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color) const
 {
   const FiguresManager & fmgr = board_->fmgr();
   const BitMask & pmask = fmgr.pawn_mask(color);
   if(!pmask)
     return{};
 
-  //std::string sfen = toFEN(*board_);
+//  std::string sfen = toFEN(*board_);
 
   PawnsScore score;
   score.endGame_ = fmgr.pawns(color) * coeffs_->pawnEndgameBonus_;
@@ -614,20 +628,9 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
   Figure::Color ocolor = Figure::otherColor(color);
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
 
-  //BitMask attacked_mask = (finfo_[ocolor].pw_attack_mask_ & ~finfo_[color].pw_attack_mask_);
-
-  //int py = promo_y[color];
-
-  //// columns, occupied by pawns
-  //uint8 cols_visited = 0;
-  //uint8 cols_passer = 0;
-  //int passers_y[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
-
-  static const int colored_y[2][8] = {
-    {7, 6, 5, 4, 3, 2, 1, 0},
-    {0, 1, 2, 3, 4, 5, 6, 7} };
 
   uint8 x_visited{ 0 };
+  uint8 x_passers{ 0 };
 
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
@@ -636,7 +639,7 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
     Index idx(n);
 
     int x  = idx.x();
-    int cy = colored_y[color][idx.y()];
+    int cy = colored_y_[color][idx.y()];
 
     // 1. center pawns
     if(x == 3 || x == 4) // D, E columns
@@ -648,6 +651,7 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
     {
       auto coeffPassed = coeffs_->passedPawn_ * cy;
       bool passer = (opmsk & pawnMasks().mask_passed(color, n)) == 0ULL;
+      x_passers |= passer << x;
       bool quadpasser = (pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL;
       score.common_ += passer*coeffPassed;
       {
@@ -689,219 +693,158 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
     }
   }
 
-    //// double pawns
-    //if(!(cols_visited & (1<<x)))
-    //{
-    //  cols_visited |= 1<<x;
-    //  uint8 column = ((uint8*)&pmsk_t)[x];
-    //  int dblNum = BitsCounter::numBitsInByte(column);
-    //  if(dblNum > 1)
-    //  {
-
-    //    // iterate from upper pawn to lower
-    //    for(; column && dblNum > 1; --dblNum)
-    //    {
-    //      int py = color ? _msb32(column) : _lsb32(column);
-    //      int p = x | (py << 3);
-
-    //      X_ASSERT(board_->getField(p).color() != color || board_->getField(p).type() != Figure::TypePawn, "no pawn found on double line");
-
-    //      const BitMask & pw_cap = movesTable().pawnCaps_o(ocolor, p);
-
-    //      /// give big penalty if upper pawn isn't defended or small otherwise
-    //      if(pw_cap & pw_mask_o) // defended
-    //        score += pawnDoubled_ >> 1;
-    //      else
-    //        score += pawnDoubled_;
-    //    }
-    //  }
-    //}
-
-    //// defended by neighbor pawn
-    //const BitMask & guardmsk = pawnMasks().mask_guarded(color, n);
-
-    //// small bonus if pawn is defended by neighbor
-    //int isDefended = ((pmsk_t & guardmsk) != 0);
-    //score += defendedBonus_ * isDefended;
-
-    //const uint64 & passmsk = pawnMasks().mask_passed(color, n);
-    //const uint64 & blckmsk = pawnMasks().mask_blocked(color, n);
-
-    //bool passed = false;
-
-    //// passed pawn evaluation
-    //if(!(opmsk_t & passmsk) && !(pmsk_t & blckmsk))
-    //{
-    //  X_ASSERT(cols_passer & set_bit(x), "more than 1 passed pawn in column");
-
-    //  passers_y[x] = y;
-    //  cols_passer |= set_bit(x);
-
-    //  passed = true;
-    //  score += pawnPassed_[cy];
-    //  score += (pawnPassed_[cy] >> 3) * isDefended;
-
-    //  int promo_pos = x | (py<<3);
-
-    //  if(score_eg)
-    //  {
-    //    int pawn_dist_promo = py - y;
-    //    if(pawn_dist_promo < 0)
-    //      pawn_dist_promo = -pawn_dist_promo;
-
-    //    int o_dist_promo = distanceCounter().getDistance(finfo_[ocolor].king_pos_, promo_pos);
-    //    if(board_->color_ == ocolor)
-    //      o_dist_promo--;
-
-    //    if(pawn_dist_promo < o_dist_promo)
-    //      *score_eg += kingFarBonus_;
-    //    else
-    //      *score_eg += o_dist_promo<<1;
-
-    //    // give penalty for long distance to my pawns if opponent doesn't have any
-    //    if(!opmsk_o)
-    //    {
-    //      int dist_promo = distanceCounter().getDistance(finfo_[color].king_pos_, promo_pos);
-    //      *score_eg -= dist_promo<<1;
-    //    }
-    //  }
-    //}
-    //else if(score_eg)
-    //{
-    //  int o_dist = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
-    //  *score_eg += o_dist<<1;
-
-    //  if(!opmsk_o)
-    //  {
-    //    int dist = distanceCounter().getDistance(finfo_[color].king_pos_, n);
-    //    *score_eg -= dist<<1;
-    //  }
-    //}
-
-    //const BitMask & isomask = pawnMasks().mask_isolated(n & 7);
-    //const BitMask & dismask = pawnMasks().mask_disconnected(n);
-
-    //// maybe isolated pawn
-    //if(!(pmsk_t & isomask))
-    //  score += pawnIsolated_;
-    //// or disconnected
-    //else if(!(pmsk_t & dismask))
-    //  score += pawnDisconnected_;
-    //// or backward - pawn isn't on last line and not guarded by other pawn and can't safely go to the next line
-    //else if((color && y < 6 || !color && y > 1) && !(finfo_[color].pw_attack_mask_ & set_mask_bit(n)))
-    //{
-    //  int to = x | ((y+delta_y[color]) << 3);
-    //  BitMask to_mask = set_mask_bit(to);
-
-    //  if(to_mask & attacked_mask)
-    //    score += pawnBackward_;
-    //}
-
-    //// passer candidate - column after pawn is opened and has more defenders than opponent's sentries
-    //if(!passed && !(pmsk_t & blckmsk) && !(opmsk_t & blckmsk))
-    //{
-    //  X_ASSERT(color && y > 6 || !color && y < 2, "passed pawn wasn't detected");
-
-    //  const uint8 *  pcol_t = (const uint8*)&pmsk_t;
-    //  const uint8 * opcol_t = (const uint8*)&opmsk_t;
-
-    //  int sentriesN = 0;
-    //  int defendersN = 0;
-
-    //  if(x > 0)
-    //  {
-    //    // sentries
-    //    {
-    //      int le = Index(x-1, y);
-    //      const uint8 * oblock_le = (const uint8 *)&pawnMasks().mask_blocked(color, le);
-    //      int sentry_le = BitsCounter::numBitsInByte(opcol_t[x-1] & oblock_le[x-1]);
-    //      sentriesN += sentry_le;
-    //    }
-
-    //    // defenders
-    //    {
-    //      int le = Index(x-1, y+delta_y[color]);
-    //      const uint8 * block_le = (const uint8 *)&pawnMasks().mask_blocked(ocolor, le);
-    //      int defender_le = BitsCounter::numBitsInByte(pcol_t[x-1] & block_le[x-1]);
-    //      defendersN += defender_le;
-    //    }
-    //  }
-
-    //  if(x < 7)
-    //  {
-    //    // sentries
-    //    {
-    //      int ri = Index(x+1, y);
-    //      const uint8 * oblock_ri = (const uint8 *)&pawnMasks().mask_blocked(color, ri);
-    //      int sentry_ri = BitsCounter::numBitsInByte(opcol_t[x+1] & oblock_ri[x+1]);
-    //      sentriesN += sentry_ri;
-    //    }
-
-    //    // defenders
-    //    {
-    //      int ri = Index(x+1, y+delta_y[color]);
-    //      const uint8 * block_ri = (const uint8 *)&pawnMasks().mask_blocked(ocolor, ri);
-    //      int defender_ri = BitsCounter::numBitsInByte(pcol_t[x+1] & block_ri[x+1]);
-    //      defendersN += defender_ri;
-    //    }
-    //  }
-
-    //  // passer candidate
-    //  if(defendersN >= sentriesN)
-    //  {
-    //    //score += passerCandidate_[cy];
-    //    if(score_eg)
-    //      *score_eg += passerCandidate_[cy];
-    //  }
-    //}
-  //}
-
-  //// give additional bonuses for passer pawns
-  //// if there 2 or more passers on neighbor columns etc...
-  //if(cols_passer)
-  //{
-  //  int n = 0;
-  //  int group_x[8];
-  //  int ymax = 0;
-  //  for(int x = 0; cols_passer; cols_passer >>= 1, ++x)
-  //  {
-  //    if(cols_passer & 1)
-  //    {
-  //      int y = passers_y[x];
-  //      X_ASSERT(!(y > 0 && y < 7), "invalid y-pos of passed pawn");
-  //      if(!color)
-  //        y = 7-y;
-  //      if(y > ymax)
-  //        ymax = y;
-
-  //      group_x[n++] = x;
-  //    }
-  //    else
-  //    {
-  //      // have group
-  //      if(n > 1)
-  //      {
-  //        X_ASSERT(ymax < 1, "max y value not found for passer pawns group");
-  //        score += passersGroup_[ymax] * (n-1);
-  //      }
-
-  //      n = 0;
-  //      ymax = 0;
-  //    }
-  //  }
-
-  //  // the last group
-  //  if(n > 1)
-  //  {
-  //    X_ASSERT(ymax < 1, "max y value not found for passer pawns group");
-  //    score += passersGroup_[ymax] * (n-1);
-  //  }
-  //}
+  // 5. additional bonus for passers on neighbour columns
+  {
+    auto multi = pawnMasks().mask_multi_passer(x_passers) & pmask;
+    if(multi)
+    {
+      int y_min = color ? _lsb64(multi) : _msb64(multi);
+      y_min >>= 3;
+      int cy = colored_y_[color][y_min];
+      score.common_ += (coeffs_->passedPawn_ * cy) >> 1;
+    }
+  }
 
   return score;
 }
 
+int Evaluator::getCastleType(Figure::Color color) const
+{
+  static const BitMask castle_mask[2][2] = {
+    {
+      set_mask_bit(F8) | set_mask_bit(G8) | set_mask_bit(H8) |
+      set_mask_bit(F7) | set_mask_bit(G7) | set_mask_bit(H7),
 
+      set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(C8) |
+      set_mask_bit(A7) | set_mask_bit(B7) | set_mask_bit(C7)
+    },
+
+    {
+      set_mask_bit(F1) | set_mask_bit(G1) | set_mask_bit(H1) |
+      set_mask_bit(F2) | set_mask_bit(G2) | set_mask_bit(H2),
+
+      set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(C1) |
+      set_mask_bit(A2) | set_mask_bit(B2) | set_mask_bit(C2)
+    }
+  };
+
+  auto const& ki_mask = board_->fmgr().king_mask(color);
+
+  // short
+  bool cking = (castle_mask[color][0] & ki_mask) != 0;
+
+  // long
+  bool cqueen = (castle_mask[color][1] & ki_mask) != 0;
+
+  // -1 == no castle
+  return (!cking && !cqueen) * (-1) + cqueen;
+}
+
+Evaluator::PawnsScore Evaluator::evaluateKingSafety() const
+{
+  auto score = evaluateKingSafety(Figure::ColorWhite);
+  score -= evaluateKingSafety(Figure::ColorBlack);
+  return score;
+}
+
+Evaluator::PawnsScore Evaluator::evaluateKingSafety(Figure::Color color) const
+{
+  const FiguresManager & fmgr = board_->fmgr();
+  auto pmask  = board_->fmgr().pawn_mask(color);
+
+  PawnsScore score;
+  Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
+  Index ki_pos(finfo_[color].king_pos_);
+
+  int kx = ki_pos.x();
+  int ky = ki_pos.y();
+
+  int ctype = getCastleType(color);
+  X_ASSERT(ctype < -1 || ctype > 1, "invalid castle type detected");
+
+  int delta_y[] = {-1, +1};
+
+  score.opening_ += evaluateCastle(color, ocolor, ctype, ki_pos);
+
+  int cy = colored_y_[color][ky] - 1;
+  score.opening_ += coeffs_->roamingKing_ * cy * (cy > 0);
+
+  // pawns shield
+  static const BitMask pawns_shield_mask[2][2][3] =
+  {
+    // black
+    {
+      // short
+      {
+        set_mask_bit(H7)|set_mask_bit(H6),
+        set_mask_bit(G7)|set_mask_bit(G6),
+        set_mask_bit(F7)|set_mask_bit(F6)
+      },
+
+      // long
+      {
+        set_mask_bit(A7)|set_mask_bit(A6),
+        set_mask_bit(B7)|set_mask_bit(B6),
+        set_mask_bit(C7)|set_mask_bit(C6)
+      }
+    },
+
+    // white
+    {
+      // short
+      {
+        set_mask_bit(H2)|set_mask_bit(H3),
+        set_mask_bit(G2)|set_mask_bit(G3),
+        set_mask_bit(F2)|set_mask_bit(F3)
+      },
+
+      // long
+      {
+        set_mask_bit(A2)|set_mask_bit(A3),
+        set_mask_bit(B2)|set_mask_bit(B3),
+        set_mask_bit(C2)|set_mask_bit(C3)
+      }
+    }
+  };
+
+  if(ctype >= 0)
+  {
+    int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0) * coeffs_->pawnShieldA_
+      + ((pawns_shield_mask[color][ctype][1] & pmask) != 0) * coeffs_->pawnShieldB_
+      + ((pawns_shield_mask[color][ctype][2] & pmask) != 0) * coeffs_->pawnShieldC_;
+    score.opening_ += shield_bonus;
+  }
+  return score;
+}
+
+int Evaluator::evaluateCastle(Figure::Color color, Figure::Color ocolor, int castleType, Index const& ki_pos) const
+{
+  const FiguresManager & fmgr = board_->fmgr();
+
+  static const BitMask fake_castle_rook[2][2] = {
+    { set_mask_bit(G8)|set_mask_bit(H8)|set_mask_bit(G7)|set_mask_bit(H7),
+      set_mask_bit(A8)|set_mask_bit(B8)|set_mask_bit(C8)|set_mask_bit(A7)|set_mask_bit(B7)|set_mask_bit(C7)},
+
+    { set_mask_bit(G1)|set_mask_bit(H1)|set_mask_bit(G2)|set_mask_bit(H2),
+      set_mask_bit(A1)|set_mask_bit(B1)|set_mask_bit(C1)|set_mask_bit(A2)|set_mask_bit(B2)|set_mask_bit(C2)} };
+
+  if(castleType < 0 && !board_->castling(color))
+    return coeffs_->castleImpossible_;
+
+  // fake castle
+  if ( !board_->castling(color) && castleType >= 0 )
+  {
+    BitMask r_mask = fmgr.rook_mask(color) & fake_castle_rook[color][castleType];
+    if ( r_mask )
+    {
+      Index r_pos( _lsb64(r_mask) );
+      if(castleType == 0 && r_pos.x() > ki_pos.x() || castleType == 1 && r_pos.x() < ki_pos.x())
+        return coeffs_->fakeCastle_;
+    }
+    return coeffs_->castleBonus_;
+  }
+  return 0;
+}
 
 
 
@@ -1550,210 +1493,7 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color)
 //  return score;
 //}
 //
-//int Evaluator::getCastleType(Figure::Color color) const
-//{
-//  Index ki_pos(finfo_[color].king_pos_);
 //
-//  int x = ki_pos.x();
-//  int y = ki_pos.y();
-//
-//  // short
-//  if ( x > 4 && (y < 6 && color || y > 1 && !color) )
-//    return 0;
-//
-//  // long
-//  if ( x < 3 && (y < 6 && color || y > 1 && !color) )
-//    return 1;
-//
-//  return -1;
-//}
-//
-//ScoreType Evaluator::evaluatePawnShield(Figure::Color color)
-//{
-//  const FiguresManager & fmgr = board_->fmgr();
-//  const uint8 * pmsk_t  = (const uint8*)&board_->fmgr().pawn_mask_t(color);
-//
-//  ScoreType score = 0;
-//  Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
-//  Index ki_pos(finfo_[color].king_pos_);
-//
-//  int kx = ki_pos.x();
-//  int ky = ki_pos.y();
-//
-//  int delta_y[] = {-1, +1};
-//
-//  uint8 semiopen_mask = 0;
-//  uint8 closed_mask = 0;
-//
-//  {
-//    int kyplus  = ky + delta_y[color];
-//    int kyplus2 = kyplus + delta_y[color];
-//
-//    if ( kyplus < 1 )
-//      kyplus = 1;
-//    else if ( kyplus > 6 )
-//      kyplus = 6;
-//
-//    if ( kyplus2 < 1 )
-//      kyplus2 = 1;
-//    else if ( kyplus2 > 6 )
-//      kyplus2 = 6;
-//
-//    closed_mask   = set_bit(ky) | set_bit(kyplus);
-//    semiopen_mask = set_bit(ky) | set_bit(kyplus) | set_bit(kyplus2);
-//  }
-//
-//  int ctype = getCastleType(color);
-//
-//  // in castle
-//  if ( ctype >= 0 )
-//  {
-//    static const int pw_x[2][3] = { {5, 6, 7}, {2, 1, 0} };
-//
-//    // first 2 lines empty, full line empty
-//    static const ScoreType kingPenalties[3][3] = {
-//      {cf_columnOpened_, bg_columnOpened_, ah_columnOpened_},
-//      {cf_columnSemiopened_, bg_columnSemiopened_, ah_columnSemiopened_},
-//      {cf_columnCracked_, bg_columnCracked_, ah_columnCracked_}
-//    };
-//
-//    // f, g, h - short; b, c, a - long
-//    for (int i = 0; i < 3; ++i)
-//    {
-//      const int & x = pw_x[ctype][i];
-//      if ( pmsk_t[x] & closed_mask ) // have pawn before king. everything's ok
-//        continue;
-//
-//      if ( pmsk_t[x] & semiopen_mask )
-//        score -= kingPenalties[2][i]; // cracked
-//      else if ( pmsk_t[x] )
-//        score -= kingPenalties[1][i]; // semi-opened (no pawns on 1st & 2nd raws before king)
-//      else
-//        score -= kingPenalties[0][i]; // completely opened column
-//    }
-//
-//    // additional penalty is bg-column is opened and king is in the corner
-//    bool bg_opened = pmsk_t[ pw_x[ctype][1] ] == 0;
-//    if ( bg_opened && (kx == 0 || kx == 7) )
-//      score -= bg_columnSemiopened_;
-//  }  
-//
-//  // try to put king under pawn's shield
-//
-//  // give additional penalty if there is no pawn before king
-//  if ( (pmsk_t[kx] & semiopen_mask) == 0 )
-//    score -= bg_columnSemiopened_;
-//  else // or give small bonus for each pawn otherwise
-//  {
-//    int xle = kx-1;
-//    if ( xle < 0 )
-//      xle = 0;
-//
-//    int xri = kx+1;
-//    if ( xri > 7 )
-//      xri = 7;
-//
-//    int pw_count = 0;
-//    for (int x = xle; x <= xri; ++x)
-//    {
-//      if ( pmsk_t[x] & semiopen_mask )
-//        pw_count++;
-//    }
-//
-//    static const int pawns_count_bonus[4] = { 0, pawnBeforeKing_, pawnBeforeKing_*2, pawnBeforeKing_*3 };
-//    score += pawns_count_bonus[pw_count & 3];
-//  }
-//
-//  // color, castle type
-//  static const BitMask opponent_pressure_masks[2][2] = {
-//    {set_mask_bit(F6)|set_mask_bit(G6)|set_mask_bit(H6), set_mask_bit(A6)|set_mask_bit(B6)|set_mask_bit(C6)},
-//    {set_mask_bit(F3)|set_mask_bit(G3)|set_mask_bit(H3), set_mask_bit(A3)|set_mask_bit(B3)|set_mask_bit(C3)}
-//  };
-//
-//  if ( (ki_pos.y() < 2 && color || ki_pos.y() > 5 && !color) && ctype >= 0 )
-//  {
-//    const BitMask & opw_mask = fmgr.pawn_mask_o(ocolor);
-//
-//    // opponent pawns pressure
-//    if ( opponent_pressure_masks[color][ctype] & opw_mask )
-//      score -= kingPawnPressure_;
-//  }
-//
-//  return score;
-//}
-//
-//ScoreType Evaluator::evaluateCastlePenalty(Figure::Color color)
-//{
-//  const FiguresManager & fmgr = board_->fmgr();
-//
-//  ScoreType score = 0;
-//  Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
-//  Index ki_pos(finfo_[color].king_pos_);
-//
-//  static const BitMask fake_castle_rook[2][3] = {
-//    { set_mask_bit(G8)|set_mask_bit(H8)|set_mask_bit(G7)|set_mask_bit(H7),
-//      set_mask_bit(A8)|set_mask_bit(B8)|set_mask_bit(C8)|set_mask_bit(A7)|set_mask_bit(B7)|set_mask_bit(C7)},
-//
-//    { set_mask_bit(G1)|set_mask_bit(H1)|set_mask_bit(G2)|set_mask_bit(H2),
-//      set_mask_bit(A1)|set_mask_bit(B1)|set_mask_bit(C1)|set_mask_bit(A2)|set_mask_bit(B2)|set_mask_bit(C2)} };
-//
-//  int ctype = getCastleType(color);
-//  if ( ctype < 0 && !board_->castling(color) )
-//    return -castleImpossiblePenalty_;
-//
-//  // fake castle
-//  if ( !board_->castling(color) && ctype >= 0 )
-//  {
-//    BitMask r_mask = fmgr.rook_mask(color) & fake_castle_rook[color][ctype];
-//    if ( r_mask )
-//    {
-//      Index r_pos( _lsb64(r_mask) );
-//      if ( ctype == 0 && r_pos.x() > ki_pos.x() || ctype == 1 && r_pos.x() < ki_pos.x() )
-//        score = -fakecastlePenalty_;
-//    }
-//  }
-//
-//  if ( ctype < 0 )
-//    return score;
-//
-//  const BitMask & obishop_mask = fmgr.bishop_mask(ocolor);
-//
-//  // color, castle type
-//  static const BitMask opponent_bishop_masks[2][2] = {
-//    {set_mask_bit(F6)|set_mask_bit(H6), set_mask_bit(C6)|set_mask_bit(A6)},
-//    {set_mask_bit(F3)|set_mask_bit(H3), set_mask_bit(C3)|set_mask_bit(A3)}
-//  };
-//
-//  static const BitMask opponent_knight_masks[2][2] = {
-//    {set_mask_bit(G5), set_mask_bit(B5)},
-//    {set_mask_bit(G4), set_mask_bit(B4)}
-//  };
-//
-//  //// some obvious attack patterns
-//  //if ( ki_pos.y() < 2 && color || ki_pos.y() > 5 && !color )
-//  //{
-//  //  bool kn_or_bi = false;
-//  //  // opponent bishop pressure
-//  //  if ( opponent_bishop_masks[color][ctype] & obishop_mask )
-//  //  {
-//  //    kn_or_bi = true;
-//  //    score -= kingBishopPressure_;
-//  //  }
-//
-//  //  // opponent's knight pressure
-//  //  if ( opponent_knight_masks[color][ctype] & oknight_mask )
-//  //  {
-//  //    kn_or_bi = true;
-//  //    score -= kingKnightPressure_;
-//  //  }
-//
-//  //  // opponent queen pressure
-//  //  if ( kn_or_bi && (opponent_bishop_masks[color][ctype] & oqueen_mask) )
-//  //    score -= kingQueenPressure_;
-//  //}
-//
-//  return score;
-//}
 //
 //
 //ScoreType Evaluator::evaluatePasserAdditional(GamePhase phase, Figure::Color color, ScoreType & pw_score_eg, int & most_adv_y)

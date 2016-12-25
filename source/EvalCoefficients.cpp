@@ -17,11 +17,21 @@ void EvalCoefficients::init()
   gen = std::make_unique<std::mt19937>((*rd)());
 
   // single vars
+  // pawns
   vars_.push_back(details::Var{ "pawnEndgameBonus_", pawnEndgameBonus_, &pawnEndgameBonus_ });
   vars_.push_back(details::Var{ "passedPawn_", passedPawn_, &passedPawn_ });
   vars_.push_back(details::Var{ "doubledPawn_", doubledPawn_, &doubledPawn_ });
   vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
   vars_.push_back(details::Var{ "backwardPawn_", backwardPawn_, &backwardPawn_ });
+
+  // king
+  vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
+  vars_.push_back(details::Var{ "fakeCastle_", fakeCastle_, &fakeCastle_ });
+  vars_.push_back(details::Var{ "castleBonus_", castleBonus_, &castleBonus_ });
+  vars_.push_back(details::Var{ "roamingKing_", roamingKing_, &roamingKing_ });  
+  vars_.push_back(details::Var{ "pawnShieldA_", pawnShieldA_, &pawnShieldA_ });
+  vars_.push_back(details::Var{ "pawnShieldB_", pawnShieldB_, &pawnShieldB_ });
+  vars_.push_back(details::Var{ "pawnShieldC_", pawnShieldC_, &pawnShieldC_ });
 
   // arrays
   arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });

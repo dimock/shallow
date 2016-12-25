@@ -106,33 +106,46 @@ int8 BitsCounter::s_array_[256] =
 
 PawnMasks::PawnMasks()
 {
-  //for(int pos = 0; pos < 64; ++pos)
-  //  clearAll(pos);
-
-  //for(int i = 0; i < 8; ++i)
-  //  pmask_isolated_[i] = 0;
-
-  BitMask doubled_msk{};
+  BitMask full_column_msk{};
   for(int i = 0; i < 8; ++i)
   {
-    doubled_msk |= set_mask_bit(Index(0, i));
+    full_column_msk |= set_mask_bit(Index(0, i));
+  }
+
+  for(int mask = 3; mask < 256; ++mask)
+  {
+    int nmax = 1;
+    BitMask best_multi_mask{};
+    for(int8 i = 0; i < 8; ++i)
+    {
+      if((mask & (1 << i)) == 0)
+        continue;
+      BitMask multi_mask{};
+      int n = 0;
+      for(int8 j = i; j < 8; ++j, ++n)
+      {
+        if((mask & (1 << j)) == 0)
+        {
+          i = j;
+          break;
+        }
+        multi_mask |= full_column_msk << j;
+      }
+      if(n > nmax)
+      {
+        nmax = n;
+        best_multi_mask = multi_mask;
+      }
+    }
+    pmask_multi_passer_[mask] = best_multi_mask;
   }
 
   for(int color = 0; color < 2; ++color)
   {
     for(int i = 0; i < 64; ++i)
     {
-      //int dy = color ? -1 : +1;
       int x = i & 7;
       int y = i >> 3;
-
-      //if(y > 0 && y < 7)
-      //{
-      //  if(x < 7)
-      //    pmasks_guarded_[color][i] |= set_mask_bit((y+dy) | ((x+1) << 3));
-      //  if(x > 0)
-      //    pmasks_guarded_[color][i] |= set_mask_bit((y+dy) | ((x-1) << 3));
-      //}
 
       BitMask pass_msk{};
       int deltay = color ? 1 : -1;
@@ -141,7 +154,7 @@ PawnMasks::PawnMasks()
         pass_msk |= set_mask_bit(Index(0, yy));
       }
 
-      pmask_doubled_[x] |= doubled_msk << x;
+      pmask_doubled_[x] |= full_column_msk << x;
       pmasks_line_blocked_[color][i] = pass_msk << x;
       pmasks_passed_[color][i] = pass_msk << x;
 
@@ -159,145 +172,21 @@ PawnMasks::PawnMasks()
 
       if(x > 0)
       {
-        pmask_isolated_[x] |= doubled_msk << (x-1);
+        pmask_isolated_[x] |= full_column_msk << (x-1);
         pmasks_passed_[color][i] |= pass_msk << (x-1);
         pmasks_backward_[color][i] |= back_mask << (x-1);
         pmasks_supported_[color][i] |= support_mask << (x-1);
       }
       if(x < 7)
       {
-        pmask_isolated_[x] |= doubled_msk << (x+1);
+        pmask_isolated_[x] |= full_column_msk << (x+1);
         pmasks_passed_[color][i] |= pass_msk << (x+1);
         pmasks_backward_[color][i] |= back_mask << (x+1);
         pmasks_supported_[color][i] |= support_mask << (x+1);
       }
     }
   }
-
-
-      //uint8 pm = 0;
-      //uint8 bm = 0;
-      //if(color)
-      //{
-      //  for(int j = y+1; j < 7; ++j)
-      //    pm |= set_bit(j);
-
-      //  if(y < 6)
-      //    bm = set_bit(y) | set_bit(y+1);
-      //}
-      //else
-      //{
-      //  for(int j = y-1; j > 0; --j)
-      //    pm |= 1 << j;
-
-      //  if(y > 1)
-      //    bm = set_bit(y) | set_bit(y-1);
-      //}
-
-      //uint8 * ppmask = (uint8*)&pmasks_passed_[color][i];
-      //uint8 * blkmask = (uint8*)&pmasks_blocked_[color][i];
-
-      //ppmask[x] = pm;
-      //blkmask[x] = pm;
-      //if(x > 0)
-      //{
-      //  ppmask[x-1] = pm;
-      //}
-      //if(x < 7)
-      //{
-      //  ppmask[x+1] = pm;
-      //}
-
-  //    uint64 & kpk_mask = pmask_kpk_[color][i];
-  //    int x0 = x > 0 ? x-1 : 0;
-  //    int x1 = x < 7 ? x+1 : 7;
-  //    if(color)
-  //    {
-  //      for(int j = y+1; j < 8; ++j)
-  //      {
-  //        for(int l = x0; l <= x1; ++l)
-  //        {
-  //          int kp = l | (j<<3);
-  //          kpk_mask |= set_mask_bit(kp);
-  //        }
-  //      }
-  //    }
-  //    else
-  //    {
-  //      for(int j = y-1; j >= 0; --j)
-  //      {
-  //        for(int l = x0; l <= x1; ++l)
-  //        {
-  //          int kp = l | (j<<3);
-  //          kpk_mask |= set_mask_bit(kp);
-  //        }
-  //      }
-  //    }
-  //  }
-  //}
-
-  //for(int i = 0; i < 64; ++i)
-  //{
-  //  int x = i & 7;
-  //  int y = i >> 3;
-
-  //  uint8 * dis_mask = (uint8*)&pmasks_disconnected_[i];
-
-  //  if(x > 0)
-  //  {
-  //    dis_mask[x-1] |= set_bit(y);
-  //    if(y > 0)
-  //      dis_mask[x-1] |= set_bit(y-1);
-  //    if(y < 7)
-  //      dis_mask[x-1] |= set_bit(y+1);
-  //  }
-
-  //  if(x < 7)
-  //  {
-  //    dis_mask[x+1] |= set_bit(y);
-  //    if(y > 0)
-  //      dis_mask[x+1] |= set_bit(y-1);
-  //    if(y < 7)
-  //      dis_mask[x+1] |= set_bit(y+1);
-  //  }
-  //}
-
-  //for(int x = 0; x < 8; ++x)
-  //{
-  //  uint8 * ppmask = (uint8*)&pmask_isolated_[x];
-  //  if(x > 0)
-  //    ppmask[x-1] = 0xff;
-  //  if(x < 7)
-  //    ppmask[x+1] = 0xff;
-  //}
-
-  //// destination color
-  //for(int color = 0; color < 2; ++color)
-  //{
-  //  for(int i = 0; i < 64; ++i)
-  //  {
-  //    int x = i & 7;
-  //    int8 dst_color = 0;
-  //    if(color) // white
-  //      dst_color = (x+1) & 1;
-  //    else
-  //      dst_color = x & 1;
-  //    pawn_dst_color_[color][i] = dst_color;
-  //  }
-  //}
 }
-//
-//void PawnMasks::clearAll(int pos)
-//{
-//  for(int color = 0; color < 2; ++color)
-//  {
-//    //pmasks_guarded_[color][pos] = 0;
-//    pmasks_passed_[color][pos] = 0;
-//    //pmasks_blocked_[color][pos] = 0;
-//    //pmask_kpk_[color][pos] = 0;
-//  }
-//  //pmasks_disconnected_[pos] = 0;
-//}
 
 //////////////////////////////////////////////////////////////////////////
 DeltaPosCounter::DeltaPosCounter()

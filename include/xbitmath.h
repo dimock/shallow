@@ -186,18 +186,6 @@ public:
 
   PawnMasks();
 
-  //inline const BitMask & mask_guarded(int color, int pos) const
-  //{
-  //  X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
-  //  return pmasks_guarded_[color][pos];
-  //}
-
-  //inline const BitMask & mask_disconnected(int pos) const
-  //{
-  //  X_ASSERT((unsigned)pos > 63, "invalid pawn pos");
-  //  return pmasks_disconnected_[pos];
-  //}
-
   inline const BitMask & mask_passed(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
@@ -224,42 +212,30 @@ public:
 
   inline const BitMask & mask_isolated(int x) const
   {
-    X_ASSERT((unsigned)x > 7, "invalid pawn x or color");
+    X_ASSERT((unsigned)x > 7, "invalid pawn x");
     return pmask_isolated_[x];
   }
 
   inline const BitMask & mask_doubled(int x) const
   {
-    X_ASSERT((unsigned)x > 7, "invalid pawn x or color");
+    X_ASSERT((unsigned)x > 7, "invalid pawn x");
     return pmask_doubled_[x];
   }
 
-  //inline int8 pawn_dst_color(int color, int pos) const
-  //{
-  //  X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
-  //  return pawn_dst_color_[color][pos];
-  //}
-
-  //inline const BitMask & mask_kpk(int color, int p) const
-  //{
-  //  X_ASSERT((unsigned)color > 1 || (unsigned)p > 63, "invalid pawn pos or color");
-  //  return pmask_kpk_[color][p];
-  //}
+  inline const BitMask & mask_multi_passer(int mask) const
+  {
+    X_ASSERT((unsigned)mask > 255, "invalid pawns row-mask");
+    return pmask_multi_passer_[mask];
+  }
 
 private:
-
-  //void clearAll(int);
-
-  //BitMask pmasks_guarded_[2][64];
   BitMask pmasks_passed_[2][64] = {};
   BitMask pmasks_line_blocked_[2][64] = {};
   BitMask pmasks_backward_[2][64] = {};
   BitMask pmasks_supported_[2][64] = {};
-  //BitMask pmasks_disconnected_[64];
   BitMask pmask_isolated_[8] = {};
   BitMask pmask_doubled_[8] = {};
-  //BitMask pmask_kpk_[2][64];
-  //int8    pawn_dst_color_[2][64];
+  BitMask pmask_multi_passer_[256] = {};
 };
 
 class BitsCounter
