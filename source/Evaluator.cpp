@@ -807,11 +807,31 @@ Evaluator::PawnsScore Evaluator::evaluateKingSafety(Figure::Color color) const
     }
   };
 
+  static const BitMask pawns_penalty_mask[2][3] =
+  {
+    // short
+    {
+      set_mask_bit(H7)|set_mask_bit(H6)|set_mask_bit(H5)|set_mask_bit(H4)|set_mask_bit(H3)|set_mask_bit(H2),
+      set_mask_bit(G7)|set_mask_bit(G6)|set_mask_bit(G5)|set_mask_bit(H4)|set_mask_bit(H3)|set_mask_bit(H2),
+      set_mask_bit(F7)|set_mask_bit(F6)|set_mask_bit(F5)|set_mask_bit(F4)|set_mask_bit(F3)|set_mask_bit(F2)
+    },
+
+    // long
+    {
+      set_mask_bit(A7)|set_mask_bit(A6)|set_mask_bit(A5)|set_mask_bit(A4)|set_mask_bit(A3)|set_mask_bit(A2),
+      set_mask_bit(B7)|set_mask_bit(B6)|set_mask_bit(B5)|set_mask_bit(B4)|set_mask_bit(B3)|set_mask_bit(B2),
+      set_mask_bit(C7)|set_mask_bit(C6)|set_mask_bit(C5)|set_mask_bit(C4)|set_mask_bit(C3)|set_mask_bit(C2)
+    }
+  };
+
   if(ctype >= 0)
   {
     int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0) * coeffs_->pawnShieldA_
       + ((pawns_shield_mask[color][ctype][1] & pmask) != 0) * coeffs_->pawnShieldB_
       + ((pawns_shield_mask[color][ctype][2] & pmask) != 0) * coeffs_->pawnShieldC_;
+    int shield_penalty = ((pawns_penalty_mask[ctype][0] & pmask) == 0) * coeffs_->pawnPenaltyA_
+      + ((pawns_penalty_mask[ctype][1] & pmask) == 0) * coeffs_->pawnPenaltyB_
+      + ((pawns_penalty_mask[ctype][2] & pmask) == 0) * coeffs_->pawnPenaltyC_;
     score.opening_ += shield_bonus;
   }
   return score;

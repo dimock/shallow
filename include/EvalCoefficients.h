@@ -57,6 +57,9 @@ struct EvalCoefficients
   int pawnShieldA_{ 10 };
   int pawnShieldB_{ 10 };
   int pawnShieldC_{ 5 };
+  int pawnPenaltyA_{ -10 };
+  int pawnPenaltyB_{ -10 };
+  int pawnPenaltyC_{ -5 };
 
   // arrays
   int centerPawn_[8] = {};

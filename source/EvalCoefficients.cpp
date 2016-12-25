@@ -32,6 +32,9 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "pawnShieldA_", pawnShieldA_, &pawnShieldA_ });
   vars_.push_back(details::Var{ "pawnShieldB_", pawnShieldB_, &pawnShieldB_ });
   vars_.push_back(details::Var{ "pawnShieldC_", pawnShieldC_, &pawnShieldC_ });
+  vars_.push_back(details::Var{ "pawnPenaltyA_", pawnPenaltyA_, &pawnPenaltyA_ });
+  vars_.push_back(details::Var{ "pawnPenaltyB_", pawnPenaltyB_, &pawnPenaltyB_ });
+  vars_.push_back(details::Var{ "pawnPenaltyC_", pawnPenaltyC_, &pawnPenaltyC_ });
 
   // arrays
   arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });

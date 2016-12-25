@@ -55,6 +55,7 @@ public:
 void testFen(std::string const& ffname, xTestFen_Callback const&, xTestFen_ErrorCallback const&);
 void testSee(std::string const& ffname);
 void optimizeFen(std::string const& ffname);
+void evaluateFen(std::string const& ffname);
 void see_perf_test(std::string const& fname);
 
 } // NEngine

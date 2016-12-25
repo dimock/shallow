@@ -183,11 +183,11 @@ void optimizeFen(std::string const& ffname)
   int summ_min{ -1 };
   int iters_num{};
   int steps_num{};
-  int depth = 6;
-  int Niters = 0;
-  int Nsteps = 0;
-  double r  = 0.35;
-  double dr = 0.7;
+  int depth = 8;
+  int Niters = 5;
+  int Nsteps = 1;
+  double r  = 0.1;
+  double dr = 0.5;
   optimizeFen(ffname, [&proc, depth](size_t i, xEPD& epd)
   {
     std::cout << i << ": ";
@@ -235,6 +235,24 @@ void optimizeFen(std::string const& ffname)
     std::cout << "error: " << err << std::endl;
   });
   std::cout << summ_min << std::endl;
+}
+
+void evaluateFen(std::string const& ffname)
+{
+  NEngine::testFen(
+    ffname,
+    [](size_t, NEngine::xEPD& e)
+  {
+    NShallow::Processor proc;
+    NEngine::Evaluator eval;
+    eval.initialize(&e.board_, nullptr, &proc.getEvals());
+    auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
+    std::cout << score << std::endl;
+  },
+    [](std::string const& err_str)
+  {
+    std::cout << "Error: " << err_str << std::endl;
+  });
 }
 
 } // NEngine
