@@ -833,6 +833,7 @@ Evaluator::PawnsScore Evaluator::evaluateKingSafety(Figure::Color color) const
       + ((pawns_penalty_mask[ctype][1] & pmask) == 0) * coeffs_->pawnPenaltyB_
       + ((pawns_penalty_mask[ctype][2] & pmask) == 0) * coeffs_->pawnPenaltyC_;
     score.opening_ += shield_bonus;
+    score.opening_ += shield_penalty;
   }
   return score;
 }
