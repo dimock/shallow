@@ -754,7 +754,6 @@ std::string toFEN(Board const& board)
 
 bool load(Board & board, std::istream & is)
 {
-  const int N = 1024;
   std::string const sepr = " \t\n\r";
   std::string const strmv = "123456789abcdefghkrq+-OxPNBRQKnul=#";
   bool fen_expected = false, fen_init = false;
@@ -768,7 +767,7 @@ bool load(Board & board, std::istream & is)
   {
     bool skip = false;
     auto si = str.begin();
-    for(; si != str.end() && !skip; ++si)
+    for(; !skip && si != str.end(); ++si)
     {
       // skip separators
       if(sepr.find(*si) != std::string::npos)
@@ -830,6 +829,11 @@ bool load(Board & board, std::istream & is)
           {
             for(; si != str.end() && sepr.find(*si) == std::string::npos; ++si)
               param += *si;
+            if(si == str.end())
+            {
+              skip = true;
+              break;
+            }
             continue;
           }
 
@@ -838,6 +842,11 @@ bool load(Board & board, std::istream & is)
           {
             for(si++; si != str.end() && '"' != *si; ++si)
               value += *si;
+            if(si == str.end())
+            {
+              skip = true;
+              break;
+            }
             continue;
           }
         }
@@ -852,6 +861,8 @@ bool load(Board & board, std::istream & is)
         }
         skip = true;
       }
+      if(skip)
+        break;
     }
   }
 

@@ -324,7 +324,7 @@ public:
   {
     int reps = 1;
     int i = halfmovesCounter_ - from;
-    for(; reps < 2 && i >= 0; i -= 2)
+    for(; reps < 3 && i >= 0; i -= 2)
     {
       if(undoInfo(i).zcode_ == zcode)
         reps++;
@@ -334,7 +334,7 @@ public:
     }
 
     // may be we forget to test initial position?
-    if(reps < 2 && i == -1 && zcode == undoInfo(0).zcode_old_)
+    if(reps < 3 && i == -1 && zcode == undoInfo(0).zcode_old_)
       reps++;
 
     return reps;

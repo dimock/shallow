@@ -211,6 +211,8 @@ bool xProtocolMgr::uciGo(const xCmd & cmd)
   }
   else
   {
+    std::string outstr("bestmove draw");
+    os_ << outstr << std::endl;
     return false;
   }
 }
