@@ -206,15 +206,12 @@ bool xProtocolMgr::uciGo(const xCmd & cmd)
     {
       outstr += r->moveStr_;
       os_ << outstr << std::endl;
+      return true;
     }
-    return true;
   }
-  else
-  {
-    std::string outstr("bestmove draw");
-    os_ << outstr << std::endl;
-    return false;
-  }
+  std::string outstr("bestmove null");
+  os_ << outstr << std::endl;
+  return false;
 }
 
 void xProtocolMgr::printUciStat(NEngine::SearchData const& sdata)
