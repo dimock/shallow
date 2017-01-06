@@ -66,6 +66,8 @@ class Engine
 
 public:
 
+  static int xcounter_;
+
   // initialize global arrays, tables, masks, etc. write them to it's board_
   Engine();
 

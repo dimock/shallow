@@ -359,6 +359,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(stopped() || ply >= MaxPly)
     return scontexts_[ictx].eval_(alpha, betta);
 
+  ////bool light_null_move{};
   //if(options_.use_nullmove_
   //   && !pv
   //   && !scontexts_[ictx].board_.underCheck()
@@ -372,15 +373,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   //  auto other_color = Figure::otherColor(my_color);
   //  if(Figure::ColorBlack  == my_color )
   //    score_x = -score_x;
-  //  if((score_x < alpha - (Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook])) ||
-  //     (scontexts_[ictx].board_.fmgr().queens(my_color) + scontexts_[ictx].board_.fmgr().rooks(my_color) == 0
-  //     && scontexts_[ictx].board_.fmgr().queens(other_color) + scontexts_[ictx].board_.fmgr().rooks(other_color) > 0
-  //     && (score_x < alpha - Figure::figureWeight_[Figure::TypeRook] + Figure::figureWeight_[Figure::TypeKnight])))
+  //  if((score_x > betta + Figure::figureWeight_[Figure::TypeQueen]+Figure::figureWeight_[Figure::TypeRook])
+  //     || (score_x > betta + Figure::figureWeight_[Figure::TypeRook] && scontexts_[ictx].board_.isWinnerColor(my_color) && scontexts_[ictx].board_.isWinnerLoser()))
   //  {
-  //    light_null_move_++;
-  //    return alpha;
+  //    return betta;
+  //    //light_null_move = true;
   //  }
   //}
+  ////XCounter xcntr(light_null_move ? &sdata_.nodesCount_ : nullptr);
 
   ScoreType alpha0 = alpha;
 
@@ -389,8 +389,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_HASH
   ScoreType hscore = -ScoreMax;
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
-  if (flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  {
     return hscore;
+  }
 #endif
 
   if(depth <= 0)
@@ -403,7 +405,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   if(options_.use_nullmove_)
   {
-    if(!pv &&
+    if(
+      //!pv &&
       //!nm &&
       !scontexts_[ictx].board_.underCheck() &&
       scontexts_[ictx].board_.allowNullMove() &&
@@ -473,15 +476,19 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     int delta = calculateDelta(alpha, score0);
     if (!scontexts_[ictx].board_.isWinnerLoser())
     {
-      if (depth <= ONE_PLY && delta > 0)
+      if(depth <= ONE_PLY && delta > 20)
+      {
         return captures(ictx, depth, ply, alpha, betta, pv, score0);
-      else if (delta > Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn])
+      }
+      else if(depth <= 2*ONE_PLY && delta > Figure::figureWeight_[Figure::TypeQueen])
+      {
         return captures(ictx, depth, ply, alpha, betta, pv, score0);
-      else if (delta > 2 * Figure::figureWeight_[Figure::TypeQueen])
-        return score0;
+      }
+      else if(delta > Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeKnight])
+      {
+        return captures(ictx, depth, ply, alpha, betta, pv, score0);
+      }
     }
-    else if (!scontexts_[ictx].board_.isWinnerColor(scontexts_[ictx].board_.getColor()) && delta > Figure::figureWeight_[Figure::TypeKnight])
-      return score0;
   }
 #endif
 
@@ -579,7 +586,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_LMR
         if ( !check_escape &&
           sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-          depth > LMR_DepthLimit &&
+          depth >= LMR_DepthLimit &&
           alpha > -Figure::MatScore-MaxPly &&             
           scontexts_[ictx].board_.canBeReduced() )
         {
@@ -681,7 +688,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     // have to recalculate with full depth, or indicate threat in hash
     if ( !stopped() && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )
     {
-      if ( prev.reduced_ )
+      if(prev.reduced_)
         return betta-1;
       else
         real_threat = true;
@@ -741,7 +748,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   if(tg.singleReply())
     depthInc += ONE_PLY;
 
-  bool alpha_found = false;
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.move();
@@ -770,7 +776,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       scoreBest = score;
       if(score > alpha)
       {
-        alpha_found = true;
         alpha = score;
       }
     }
@@ -779,45 +784,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   if(stopped())
     return scoreBest;
-
-  // no good move found. lets try weak if exist
-  if(/*!alpha_found && */counter == 0)
-  {
-    for(; !alpha_found && alpha < betta && !checkForStop();)
-    {
-      auto* pmove = tg.weak();
-      if(!pmove)
-        break;
-
-      auto& move = *pmove;
-      if(!scontexts_[ictx].board_.validateMove(move))
-        continue;
-
-      ScoreType score = -ScoreMax;
-
-      scontexts_[ictx].board_.makeMove(move);
-      sdata_.inc_nc();
-
-      {
-        int depthInc1 = depthInc + depthIncrement(ictx, move, false);
-        score = -captures(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax);
-      }
-
-      scontexts_[ictx].board_.unmakeMove();
-
-      if(!stopped() && score > scoreBest)
-      {
-        best = move;
-        scoreBest = score;
-        if(score > alpha)
-        {
-          alpha_found = true;
-          alpha = score;
-        }
-      }
-      counter++;
-    }
-  }
 
   if(!counter)
   {
@@ -972,5 +938,7 @@ bool Engine::isRealThreat(int ictx, const Move & move)
 
   return false;
 }
+
+int Engine::xcounter_ = 0;
 
 } // NEngine

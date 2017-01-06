@@ -958,6 +958,8 @@ bool save(const Board & board, std::ostream & os, bool write_prefix)
 }
 
 
+int XCounter::count_ = 0;
+
 #ifdef _USE_LOG
 void addLog(std::string const& str)
 {

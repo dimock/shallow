@@ -421,7 +421,7 @@ private:
     int s = board_.see(move);
 		move.seen_ = 1;
 		move.see_good_ = s >= 0;
-    return true;// move.see_good_;
+    return move.see_good_;
   }
 
   bool expressCheck(Move & move) const;

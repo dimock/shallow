@@ -39,6 +39,24 @@ bool fromFEN(std::string const& i_fen, Board& board);
 /// save current position to FEN
 std::string toFEN(Board const& board);
 
+struct XCounter
+{
+  static int count_;
+  int var0_;
+  int* var_;
+  XCounter(int* var)
+  {
+    var_ = var;
+    if(var_)
+      var0_ = *var_;
+  }
+  ~XCounter()
+  {
+    if(var_)
+      count_ += *var_ - var0_;
+  }
+};
+
 #ifdef _USE_LOG
 void addLog(std::string const& str);
 #else
