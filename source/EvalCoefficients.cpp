@@ -36,6 +36,31 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "pawnPenaltyB_", pawnPenaltyB_, &pawnPenaltyB_ });
   vars_.push_back(details::Var{ "pawnPenaltyC_", pawnPenaltyC_, &pawnPenaltyC_ });
 
+  // blocked figure
+  vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
+  vars_.push_back(details::Var{ "knightBlocked_", knightBlocked_, &knightBlocked_ });
+  vars_.push_back(details::Var{ "rookBlocked_", rookBlocked_, &rookBlocked_ });
+  vars_.push_back(details::Var{ "queenBlocked_", queenBlocked_, &queenBlocked_ });
+
+  // mobility
+  vars_.push_back(details::Var{ "bishopMobility_", bishopMobility_, &bishopMobility_ });
+  vars_.push_back(details::Var{ "knightMobility_", knightMobility_, &knightMobility_ });
+  vars_.push_back(details::Var{ "rookMobility_", rookMobility_, &rookMobility_ });
+  vars_.push_back(details::Var{ "queenMobility_", queenMobility_, &queenMobility_ });
+
+  // attacked fields
+  vars_.push_back(details::Var{ "knightAttacks_", knightAttacks_, &knightAttacks_ });
+  vars_.push_back(details::Var{ "bishopAttacks_", bishopAttacks_, &bishopAttacks_ });
+  vars_.push_back(details::Var{ "rookAttacks_", rookAttacks_, &rookAttacks_ });
+  vars_.push_back(details::Var{ "queenAttacks_", queenAttacks_, &queenAttacks_ });
+
+  // king attacks
+  vars_.push_back(details::Var{ "pawnKingAttack_", pawnKingAttack_, &pawnKingAttack_ });
+  vars_.push_back(details::Var{ "knightKingAttack_", knightKingAttack_, &knightKingAttack_ });
+  vars_.push_back(details::Var{ "bishopKingAttack_", bishopKingAttack_, &bishopKingAttack_ });
+  vars_.push_back(details::Var{ "rookKingAttack_", rookKingAttack_, &rookKingAttack_ });
+  vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
+
   // arrays
   arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
 

@@ -6,6 +6,7 @@
 #include <Board.h>
 #include <EvalCoefficients.h>
 #include <xindex.h>
+#include <xlist.h>
 
 namespace NEngine
 {
@@ -75,15 +76,31 @@ class Evaluator
     int bishopMobility_{};
     int rookMobility_{};
     int queenMobility_{};
-    int knightPressure_{};
-    int bishopPressure_{};
-    int rookPressure_{};
-    int queenPressure_{};
-    int rookOpenScore_{};
-    BitMask pw_attack_mask_{};
-    BitMask kn_attack_mask_{};
+    int knightAttackBonus_{};
+    int bishopAttackBonus_{};
+    int rookAttackBonus_{};
+    int queenAttackBonus_{};
+    BitMask pawnAttacks_{};
+    BitMask knightAttacks_{};
+    BitMask bishopAttacks_{};
+    BitMask rookAttacks_{};
+    BitMask queenAttacks_{};
+    BitMask kingAttacks_{};
+    BitMask allButKnightAttacks_{};
+    BitMask allButBishopAttacks_{};
+    BitMask allButRookAttacks_{};
+    BitMask allButQueenAttacks_{};
+    //int knightPressure_{};
+    //int bishopPressure_{};
+    //int rookPressure_{};
+    //int queenPressure_{};
+    //int rookOpenScore_{};
     BitMask attack_mask_{};
-    int attackersN_[Figure::TypesNum] = {};
+    xlist<BitMask, 10> knightMasks_;
+    xlist<BitMask, 10> bishopMasks_;
+    xlist<BitMask, 10> rookMasks_;
+    xlist<BitMask, 10> queenMasks_;
+    //int attackersN_[Figure::TypesNum] = {};
   } finfo_[2];
 
 public:
@@ -97,7 +114,8 @@ public:
  // // position evaluation. 0 - opening, 1 - endgame; color,type,pos
  // static const ScoreType positionEvaluations_[2][8][64];
 
- const int lazyThreshold_ = Figure::figureWeight_[Figure::TypePawn] * 4;
+ const int lazyThreshold0_ = Figure::figureWeight_[Figure::TypePawn] * 4;
+ const int lazyThreshold1_ = Figure::figureWeight_[Figure::TypePawn] * 2;
 
  // // evaluation constants
  // static const ScoreType bishopKnightMat_[64];
@@ -194,8 +212,17 @@ private:
  // ScoreType evaluatePassersAdditional(GamePhase phase, int coef_e);
  // ScoreType evaluatePasserAdditional(GamePhase phase, Figure::Color color, ScoreType & pw_score_eg, int & most_adv_y);
 
- // ScoreType evaluateBlockedBishops();
- // ScoreType evaluateBlockedKnights();
+  int evaluateFigures();
+  void calculateKnightsMoves();
+  void calculateBishopsMoves();
+  void calculateRooksMoves();
+  void calculateQueenMoves();
+  void calculateKnightsMobility();
+  void calculateBishopsMobility();
+  void calculateRooksMobility();
+  void calculateQueenMobility();
+
+  int evaluateFields();
 
  // ScoreType evaluateMaterialDiff();
  // ScoreType evaluateFianchetto() const;
@@ -278,8 +305,10 @@ private:
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
-  ScoreType alpha_{};
-  ScoreType betta_{};
+  int alpha0_{};
+  int betta0_{};
+  int alpha1_{};
+  int betta1_{};
 };
 
 } // NEngine
