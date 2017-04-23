@@ -16,6 +16,8 @@ namespace details
   MovesTable const*      g_movesTable_{};
   FigureDir const*       g_figureDir_{};
   PawnMasks const*       g_pawnMasks_{};
+  SpecialCasesDetector
+  const*                 g_specialCases_{};
 }
 
 namespace
@@ -29,6 +31,8 @@ class Globals
   std::unique_ptr<MovesTable>      movesTable_;
   std::unique_ptr<FigureDir>       figureDir_;
   std::unique_ptr<PawnMasks>       pawnMasks_;
+  std::unique_ptr<
+  SpecialCasesDetector>            specialCases_;
 
 public:
   Globals()
@@ -39,6 +43,7 @@ public:
     movesTable_      = std::unique_ptr<MovesTable>(new MovesTable);
     figureDir_       = std::unique_ptr<FigureDir>(new FigureDir);
     pawnMasks_       = std::unique_ptr<PawnMasks>(new PawnMasks);
+    specialCases_    = std::unique_ptr<SpecialCasesDetector>(new SpecialCasesDetector);
 
     details::g_deltaPosCounter_ = deltaPosCounter_.get();
     details::g_betweenMasks_ = betweenMasks_.get();
@@ -46,6 +51,7 @@ public:
     details::g_movesTable_ = movesTable_.get();
     details::g_figureDir_ = figureDir_.get();
     details::g_pawnMasks_ = pawnMasks_.get();
+    details::g_specialCases_ = specialCases_.get();
   }
 };
 

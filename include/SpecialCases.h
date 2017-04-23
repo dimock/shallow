@@ -1,0 +1,26 @@
+#pragma once
+
+#include <xcommon.h>
+#include <Figure.h>
+#include <unordered_map>
+#include <boost/optional.hpp>
+
+namespace NEngine
+{
+
+class Board;
+
+class SpecialCasesDetector
+{
+public:
+  using Scase = uint64;
+
+  SpecialCasesDetector();
+
+  boost::optional<ScoreType> eval(Board const& board) const;
+
+private:
+  std::unordered_map<Scase, ScoreType> scases_;
+};
+
+}

@@ -28,7 +28,7 @@ message(status "** Boost Libraries dirs: ${Boost_LIBRARY_DIRS}")
 message(status "** Boost Libraries: ${Boost_LIBRARIES}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
+set( Boost_USE_STATIC_LIBS ON )
 include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 

@@ -47,39 +47,11 @@ class Evaluator
 
   struct FieldsInfo
   {
-    //void reset()
-    //{
-    //  king_pos_ = -1;
-
-    //  pw_attack_mask_ = 0;
-    //  kn_attack_mask_ = 0;
-    //  attack_mask_ = 0;
-
-    //  knightMobility_ = 0;
-    //  bishopMobility_ = 0;
-    //  rookMobility_ = 0;
-    //  queenMobility_ = 0;
-
-    //  knightPressure_ = 0;
-    //  bishopPressure_ = 0;
-    //  rookPressure_ = 0;
-    //  queenPressure_ = 0;
-
-    //  rookOpenScore_ = 0;
-
-    //  for(int i = 0; i < Figure::TypesNum; ++i)
-    //    attackersN_[i] = 0;
-    //}
-
     int king_pos_{-1};
     int knightMobility_{};
     int bishopMobility_{};
     int rookMobility_{};
     int queenMobility_{};
-    int knightAttackBonus_{};
-    int bishopAttackBonus_{};
-    int rookAttackBonus_{};
-    int queenAttackBonus_{};
     BitMask pawnAttacks_{};
     BitMask knightAttacks_{};
     BitMask bishopAttacks_{};
@@ -90,17 +62,11 @@ class Evaluator
     BitMask allButBishopAttacks_{};
     BitMask allButRookAttacks_{};
     BitMask allButQueenAttacks_{};
-    //int knightPressure_{};
-    //int bishopPressure_{};
-    //int rookPressure_{};
-    //int queenPressure_{};
-    //int rookOpenScore_{};
     BitMask attack_mask_{};
     xlist<BitMask, 10> knightMasks_;
     xlist<BitMask, 10> bishopMasks_;
     xlist<BitMask, 10> rookMasks_;
     xlist<BitMask, 10> queenMasks_;
-    //int attackersN_[Figure::TypesNum] = {};
   } finfo_[2];
 
 public:
@@ -195,6 +161,9 @@ private:
   // multiple coefficients for opening/endgame
   PhaseInfo detectPhase() const;
 
+  // get from PSQ table
+  ScoreType evaluatePsq(Figure::Color color) const;
+
   // calculate or take from hash
   // pawns structure for middle & end game
   // + king's pawn shield???
@@ -208,6 +177,10 @@ private:
   PawnsScore evaluateKingSafety(Figure::Color color) const;
   PawnsScore evaluateKingSafety() const;
   int evaluateCastle(Figure::Color color, Figure::Color ocolor, int castleType, Index const& ki_pos) const;
+
+  int evaluateBlockedKnights();
+  int evaluateBlockedBishops();
+  int evaluateBlockedRooks();
 
  // ScoreType evaluatePassersAdditional(GamePhase phase, int coef_e);
  // ScoreType evaluatePasserAdditional(GamePhase phase, Figure::Color color, ScoreType & pw_score_eg, int & most_adv_y);

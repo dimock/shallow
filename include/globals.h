@@ -5,6 +5,7 @@ Board.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #include <MovesTable.h>
 #include <FigureDirs.h>
+#include <SpecialCases.h>
 
 namespace NEngine
 {
@@ -17,6 +18,8 @@ namespace details
   extern MovesTable const*      g_movesTable_;
   extern FigureDir const*       g_figureDir_;
   extern PawnMasks const*       g_pawnMasks_;
+  extern
+  SpecialCasesDetector const*   g_specialCases_;
 }
 
 void initGlobals();
@@ -50,6 +53,11 @@ inline DeltaPosCounter const& deltaPosCounter()
 inline DistanceCounter const& distanceCounter()
 {
   return *details::g_distanceCounter_;
+}
+
+inline SpecialCasesDetector const& specialCases()
+{
+  return *details::g_specialCases_;
 }
 
 } // NEngine

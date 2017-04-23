@@ -11,58 +11,139 @@ EvalCoefficients.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
-void EvalCoefficients::init()
-{
-  rd = std::make_unique<std::random_device>();
-  gen = std::make_unique<std::mt19937>((*rd)());
+  void EvalCoefficients::init()
+  {
+    rd = std::make_unique<std::random_device>();
+    gen = std::make_unique<std::mt19937>((*rd)());
 
-  // single vars
-  // pawns
-  vars_.push_back(details::Var{ "pawnEndgameBonus_", pawnEndgameBonus_, &pawnEndgameBonus_ });
-  vars_.push_back(details::Var{ "passedPawn_", passedPawn_, &passedPawn_ });
-  vars_.push_back(details::Var{ "doubledPawn_", doubledPawn_, &doubledPawn_ });
-  vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
-  vars_.push_back(details::Var{ "backwardPawn_", backwardPawn_, &backwardPawn_ });
+    // single vars
+    // pawns
+    vars_.push_back(details::Var{ "pawnEndgameBonus_", pawnEndgameBonus_, &pawnEndgameBonus_ });
+    vars_.push_back(details::Var{ "passedPawn_", passedPawn_, &passedPawn_ });
+    vars_.push_back(details::Var{ "doubledPawn_", doubledPawn_, &doubledPawn_ });
+    vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
+    vars_.push_back(details::Var{ "backwardPawn_", backwardPawn_, &backwardPawn_ });
 
-  // king
-  vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
-  vars_.push_back(details::Var{ "fakeCastle_", fakeCastle_, &fakeCastle_ });
-  vars_.push_back(details::Var{ "castleBonus_", castleBonus_, &castleBonus_ });
-  vars_.push_back(details::Var{ "roamingKing_", roamingKing_, &roamingKing_ });  
-  vars_.push_back(details::Var{ "pawnShieldA_", pawnShieldA_, &pawnShieldA_ });
-  vars_.push_back(details::Var{ "pawnShieldB_", pawnShieldB_, &pawnShieldB_ });
-  vars_.push_back(details::Var{ "pawnShieldC_", pawnShieldC_, &pawnShieldC_ });
-  vars_.push_back(details::Var{ "pawnPenaltyA_", pawnPenaltyA_, &pawnPenaltyA_ });
-  vars_.push_back(details::Var{ "pawnPenaltyB_", pawnPenaltyB_, &pawnPenaltyB_ });
-  vars_.push_back(details::Var{ "pawnPenaltyC_", pawnPenaltyC_, &pawnPenaltyC_ });
+    // king
+    vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
+    vars_.push_back(details::Var{ "fakeCastle_", fakeCastle_, &fakeCastle_ });
+    vars_.push_back(details::Var{ "castleBonus_", castleBonus_, &castleBonus_ });
+    vars_.push_back(details::Var{ "roamingKing_", roamingKing_, &roamingKing_ });
+    vars_.push_back(details::Var{ "pawnShieldA_", pawnShieldA_, &pawnShieldA_ });
+    vars_.push_back(details::Var{ "pawnShieldB_", pawnShieldB_, &pawnShieldB_ });
+    vars_.push_back(details::Var{ "pawnShieldC_", pawnShieldC_, &pawnShieldC_ });
+    vars_.push_back(details::Var{ "pawnPenaltyA_", pawnPenaltyA_, &pawnPenaltyA_ });
+    vars_.push_back(details::Var{ "pawnPenaltyB_", pawnPenaltyB_, &pawnPenaltyB_ });
+    vars_.push_back(details::Var{ "pawnPenaltyC_", pawnPenaltyC_, &pawnPenaltyC_ });
 
-  // blocked figure
-  vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
-  vars_.push_back(details::Var{ "knightBlocked_", knightBlocked_, &knightBlocked_ });
-  vars_.push_back(details::Var{ "rookBlocked_", rookBlocked_, &rookBlocked_ });
-  vars_.push_back(details::Var{ "queenBlocked_", queenBlocked_, &queenBlocked_ });
+    // blocked figure
+    vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
+    vars_.push_back(details::Var{ "knightBlocked_", knightBlocked_, &knightBlocked_ });
+    vars_.push_back(details::Var{ "rookBlocked_", rookBlocked_, &rookBlocked_ });
+    vars_.push_back(details::Var{ "queenBlocked_", queenBlocked_, &queenBlocked_ });
 
-  // mobility
-  vars_.push_back(details::Var{ "bishopMobility_", bishopMobility_, &bishopMobility_ });
-  vars_.push_back(details::Var{ "knightMobility_", knightMobility_, &knightMobility_ });
-  vars_.push_back(details::Var{ "rookMobility_", rookMobility_, &rookMobility_ });
-  vars_.push_back(details::Var{ "queenMobility_", queenMobility_, &queenMobility_ });
+    // king attacks
+    vars_.push_back(details::Var{ "pawnKingAttack_", pawnKingAttack_, &pawnKingAttack_ });
+    vars_.push_back(details::Var{ "knightKingAttack_", knightKingAttack_, &knightKingAttack_ });
+    vars_.push_back(details::Var{ "bishopKingAttack_", bishopKingAttack_, &bishopKingAttack_ });
+    vars_.push_back(details::Var{ "rookKingAttack_", rookKingAttack_, &rookKingAttack_ });
+    vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
-  // attacked fields
-  vars_.push_back(details::Var{ "knightAttacks_", knightAttacks_, &knightAttacks_ });
-  vars_.push_back(details::Var{ "bishopAttacks_", bishopAttacks_, &bishopAttacks_ });
-  vars_.push_back(details::Var{ "rookAttacks_", rookAttacks_, &rookAttacks_ });
-  vars_.push_back(details::Var{ "queenAttacks_", queenAttacks_, &queenAttacks_ });
+    // arrays
+    arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
 
-  // king attacks
-  vars_.push_back(details::Var{ "pawnKingAttack_", pawnKingAttack_, &pawnKingAttack_ });
-  vars_.push_back(details::Var{ "knightKingAttack_", knightKingAttack_, &knightKingAttack_ });
-  vars_.push_back(details::Var{ "bishopKingAttack_", bishopKingAttack_, &bishopKingAttack_ });
-  vars_.push_back(details::Var{ "rookKingAttack_", rookKingAttack_, &rookKingAttack_ });
-  vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
+    // mobility
+    arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-30, -15, 0, 3, 5, 7, 9, 11}, knightMobility_,
+                    sizeof(knightMobility_)/sizeof(*knightMobility_) });
+    arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-20, -10, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4},
+                    bishopMobility_, sizeof(bishopMobility_)/sizeof(*bishopMobility_) });
+    arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-25, -15, -5, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4},
+                    rookMobility_, sizeof(rookMobility_)/sizeof(*rookMobility_) });
+    arrs_.push_back(details::Arr{ "queenMobility_",
+                    std::vector<int>{-45, -35, -15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 10, 10,
+                    10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12},
+                    queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
 
-  // arrays
-  arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
+    // PSQ-tables
+    // pawn
+    arrs_.push_back(details::Arr{ "pawnPsq_", std::vector<int>
+      {
+        0, 0, 0, 0, 0, 0, 0, 0,
+        5, 5, 5, 5, 5, 5, 5, 5,
+        0, 0, 3, 8, 8, 3, 0, 0,
+        0, 0, 2, 7, 7, 2, 0, 0,
+        0, 0, 1, 8, 8, 1, 0, 0,
+        2, 0, 0, 0, 0, 0, 0, 2,
+        2, 4, 4, -10, -10, 4, 4, 2,
+        0, 0, 0, 0, 0, 0, 0, 0
+      },
+      pawnPsq_,
+      sizeof(pawnPsq_)/sizeof(*pawnPsq_)
+    });
+
+    // knight
+    arrs_.push_back(details::Arr{ "knightPsq_", std::vector<int>
+      {
+        -8, -8, -8, -8, -8, -8, -8, -8,
+        -8, -8,  0,  0,  0,  0, -8, -8,
+        -5,  0,  3,  4,  4,  3,  0, -5,
+         0,  5,  5,  5,  5,  5,  5,  0,
+        -7,  0,  4,  5,  5,  4,  0, -7,
+        -8,  2,  4,  4,  4,  4,  2, -8,
+        -8, -8,  0,  2,  2,  0, -8, -8,
+        -8, -12,-5, -5, -5,  5, -12,-8
+      },
+      knightPsq_,
+      sizeof(knightPsq_)/sizeof(*knightPsq_)
+    });
+  
+    // bishop
+    arrs_.push_back(details::Arr{ "bishopPsq_", std::vector<int>
+      {
+        -8,  -4,  -4,  -4,  -4,  -4,  -4,  -8,
+        -2,   0,   0,   0,   0,   0,   0,  -2,
+         2,   0,   2,   6,   6,   2,   0,   2,
+        -2,   2,   2,   6,   6,   2,   2,  -2,
+        -2,   0,   6,   6,   6,   6,   0,  -2,
+         0,   6,   6,   6,   6,   6,   6,   0,
+        -2,   2,   0,   0,   0,   0,   2,  -2,
+        -5,  -4, -12,  -4,  -4, -12,  -4,  -5
+      },
+      bishopPsq_,
+      sizeof(bishopPsq_)/sizeof(*bishopPsq_)
+    });
+
+    // rook
+    arrs_.push_back(details::Arr{ "rookPsq_", std::vector<int>
+      {
+        10,  10,  10,  10,  10,  10,  10,  10,
+        15,  15,  15,  15,  15,  15,  15,  15,
+        -2,   0,   0,   0,   0,   0,   0,  -2,
+        -2,   0,   0,   0,   0,   0,   0,  -2,
+        -2,   0,   0,   0,   0,   0,   0,  -2,
+        -2,   0,   0,   0,   0,   0,   0,  -2,
+        -2,   0,   0,   0,   0,   0,   0,  -2,
+        -5,  -5,   0,   3,   3,   0,  -5,  -5
+      },
+      rookPsq_,
+      sizeof(rookPsq_)/sizeof(*rookPsq_)
+    });
+  
+    // queen
+    arrs_.push_back(details::Arr{ "queenPsq_", std::vector<int>
+      {
+         0,   0,   0,   0,   0,   0,   0,   0,
+         0,   0,   0,   0,   0,   0,   0,   0,
+        -2,   0,   2,   2,   2,   2,   0,  -2,
+        -2,   0,   2,   3,   3,   2,   0,  -2,
+         0,   0,   2,   3,   3,   2,   0,  -2,
+        -4,   0,   2,   2,   2,   2,   0,  -4,
+        -4,   0,   0,   1,   1,   0,   0,  -4,
+        -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5
+      },
+      queenPsq_,
+      sizeof(queenPsq_)/sizeof(*queenPsq_)
+    });
 
   for(auto& arr : arrs_)
   {

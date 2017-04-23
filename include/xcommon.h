@@ -6,7 +6,6 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
 #pragma once
 
 #include <cstdint>
-//#include <stdexcept>
 #include <vector>
 #include <string>
 #include <ostream>

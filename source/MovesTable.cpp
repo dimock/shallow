@@ -45,6 +45,7 @@ MovesTable::MovesTable()
 
 void MovesTable::resetAllTables(int pos)
 {
+  s_blockedRook_[pos] = 0;
   for (int color = 0; color < 2; ++color)
   {
     for (int i = 0; i < 6; ++i)
@@ -270,7 +271,10 @@ void MovesTable::initRooks(int pos)
   {
     const FPos & d = dpos[i];
     int n = 0;
-    for (FPos q = p + d; q; ++n, q += d)
+    FPos q = p + d;
+    if(q)
+      s_blockedRook_[pos] |= set_mask_bit(q.index());
+    for (; q; ++n, q += d)
     {
       // fill captures masks
       s_otherCaps_[Figure::TypeRook][pos] |= set_mask_bit(q.index());

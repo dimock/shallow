@@ -24,6 +24,9 @@ class MovesTable
   BitMask s_pawnPromotions_t_[2];
   BitMask s_pawnPromotions_o_[2];
 
+  // blocked rook
+  BitMask s_blockedRook_[64];
+
   // king pressure mask: +1 square around king
   BitMask s_kingPressure_[64];
 
@@ -115,6 +118,12 @@ public:
   {
     X_ASSERT((unsigned)pos > 63, "try to get mask for invalid position");
     return s_kingPressure_[pos];
+  }
+
+  inline const BitMask & blocked_rook(int pos) const
+  {
+    X_ASSERT((unsigned)pos > 63, "try to get mask for invalid position");
+    return s_blockedRook_[pos];
   }
 };
 
