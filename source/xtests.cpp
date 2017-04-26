@@ -8,6 +8,7 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <fstream>
 #include <regex>
 #include <chrono>
+#include <iomanip>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 
@@ -253,6 +254,81 @@ void evaluateFen(std::string const& ffname)
   {
     std::cout << "Error: " << err_str << std::endl;
   });
+}
+
+void kpkTable(std::string const& fname)
+{
+  NShallow::Processor proc;
+  NTime::duration tm(NTime::from_milliseconds(300));
+  std::array<std::array<std::array<uint64, 2>, 64>, 64> kpk = {};
+  for(int kw = 0; kw < 64; ++kw)
+  {
+    for(int kl = 0; kl < 64; ++kl)
+    {
+      if(distanceCounter().getDistance(kl, kw) < 2)
+        continue;
+      for(int p = 8; p < 56; ++p)
+      {
+        if(p == kl || p == kw)
+          continue;
+        kpk[kw][kl][1] |= 1ULL << p;
+        for(int color = 0; color < 2; ++color)
+        {
+          Figure::Color ccolor = (Figure::Color)color;
+          SBoard<256> board;
+          board.initEmpty(ccolor);
+          board.addFigure(Figure::ColorWhite, Figure::TypePawn, p);
+          board.addFigure(Figure::ColorWhite, Figure::TypeKing, kw);
+          board.addFigure(Figure::ColorBlack, Figure::TypeKing, kl);
+          if(!board.invalidate())
+            continue;
+          if(board.getState() != Board::State::Ok && board.getState() != Board::State::UnderCheck)
+            continue;
+          proc.setTimePerMove(tm);
+          proc.setBoard(board);
+          proc.clear();
+          std::cout << "processing " << kw << " " << kl << " " << p << " " << color << std::endl;
+          auto r = proc.reply(false);
+          if(!r)
+          {
+            std::cout << "Error" << std::endl;
+            return;
+          }
+          if(std::abs(r->score_) > 500) {
+            kpk[kw][kl][color] |= 1ULL << p;
+            std::cout << " winner: " << r->score_ << std::endl;
+          }
+          else
+          {
+            std::cout << " draw: " << r->score_ << std::endl;
+          }
+        }
+      }
+    }
+  }
+  std::ofstream f(fname);
+  f << "#include <kpk.h>" << std::endl << std::endl;
+  f << "namespace NEngine" << std::endl;
+  f << "{" << std::endl << std::endl;
+  f << "std::vector<std::vector<std::array<uint64, 2>>> kpk_ = {" << std::endl;
+  for(size_t kw = 0; kw < 64; ++kw)
+  {
+    f << "  {";
+    for(size_t kl = 0; kl < 64; ++kl)
+    {
+      if((kl & 3) == 0)
+      {
+        f << std::endl << "    ";
+      }
+      f << "{ ";
+      f << "0x" << std::hex << std::setfill('0') << std::setw(16) << kpk[kw][kl][0] << "ULL";
+      f << ", " << "0x" << std::hex << std::setfill('0') << std::setw(16) << kpk[kw][kl][1] << "ULL";
+      f << " },";
+    }
+    f << std::endl << "  }," << std::endl;
+  }
+  f << "};" << std::endl << std::endl;
+  f << "} // NEngine" << std::endl;
 }
 
 } // NEngine

@@ -255,6 +255,7 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
   rep.state_ = static_cast<NEngine::Board::State>(board.getState());
   rep.best_ = sres.best_;
   rep.moveStr_ = moveToStr(sres.best_, winboardFormat);
+  rep.score_ = sres.score_;
   return rep;
 }
 

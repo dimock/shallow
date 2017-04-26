@@ -20,6 +20,7 @@ struct ReplyStruct
   NEngine::Move best_;
   std::string moveStr_;
   bool white_{ false };
+  ScoreType score_{};
 };
 
 class Processor

@@ -212,7 +212,7 @@ private:
 
  // SpecialCases findSpecialCase() const;
  // ScoreType evaluateSpecial(SpecialCases sc) const;
- // ScoreType evaluateWinnerLoser();
+  ScoreType evaluateWinnerLoser();
  // bool evaluateWinnerLoserSpecial(ScoreType & score);
  // ScoreType evaluateTrueWinnerLoser();
 

@@ -388,6 +388,14 @@ namespace NEngine
         score = -score;
       return score;
     }
+    //else if(board_->isWinnerLoser())
+    //{
+    //  ScoreType score = evaluateWinnerLoser();
+    //  // consider current move side
+    //  if(Figure::ColorBlack  == board_->getColor())
+    //    score = -score;
+    //  return score;
+    //}
 
     //ScoreType score = board_->fmgr().weight();
     //for(Figure::Color color : { Figure::ColorBlack, Figure::ColorWhite})
@@ -1423,6 +1431,215 @@ void Evaluator::calculateQueenMobility()
   finfo_[Figure::ColorWhite].queenMobility_ = calculate_mobility(Figure::ColorWhite);
   finfo_[Figure::ColorBlack].queenMobility_ = calculate_mobility(Figure::ColorBlack);
 }
+
+ScoreType Evaluator::evaluateWinnerLoser()
+{
+  return 0;
+  //const FiguresManager & fmgr = board_->fmgr();
+  //Figure::Color win_color = board_->can_win_[0] ? Figure::ColorBlack : Figure::ColorWhite;
+  //Figure::Color lose_color = Figure::otherColor(win_color);
+
+  //ScoreType score = fmgr.weight(win_color);
+
+  //// bonus for pawns
+  //score += fmgr.pawns(win_color)*pawnEndgameBonus_;
+
+  //Index king_pos_w = board_->kingPos(win_color);
+  //Index king_pos_l = board_->kingPos(lose_color);
+
+  //bool eval_pawns = true;
+
+  //if ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) > 0 )
+  //{
+  //  int num_lose_figs = fmgr.knights(lose_color) + fmgr.bishops(lose_color);
+  //  ScoreType weight_lose_fig = 10;
+
+  //  // if winner doesn't have light figure and loser has more than 1 figure we don't want to evaluate them less than a pawn
+  //  if ( fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 1 && fmgr.knights(win_color) +fmgr.bishops(win_color) == 0 )
+  //    weight_lose_fig = Figure::figureWeight_[Figure::TypePawn] + (MAX_PASSED_SCORE) + pawnEndgameBonus_;
+
+  //  // if winner has more pawns than loser and also has some figure he must exchange all loser figures to pawns
+  //  else if ( fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 0  &&
+  //       fmgr.knights(win_color) +fmgr.bishops(win_color) > 0 &&
+  //       fmgr.knights(lose_color)+fmgr.bishops(lose_color) < fmgr.pawns(win_color) )
+  //  {
+  //    weight_lose_fig = Figure::figureWeight_[Figure::TypePawn] + (MAX_PASSED_SCORE) + pawnEndgameBonus_;
+  //    eval_pawns = false;
+  //  }
+
+  //  score -= num_lose_figs * weight_lose_fig;
+  //}
+  //else
+  //  score -= fmgr.weight(lose_color);
+
+  //// add small bonus for winner-loser state to force it
+  //score += winloseBonus_;
+
+  //// BN-mat case
+  //if ( fmgr.weight(lose_color) == 0 && fmgr.knights(win_color) == 1 && fmgr.bishops(win_color) == 1 &&
+  //     fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) == 0 )
+  //{
+  //  int dist  = distanceCounter().getDistance(king_pos_w, king_pos_l);
+  //  score -= dist;
+
+  //  int kp = king_pos_l;
+  //  if ( fmgr.bishops_w(win_color) )
+  //  {
+  //    int kx = king_pos_l.x();
+  //    int ky = king_pos_l.y();
+  //    kp = ((7-ky)<<3)| kx;
+  //  }
+  //  score += bishopKnightMat_[kp];
+
+  //  uint64 n_mask = fmgr.knight_mask(win_color);
+  //  int np = clear_lsb(n_mask);
+  //  X_ASSERT( (unsigned)np > 63, "no knigt found" );
+  //  int ndist = distanceCounter().getDistance(np, king_pos_l);
+  //  score -= ndist >> 1;
+
+  //  // add more bonus to be sure that we go to this state
+  //  score += winloseBonus_;
+  //}
+  //else
+  //{
+  //  // some special almost-draw cases
+  //  if ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) == 0 &&
+  //       fmgr.weight(win_color)-fmgr.weight(lose_color) < Figure::figureWeight_[Figure::TypeBishop]+Figure::figureWeight_[Figure::TypeKnight] )
+  //  {
+  //    score = 10;
+  //  }
+  //  else if ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) == 1 &&
+  //            fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 0 )
+  //  {
+  //    if ( fmgr.knights(win_color)+fmgr.bishops(win_color) <= fmgr.knights(lose_color)+fmgr.bishops(lose_color) )
+  //    {
+  //      score = (MAX_PASSED_SCORE);
+  //      uint64 pwmask = fmgr.pawn_mask_o(win_color);
+  //      int pp = clear_lsb(pwmask);
+  //      int x = pp & 7;
+  //      int y = pp >> 3;
+  //      if ( !win_color )
+  //        y = 7-y;
+  //      if ( y < 6 )
+  //      {
+  //        int ep = x | (win_color ? A8 : A1);
+  //        int8 pwhite = FiguresCounter::s_whiteColors_[ep];
+  //        if ( pwhite && fmgr.bishops_w(lose_color) || !pwhite && fmgr.bishops_b(lose_color) > 0 || y < 5 )
+  //          score = 10;
+  //      }
+  //      else if ( board_->color_ == win_color )
+  //        score = Figure::figureWeight_[Figure::TypePawn];
+  //      score += y << 1;
+  //      eval_pawns = false;
+  //    }
+  //  }
+
+  //  if ( fmgr.pawns(win_color) == 1 )
+  //  {
+  //    uint64 pwmsk = fmgr.pawn_mask_o(win_color);
+  //    int pp = clear_lsb(pwmsk);
+  //    X_ASSERT( (unsigned)pp > 63, "no pawn found" );
+
+  //    int ykl = king_pos_l.y();
+  //    int ykw = king_pos_w.y();
+
+  //    int xkl = king_pos_l.x();
+  //    int xkw = king_pos_w.x();
+
+  //    int x = pp & 7;
+  //    int y = pp >> 3;
+  //    int y_under = y;
+  //    if ( win_color )
+  //      y_under++;
+  //    else
+  //      y_under--;
+  //    int pp_under = (x | (y_under << 3)) & 63;
+
+  //    if ( !win_color )
+  //    {
+  //      y = 7-y;
+  //      ykl = 7-ykl;
+  //      ykw = 7-ykw;
+  //    }
+
+  //    int pr_pos = x | (win_color ? A8 : A1);
+  //    Figure::Color pr_color = (Figure::Color)FiguresCounter::s_whiteColors_[pr_pos];
+
+  //    int pr_moves = 7-y;
+
+  //    int wk_pr_dist = distanceCounter().getDistance(king_pos_w, pr_pos);
+  //    int lk_pr_dist = distanceCounter().getDistance(king_pos_l, pr_pos);
+
+  //    int wdist = distanceCounter().getDistance(king_pos_w, pp);
+  //    int ldist = distanceCounter().getDistance(king_pos_l, pp);
+
+  //    int wudist = distanceCounter().getDistance(king_pos_w, pp_under);
+  //    int ludist = distanceCounter().getDistance(king_pos_l, pp_under);
+
+  //    // special case KPK
+  //    if ( (fmgr.weight(win_color) == Figure::figureWeight_[Figure::TypePawn] && fmgr.weight(lose_color) == 0) )
+  //    {
+  //      bool almost_draw = false;
+  //      if ( x == 0 || x == 7 )
+  //      {
+  //        if ( (lk_pr_dist + ludist <= wk_pr_dist + wudist) ||
+  //             ((pr_moves >= lk_pr_dist && y > 1 || pr_moves > lk_pr_dist && y == 1) && wudist >= ludist) )
+  //          almost_draw = true;
+  //      }
+  //      else
+  //      {
+  //        if ( (pr_moves >= lk_pr_dist && y > 1 || pr_moves > lk_pr_dist && y == 1) &&
+  //             ( (wudist > ludist || wudist == ludist && lose_color == board_->color_) && y >= ykw ||
+  //               (wudist > ludist+1 && y < ykw) ) )
+  //          almost_draw = true;
+  //      }
+
+  //      if ( almost_draw )
+  //      {
+  //        score = 30 + (y<<1);
+  //        eval_pawns = false;
+  //      }
+  //    }
+  //    // KPBK. bishop color differs from promotion field color
+  //    else if ( ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.knights(win_color) == 0 &&
+  //                fmgr.bishops(win_color) && (x == 0 || x == 7) &&
+  //               (!fmgr.bishops_w(win_color) && pr_color || !fmgr.bishops_b(win_color) && !pr_color) ) )
+  //    {
+  //      if ( (pr_moves > lk_pr_dist && lk_pr_dist <= wk_pr_dist) || (lk_pr_dist < 2 && pr_moves > 0) )
+  //      {
+  //        score = 30 + (y<<1);
+  //        eval_pawns = false;
+  //      }
+  //    }
+
+  //    // opponent's king should be as far as possible from my pawn
+  //    score -= (7-ldist);
+
+  //    // my king should be as near as possible to my pawn
+  //    score -= wdist;
+  //  }
+  //  else
+  //  {
+  //    int dist  = distanceCounter().getDistance(king_pos_w, king_pos_l);
+  //    score -= dist << 1;
+  //    score -= positionEvaluation(1, lose_color, Figure::TypeKing, king_pos_l);
+  //    score += positionEvaluation(1, Figure::ColorBlack, Figure::TypeKing, king_pos_w) >> 1;
+  //  }
+  //}
+
+  //if ( win_color == Figure::ColorBlack )
+  //  score = -score;
+
+  //return score;
+}
+
+
+
+
+
+
+
+
 
 //
 //// most expensive part: mobility of figures, rooks on open columns, passed pawns additional bonus
@@ -2482,231 +2699,5 @@ void Evaluator::calculateQueenMobility()
 //  return false;
 //}
 //
-//ScoreType Evaluator::evaluateTrueWinnerLoser()
-//{
-//  const FiguresManager & fmgr = board_->fmgr();
-//  Figure::Color win_color = board_->can_win_[0] ? Figure::ColorBlack : Figure::ColorWhite;
-//  Figure::Color lose_color = Figure::otherColor(win_color);
-//
-//  ScoreType score = fmgr.weight(win_color);
-//
-//  // bonus for pawns
-//  score += fmgr.pawns(win_color)*pawnEndgameBonus_;
-//
-//  Index king_pos_w = board_->kingPos(win_color);
-//  Index king_pos_l = board_->kingPos(lose_color);
-//
-//  bool eval_pawns = true;
-//
-//  if ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) > 0 )
-//  {
-//    int num_lose_figs = fmgr.knights(lose_color) + fmgr.bishops(lose_color);
-//    ScoreType weight_lose_fig = 10;
-//
-//    // if winner doesn't have light figure and loser has more than 1 figure we don't want to evaluate them less than a pawn
-//    if ( fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 1 && fmgr.knights(win_color) +fmgr.bishops(win_color) == 0 )
-//      weight_lose_fig = Figure::figureWeight_[Figure::TypePawn] + (MAX_PASSED_SCORE) + pawnEndgameBonus_;
-//
-//    // if winner has more pawns than loser and also has some figure he must exchange all loser figures to pawns
-//    else if ( fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 0  &&
-//         fmgr.knights(win_color) +fmgr.bishops(win_color) > 0 &&
-//         fmgr.knights(lose_color)+fmgr.bishops(lose_color) < fmgr.pawns(win_color) )
-//    {
-//      weight_lose_fig = Figure::figureWeight_[Figure::TypePawn] + (MAX_PASSED_SCORE) + pawnEndgameBonus_;
-//      eval_pawns = false;
-//    }
-//
-//    score -= num_lose_figs * weight_lose_fig;
-//  }
-//  else
-//    score -= fmgr.weight(lose_color);
-//
-//  // add small bonus for winner-loser state to force it
-//  score += winloseBonus_;
-//
-//  // BN-mat case
-//  if ( fmgr.weight(lose_color) == 0 && fmgr.knights(win_color) == 1 && fmgr.bishops(win_color) == 1 &&
-//       fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) == 0 )
-//  {
-//    int dist  = distanceCounter().getDistance(king_pos_w, king_pos_l);
-//    score -= dist;
-//
-//    int kp = king_pos_l;
-//    if ( fmgr.bishops_w(win_color) )
-//    {
-//      int kx = king_pos_l.x();
-//      int ky = king_pos_l.y();
-//      kp = ((7-ky)<<3)| kx;
-//    }
-//    score += bishopKnightMat_[kp];
-//
-//    uint64 n_mask = fmgr.knight_mask(win_color);
-//    int np = clear_lsb(n_mask);
-//    X_ASSERT( (unsigned)np > 63, "no knigt found" );
-//    int ndist = distanceCounter().getDistance(np, king_pos_l);
-//    score -= ndist >> 1;
-//
-//    // add more bonus to be sure that we go to this state
-//    score += winloseBonus_;
-//  }
-//  else
-//  {
-//    // some special almost-draw cases
-//    if ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) == 0 &&
-//         fmgr.weight(win_color)-fmgr.weight(lose_color) < Figure::figureWeight_[Figure::TypeBishop]+Figure::figureWeight_[Figure::TypeKnight] )
-//    {
-//      score = 10;
-//    }
-//    else if ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.pawns(win_color) == 1 &&
-//              fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 0 )
-//    {
-//      if ( fmgr.knights(win_color)+fmgr.bishops(win_color) <= fmgr.knights(lose_color)+fmgr.bishops(lose_color) )
-//      {
-//        score = (MAX_PASSED_SCORE);
-//        uint64 pwmask = fmgr.pawn_mask_o(win_color);
-//        int pp = clear_lsb(pwmask);
-//        int x = pp & 7;
-//        int y = pp >> 3;
-//        if ( !win_color )
-//          y = 7-y;
-//        if ( y < 6 )
-//        {
-//          int ep = x | (win_color ? A8 : A1);
-//          int8 pwhite = FiguresCounter::s_whiteColors_[ep];
-//          if ( pwhite && fmgr.bishops_w(lose_color) || !pwhite && fmgr.bishops_b(lose_color) > 0 || y < 5 )
-//            score = 10;
-//        }
-//        else if ( board_->color_ == win_color )
-//          score = Figure::figureWeight_[Figure::TypePawn];
-//        score += y << 1;
-//        eval_pawns = false;
-//      }
-//    }
-//    // Rook against Knight|Bishop
-//    else if ( fmgr.queens(win_color) == 0 && fmgr.bishops(win_color) == 0 &&
-//              fmgr.knights(win_color) == 0 && fmgr.pawns(win_color) == 0 && fmgr.rooks(win_color) == 1 &&
-//              fmgr.knights(lose_color)+fmgr.bishops(lose_color) == 1 )
-//    {
-//      score = 35;
-//    }
-//
-//    if ( fmgr.pawns(win_color) == 1 )
-//    {
-//      uint64 pwmsk = fmgr.pawn_mask_o(win_color);
-//      int pp = clear_lsb(pwmsk);
-//      X_ASSERT( (unsigned)pp > 63, "no pawn found" );
-//
-//      int ykl = king_pos_l.y();
-//      int ykw = king_pos_w.y();
-//
-//      int xkl = king_pos_l.x();
-//      int xkw = king_pos_w.x();
-//
-//      int x = pp & 7;
-//      int y = pp >> 3;
-//      int y_under = y;
-//      if ( win_color )
-//        y_under++;
-//      else
-//        y_under--;
-//      int pp_under = (x | (y_under << 3)) & 63;
-//
-//      if ( !win_color )
-//      {
-//        y = 7-y;
-//        ykl = 7-ykl;
-//        ykw = 7-ykw;
-//      }
-//
-//      int pr_pos = x | (win_color ? A8 : A1);
-//      Figure::Color pr_color = (Figure::Color)FiguresCounter::s_whiteColors_[pr_pos];
-//
-//      int pr_moves = 7-y;
-//
-//      int wk_pr_dist = distanceCounter().getDistance(king_pos_w, pr_pos);
-//      int lk_pr_dist = distanceCounter().getDistance(king_pos_l, pr_pos);
-//
-//      int wdist = distanceCounter().getDistance(king_pos_w, pp);
-//      int ldist = distanceCounter().getDistance(king_pos_l, pp);
-//
-//      int wudist = distanceCounter().getDistance(king_pos_w, pp_under);
-//      int ludist = distanceCounter().getDistance(king_pos_l, pp_under);
-//
-//      // special case KPK
-//      if ( (fmgr.weight(win_color) == Figure::figureWeight_[Figure::TypePawn] && fmgr.weight(lose_color) == 0) )
-//      {
-//        bool almost_draw = false;
-//        if ( x == 0 || x == 7 )
-//        {
-//          if ( (lk_pr_dist + ludist <= wk_pr_dist + wudist) ||
-//               ((pr_moves >= lk_pr_dist && y > 1 || pr_moves > lk_pr_dist && y == 1) && wudist >= ludist) )
-//            almost_draw = true;
-//        }
-//        else
-//        {
-//          if ( (pr_moves >= lk_pr_dist && y > 1 || pr_moves > lk_pr_dist && y == 1) &&
-//               ( (wudist > ludist || wudist == ludist && lose_color == board_->color_) && y >= ykw ||
-//                 (wudist > ludist+1 && y < ykw) ) )
-//            almost_draw = true;
-//        }
-//
-//        if ( almost_draw )
-//        {
-//          score = 30 + (y<<1);
-//          eval_pawns = false;
-//        }
-//      }
-//      // KPBK. bishop color differs from promotion field color
-//      else if ( ( fmgr.rooks(win_color) == 0 && fmgr.queens(win_color) == 0 && fmgr.knights(win_color) == 0 &&
-//                  fmgr.bishops(win_color) && (x == 0 || x == 7) &&
-//                 (!fmgr.bishops_w(win_color) && pr_color || !fmgr.bishops_b(win_color) && !pr_color) ) )
-//      {
-//        if ( (pr_moves > lk_pr_dist && lk_pr_dist <= wk_pr_dist) || (lk_pr_dist < 2 && pr_moves > 0) )
-//        {
-//          score = 30 + (y<<1);
-//          eval_pawns = false;
-//        }
-//      }
-//
-//      // opponent's king should be as far as possible from my pawn
-//      score -= (7-ldist);
-//
-//      // my king should be as near as possible to my pawn
-//      score -= wdist;
-//    }
-//    else
-//    {
-//      int dist  = distanceCounter().getDistance(king_pos_w, king_pos_l);
-//      score -= dist << 1;
-//      score -= positionEvaluation(1, lose_color, Figure::TypeKing, king_pos_l);
-//      score += positionEvaluation(1, Figure::ColorBlack, Figure::TypeKing, king_pos_w) >> 1;
-//    }
-//  }
-//
-//  if ( win_color == Figure::ColorBlack )
-//    score = -score;
-//
-//  if ( eval_pawns )
-//  {
-//    ScoreType pwscore = -ScoreMax, pwscore_eg = -ScoreMax, score_ps = -ScoreMax;
-//    hashedEvaluation(pwscore, pwscore_eg, score_ps);
-//
-//    /// calculate attacked fields
-//    evaluateKnights();
-//    evaluateBishops();
-//    evaluateRooks(false);
-//    evaluateQueens();
-//
-//    int most_adv_yb = -1, most_adv_yw = -1;
-//    ScoreType score_eg = 0;
-//    score -= evaluatePasserAdditional(EndGame, Figure::ColorBlack, score_eg, most_adv_yb);
-//    score += evaluatePasserAdditional(EndGame, Figure::ColorWhite, score_eg, most_adv_yw);
-//
-//    score += score_eg;
-//    score += pwscore;
-//  }
-//
-//  return score;
-//}
 
 } //NEngine
