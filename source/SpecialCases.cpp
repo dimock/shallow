@@ -199,11 +199,19 @@ void SpecialCasesDetector::initWinnerLoser()
   //{
   //  ScoreType score{+10};
   //  auto loserColor = Figure::otherColor(pawnColor);
+  //  auto moveColor = board.getColor();
   //  int p  = _lsb64(board.fmgr().pawn_mask(pawnColor));
   //  int kw = _lsb64(board.fmgr().king_mask(pawnColor));
   //  int kl = _lsb64(board.fmgr().king_mask(loserColor));
+  //  if(pawnColor == Figure::ColorBlack)
+  //  {
+  //    p  = Figure::mirrorIndex_[p];
+  //    kw = Figure::mirrorIndex_[kw];
+  //    kl = Figure::mirrorIndex_[kl];
+  //    moveColor = Figure::otherColor(moveColor);
+  //  }
   //  Index index(p);    
-  //  if(kpk_[kw][kl][pawnColor] & (1ULL<<p))
+  //  if(kpk_[kw][kl][moveColor] & (1ULL<<p))
   //    score = 2*Figure::figureWeight_[Figure::TypePawn] + pawn_colored_y_[pawnColor][index.y()] * 20;
   //  if(pawnColor == Figure::ColorBlack)
   //    score = -score;

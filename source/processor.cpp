@@ -57,6 +57,15 @@ bool Processor::setDepth(int depth)
   return true;
 }
 
+bool Processor::setScoreLimit(ScoreType score)
+{
+  if(is_thinking())
+    return false;
+
+  engine_.setScoreLimit(score);
+  return true;
+}
+
 bool Processor::setTimePerMove(NTime::duration const& tm)
 {
   if(is_thinking())
@@ -81,6 +90,7 @@ bool Processor::setXtime(NTime::duration const& xtm)
   xtime_ = std::max(xtm, minimalTimePerMove_);
   timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
+  engine_.setScoreLimit(NEngine::Figure::MatScore);
   return true;
 }
 
@@ -94,6 +104,7 @@ bool Processor::setMovesLeft(int mleft)
   movesToGo_ = 0;
   timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
+  engine_.setScoreLimit(NEngine::Figure::MatScore);
   return true;
 }
 
@@ -107,6 +118,7 @@ bool Processor::setMovesToGo(int mtogo)
   movesToGo_ = mtogo;
   timePerMove_ = NTime::duration(0);
   engine_.setMaxDepth(DepthMaximum);
+  engine_.setScoreLimit(NEngine::Figure::MatScore);
   return true;
 }
 
@@ -208,6 +220,7 @@ bool Processor::analyze()
   engine_.setAnalyzeMode(true);
   engine_.search(sres);
   engine_.setAnalyzeMode(false);
+  engine_.setScoreLimit(NEngine::Figure::MatScore);
 
   engine_.setTimeLimit(timePerMove_);
   engine_.setMaxDepth(maxDepth_ < 0 ? DepthMaximum : maxDepth_);

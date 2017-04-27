@@ -271,7 +271,6 @@ void kpkTable(std::string const& fname)
       {
         if(p == kl || p == kw)
           continue;
-        kpk[kw][kl][1] |= 1ULL << p;
         for(int color = 0; color < 2; ++color)
         {
           Figure::Color ccolor = (Figure::Color)color;
@@ -285,6 +284,7 @@ void kpkTable(std::string const& fname)
           if(board.getState() != Board::State::Ok && board.getState() != Board::State::UnderCheck)
             continue;
           proc.setTimePerMove(tm);
+          proc.setScoreLimit(500);
           proc.setBoard(board);
           proc.clear();
           std::cout << "processing " << kw << " " << kl << " " << p << " " << color << std::endl;

@@ -30,6 +30,7 @@ public:
   void enableBook(int v);
   void setOptions(NEngine::xOptions const& opts);
   bool setDepth(int depth);
+  bool setScoreLimit(ScoreType score);
   bool setTimePerMove(NTime::duration const& tm);
   bool setXtime(NTime::duration const& xtm);
   bool setMovesLeft(int mleft);

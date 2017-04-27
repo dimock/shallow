@@ -55,6 +55,7 @@ struct SearchParams
   NTime::duration timeLimit_{};
   int  depthMax_{};
   bool analyze_mode_{};
+  ScoreType scoreLimit_{ Figure::MatScore };
 };
 
 class Engine
@@ -99,6 +100,7 @@ public:
   void setAnalyzeMode(bool);
   void setTimeLimit(NTime::duration const& tm);
   void setMaxDepth(int d);
+  void setScoreLimit(ScoreType score);
 
 private:
 

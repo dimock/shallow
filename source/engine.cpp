@@ -14,6 +14,7 @@ void SearchParams::reset()
   timeLimit_ = NTime::duration(0);
   depthMax_ = 0;
   analyze_mode_ = false;
+  scoreLimit_ = Figure::MatScore;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -156,6 +157,11 @@ void Engine::setMaxDepth(int d)
 {
   if(d >= 1 && d <= 32)
     sparams_.depthMax_ = d;
+}
+
+void Engine::setScoreLimit(ScoreType score)
+{
+  sparams_.scoreLimit_ = score;
 }
 
 void Engine::pleaseStop()

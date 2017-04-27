@@ -134,7 +134,7 @@ bool Engine::search(SearchResult& sres)
     }
 
     if(!sdata_.best_ ||
-      ((score >= Figure::MatScore-MaxPly || score <= MaxPly-Figure::MatScore) &&
+       ((score >= sparams_.scoreLimit_-MaxPly || score <= MaxPly-sparams_.scoreLimit_) &&
       !sparams_.analyze_mode_))
     {
       break;
