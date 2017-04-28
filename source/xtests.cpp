@@ -4,6 +4,7 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 
 #include <xtests.h>
 #include <xprotocol.h>
+#include <kpk.h>
 #include <iostream>
 #include <fstream>
 #include <regex>
@@ -259,7 +260,7 @@ void evaluateFen(std::string const& ffname)
 void kpkTable(std::string const& fname)
 {
   NShallow::Processor proc;
-  NTime::duration tm(NTime::from_milliseconds(300));
+  NTime::duration tm(NTime::from_milliseconds(500));
   std::array<std::array<std::array<uint64, 2>, 64>, 64> kpk = {};
   for(int kw = 0; kw < 64; ++kw)
   {
@@ -283,6 +284,11 @@ void kpkTable(std::string const& fname)
             continue;
           if(board.getState() != Board::State::Ok && board.getState() != Board::State::UnderCheck)
             continue;
+          if(kpk_[kw][kl][color] & (1ULL<<p))
+          {
+            kpk[kw][kl][color] |= 1ULL << p;
+            continue;
+          }
           proc.setTimePerMove(tm);
           proc.setScoreLimit(500);
           proc.setBoard(board);
