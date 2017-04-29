@@ -195,36 +195,49 @@ void SpecialCasesDetector::initComplex()
 
 void SpecialCasesDetector::initWinnerLoser()
 {
-  //auto pawnOnly = [](Board const& board, Figure::Color pawnColor)
-  //{
-  //  ScoreType score{+10};
-  //  auto loserColor = Figure::otherColor(pawnColor);
-  //  auto moveColor = board.getColor();
-  //  int p  = _lsb64(board.fmgr().pawn_mask(pawnColor));
-  //  int kw = _lsb64(board.fmgr().king_mask(pawnColor));
-  //  int kl = _lsb64(board.fmgr().king_mask(loserColor));
-  //  if(pawnColor == Figure::ColorBlack)
-  //  {
-  //    p  = Figure::mirrorIndex_[p];
-  //    kw = Figure::mirrorIndex_[kw];
-  //    kl = Figure::mirrorIndex_[kl];
-  //    moveColor = Figure::otherColor(moveColor);
-  //  }
-  //  Index index(p);    
-  //  if(kpk_[kw][kl][moveColor] & (1ULL<<p))
-  //    score = 2*Figure::figureWeight_[Figure::TypePawn] + pawn_colored_y_[pawnColor][index.y()] * 20;
-  //  if(pawnColor == Figure::ColorBlack)
-  //    score = -score;
-  //  return score;
-  //};
-  //winnerLoser_[format({ { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [pawnOnly](Board const& board)
-  //{
-  //  return pawnOnly(board, Figure::ColorBlack);
-  //};
-  //winnerLoser_[format({ { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [pawnOnly](Board const& board)
-  //{
-  //  return pawnOnly(board, Figure::ColorWhite);
-  //};
+  auto pawnOnly = [](Board const& board, Figure::Color pawnColor)
+  {
+    ScoreType score{+10};
+    auto loserColor = Figure::otherColor(pawnColor);
+    auto xpawnColor = pawnColor;
+    auto moveColor = board.getColor();
+    int p  = _lsb64(board.fmgr().pawn_mask(pawnColor));
+    int kw = _lsb64(board.fmgr().king_mask(pawnColor));
+    int kl = _lsb64(board.fmgr().king_mask(loserColor));
+    if(pawnColor == Figure::ColorBlack)
+    {
+      p  = Figure::mirrorIndex_[p];
+      kw = Figure::mirrorIndex_[kw];
+      kl = Figure::mirrorIndex_[kl];
+      moveColor = Figure::otherColor(moveColor);
+      xpawnColor = Figure::otherColor(xpawnColor);
+    }
+
+    //SBoard<8> sboard;
+    //sboard.initEmpty(moveColor);
+    //sboard.addFigure(xpawnColor, Figure::TypePawn, p);
+    //sboard.addFigure(xpawnColor, Figure::TypeKing, kw);
+    //sboard.addFigure(Figure::otherColor(xpawnColor), Figure::TypeKing, kl);
+    //sboard.invalidate();
+    //std::string sfen = toFEN(sboard);
+
+    Index index(p);
+    if(kpk_[kw][kl][moveColor] & (1ULL<<p))
+    {
+      score = 2*Figure::figureWeight_[Figure::TypePawn] + pawn_colored_y_[xpawnColor][index.y()] * 20;
+    }
+    if(pawnColor == Figure::ColorBlack)
+      score = -score;
+    return score;
+  };
+  winnerLoser_[format({ { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [pawnOnly](Board const& board)
+  {
+    return pawnOnly(board, Figure::ColorBlack);
+  };
+  winnerLoser_[format({ { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [pawnOnly](Board const& board)
+  {
+    return pawnOnly(board, Figure::ColorWhite);
+  };
 }
 
 boost::optional<ScoreType> SpecialCasesDetector::eval(Board const& board) const
