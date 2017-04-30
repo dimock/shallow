@@ -23,6 +23,11 @@ namespace NEngine
     vars_.push_back(details::Var{ "doubledPawn_", doubledPawn_, &doubledPawn_ });
     vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
     vars_.push_back(details::Var{ "backwardPawn_", backwardPawn_, &backwardPawn_ });
+    vars_.push_back(details::Var{ "unsupportedPawn_", unsupportedPawn_, &unsupportedPawn_ });
+    vars_.push_back(details::Var{ "unprotectedPawn_", unprotectedPawn_, &unprotectedPawn_ });
+
+    // material diff
+    vars_.push_back(details::Var{ "doubleBishop_", doubleBishop_, &doubleBishop_ });
 
     // king
     vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
@@ -35,6 +40,9 @@ namespace NEngine
     vars_.push_back(details::Var{ "pawnPenaltyA_", pawnPenaltyA_, &pawnPenaltyA_ });
     vars_.push_back(details::Var{ "pawnPenaltyB_", pawnPenaltyB_, &pawnPenaltyB_ });
     vars_.push_back(details::Var{ "pawnPenaltyC_", pawnPenaltyC_, &pawnPenaltyC_ });
+    vars_.push_back(details::Var{ "opponentPawnA_", opponentPawnA_, &opponentPawnA_ });
+    vars_.push_back(details::Var{ "opponentPawnB_", opponentPawnB_, &opponentPawnB_ });
+    vars_.push_back(details::Var{ "opponentPawnC_", opponentPawnC_, &opponentPawnC_ });
 
     // blocked figure
     vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
@@ -50,7 +58,8 @@ namespace NEngine
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
     // arrays
-    arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -160, 0, 160, 160, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
+    arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 8, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
+    arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
 
     // mobility
     arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-30, -15, 0, 3, 5, 7, 9, 11}, knightMobility_,
@@ -143,6 +152,22 @@ namespace NEngine
       },
       queenPsq_,
       sizeof(queenPsq_)/sizeof(*queenPsq_)
+    });
+    
+    // king
+    arrs_.push_back(details::Arr{ "kingPsqEg_", std::vector<int>
+      {
+        -14, -12, -10, -10, -10, -10, -12, -14,
+        -12,  -8,   0,   0,   0,   0,  -8, -12,
+        -10,  -4,   6,   8,   8,   6,  -4, -10,
+        -10,  -4,   8,  10,  10,   8,  -4, -10,
+        -10,  -4,   8,  10,  10,   8,  -4, -10,
+        -10,  -4,   6,   8,   8,   6,  -4, -10,
+        -12,  -8,   0,   0,   0,   0,  -8, -12,
+        -14, -12, -10, -10, -10, -10, -12, -14
+      },
+      kingPsqEg_,
+      sizeof(kingPsqEg_)/sizeof(*kingPsqEg_)
     });
 
   for(auto& arr : arrs_)
