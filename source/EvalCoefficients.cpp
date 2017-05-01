@@ -19,15 +19,15 @@ namespace NEngine
     // single vars
     // pawns
     vars_.push_back(details::Var{ "pawnEndgameBonus_", pawnEndgameBonus_, &pawnEndgameBonus_ });
-    vars_.push_back(details::Var{ "passedPawn_", passedPawn_, &passedPawn_ });
     vars_.push_back(details::Var{ "doubledPawn_", doubledPawn_, &doubledPawn_ });
     vars_.push_back(details::Var{ "isolatedPawn_", isolatedPawn_, &isolatedPawn_ });
     vars_.push_back(details::Var{ "backwardPawn_", backwardPawn_, &backwardPawn_ });
     vars_.push_back(details::Var{ "unsupportedPawn_", unsupportedPawn_, &unsupportedPawn_ });
     vars_.push_back(details::Var{ "unprotectedPawn_", unprotectedPawn_, &unprotectedPawn_ });
+    vars_.push_back(details::Var{ "rookBehindBonus_", rookBehindBonus_, &rookBehindBonus_ });
 
     // material diff
-    vars_.push_back(details::Var{ "doubleBishop_", doubleBishop_, &doubleBishop_ });
+    vars_.push_back(details::Var{ "bishopBonus_", bishopBonus_, &bishopBonus_ });
 
     // king
     vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
@@ -60,6 +60,9 @@ namespace NEngine
     // arrays
     arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 8, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
     arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 15, 40, 50, 60, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
+    arrs_.push_back(details::Arr{ "unstoppablePawn_", std::vector<int>{ 0, 20, 25, 30, 35, 40, 45, 0 }, unstoppablePawn_,
+                    sizeof(unstoppablePawn_)/sizeof(*unstoppablePawn_) });    
 
     // mobility
     arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-30, -15, 0, 3, 5, 7, 9, 11}, knightMobility_,

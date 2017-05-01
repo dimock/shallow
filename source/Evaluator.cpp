@@ -417,14 +417,14 @@ namespace NEngine
     auto phaseInfo = detectPhase();
 
     ScoreType score_o = 0, score_e = 0;
+    // PSQ - evaluation
+    // + attacked fields
+    score_o -= evaluatePsq(Figure::ColorBlack);
+    score_o += evaluatePsq(Figure::ColorWhite);
 
     // opening part
     if(phaseInfo.phase_ != EndGame)
     {
-      // PSQ - evaluation
-      score_o -= evaluatePsq(Figure::ColorBlack);
-      score_o += evaluatePsq(Figure::ColorWhite);
-
       // pawns
       score_o += pawnScore.opening_;
 
@@ -447,6 +447,14 @@ namespace NEngine
       score_e -= evaluateKingPsqEg(Figure::ColorBlack);
       score_e += evaluateKingPsqEg(Figure::ColorWhite);
     }
+
+    // detailed passer evaluation
+    auto passerScore = passerEvaluation(Figure::ColorWhite);
+    passerScore -= passerEvaluation(Figure::ColorBlack);
+
+    score += passerScore.common_;
+    score_o += passerScore.opening_;
+    score_e += passerScore.endGame_;
 
     if(phaseInfo.phase_ == Opening)
       score += score_o;
@@ -505,41 +513,49 @@ namespace NEngine
     return phaseInfo;
   }
 
-  ScoreType Evaluator::evaluatePsq(Figure::Color color) const
+  ScoreType Evaluator::evaluatePsq(Figure::Color color)
   {
     ScoreType score{};
 
     // knights
-    BitMask knmask_w = board_->fmgr().knight_mask(color);
-    for(; knmask_w;)
+    BitMask knmask = board_->fmgr().knight_mask(color);
+    for(; knmask;)
     {
-      int n = clear_lsb(knmask_w);
+      int n = clear_lsb(knmask);
       int p = color ? Figure::mirrorIndex_[n] : n;
       score += coeffs_->knightPsq_[p];
+      auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
+      finfo_[color].attack_mask_ |= knight_moves;
     }
     // bishops
-    BitMask bimask_w = board_->fmgr().bishop_mask(color);
-    for(; bimask_w;)
+    BitMask bimask = board_->fmgr().bishop_mask(color);
+    for(; bimask;)
     {
-      int n = clear_lsb(bimask_w);
+      int n = clear_lsb(bimask);
       int p = color ? Figure::mirrorIndex_[n] : n;
       score += coeffs_->bishopPsq_[p];
+      auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
+      finfo_[color].attack_mask_ |= bishop_moves;
     }
     // rooks
-    BitMask rmask_w = board_->fmgr().rook_mask(color);
-    for(; bimask_w;)
+    BitMask rmask = board_->fmgr().rook_mask(color);
+    for(; rmask;)
     {
-      int n = clear_lsb(bimask_w);
+      int n = clear_lsb(rmask);
       int p = color ? Figure::mirrorIndex_[n] : n;
       score += coeffs_->rookPsq_[p];
+      auto rook_moves = magic_ns::rook_moves(n, mask_all_);
+      finfo_[color].attack_mask_ |= rook_moves;
     }
     // queens
-    BitMask qmask_w = board_->fmgr().queen_mask(color);
-    for(; qmask_w;)
+    BitMask qmask = board_->fmgr().queen_mask(color);
+    for(; qmask;)
     {
-      int n = clear_lsb(qmask_w);
+      int n = clear_lsb(qmask);
       int p = color ? Figure::mirrorIndex_[n] : n;
       score += coeffs_->queenPsq_[p];
+      auto queen_moves = magic_ns::queen_moves(n, mask_all_);
+      finfo_[color].attack_mask_ |= queen_moves;
     }
     return score;
   }
@@ -674,7 +690,7 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color) const
 
     // 2. passed pawn
     {
-      auto coeffPassed = coeffs_->passedPawn_ * cy;
+      auto coeffPassed = coeffs_->passerPawn_[cy];
       bool passer = (opmsk & pawnMasks().mask_passed(color, n)) == 0ULL;
       x_passers |= passer << x;
       bool quadpasser = (pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL;
@@ -736,11 +752,163 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color) const
       int y_min = color ? _lsb64(multi) : _msb64(multi);
       y_min >>= 3;
       int cy = colored_y_[color][y_min];
-      score.common_ += (coeffs_->passedPawn_ * cy) >> 1;
+      score.common_ += (coeffs_->passerPawn_[cy]) >> 1;
     }
   }
 
   return score;
+}
+
+Evaluator::PawnsScore Evaluator::passerEvaluation(Figure::Color color) const
+{
+  const FiguresManager & fmgr = board_->fmgr();
+  const BitMask & pmask = fmgr.pawn_mask(color);
+  if(!pmask)
+    return{};
+
+  static int delta_y[] = { -1, 1 };
+  static int promo_y[] = {  0, 7 };
+    
+  int py = promo_y[color];
+  int dy = delta_y[color];
+  
+  nst::dirs dir_behind[] = {nst::no, nst::so};
+
+  PawnsScore score;
+
+  Figure::Color ocolor = Figure::otherColor(color);
+  const BitMask & opmsk = fmgr.pawn_mask(ocolor);
+
+  BitMask pawn_mask = pmask;
+  for(; pawn_mask;)
+  {
+    int n = clear_lsb(pawn_mask);
+    Index idx(n);
+
+    int x = idx.x();
+    int y = idx.y();
+    int cy = colored_y_[color][idx.y()];
+
+    const uint64 & passmsk = pawnMasks().mask_passed(color, n);
+    const uint64 & blckmsk = pawnMasks().mask_line_blocked(color, n);
+    
+    if((opmsk & passmsk) || (pmask & blckmsk))
+      continue;
+
+    int promo_pos = x | (py<<3);
+    
+    bool king_far = false;
+    int pawn_dist_promo = std::abs(py - y);
+    int o_dist_promo = distanceCounter().getDistance(finfo_[ocolor].king_pos_, promo_pos) - (board_->color_ == ocolor);
+    king_far = pawn_dist_promo < o_dist_promo;
+    
+    //// have bishop with color the same as promotion field's color
+    //Figure::Color pcolor = ((Figure::Color)FiguresCounter::s_whiteColors_[promo_pos]);
+    //if ( pcolor && fmgr.bishops_w(color) || !pcolor && fmgr.bishops_b(color) )
+    //  score += assistantBishop_;
+    
+    // my rook behind passed pawn - give bonus
+    BitMask behind_msk = betweenMasks().from_dir(n, dir_behind[color]) & fmgr.rook_mask(color) ;
+    BitMask o_behind_msk = betweenMasks().from_dir(n, dir_behind[color]) & fmgr.rook_mask(ocolor) ;
+    if ( behind_msk )
+    {
+      int rpos = color ? _msb64(behind_msk) : _lsb64(behind_msk);
+      if ( board_->is_nothing_between(n, rpos, inv_mask_all_) )
+        score.common_ += coeffs_->rookBehindBonus_;
+    }
+    else if ( o_behind_msk ) // may be opponent's rook - give penalty
+    {
+      int rpos = color ? _msb64(o_behind_msk) : _lsb64(o_behind_msk);
+      if ( board_->is_nothing_between(n, rpos, inv_mask_all_) )
+        score.common_ -= coeffs_->rookBehindBonus_;
+    }
+    
+    // pawn can go to the next line
+    int next_pos = x | ((y+dy)<<3);
+    X_ASSERT( ((y+dy)) > 7 || ((y+dy)) < 0, "pawn goes to invalid line" );
+    
+    bool can_go = false;
+    
+    // field is empty
+    // check is it attacked by opponent
+    auto const& next_field = board_->getField(next_pos);
+    if(!next_field)
+    {
+      BitMask next_mask = set_mask_bit(next_pos);
+      if((next_mask & finfo_[ocolor].attack_mask_) == 0)
+        can_go = true;
+      else
+      {
+        Move move;
+        Figure::Type type = Figure::TypeNone;
+        if(next_pos == promo_pos)
+          type = Figure::TypeQueen;
+
+        move.set(n, next_pos, type, false);
+        ScoreType see_score = board_->see(move);
+        can_go = see_score >= 0;
+      }
+    }
+    // field is occupied by my figure
+    else if(next_field.color() == color)
+    {
+      can_go = true;
+    }
+
+    // additional bonus if opponent's king can't go to my pawn's promotion field
+    score.common_ += can_go * coeffs_->passerPawn_[cy] / 3;
+    
+    // opponent king could not go to my pawns promotion field
+    if(king_far || !findRootToPawn(color, promo_pos, pawn_dist_promo))
+    {
+      score.endGame_ += coeffs_->unstoppablePawn_[cy];
+    }
+  }
+  return score;
+}
+
+// idea from CCRL
+bool Evaluator::findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const
+{
+  Figure::Color ocolor = Figure::otherColor(color);
+  int oki_pos = finfo_[ocolor].king_pos_;
+
+  if ( oki_pos == promo_pos )
+  {
+    X_ASSERT(finfo_[color].attack_mask_ & set_mask_bit(promo_pos), "king is on attacked field");
+    return true;
+  }
+
+  BitMask to_mask = set_mask_bit(promo_pos);
+
+  // promotion field is attacked
+  if ( finfo_[color].attack_mask_ & to_mask )
+    return false;
+
+  BitMask from_mask = set_mask_bit(oki_pos);
+  BitMask path_mask = (inv_mask_all_ & ~finfo_[color].attack_mask_) | from_mask | to_mask;
+
+  const BitMask cut_le = ~0x0101010101010101;
+  const BitMask cut_ri = ~0x8080808080808080;
+
+  for (int i = 0; i < stepsMax; ++i)
+  {
+    X_ASSERT( i > 64, "infinite loop in path finder" );
+
+    BitMask mask_le = ((from_mask << 1) | (from_mask << 9) | (from_mask >> 7) | (from_mask << 8)) & cut_le;
+    BitMask mask_ri = ((from_mask >> 1) | (from_mask >> 9) | (from_mask << 7) | (from_mask >> 8)) & cut_ri;
+    BitMask next_mask = from_mask | ((mask_le | mask_ri) & path_mask);
+
+    if ( next_mask & to_mask )
+      return true;
+
+    if ( next_mask == from_mask )
+      break;
+
+    from_mask = next_mask;
+  }
+
+  return false;
 }
 
 int Evaluator::getCastleType(Figure::Color color) const
@@ -1177,11 +1345,9 @@ ScoreType Evaluator::evaluateMaterialDiff()
   ScoreType score = 0;
   const FiguresManager & fmgr = board_->fmgr();
 
-  // bonus for double bishop
-  if(fmgr.bishops_b(Figure::ColorWhite) && fmgr.bishops_w(Figure::ColorWhite))
-    score += coeffs_->doubleBishop_;
-  if(fmgr.bishops_b(Figure::ColorBlack) && fmgr.bishops_w(Figure::ColorBlack))
-    score -= coeffs_->doubleBishop_;
+  // bonus for bishops
+  score += fmgr.bishops(Figure::ColorWhite) * coeffs_->bishopBonus_;
+  score -= fmgr.bishops(Figure::ColorBlack) * coeffs_->bishopBonus_;
 
   //// 1. bonus for bishop. only if we have other figures
   //if(fmgr.bishops(Figure::ColorWhite) + fmgr.knights(Figure::ColorWhite) + fmgr.rooks(Figure::ColorWhite) + fmgr.queens(Figure::ColorWhite) > 1)
@@ -1249,7 +1415,7 @@ ScoreType Evaluator::evaluateWinnerLoser()
     if(fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 1 && fmgr.knights(win_color) +fmgr.bishops(win_color) == 0)
     {
       weight_lose_fig = Figure::figureWeight_[Figure::TypePawn]
-        + (coeffs_->passedPawn_*7)
+        + (coeffs_->passerPawn_[7])
         + coeffs_->pawnEndgameBonus_;
     }
     // if winner has more pawns than loser figures and also has some figure he must exchange all loser figures to pawns
@@ -1258,7 +1424,7 @@ ScoreType Evaluator::evaluateWinnerLoser()
             && fmgr.knights(lose_color)+fmgr.bishops(lose_color) < fmgr.pawns(win_color))
     {
       weight_lose_fig = Figure::figureWeight_[Figure::TypePawn]
-        + (coeffs_->passedPawn_*7)
+        + (coeffs_->passerPawn_[7])
         + coeffs_->pawnEndgameBonus_;
     }
 
@@ -1959,49 +2125,6 @@ ScoreType Evaluator::evaluateWinnerLoser()
 //  return score;
 //}
 //
-//// idea from CCRL
-//bool Evaluator::findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const
-//{
-//  Figure::Color ocolor = Figure::otherColor(color);
-//  int oki_pos = finfo_[ocolor].king_pos_;
-//
-//  if ( oki_pos == promo_pos )
-//  {
-//    X_ASSERT(finfo_[color].attack_mask_ & set_mask_bit(promo_pos), "king is on attacked field");
-//    return true;
-//  }
-//
-//  BitMask to_mask = set_mask_bit(promo_pos);
-//
-//  // promotion field is attacked
-//  if ( finfo_[color].attack_mask_ & to_mask )
-//    return false;
-//
-//  BitMask from_mask = set_mask_bit(oki_pos);
-//  BitMask path_mask = (inv_mask_all_ & ~finfo_[color].attack_mask_) | from_mask | to_mask;
-//
-//  const BitMask cut_le = ~0x0101010101010101;
-//  const BitMask cut_ri = ~0x8080808080808080;
-//
-//  for (int i = 0; i < stepsMax; ++i)
-//  {
-//    X_ASSERT( i > 64, "infinite loop in path finder" );
-//
-//    BitMask mask_le = ((from_mask << 1) | (from_mask << 9) | (from_mask >> 7) | (from_mask << 8)) & cut_le;
-//    BitMask mask_ri = ((from_mask >> 1) | (from_mask >> 9) | (from_mask << 7) | (from_mask >> 8)) & cut_ri;
-//    BitMask next_mask = from_mask | ((mask_le | mask_ri) & path_mask);
-//
-//    if ( next_mask & to_mask )
-//      return true;
-//
-//    if ( next_mask == from_mask )
-//      break;
-//
-//    from_mask = next_mask;
-//  }
-//
-//  return false;
-//}
 //
 //bool Evaluator::isSpecialCase() const
 //{

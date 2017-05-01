@@ -47,13 +47,13 @@ class Evaluator
       return *this;
     }
 
-    PawnsScore& operator >>= (int const shift)
-    {
-      common_  >>= shift;
-      opening_ >>= shift;
-      endGame_ >>= shift;
-      return *this;
-    }
+    //PawnsScore& operator >>= (int const shift)
+    //{
+    //  common_  >>= shift;
+    //  opening_ >>= shift;
+    //  endGame_ >>= shift;
+    //  return *this;
+    //}
   };
 
   struct FieldsInfo
@@ -173,7 +173,9 @@ private:
   PhaseInfo detectPhase() const;
 
   // get from PSQ table
-  ScoreType evaluatePsq(Figure::Color color) const;
+  // + fill attacked fileds masks
+  ScoreType evaluatePsq(Figure::Color color);
+
   ScoreType evaluateKingPsqEg(Figure::Color color) const;
 
   // calculate or take from hash
@@ -183,6 +185,10 @@ private:
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
   PawnsScore evaluatePawns(Figure::Color color) const;
+  PawnsScore passerEvaluation(Figure::Color color) const;
+  // search path from opponent king to pawn's promotion of given color
+  bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const;
+
 
   ScoreType evaluateMaterialDiff();
 
@@ -212,9 +218,6 @@ private:
   int evaluateFields();
 
  // ScoreType evaluateFianchetto() const;
-
- // // search path from opponent king to pawn's promotion of given color
- // bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const;
 
  // // special cases
 
