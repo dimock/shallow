@@ -222,6 +222,12 @@ public:
     return pmask_doubled_[x];
   }
 
+  inline const BitMask & mask_column(int x) const
+  {
+    X_ASSERT((unsigned)x > 7, "invalid pawn x");
+    return pmask_column_[x];
+  }
+
   inline const BitMask & mask_multi_passer(int mask) const
   {
     X_ASSERT((unsigned)mask > 255, "invalid pawns row-mask");
@@ -236,6 +242,7 @@ private:
   BitMask pmask_isolated_[8] = {};
   BitMask pmask_doubled_[8] = {};
   BitMask pmask_multi_passer_[256] = {};
+  BitMask pmask_column_[8] = {};
 };
 
 class BitsCounter

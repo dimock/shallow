@@ -379,14 +379,14 @@ namespace NEngine
     // prepare lazy evaluation
     if(alpha > -Figure::MatScore)
     {
-      alpha0_ = alpha - lazyThreshold0_;
-      alpha1_ = alpha - lazyThreshold1_;
+      alpha0_ = (int)alpha - lazyThreshold0_;
+      alpha1_ = (int)alpha - lazyThreshold1_;
     }
 
     if(betta < +Figure::MatScore)
     {
-      betta0_ = betta + lazyThreshold0_;
-      betta1_ = betta + lazyThreshold1_;
+      betta0_ = (int)betta + lazyThreshold0_;
+      betta1_ = (int)betta + lazyThreshold1_;
     }
 
     ScoreType score = evaluate();
@@ -404,6 +404,13 @@ namespace NEngine
     ScoreType score = fmgr.weight();
     score += evaluateMaterialDiff();
 
+    /// use lazy evaluation 0
+    {
+      auto score0 = Figure::ColorBlack  == board_->getColor() ? -score : score;
+      if(score0 < alpha0_ || score0 > betta0_)
+        return score0;
+    }
+
     // take pawns eval. from hash if possible
     auto pawnScore = hashedEvaluation();
 
@@ -417,10 +424,6 @@ namespace NEngine
     auto phaseInfo = detectPhase();
 
     ScoreType score_o = 0, score_e = 0;
-    // PSQ - evaluation
-    // + attacked fields
-    score_o -= evaluatePsq(Figure::ColorBlack);
-    score_o += evaluatePsq(Figure::ColorWhite);
 
     // opening part
     if(phaseInfo.phase_ != EndGame)
@@ -448,6 +451,30 @@ namespace NEngine
       score_e += evaluateKingPsqEg(Figure::ColorWhite);
     }
 
+    /// use lazy evaluation 1
+    {
+      auto score1 = score;
+      if(phaseInfo.phase_ == Opening)
+        score1 += score_o;
+      else if(phaseInfo.phase_ == EndGame)
+        score1 += score_e;
+      else // middle game
+        score1 = score1 + (score_o * phaseInfo.opening_ + score_e * phaseInfo.endGame_) / weightOEDiff_;
+      if(Figure::ColorBlack  == board_->getColor())
+        score1 = -score1;
+      if(score1 < alpha1_ || score1 > betta1_)
+        return score1;
+    }
+
+    // PSQ - evaluation
+    // + attacked fields
+    auto scorePsq = evaluatePsq(Figure::ColorWhite);
+    scorePsq -= evaluatePsq(Figure::ColorBlack);
+
+    score += scorePsq.common_;
+    score_o += scorePsq.opening_;
+    score_e += scorePsq.endGame_;
+
     // detailed passer evaluation
     auto passerScore = passerEvaluation(Figure::ColorWhite);
     passerScore -= passerEvaluation(Figure::ColorBlack);
@@ -467,18 +494,10 @@ namespace NEngine
     if(Figure::ColorBlack  == board_->getColor())
       score = -score;
 
-    /// use lazy evaluation
-    if(score < alpha0_ || score > betta0_)
-      return score;
-
-    //score += evaluateBlockedRooks();
 
     // figures mobility, fields pressure
 //    score += evaluateFigures();
 
-    ///// use lazy evaluation
-    //if(score < alpha1_ || score > betta1_)
-    //  return score;
 
     //score += evaluateFields();
 
@@ -513,47 +532,58 @@ namespace NEngine
     return phaseInfo;
   }
 
-  ScoreType Evaluator::evaluatePsq(Figure::Color color)
+  Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
-    ScoreType score{};
+    FullScore score{};
+    auto const& fmgr = board_->fmgr();
+    auto const ocolor = Figure::otherColor(color);
 
     // knights
-    BitMask knmask = board_->fmgr().knight_mask(color);
+    BitMask knmask = fmgr.knight_mask(color);
     for(; knmask;)
     {
       int n = clear_lsb(knmask);
       int p = color ? Figure::mirrorIndex_[n] : n;
-      score += coeffs_->knightPsq_[p];
+      score.opening_ += coeffs_->knightPsq_[p];
       auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
       finfo_[color].attack_mask_ |= knight_moves;
     }
     // bishops
-    BitMask bimask = board_->fmgr().bishop_mask(color);
+    BitMask bimask = fmgr.bishop_mask(color);
     for(; bimask;)
     {
       int n = clear_lsb(bimask);
       int p = color ? Figure::mirrorIndex_[n] : n;
-      score += coeffs_->bishopPsq_[p];
+      score.opening_ += coeffs_->bishopPsq_[p];
       auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
       finfo_[color].attack_mask_ |= bishop_moves;
     }
     // rooks
-    BitMask rmask = board_->fmgr().rook_mask(color);
+    BitMask rmask = fmgr.rook_mask(color);
     for(; rmask;)
     {
       int n = clear_lsb(rmask);
       int p = color ? Figure::mirrorIndex_[n] : n;
-      score += coeffs_->rookPsq_[p];
+      score.opening_ += coeffs_->rookPsq_[p];
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
       finfo_[color].attack_mask_ |= rook_moves;
+
+      // open column
+      auto const& mask_col = pawnMasks().mask_column(Index(n).x());
+      bool no_pw_color  = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
+      bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
+      if(no_pw_color && no_pw_ocolor)
+        score.common_ += coeffs_->openRook_;
+      else if(no_pw_color || no_pw_ocolor)
+        score.common_ += coeffs_->openRook_ >> 2;
     }
     // queens
-    BitMask qmask = board_->fmgr().queen_mask(color);
+    BitMask qmask = fmgr.queen_mask(color);
     for(; qmask;)
     {
       int n = clear_lsb(qmask);
       int p = color ? Figure::mirrorIndex_[n] : n;
-      score += coeffs_->queenPsq_[p];
+      score.opening_ += coeffs_->queenPsq_[p];
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
       finfo_[color].attack_mask_ |= queen_moves;
     }
@@ -566,7 +596,7 @@ namespace NEngine
     return coeffs_->knightPsq_[p];
   }
 
-  Evaluator::PawnsScore Evaluator::hashedEvaluation()
+  Evaluator::FullScore Evaluator::hashedEvaluation()
   {
     HEval * heval = 0;
     const uint64 & code = board_->pawnCode();
@@ -578,7 +608,7 @@ namespace NEngine
 
       if(heval->hkey_ == hkey && heval->initizalized_)
       {
-        PawnsScore score;
+        FullScore score;
         score.common_ = heval->common_;
         score.opening_ = heval->opening_;
         score.endGame_ = heval->endGame_;
@@ -650,14 +680,14 @@ bool Evaluator::couldBeSupported(Index const& idx, Figure::Color color, Figure::
   return false;
 }
 
-Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color) const
+Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
 {
   const FiguresManager & fmgr = board_->fmgr();
   const BitMask & pmask = fmgr.pawn_mask(color);
   if(!pmask)
     return{};
 
-  PawnsScore score;
+  FullScore score;
   score.endGame_ = fmgr.pawns(color) * coeffs_->pawnEndgameBonus_;
 
   static int promo_y[] = { 0, 7 };
@@ -759,7 +789,7 @@ Evaluator::PawnsScore Evaluator::evaluatePawns(Figure::Color color) const
   return score;
 }
 
-Evaluator::PawnsScore Evaluator::passerEvaluation(Figure::Color color) const
+Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
 {
   const FiguresManager & fmgr = board_->fmgr();
   const BitMask & pmask = fmgr.pawn_mask(color);
@@ -774,7 +804,7 @@ Evaluator::PawnsScore Evaluator::passerEvaluation(Figure::Color color) const
   
   nst::dirs dir_behind[] = {nst::no, nst::so};
 
-  PawnsScore score;
+  FullScore score;
 
   Figure::Color ocolor = Figure::otherColor(color);
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
@@ -782,7 +812,7 @@ Evaluator::PawnsScore Evaluator::passerEvaluation(Figure::Color color) const
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
   {
-    int n = clear_lsb(pawn_mask);
+    const int n = clear_lsb(pawn_mask);
     Index idx(n);
 
     int x = idx.x();
@@ -856,13 +886,17 @@ Evaluator::PawnsScore Evaluator::passerEvaluation(Figure::Color color) const
     }
 
     // additional bonus if opponent's king can't go to my pawn's promotion field
-    score.common_ += can_go * coeffs_->passerPawn_[cy] / 3;
+    score.common_ += can_go * coeffs_->passerPawn_[cy] >> 1;
     
     // opponent king could not go to my pawns promotion field
     if(king_far || !findRootToPawn(color, promo_pos, pawn_dist_promo))
     {
       score.endGame_ += coeffs_->unstoppablePawn_[cy];
     }
+
+    // opponent king should be far from my pawn
+    int dist_to_king = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
+    score.endGame_ += coeffs_->kingToPasserBonus_[dist_to_king];
   }
   return score;
 }
@@ -943,19 +977,19 @@ int Evaluator::getCastleType(Figure::Color color) const
   return (!cking && !cqueen) * (-1) + cqueen;
 }
 
-Evaluator::PawnsScore Evaluator::evaluateKingSafety() const
+Evaluator::FullScore Evaluator::evaluateKingSafety() const
 {
   auto score = evaluateKingSafety(Figure::ColorWhite);
   score -= evaluateKingSafety(Figure::ColorBlack);
   return score;
 }
 
-Evaluator::PawnsScore Evaluator::evaluateKingSafety(Figure::Color color) const
+Evaluator::FullScore Evaluator::evaluateKingSafety(Figure::Color color) const
 {
   const FiguresManager & fmgr = board_->fmgr();
   auto pmask  = fmgr.pawn_mask(color);
 
-  PawnsScore score;
+  FullScore score;
   Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
   auto opmask = fmgr.pawn_mask(ocolor);
   Index ki_pos(finfo_[color].king_pos_);

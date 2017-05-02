@@ -43,11 +43,14 @@ struct EvalCoefficients
   // pawns
   int pawnEndgameBonus_{ 15 };
   int doubledPawn_{ -12 };
-  int isolatedPawn_{ -20 };
+  int isolatedPawn_{ -17 };
   int backwardPawn_{ -15 };
   int unsupportedPawn_{ -15 };
   int unprotectedPawn_{ -10 };
   int rookBehindBonus_{ 7 };
+
+  // rook on open column
+  int openRook_{ 15 };
 
   // material diff
   int bishopBonus_{ 10 };
@@ -85,6 +88,7 @@ struct EvalCoefficients
   int forwardPawn_[8] = {};
   int passerPawn_[8]  = {};
   int unstoppablePawn_[8] = {};
+  int kingToPasserBonus_[8] = {};
 
   // mobility
   int knightMobility_[16] = {};

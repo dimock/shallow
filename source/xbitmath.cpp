@@ -155,6 +155,7 @@ PawnMasks::PawnMasks()
       }
 
       pmask_doubled_[x] |= full_column_msk << x;
+      pmask_column_[x] = full_column_msk << x;
       pmasks_line_blocked_[color][i] = pass_msk << x;
       pmasks_passed_[color][i] = pass_msk << x;
 

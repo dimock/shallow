@@ -33,27 +33,19 @@ class Evaluator
     GamePhase phase_{Opening};
   };
 
-  struct PawnsScore
+  struct FullScore
   {
     int common_{};
     int opening_{};
     int endGame_{};
 
-    PawnsScore& operator -= (PawnsScore const& other)
+    FullScore& operator -= (FullScore const& other)
     {
       common_  -= other.common_;
       opening_ -= other.opening_;
       endGame_ -= other.endGame_;
       return *this;
     }
-
-    //PawnsScore& operator >>= (int const shift)
-    //{
-    //  common_  >>= shift;
-    //  opening_ >>= shift;
-    //  endGame_ >>= shift;
-    //  return *this;
-    //}
   };
 
   struct FieldsInfo
@@ -92,7 +84,7 @@ public:
  // static const ScoreType positionEvaluations_[2][8][64];
 
  const int lazyThreshold0_ = Figure::figureWeight_[Figure::TypePawn] * 4;
- const int lazyThreshold1_ = Figure::figureWeight_[Figure::TypePawn] * 2;
+ const int lazyThreshold1_ = Figure::figureWeight_[Figure::TypePawn] * 3;
 
  // // evaluation constants
  // static const ScoreType bishopKnightMat_[64];
@@ -174,18 +166,18 @@ private:
 
   // get from PSQ table
   // + fill attacked fileds masks
-  ScoreType evaluatePsq(Figure::Color color);
+  FullScore evaluatePsq(Figure::Color color);
 
   ScoreType evaluateKingPsqEg(Figure::Color color) const;
 
   // calculate or take from hash
   // pawns structure for middle & end game
   // + king's pawn shield???
-  PawnsScore hashedEvaluation();
+  FullScore hashedEvaluation();
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
-  PawnsScore evaluatePawns(Figure::Color color) const;
-  PawnsScore passerEvaluation(Figure::Color color) const;
+  FullScore evaluatePawns(Figure::Color color) const;
+  FullScore passerEvaluation(Figure::Color color) const;
   // search path from opponent king to pawn's promotion of given color
   bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const;
 
@@ -194,8 +186,8 @@ private:
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
-  PawnsScore evaluateKingSafety(Figure::Color color) const;
-  PawnsScore evaluateKingSafety() const;
+  FullScore evaluateKingSafety(Figure::Color color) const;
+  FullScore evaluateKingSafety() const;
   int evaluateCastle(Figure::Color color, Figure::Color ocolor, int castleType, Index const& ki_pos) const;
 
   int evaluateBlockedKnights();
