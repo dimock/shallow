@@ -399,69 +399,46 @@ namespace NEngine
     //std::string sfen = toFEN(*board_);
 
     const FiguresManager & fmgr = board_->fmgr();
+    FullScore score;
 
     // evaluate figures weight
-    ScoreType score = fmgr.weight();
-    score += evaluateMaterialDiff();
+    score.common_ = fmgr.weight() + evaluateMaterialDiff();
 
-    /// use lazy evaluation 0
+    /// use lazy evaluation level 0
     {
-      auto score0 = Figure::ColorBlack  == board_->getColor() ? -score : score;
+      auto score0 = considerColor(score.common_);
       if(score0 < alpha0_ || score0 > betta0_)
         return score0;
     }
 
-    // take pawns eval. from hash if possible
+    // take pawns eval from hash if possible
     auto pawnScore = hashedEvaluation();
 
     // basic king safety - pawn shield, castle
     auto kingScore = evaluateKingSafety();
 
-    score += pawnScore.common_;
-    score += kingScore.common_;
+    score += pawnScore;
+    score += kingScore;
 
-    // 2. determine game phase (opening, middle or end game)
+    // determine game phase (opening, middle or end game)
     auto phaseInfo = detectPhase();
 
-    ScoreType score_o = 0, score_e = 0;
-
-    // opening part
     if(phaseInfo.phase_ != EndGame)
     {
-      // pawns
-      score_o += pawnScore.opening_;
-
-      // king
-      score_o += kingScore.opening_;
-
-      score_o += evaluateBlockedKnights();
-      score_o += evaluateBlockedBishops();
+      score.opening_ += evaluateBlockedKnights();
+      score.opening_ += evaluateBlockedBishops();
     }
 
     if(phaseInfo.phase_ != Opening)
     {
-      // pawns
-      score_e += pawnScore.endGame_;
-
-      // king
-      score_e += kingScore.endGame_;
-
       // king psq endgame
-      score_e -= evaluateKingPsqEg(Figure::ColorBlack);
-      score_e += evaluateKingPsqEg(Figure::ColorWhite);
+      score.endGame_ += evaluateKingPsqEg(Figure::ColorWhite);
+      score.endGame_ -= evaluateKingPsqEg(Figure::ColorBlack);
     }
 
-    /// use lazy evaluation 1
+    /// use lazy evaluation level 1
     {
-      auto score1 = score;
-      if(phaseInfo.phase_ == Opening)
-        score1 += score_o;
-      else if(phaseInfo.phase_ == EndGame)
-        score1 += score_e;
-      else // middle game
-        score1 = score1 + (score_o * phaseInfo.opening_ + score_e * phaseInfo.endGame_) / weightOEDiff_;
-      if(Figure::ColorBlack  == board_->getColor())
-        score1 = -score1;
+      auto score1 = considerColor(lipolScore(score, phaseInfo));
       if(score1 < alpha1_ || score1 > betta1_)
         return score1;
     }
@@ -470,38 +447,15 @@ namespace NEngine
     // + attacked fields
     auto scorePsq = evaluatePsq(Figure::ColorWhite);
     scorePsq -= evaluatePsq(Figure::ColorBlack);
-
-    score += scorePsq.common_;
-    score_o += scorePsq.opening_;
-    score_e += scorePsq.endGame_;
+    score += scorePsq;
 
     // detailed passer evaluation
     auto passerScore = passerEvaluation(Figure::ColorWhite);
     passerScore -= passerEvaluation(Figure::ColorBlack);
+    score += passerScore;
 
-    score += passerScore.common_;
-    score_o += passerScore.opening_;
-    score_e += passerScore.endGame_;
-
-    if(phaseInfo.phase_ == Opening)
-      score += score_o;
-    else if(phaseInfo.phase_ == EndGame)
-      score += score_e;
-    else // middle game
-      score = score + (score_o * phaseInfo.opening_ + score_e * phaseInfo.endGame_) / weightOEDiff_;
-
-    // consider current move side
-    if(Figure::ColorBlack  == board_->getColor())
-      score = -score;
-
-
-    // figures mobility, fields pressure
-//    score += evaluateFigures();
-
-
-    //score += evaluateFields();
-
-    return score;
+    auto result = considerColor(lipolScore(score, phaseInfo));
+    return result;
   }
 
   Evaluator::PhaseInfo Evaluator::detectPhase() const

@@ -46,6 +46,14 @@ class Evaluator
       endGame_ -= other.endGame_;
       return *this;
     }
+
+    FullScore& operator += (FullScore const& other)
+    {
+      common_  += other.common_;
+      opening_ += other.opening_;
+      endGame_ += other.endGame_;
+      return *this;
+    }
   };
 
   struct FieldsInfo
@@ -158,6 +166,24 @@ private:
 
   void prepare();
 
+  // linear interpolation between opening & endgame
+  ScoreType lipolScore(FullScore const& score, PhaseInfo const& phase) const
+  {
+    ScoreType result = score.common_;
+    if(phase.phase_ == Opening)
+      result += score.opening_;
+    else if(phase.phase_ == EndGame)
+      result += score.endGame_;
+    else // middle game
+      result = result + (score.opening_ * phase.opening_ + score.endGame_ * phase.endGame_) / weightOEDiff_;
+    return result;
+  }
+
+  ScoreType considerColor(ScoreType score) const
+  {
+    return Figure::ColorBlack  == board_->getColor() ? -score : score;
+  }
+
   /// calculates absolute position evaluation
   ScoreType evaluate();
 
@@ -180,7 +206,6 @@ private:
   FullScore passerEvaluation(Figure::Color color) const;
   // search path from opponent king to pawn's promotion of given color
   bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const;
-
 
   ScoreType evaluateMaterialDiff();
 
