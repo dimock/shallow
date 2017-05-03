@@ -339,8 +339,7 @@ ScoreType Engine::alphaBetta0()
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv,
-  bool nm/* = false*/)
+ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv)
 {
   prefetchHash(ictx);
 
@@ -405,48 +404,23 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   if(options_.use_nullmove_)
   {
-    if(
-      //!pv &&
-      //!nm &&
-      !scontexts_[ictx].board_.underCheck() &&
+    if(!scontexts_[ictx].board_.underCheck() &&
       scontexts_[ictx].board_.allowNullMove() &&
       depth >= scontexts_[ictx].board_.nullMoveDepthMin() &&
       betta < Figure::MatScore+MaxPly &&
       betta > -Figure::MatScore-MaxPly)
     {
-      // if we have much more material than opponent we could skip null-move
-      //ScoreType nullScore = scontexts_[ictx].eval_.express();
-
-      int null_depth = scontexts_[ictx].board_.nullMoveDepth(depth, betta);
+      int null_depth = std::max(0, depth - NullMove_PlyReduce);// scontexts_[ictx].board_.nullMoveDepth(depth, betta);
 
       // do null-move
-      //if ( scontexts_[ictx].board_.fmgr().queens(scontexts_[ictx].board_.getColor()) == 0 ||
-      //	   scontexts_[ictx].board_.fmgr().rooks(scontexts_[ictx].board_.getColor()) == 0 ||
-      //		 nullScore < betta+Evaluator::nullMoveMargin_ )
-      //{
       scontexts_[ictx].board_.makeNullMove();
-
-      ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false, false /* we are in null-move*/);
-
+      ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false);
       scontexts_[ictx].board_.unmakeNullMove();
-      //}
 
       // verify null-move with shortened depth
       if(nullScore >= betta)
       {
-        //if(scontexts_[ictx].board_.fmgr().weight(scontexts_[ictx].board_.getColor()) > 0)
-        //  return betta;
-        //if ( scontexts_[ictx].board_.fmgr().queens(scontexts_[ictx].board_.getColor()) > 0 &&
-        //		 scontexts_[ictx].board_.fmgr().rooks(scontexts_[ictx].board_.getColor()) > 0 &&
-        //		 nullScore > betta+Evaluator::nullMoveVerifyMargin_ )
-        //{
-        //	depth = scontexts_[ictx].board_.nullMoveDepthVerify(depth);
-        //}
-        //else
-        depth = null_depth;
-
-        nm = true; // don't use null-move in this string
-
+        depth -= NullMove_PlyVerify;// null_depth;
         if(depth <= 0)
           return captures(ictx, depth, ply, alpha, betta, pv);
       }
@@ -476,7 +450,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     int delta = calculateDelta(alpha, score0);
     if (!scontexts_[ictx].board_.isWinnerLoser())
     {
-      if(depth <= ONE_PLY && delta > 20)
+      if(depth <= ONE_PLY && delta > 0)
       {
         return captures(ictx, depth, ply, alpha, betta, pv, score0);
       }
@@ -493,9 +467,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef USE_IID
-  if (!hmove && depth >= 6 * ONE_PLY)
+  if (!hmove && depth >= 5 * ONE_PLY)
   {
-    alphaBetta(ictx, depth - 2 * ONE_PLY, ply, alpha, betta, pv, false);
+    alphaBetta(ictx, depth - 2 * ONE_PLY, ply, alpha, betta, pv);
   }
 #endif
 
@@ -510,8 +484,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   FastGenerator fg(scontexts_[ictx].board_, hmove, killer);
   if(fg.singleReply())
     depthInc += ONE_PLY;
-
-  //const bool haveSpecialCase = scontexts_[ictx].eval_.isSpecialCase();
 
 #ifdef SINGULAR_EXT
   int  aboveAlphaN = 0;
@@ -550,37 +522,19 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     scontexts_[ictx].board_.makeMove(move);
     sdata_.inc_nc();
 
-    //bool specialCaseAfter = scontexts_[ictx].eval_.isSpecialCase();
-
     //findSequence(ictx, move, ply, depth, counter, alpha, betta);
 
     UndoInfo & curr = scontexts_[ictx].board_.undoInfoRev(0);
 
     int depthInc1 = depthIncrement(ictx, move, pv) + depthInc;
 
-    //if ( !haveSpecialCase && specialCaseAfter )
-    //{
-    //  //if (depth + depthInc1 <= ONE_PLY)
-    //    depthInc1 += 2*ONE_PLY;
-    //  //else if (depth + depthInc1 <= 2*ONE_PLY)
-    //  //  depthInc1 += ONE_PLY;
-    //}
-
     {
 
       if(!counter)
-        score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv, nm);
+        score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv);
       else
       {
         int depthInc2 = depthIncrement(ictx, move, false) + depthInc;
-        //if ( !haveSpecialCase && specialCaseAfter )
-        //{
-        //  //if (depth + depthInc2 <= ONE_PLY)
-        //    depthInc2 += 2*ONE_PLY;
-        //  //else if (depth + depthInc2 <= 2*ONE_PLY)
-        //  //  depthInc2 += ONE_PLY;
-        //}
-
         int R = 0;
 
 #ifdef USE_LMR
@@ -595,14 +549,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         }
 #endif
 
-        score = -alphaBetta(ictx, depth + depthInc2 - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, nm);
+        score = -alphaBetta(ictx, depth + depthInc2 - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
         curr.reduced_ = false;
 
         if(!stopped() && score > alpha && R > 0)
-          score = -alphaBetta(ictx, depth + depthInc2 - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, nm);
+          score = -alphaBetta(ictx, depth + depthInc2 - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
 
         if(!stopped() && score > alpha && score < betta)
-          score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply + 1, -betta, -alpha, pv, nm);
+          score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply + 1, -betta, -alpha, pv);
       }
     }
 

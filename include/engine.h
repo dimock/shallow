@@ -124,7 +124,7 @@ private:
 
   // search routine
   ScoreType alphaBetta0();
-  ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool nm = false);
+  ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv);
   ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
   int depthIncrement(int ictx, Move & move, bool pv) const;
   void assemblePV(int ictx, const Move & move, bool checking, int ply);

@@ -262,17 +262,17 @@ public:
 
   inline int nullMoveDepth(int depth, ScoreType betta) const
   {
-    Figure::Color ocolor = Figure::otherColor(color_);
-    ScoreType score = fmgr().weight(color_) - fmgr().weight(ocolor);
-    if(score < betta + (Figure::figureWeight_[Figure::TypePawn]<<1))
-    {
-      if(depth < 4*ONE_PLY)
-        return 0;
-      else if(depth < 5*ONE_PLY)
-        return ONE_PLY;
-      else if(depth < 6*ONE_PLY)
-        return 2 * ONE_PLY;
-    }
+    //Figure::Color ocolor = Figure::otherColor(color_);
+    //ScoreType score = fmgr().weight(color_) - fmgr().weight(ocolor);
+    //if(score < betta + (Figure::figureWeight_[Figure::TypePawn]<<1))
+    //{
+    //  if(depth < 4*ONE_PLY)
+    //    return 0;
+    //  else if(depth < 5*ONE_PLY)
+    //    return ONE_PLY;
+    //  else if(depth < 6*ONE_PLY)
+    //    return 2 * ONE_PLY;
+    //}
 
     int null_depth = depth - nullMoveReduce();
     if(null_depth < 0)
