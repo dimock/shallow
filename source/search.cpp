@@ -410,7 +410,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       betta < Figure::MatScore+MaxPly &&
       betta > -Figure::MatScore-MaxPly)
     {
-      int null_depth = std::max(0, depth - NullMove_PlyReduce);// scontexts_[ictx].board_.nullMoveDepth(depth, betta);
+      int null_depth = scontexts_[ictx].board_.nullMoveDepth(depth, betta);
 
       // do null-move
       scontexts_[ictx].board_.makeNullMove();
@@ -420,7 +420,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       // verify null-move with shortened depth
       if(nullScore >= betta)
       {
-        depth -= NullMove_PlyVerify;// null_depth;
+        depth = null_depth;
         if(depth <= 0)
           return captures(ictx, depth, ply, alpha, betta, pv);
       }
@@ -469,7 +469,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_IID
   if (!hmove && depth >= 5 * ONE_PLY)
   {
-    alphaBetta(ictx, depth - 2 * ONE_PLY, ply, alpha, betta, pv);
+    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv);
   }
 #endif
 
@@ -529,34 +529,51 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     int depthInc1 = depthIncrement(ictx, move, pv) + depthInc;
 
     {
-
-      if(!counter)
-        score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv);
-      else
+      ScoreType betta_pc = betta + 300;
+#ifdef USE_PROBCUT
+      if(
+        /*!pv
+         && move.capture_
+         && */move.see_good_
+         && !check_escape
+         && depth >= Probcut_Depth
+         && std::abs(betta) < Figure::MatScore-MaxPly
+         && std::abs(alpha) < Figure::MatScore-MaxPly)
       {
-        int depthInc2 = depthIncrement(ictx, move, false) + depthInc;
-        int R = 0;
-
-#ifdef USE_LMR
-        if ( !check_escape &&
-          sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-          depth >= LMR_DepthLimit &&
-          alpha > -Figure::MatScore-MaxPly &&             
-          scontexts_[ictx].board_.canBeReduced() )
-        {
-          R = ONE_PLY;
-          curr.reduced_ = true;
-        }
+        score = -alphaBetta(ictx, depth - Probcut_PlyReduce, ply+1, -betta_pc, -(betta_pc-1), pv);
+      }
 #endif
 
-        score = -alphaBetta(ictx, depth + depthInc2 - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
-        curr.reduced_ = false;
+      if(score < betta_pc)
+      {
+        if(!counter)
+          score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv);
+        else
+        {
+          int depthInc2 = depthIncrement(ictx, move, false) + depthInc;
+          int R = 0;
 
-        if(!stopped() && score > alpha && R > 0)
-          score = -alphaBetta(ictx, depth + depthInc2 - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
+#ifdef USE_LMR
+          if(!check_escape &&
+             sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+             depth >= LMR_DepthLimit &&
+             alpha > -Figure::MatScore-MaxPly &&
+             scontexts_[ictx].board_.canBeReduced())
+          {
+            R = ONE_PLY;
+            curr.reduced_ = true;
+          }
+#endif
 
-        if(!stopped() && score > alpha && score < betta)
-          score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply + 1, -betta, -alpha, pv);
+          score = -alphaBetta(ictx, depth + depthInc2 - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
+          curr.reduced_ = false;
+
+          if(!stopped() && score > alpha && R > 0)
+            score = -alphaBetta(ictx, depth + depthInc2 - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
+
+          if(!stopped() && score > alpha && score < betta)
+            score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply + 1, -betta, -alpha, pv);
+        }
       }
     }
 

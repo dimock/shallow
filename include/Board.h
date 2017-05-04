@@ -232,8 +232,7 @@ public:
 
   inline bool allowNullMove() const
   {
-    return can_win_[color_] &&
-      (fmgr_.queens(color_) + fmgr_.rooks(color_) + fmgr_.knights(color_)+fmgr_.bishops(color_) > 0);
+    return can_win_[color_] && (fmgr_.queens(color_) + fmgr_.rooks(color_) + fmgr_.knights(color_)+fmgr_.bishops(color_) > 0);
   }
 
   inline int nullMoveDepthMin() const
@@ -241,64 +240,18 @@ public:
     if(fmgr_.queens(color_) + fmgr_.rooks(color_) + fmgr_.knights(color_)+fmgr_.bishops(color_) > 1)
       return NullMove_DepthMin;
     else
-      return NullMove_DepthMin + 2 * ONE_PLY;
-  }
-
-  inline int nullMoveReduce() const
-  {
-    if(fmgr_.queens(color_) + fmgr_.rooks(color_) + fmgr_.knights(color_)+fmgr_.bishops(color_) > 1)
-      return NullMove_PlyReduce;
-    else
-      return NullMove_PlyReduce - ONE_PLY;
-  }
-
-  inline int nullMoveVerify() const
-  {
-    if(fmgr_.queens(color_) + fmgr_.rooks(color_) + fmgr_.knights(color_)+fmgr_.bishops(color_) > 1)
-      return NullMove_PlyVerify;
-    else
-      return NullMove_PlyVerify - ONE_PLY;
+      return NullMove_DepthMin + ONE_PLY;
   }
 
   inline int nullMoveDepth(int depth, ScoreType betta) const
   {
-    //Figure::Color ocolor = Figure::otherColor(color_);
-    //ScoreType score = fmgr().weight(color_) - fmgr().weight(ocolor);
-    //if(score < betta + (Figure::figureWeight_[Figure::TypePawn]<<1))
-    //{
-    //  if(depth < 4*ONE_PLY)
-    //    return 0;
-    //  else if(depth < 5*ONE_PLY)
-    //    return ONE_PLY;
-    //  else if(depth < 6*ONE_PLY)
-    //    return 2 * ONE_PLY;
-    //}
-
-    int null_depth = depth - nullMoveReduce();
-    if(null_depth < 0)
-      null_depth = 0;
-
-    return null_depth;
-  }
-
-  inline int nullMoveDepthVerify(int depth) const
-  {
-    int null_depth = depth - nullMoveVerify();
-    if(null_depth >(depth>>1))
-      null_depth = depth>>1;
-    if(null_depth < 0)
-      null_depth = 0;
-    return null_depth;
-  }
-
-  inline bool shortNullMoveReduction() const
-  {
-    return fmgr_.weight(color_) <= Figure::figureWeight_[Figure::TypeRook]+Figure::figureWeight_[Figure::TypePawn];
-  }
-
-  inline bool limitedNullMoveReduction() const
-  {
-    return fmgr_.weight(color_)- fmgr_.pawns()*Figure::figureWeight_[Figure::TypePawn] <= Figure::figureWeight_[Figure::TypeQueen];
+    Figure::Color ocolor = Figure::otherColor(color_);
+    ScoreType score = fmgr().weight(color_) - fmgr().weight(ocolor);
+    if(score > betta + 2*Figure::figureWeight_[Figure::TypePawn]*2 && depth > 7*ONE_PLY)
+    {
+      return std::max(0, depth - NullMove_PlyReduce - ONE_PLY);
+    }    
+    return std::max(0, depth - NullMove_PlyReduce);
   }
 
   inline bool isWinnerLoser() const

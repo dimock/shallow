@@ -87,6 +87,7 @@ namespace nst
 #define USE_LMR
 #define VERIFY_LMR
 #define SINGULAR_EXT
+#define USE_PROBCUT
 
   //#define VERIFY_ESCAPE_GENERATOR
   //#define VERIFY_CHECKS_GENERATOR
@@ -101,5 +102,6 @@ static const int LMR_DepthLimit = 3 * ONE_PLY;
 static const int LMR_MinDepthLimit = 5 * ONE_PLY;
 static const int NullMove_DepthMin = 2 * ONE_PLY;
 static const int NullMove_PlyReduce = 4 * ONE_PLY;
-static const int NullMove_PlyVerify = 4 * ONE_PLY;
-static const int Position_Gain = 100;
+static const int Probcut_Depth = 7 * ONE_PLY;
+static const int Probcut_PlyReduce = 4 * ONE_PLY;
+static const int Position_Gain = 120;
