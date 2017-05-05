@@ -87,7 +87,7 @@ namespace nst
 #define USE_LMR
 #define VERIFY_LMR
 #define SINGULAR_EXT
-#define USE_PROBCUT
+#undef USE_PROBCUT
 
   //#define VERIFY_ESCAPE_GENERATOR
   //#define VERIFY_CHECKS_GENERATOR

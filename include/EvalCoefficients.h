@@ -88,7 +88,8 @@ struct EvalCoefficients
   int forwardPawn_[8] = {};
   int passerPawn_[8]  = {};
   int unstoppablePawn_[8] = {};
-  int kingToPasserBonus_[8] = {};
+  int oKingToPasserBonus_[8] = {};
+  int myKingToPasserBonus_[8] = {};
 
   // mobility
   int knightMobility_[16] = {};

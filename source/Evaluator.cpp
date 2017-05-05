@@ -762,6 +762,7 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
 
   Figure::Color ocolor = Figure::otherColor(color);
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
+  bool no_opawns = opmsk == 0ULL;
 
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
@@ -849,8 +850,13 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
     }
 
     // opponent king should be far from my pawn
-    int dist_to_king = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
-    score.endGame_ += coeffs_->kingToPasserBonus_[dist_to_king];
+    int dist_to_oking = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
+    score.endGame_ += coeffs_->oKingToPasserBonus_[dist_to_oking];
+
+    // small bonus for short distance to my king
+    // double if opponent has no pawns
+    int dist_to_myking = distanceCounter().getDistance(finfo_[color].king_pos_, n);
+    score.endGame_ += coeffs_->myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
   }
   return score;
 }

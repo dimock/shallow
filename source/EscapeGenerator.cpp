@@ -16,7 +16,7 @@ EscapeGenerator::EscapeGenerator(Board & board) :
 }
 
 EscapeGenerator::EscapeGenerator(const Move & hmove, Board & board) :
-  MovesGeneratorBase(board), hmove_(hmove) 
+  MovesGeneratorBase(board), hmove_(hmove)
 {
   generate();
   movesCount_ = moves_.size() + takeHash_;

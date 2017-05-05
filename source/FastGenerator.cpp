@@ -113,15 +113,27 @@ Move* FastGenerator::move()
 //////////////////////////////////////////////////////////////////////////
 TacticalGenerator::TacticalGenerator(Board & board, Figure::Type thresholdType, int depth) :
   eg_(board), cg_(board), chg_(board), thresholdType_(thresholdType), board_(board),
-  order_(oGenCaps), depth_(depth)
+  order_(oGenCaps), depth_(depth), hmove_(0)
 {
-
   if(board_.underCheck())
   {
     Move hmove(0);
     eg_.generate(hmove);
     order_ = oEscape;
   }
+}
+
+TacticalGenerator::TacticalGenerator(Board & board, const Move & hmove, Figure::Type thresholdType, int depth) :
+  eg_(board), cg_(board), chg_(board), thresholdType_(thresholdType), board_(board),
+  order_(oGenCaps), depth_(depth), hmove_(hmove)
+{
+  if(board_.underCheck())
+  {
+    eg_.generate(hmove_);
+    order_ = oEscape;
+  }
+  if(hmove_)
+    order_ = oHash;
 }
 
 Move* TacticalGenerator::move()
@@ -131,10 +143,17 @@ Move* TacticalGenerator::move()
     return eg_.move();
   }
 
+  if(order_ == oHash)
+  {
+    order_ = oGenCaps;
+    X_ASSERT(!hmove_, "no hash move but oHash move order is given");
+    hmove_.see_good_ = true;
+    return &hmove_;
+  }
+
   if(order_ == oGenCaps)
   {
-    Move hmove(0);
-    cg_.generate(hmove, thresholdType_);
+    cg_.generate(hmove_, thresholdType_);
     order_ = oCaps;
   }
 
@@ -153,7 +172,7 @@ Move* TacticalGenerator::move()
 
   if(order_ == oGenChecks)
   {
-    chg_.generate();
+    chg_.generate(hmove_);
     order_ = oChecks;
   }
 

@@ -103,7 +103,8 @@ public:
   static const unsigned int vsort_add_ = 10000;
 
   MovesGeneratorBase(const Board & board) : board_(board)
-  {}
+  {
+  }
 
   operator bool () const
   {
@@ -431,7 +432,7 @@ private:
 
   // for checks detector
   BitMask mask_all_, mask_brq_;
-  int oking_pos_{0};
+  int oking_pos_{ 0 };
 };
 
 /// generate all moves, that escape from check
@@ -440,7 +441,7 @@ class EscapeGenerator : public MovesGeneratorBase<32>
 public:
 
   EscapeGenerator(Board &);
-  EscapeGenerator(const Move & hmove, Board & );
+  EscapeGenerator(const Move & hmove, Board &);
 
   void generate(const Move & hmove);
 
@@ -476,7 +477,7 @@ public:
       }
       move = &*iter;
       moves_.erase(iter);
-      if(move->capture_ && !move->seen_ && count() > 1)
+      if(!move->capture_ && move->new_type_ == Figure::TypeNone && !move->seen_ && count() > 1)
       {
         move->seen_ = 1;
         move->see_good_ = board_.see(*move) >= 0;
@@ -630,6 +631,7 @@ class TacticalGenerator
 public:
 
   TacticalGenerator(Board & board, Figure::Type thresholdType, int depth);
+  TacticalGenerator(Board & board, const Move & hmove, Figure::Type thresholdType, int depth);
 
   Move* move();
 
@@ -657,13 +659,14 @@ private:
   EscapeGenerator eg_;
   ChecksGenerator chg_;
 
-  enum Order { oNone, oEscape, oGenCaps, oCaps, oGenChecks, oChecks };
+  enum Order { oNone, oHash, oEscape, oGenCaps, oCaps, oGenChecks, oChecks };
 
   Board & board_;
   Figure::Type thresholdType_;
   Order order_;
   int depth_;
   xlist<Move, 64> weaks_;
+  Move hmove_;
 };
 
 } // NEngine

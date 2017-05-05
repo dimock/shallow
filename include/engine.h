@@ -139,6 +139,7 @@ private:
   // we should return alpha if flag is Alpha, or Betta if flag is Betta
   GHashTable::Flag getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv);
   void putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat);
+  void putCaptureHash(int ictx, const Move & move);
 #endif // USE_HASH
 
   // analyze mode support

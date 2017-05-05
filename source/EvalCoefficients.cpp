@@ -66,8 +66,10 @@ namespace NEngine
     arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 15, 40, 50, 60, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
     arrs_.push_back(details::Arr{ "unstoppablePawn_", std::vector<int>{ 0, 20, 25, 30, 35, 40, 45, 0 }, unstoppablePawn_,
                     sizeof(unstoppablePawn_)/sizeof(*unstoppablePawn_) });    
-    arrs_.push_back(details::Arr{ "kingToPasserBonus_", std::vector<int>{ 0, 0, 2, 4, 6, 8, 10, 12 }, kingToPasserBonus_,
-                    sizeof(kingToPasserBonus_)/sizeof(*kingToPasserBonus_) });
+    arrs_.push_back(details::Arr{ "oKingToPasserBonus_", std::vector<int>{ 0, 0, 2, 4, 6, 8, 10, 12 }, oKingToPasserBonus_,
+                    sizeof(oKingToPasserBonus_)/sizeof(*oKingToPasserBonus_) });
+    arrs_.push_back(details::Arr{ "myKingToPasserBonus_", std::vector<int>{ 6, 6, 5, 4, 3, 2, 1, 0 }, myKingToPasserBonus_,
+                    sizeof(myKingToPasserBonus_)/sizeof(*myKingToPasserBonus_) });
 
     // mobility
     arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-30, -15, 0, 3, 5, 7, 9, 11}, knightMobility_,

@@ -404,11 +404,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   if(options_.use_nullmove_)
   {
-    if(!scontexts_[ictx].board_.underCheck() &&
-      scontexts_[ictx].board_.allowNullMove() &&
-      depth >= scontexts_[ictx].board_.nullMoveDepthMin() &&
-      betta < Figure::MatScore+MaxPly &&
-      betta > -Figure::MatScore-MaxPly)
+    if(
+      !scontexts_[ictx].board_.underCheck()
+       && scontexts_[ictx].board_.allowNullMove()
+       && depth >= scontexts_[ictx].board_.nullMoveDepthMin()
+       && std::abs(betta) < Figure::MatScore+MaxPly
+       )
     {
       int null_depth = scontexts_[ictx].board_.nullMoveDepth(depth, betta);
 
@@ -467,9 +468,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef USE_IID
-  if (!hmove && depth >= 5 * ONE_PLY)
+  if (!hmove && depth >= 4 * ONE_PLY)
   {
     alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv);
+    if(const HItem * hitem = hash_.find(scontexts_[ictx].board_.hashCode()))
+    {
+      X_ASSERT(hitem->hkey_ != scontexts_[ictx].board_.hashCode(), "invalid hash item found");
+      scontexts_[ictx].board_.unpackMove(hitem->move_, hmove);
+    }
   }
 #endif
 
@@ -531,10 +537,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     {
       ScoreType betta_pc = betta + 300;
 #ifdef USE_PROBCUT
-      if(
-        /*!pv
+      if(!pv
          && move.capture_
-         && */move.see_good_
+         && move.see_good_
          && !check_escape
          && depth >= Probcut_Depth
          && std::abs(betta) < Figure::MatScore-MaxPly
@@ -560,7 +565,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
              alpha > -Figure::MatScore-MaxPly &&
              scontexts_[ictx].board_.canBeReduced())
           {
-            R = ONE_PLY;
+            //move.see_good_ = move.see_good_ || (!move.seen_ && scontexts_[ictx].board_.see(move) >= 0);
+            //move.seen_ = 1;
+            R = ONE_PLY;// +ONE_PLY * !move.see_good_;
             curr.reduced_ = true;
           }
 #endif
@@ -682,14 +689,25 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   if(alpha >= Figure::MatScore-ply)
     return alpha;
 
-  //if ( pv && sdata_.plyMax_ < ply )
-  //  sdata_.plyMax_ = ply;
-
   if(scontexts_[ictx].board_.drawState() || scontexts_[ictx].board_.countReps() > 1)
     return Figure::DrawScore;
 
   if(stopped() || ply >= MaxPly)
     return Figure::DrawScore;
+
+  Move hmove(0);
+#ifdef USE_HASH
+  ScoreType hscore = -ScoreMax;
+  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
+  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  {
+    return hscore;
+  }
+  if(!hmove.capture_)
+  {
+    hmove.clear();
+  }
+#endif
 
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
@@ -715,7 +733,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   Move best(0);
   Figure::Type thresholdType = scontexts_[ictx].board_.isWinnerLoser() ? Figure::TypePawn : delta2type(delta);
 
-  TacticalGenerator tg(scontexts_[ictx].board_, thresholdType, depth);
+  TacticalGenerator tg(scontexts_[ictx].board_, hmove, thresholdType, depth);
   if(tg.singleReply())
     depthInc += ONE_PLY;
 
@@ -764,6 +782,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       scoreBest = score0;
   }
 
+#ifdef USE_HASH
+  putCaptureHash(ictx, best);
+#endif
+
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
 
   return scoreBest;
@@ -800,21 +822,21 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
 
-  if ( (int)hitem->depth_ >= depth && ply > 0 )
+  if(hitem->flag_  != GHashTable::NoFlag && (int)hitem->depth_ >= depth && ply > 0)
   {
-    if ( GHashTable::Alpha == hitem->flag_ && hscore <= alpha )
+    if(GHashTable::Alpha == hitem->flag_ && hscore <= alpha)
     {
-      X_ASSERT( !stop_ && alpha < -32760, "invalid hscore" );
+      X_ASSERT(!stop_ && alpha < -32760, "invalid hscore");
       return GHashTable::Alpha;
     }
 
-    if ( hitem->flag_ > GHashTable::Alpha && hscore >= betta && hmove )
+    if(hitem->flag_ > GHashTable::Alpha && hscore >= betta && hmove)
     {
-      if ( scontexts_[ictx].board_.calculateReps(hmove) < 2 )
+      if(scontexts_[ictx].board_.calculateReps(hmove) < 2)
       {
         /// danger move was reduced - recalculate it with full depth
         const UndoInfo & prev = scontexts_[ictx].board_.undoInfoRev(0);
-        if ( hitem->threat_ && prev.reduced_ )
+        if(hitem->threat_ && prev.reduced_)
         {
           hscore = betta-1;
           return GHashTable::Alpha;
@@ -850,6 +872,14 @@ void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType bet
   else if ( score <= -Figure::MatScore+MaxPly )
     score -= ply;
   hash_.push(scontexts_[ictx].board_.hashCode(), score, depth / ONE_PLY, flag, pm, threat);
+}
+
+void Engine::putCaptureHash(int ictx, const Move & move)
+{
+  if(!move || scontexts_[ictx].board_.repsCount() >= 3)
+    return;
+  PackedMove pm = scontexts_[ictx].board_.packMove(move);
+  hash_.push(scontexts_[ictx].board_.hashCode(), 0, 0, GHashTable::NoFlag, pm, false);
 }
 #endif
 
