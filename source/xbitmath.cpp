@@ -29,7 +29,7 @@ int pop_count_common(uint64 n)
 #ifdef _M_X64
 int pop_count64_fast(uint64 n)
 {
-  return __popcnt64(n);
+  return static_cast<int>(__popcnt64(n));
 }
 
 void init_popcount_ptr()

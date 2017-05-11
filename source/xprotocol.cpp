@@ -158,7 +158,7 @@ void xProtocolMgr::setOption(const xCmd & cmd)
 {
   NEngine::xOptions xopts;
   xopts.hash_size_ = cmd.param("Hash");
-  xopts.use_nullmove_ = cmd.param("Nullmove");
+  xopts.use_nullmove_ = cmd.param("Nullmove") != 0;
   proc_.setOptions(xopts);
 }
 

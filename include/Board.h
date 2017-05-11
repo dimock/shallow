@@ -561,7 +561,7 @@ public:
       return true;
     auto rq_mask = (fmgr_.rook_mask(acolor) | fmgr_.queen_mask(acolor)) & all_mask & mask_to;
     auto rook_attack = magic_ns::rook_moves(ki_pos, all_mask);
-    return rook_attack & rq_mask;
+    return (rook_attack & rq_mask) != 0ULL;
   }
 private:
 

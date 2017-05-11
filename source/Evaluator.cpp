@@ -711,7 +711,7 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
         int closest_y = closestToBackward(idx.x(), idx.y(), pmask, color);
         X_ASSERT(closest_y < 0 || closest_y > 7, "backward mask calculation error - invalid next y position");
         BitMask pmask_after = betweenMasks().between(n, Index(idx.x(), closest_y));
-        bool is_blocked  = (finfo_[ocolor].pawnAttacks_ | opmsk) & pmask_after;
+        bool is_blocked  = ((finfo_[ocolor].pawnAttacks_ | opmsk) & pmask_after) != 0ULL;
         score.common_ += is_blocked * coeffs_->backwardPawn_;
       }
       // 6. forward but not supported
@@ -1343,42 +1343,27 @@ ScoreType Evaluator::evaluateMaterialDiff()
   score += fmgr.bishops(Figure::ColorWhite) * coeffs_->bishopBonus_;
   score -= fmgr.bishops(Figure::ColorBlack) * coeffs_->bishopBonus_;
 
-  //// 1. bonus for bishop. only if we have other figures
-  //if(fmgr.bishops(Figure::ColorWhite) + fmgr.knights(Figure::ColorWhite) + fmgr.rooks(Figure::ColorWhite) + fmgr.queens(Figure::ColorWhite) > 1)
-  //  score += fmgr.bishops(Figure::ColorWhite)*bishopBonus_;
-  //if(fmgr.bishops(Figure::ColorBlack) + fmgr.knights(Figure::ColorBlack) + fmgr.rooks(Figure::ColorBlack) + fmgr.queens(Figure::ColorBlack) > 1)
-  //  score -= fmgr.bishops(Figure::ColorBlack)*bishopBonus_;
+  // Knight or Bishop against 3 pawns
+  int figuresDiff = (fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite)) -
+                    (fmgr.bishops(Figure::ColorBlack)+fmgr.knights(Figure::ColorBlack));
+  int pawnsDiff  = fmgr.pawns(Figure::ColorWhite)  - fmgr.pawns(Figure::ColorBlack);
+  int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
+  int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
 
+  if(figuresDiff*pawnsDiff < 0 && !rooksDiff && !queensDiff)
+  {
+    Figure::Color strongColor = (Figure::Color)(figuresDiff > 0);
+    int pawnsN = fmgr.pawns(strongColor) != 0;
+    score += figuresDiff * coeffs_->figureAgainstPawnBonus_[pawnsN];
+  }
 
-  //// 3. Knight or Bishop against 3 pawns
-  //int figuresDiff = (fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite)) -
-  //  (fmgr.bishops(Figure::ColorBlack)+fmgr.knights(Figure::ColorBlack));
-
-  //int pawnsDiff = fmgr.pawns(Figure::ColorWhite) - fmgr.pawns(Figure::ColorBlack);
-  //int rooksDiff = fmgr.rooks(Figure::ColorWhite) - fmgr.rooks(Figure::ColorBlack);
-  //int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
-
-  //if(figuresDiff*pawnsDiff < 0 && !rooksDiff && !queensDiff)
-  //{
-  //  Figure::Color strongColor = (Figure::Color)(figuresDiff > 0);
-  //  int zeroPawns = (fmgr.pawns(strongColor) != 0) & 1;
-  //  score += figuresDiff * figureAgainstPawnBonus_[zeroPawns];
-  //}
-
-  //// 4. Knight|Bishop+2Pawns vs. Rook
-  //else if(!queensDiff && ((rooksDiff == -1 && figuresDiff == 1) || (rooksDiff == 1 && figuresDiff == -1)))
-  //{
-  //  Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
-  //  int zeroPawns = (fmgr.pawns(strongColor) != 0) & 1;
-  //  score += rooksDiff * rookAgainstFigureBonus_[zeroPawns];
-  //}
-  //// 5. pawns against rook
-  //else if(!queensDiff && rooksDiff*pawnsDiff < 0)
-  //{
-  //  Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
-  //  int zeroPawns = (fmgr.pawns(strongColor) != 0) & 1;
-  //  score += rooksDiff * rookAgainstPawnsBonus_[zeroPawns];
-  //}
+  // Knight|Bishop+2Pawns vs. Rook
+  else if(!queensDiff && (rooksDiff*figuresDiff == -1))
+  {
+    Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
+    int pawnsN = fmgr.pawns(strongColor) != 0;
+    score += rooksDiff * coeffs_->rookAgainstFigureBonus_[pawnsN];
+  }
 
   return score;
 }

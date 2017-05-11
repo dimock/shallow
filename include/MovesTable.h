@@ -16,7 +16,6 @@ class MovesTable
   uint16 s_tableOther_[4][64][10];
 
   // masks only for captures
-  //BitMask s_pawnsCaps_t_[2][64];
   BitMask s_pawnsCaps_[2][64];
   BitMask s_pawnsMoves_[2][64];
   BitMask s_pawnsFrom_[2][64];
@@ -66,13 +65,6 @@ public:
     X_ASSERT((unsigned)type > 2 || (unsigned)pos > 63, "try to get figure move from invalid position or type");
     return s_tableOther_[type][pos];
   }
-
-  //// transposed captures
-  //inline const BitMask & pawnCaps_t(int color, int pos) const
-  //{
-  //  X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "try to get pawn move from invalid position, color");
-  //  return s_pawnsCaps_t_[color][pos];
-  //}
 
   // ordinary captures
   inline const BitMask & pawnCaps(int color, int pos) const

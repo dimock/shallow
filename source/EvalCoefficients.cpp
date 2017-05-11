@@ -32,6 +32,11 @@ namespace NEngine
     // material diff
     vars_.push_back(details::Var{ "bishopBonus_", bishopBonus_, &bishopBonus_ });
 
+    arrs_.push_back(details::Arr{ "figureAgainstPawnBonus_", std::vector<int>{ 25, 90}, figureAgainstPawnBonus_,
+                    sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
+    arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{35, 80}, rookAgainstFigureBonus_,
+                    sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
+
     // king
     vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
     vars_.push_back(details::Var{ "fakeCastle_", fakeCastle_, &fakeCastle_ });

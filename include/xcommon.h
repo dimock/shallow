@@ -12,9 +12,14 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <istream>
 #include <limits>
 #include <algorithm>
+#include <set>
+#include <memory>
+#include <random>
 
 
 #ifdef _MSC_VER
+
+  #pragma warning (disable:4351)
 
   #define ALIGN_MSC(bytes) __declspec (align(bytes))
   #define ALIGN_GCC(bytes)

@@ -4,11 +4,7 @@ EvalCoefficients.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <set>
-#include <memory>
-#include <random>
+#include <xcommon.h>
 
 namespace NEngine
 {
@@ -54,6 +50,8 @@ struct EvalCoefficients
 
   // material diff
   int bishopBonus_{ 10 };
+  int figureAgainstPawnBonus_[2] = {};
+  int rookAgainstFigureBonus_[2] = {};
 
   // king
   int castleImpossible_{ -25 };
