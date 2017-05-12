@@ -7,6 +7,7 @@
 #include <HashTable.h>
 #include <xindex.h>
 #include <magicbb.h>
+#include <xbitmath.h>
 
 namespace NEngine
 {
@@ -844,7 +845,7 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
     score.common_ += can_go * coeffs_->passerPawn_[cy] >> 1;
     
     // opponent king could not go to my pawns promotion field
-    if(king_far || !findRootToPawn(color, promo_pos, pawn_dist_promo))
+    if(king_far || !findRootToPawn(color, promo_pos, pawn_dist_promo+1))
     {
       score.endGame_ += coeffs_->unstoppablePawn_[cy];
     }
@@ -864,45 +865,7 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
 // idea from CCRL
 bool Evaluator::findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const
 {
-  Figure::Color ocolor = Figure::otherColor(color);
-  int oki_pos = finfo_[ocolor].king_pos_;
-
-  if ( oki_pos == promo_pos )
-  {
-    X_ASSERT(finfo_[color].attack_mask_ & set_mask_bit(promo_pos), "king is on attacked field");
-    return true;
-  }
-
-  BitMask to_mask = set_mask_bit(promo_pos);
-
-  // promotion field is attacked
-  if ( finfo_[color].attack_mask_ & to_mask )
-    return false;
-
-  BitMask from_mask = set_mask_bit(oki_pos);
-  BitMask path_mask = (inv_mask_all_ & ~finfo_[color].attack_mask_) | from_mask | to_mask;
-
-  const BitMask cut_le = ~0x0101010101010101;
-  const BitMask cut_ri = ~0x8080808080808080;
-
-  for (int i = 0; i < stepsMax; ++i)
-  {
-    X_ASSERT( i > 64, "infinite loop in path finder" );
-
-    BitMask mask_le = ((from_mask << 1) | (from_mask << 9) | (from_mask >> 7) | (from_mask << 8)) & cut_le;
-    BitMask mask_ri = ((from_mask >> 1) | (from_mask >> 9) | (from_mask << 7) | (from_mask >> 8)) & cut_ri;
-    BitMask next_mask = from_mask | ((mask_le | mask_ri) & path_mask);
-
-    if ( next_mask & to_mask )
-      return true;
-
-    if ( next_mask == from_mask )
-      break;
-
-    from_mask = next_mask;
-  }
-
-  return false;
+  return NEngine::findRootToPawn(*board_, inv_mask_all_, finfo_[color].attack_mask_, color, promo_pos, stepsMax);
 }
 
 int Evaluator::getCastleType(Figure::Color color) const

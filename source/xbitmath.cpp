@@ -4,6 +4,7 @@ xbitmath.cpp - Copyright (C) 2016 by Dmitry Sultanov
 
 #include <xbitmath.h>
 #include <xindex.h>
+#include <Board.h>
 #include <iostream>
 
 namespace NEngine
@@ -299,6 +300,56 @@ void print_bitmask(uint64 mask)
     }
     std::cout << std::endl;
   }
+}
+
+// idea from CCRL
+// "color" belongs to pawn
+bool findRootToPawn(Board const& board,
+                    BitMask const& inv_mask_all,
+                    BitMask const& attack_mask_c,
+                    int8 color,
+                    int promo_pos,
+                    int stepsLimit)
+{
+  Figure::Color ocolor = Figure::otherColor(Figure::Color(color));
+  int oki_pos = board.kingPos(ocolor);
+
+  if(oki_pos == promo_pos)
+  {
+    X_ASSERT(attack_mask_c & set_mask_bit(promo_pos), "king is on attacked field");
+    return true;
+  }
+
+  BitMask to_mask = set_mask_bit(promo_pos);
+
+  // promotion field is attacked
+  if(attack_mask_c & to_mask)
+    return false;
+
+  BitMask from_mask = set_mask_bit(oki_pos);
+  BitMask path_mask = (inv_mask_all & ~attack_mask_c) | from_mask | to_mask;
+
+  const BitMask cut_le = ~0x0101010101010101;
+  const BitMask cut_ri = ~0x8080808080808080;
+
+  for(int i = 0; i < stepsLimit; ++i)
+  {
+    X_ASSERT(i > 64, "infinite loop in path finder");
+
+    BitMask mask_le = ((from_mask << 1) | (from_mask << 9) | (from_mask >> 7) | (from_mask << 8)) & cut_le;
+    BitMask mask_ri = ((from_mask >> 1) | (from_mask >> 9) | (from_mask << 7) | (from_mask >> 8)) & cut_ri;
+    BitMask next_mask = from_mask | ((mask_le | mask_ri) & path_mask);
+
+    if(next_mask & to_mask)
+      return true;
+
+    if(next_mask == from_mask)
+      break;
+
+    from_mask = next_mask;
+  }
+
+  return false;
 }
 
 } // NEngine

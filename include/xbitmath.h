@@ -366,4 +366,11 @@ public:
   }
 };
 
+class Board;
+bool findRootToPawn(Board const& board,
+                    BitMask const& inv_mask_all,
+                    BitMask const& attack_mask_c,
+                    int8 color,
+                    int promo_pos,
+                    int stepsLimit);
 } // NEngine
