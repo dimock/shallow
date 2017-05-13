@@ -194,6 +194,8 @@ private:
   // + fill attacked fileds masks
   FullScore evaluatePsq(Figure::Color color);
 
+  FullScore evaluatePawnsPressure(Figure::Color color);
+
   ScoreType evaluateKingPsqEg(Figure::Color color) const;
 
   // calculate or take from hash

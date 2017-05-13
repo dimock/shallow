@@ -44,6 +44,8 @@ struct EvalCoefficients
   int unsupportedPawn_{ -15 };
   int unprotectedPawn_{ -10 };
   int rookBehindBonus_{ 7 };
+  int protectedPawnPressure_{ 2 };
+  int unprotectedPawnPressure_{ 7 };
 
   // rook on open column
   int openRook_{ 15 };

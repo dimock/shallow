@@ -25,6 +25,8 @@ namespace NEngine
     vars_.push_back(details::Var{ "unsupportedPawn_", unsupportedPawn_, &unsupportedPawn_ });
     vars_.push_back(details::Var{ "unprotectedPawn_", unprotectedPawn_, &unprotectedPawn_ });
     vars_.push_back(details::Var{ "rookBehindBonus_", rookBehindBonus_, &rookBehindBonus_ });
+    vars_.push_back(details::Var{ "protectedPawnPressure_", protectedPawnPressure_, &protectedPawnPressure_ });
+    vars_.push_back(details::Var{ "unprotectedPawnPressure_", unprotectedPawnPressure_, &unprotectedPawnPressure_ });
 
     // rook on open column
     vars_.push_back(details::Var{ "openRook_", openRook_, &openRook_ });

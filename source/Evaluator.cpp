@@ -450,6 +450,10 @@ namespace NEngine
     scorePsq -= evaluatePsq(Figure::ColorBlack);
     score += scorePsq;
 
+    auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+    scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+    score += scorePP;
+
     // detailed passer evaluation
     auto passerScore = passerEvaluation(Figure::ColorWhite);
     passerScore -= passerEvaluation(Figure::ColorBlack);
@@ -542,6 +546,20 @@ namespace NEngine
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
       finfo_[color].attack_mask_ |= queen_moves;
     }
+    return score;
+  }
+
+  Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
+  {
+    FullScore score{};
+    auto const& fmgr = board_->fmgr();
+    auto const ocolor = Figure::otherColor(color);
+    auto pw_mask = fmgr.pawn_mask(ocolor);
+    auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
+    auto pw_unprotected = pw_mask ^ pw_protected;
+    auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
+    score.common_ = pop_count(pw_protected & attackers) * coeffs_->protectedPawnPressure_;
+    score.common_ += pop_count(pw_unprotected & attackers) * coeffs_->unprotectedPawnPressure_;
     return score;
   }
 
