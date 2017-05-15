@@ -42,10 +42,10 @@ struct EvalCoefficients
   int isolatedPawn_{ -17 };
   int backwardPawn_{ -15 };
   int unsupportedPawn_{ -15 };
-  int unprotectedPawn_{ -10 };
+  int unprotectedPawn_{ -5 };
   int rookBehindBonus_{ 7 };
   int protectedPawnPressure_{ 2 };
-  int unprotectedPawnPressure_{ 7 };
+  int unprotectedPawnPressure_{ 5 };
 
   // rook on open column
   int openRook_{ 15 };
@@ -87,6 +87,7 @@ struct EvalCoefficients
   int centerPawn_[8]  = {};
   int forwardPawn_[8] = {};
   int passerPawn_[8]  = {};
+  int passerGroup_[8] = {};
   int unstoppablePawn_[8] = {};
   int oKingToPasserBonus_[8] = {};
   int myKingToPasserBonus_[8] = {};

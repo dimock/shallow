@@ -752,10 +752,11 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
     auto multi = pawnMasks().mask_multi_passer(x_passers) & pmask;
     if(multi)
     {
-      int y_min = color ? _lsb64(multi) : _msb64(multi);
-      y_min >>= 3;
-      int cy = colored_y_[color][y_min];
-      score.common_ += (coeffs_->passerPawn_[cy]) >> 1;
+      int ymax = color ? _msb64(multi) : _lsb64(multi);
+      ymax >>= 3;
+      int cy = colored_y_[color][ymax];
+      int num = pop_count(multi);
+      score.common_ += coeffs_->passerGroup_[cy] * (num-1);
     }
   }
 

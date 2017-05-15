@@ -91,8 +91,8 @@ public:
  // // position evaluation. 0 - opening, 1 - endgame; color,type,pos
  // static const ScoreType positionEvaluations_[2][8][64];
 
- const int lazyThreshold0_ = Figure::figureWeight_[Figure::TypePawn] * 4;
- const int lazyThreshold1_ = Figure::figureWeight_[Figure::TypePawn] * 3;
+  const int lazyThreshold0_ = 400;// Figure::figureWeight_[Figure::TypePawn] * 4;
+  const int lazyThreshold1_ = 300;// Figure::figureWeight_[Figure::TypePawn] * 3;
 
  // // evaluation constants
  // static const ScoreType bishopKnightMat_[64];

@@ -70,8 +70,9 @@ namespace NEngine
     // arrays
     arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 8, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
     arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 15, 40, 50, 60, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
-    arrs_.push_back(details::Arr{ "unstoppablePawn_", std::vector<int>{ 0, 20, 25, 30, 35, 40, 45, 0 }, unstoppablePawn_,
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 60, 80, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
+    arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 3, 5, 7, 9, 11, 13, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
+    arrs_.push_back(details::Arr{ "unstoppablePawn_", std::vector<int>{ 0, 10, 20, 30, 40, 50, 60, 0 }, unstoppablePawn_,
                     sizeof(unstoppablePawn_)/sizeof(*unstoppablePawn_) });    
     arrs_.push_back(details::Arr{ "oKingToPasserBonus_", std::vector<int>{ 0, 0, 2, 4, 6, 8, 10, 12 }, oKingToPasserBonus_,
                     sizeof(oKingToPasserBonus_)/sizeof(*oKingToPasserBonus_) });
