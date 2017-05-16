@@ -289,22 +289,7 @@ namespace NEngine
 
       finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
       finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
-
-      //finfo_[0].attackersN_[Figure::TypePawn] = (int)((finfo_[Figure::ColorBlack].pawnAttacks_ & ki_mask_w) != 0);
-      //finfo_[1].attackersN_[Figure::TypePawn] = (int)((finfo_[Figure::ColorWhite].pawnAttacks_ & ki_mask_b) != 0);
-
-      //finfo_[0].attackersN_[Figure::TypeKing] = finfo_[1].attackersN_[Figure::TypeKing] = (int)((ki_mask_b & ki_mask_w) != 0);
     }
-
-    finfo_[0].allButKnightAttacks_ = finfo_[0].attack_mask_;
-    finfo_[0].allButBishopAttacks_ = finfo_[0].attack_mask_;
-    finfo_[0].allButRookAttacks_   = finfo_[0].attack_mask_;
-    finfo_[0].allButQueenAttacks_  = finfo_[0].attack_mask_;
-
-    finfo_[1].allButKnightAttacks_ = finfo_[1].attack_mask_;
-    finfo_[1].allButBishopAttacks_ = finfo_[1].attack_mask_;
-    finfo_[1].allButRookAttacks_   = finfo_[1].attack_mask_;
-    finfo_[1].allButQueenAttacks_  = finfo_[1].attack_mask_;
 
     alpha0_ = -ScoreMax;
     betta0_ = +ScoreMax;
@@ -459,6 +444,10 @@ namespace NEngine
     passerScore -= passerEvaluation(Figure::ColorBlack);
     score += passerScore;
 
+    auto mobilityScore = evaluateMobility(Figure::ColorWhite);
+    mobilityScore -= evaluateMobility(Figure::ColorBlack);
+    score += mobilityScore;
+
     auto result = considerColor(lipolScore(score, phaseInfo));
     return result;
   }
@@ -489,64 +478,6 @@ namespace NEngine
     phaseInfo.endGame_ = weightOEDiff_ - phaseInfo.opening_;
 
     return phaseInfo;
-  }
-
-  Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
-  {
-    FullScore score{};
-    auto const& fmgr = board_->fmgr();
-    auto const ocolor = Figure::otherColor(color);
-
-    // knights
-    BitMask knmask = fmgr.knight_mask(color);
-    for(; knmask;)
-    {
-      int n = clear_lsb(knmask);
-      int p = color ? Figure::mirrorIndex_[n] : n;
-      score.opening_ += coeffs_->knightPsq_[p];
-      auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
-      finfo_[color].attack_mask_ |= knight_moves;
-    }
-    // bishops
-    BitMask bimask = fmgr.bishop_mask(color);
-    for(; bimask;)
-    {
-      int n = clear_lsb(bimask);
-      int p = color ? Figure::mirrorIndex_[n] : n;
-      score.opening_ += coeffs_->bishopPsq_[p];
-      auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
-      finfo_[color].attack_mask_ |= bishop_moves;
-    }
-    // rooks
-    BitMask rmask = fmgr.rook_mask(color);
-    for(; rmask;)
-    {
-      int n = clear_lsb(rmask);
-      int p = color ? Figure::mirrorIndex_[n] : n;
-      score.opening_ += coeffs_->rookPsq_[p];
-      auto rook_moves = magic_ns::rook_moves(n, mask_all_);
-      finfo_[color].attack_mask_ |= rook_moves;
-
-      // open column
-      auto const& mask_col = pawnMasks().mask_column(Index(n).x());
-      bool no_pw_color  = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
-      bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
-      if(no_pw_color && no_pw_ocolor)
-        score.common_ += coeffs_->openRook_;
-      else if(no_pw_color || no_pw_ocolor)
-        score.common_ += coeffs_->openRook_ >> 2;
-    }
-    // queens
-    BitMask qmask = fmgr.queen_mask(color);
-    for(; qmask;)
-    {
-      int n = clear_lsb(qmask);
-      int p = color ? Figure::mirrorIndex_[n] : n;
-      score.opening_ += coeffs_->queenPsq_[p];
-      auto queen_moves = magic_ns::queen_moves(n, mask_all_);
-      finfo_[color].attack_mask_ |= queen_moves;
-    }
-    return score;
   }
 
   Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)

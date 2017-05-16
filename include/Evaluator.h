@@ -69,10 +69,6 @@ class Evaluator
     BitMask rookAttacks_{};
     BitMask queenAttacks_{};
     BitMask kingAttacks_{};
-    BitMask allButKnightAttacks_{};
-    BitMask allButBishopAttacks_{};
-    BitMask allButRookAttacks_{};
-    BitMask allButQueenAttacks_{};
     BitMask attack_mask_{};
     xlist<BitMask, 10> knightMasks_;
     xlist<BitMask, 10> bishopMasks_;
@@ -194,6 +190,8 @@ private:
   // + fill attacked fileds masks
   FullScore evaluatePsq(Figure::Color color);
 
+  FullScore evaluateMobility(Figure::Color color);
+
   FullScore evaluatePawnsPressure(Figure::Color color);
 
   ScoreType evaluateKingPsqEg(Figure::Color color) const;
@@ -220,21 +218,6 @@ private:
   int evaluateBlockedKnights();
   int evaluateBlockedBishops();
   int evaluateBlockedRooks();
-
- // ScoreType evaluatePassersAdditional(GamePhase phase, int coef_e);
- // ScoreType evaluatePasserAdditional(GamePhase phase, Figure::Color color, ScoreType & pw_score_eg, int & most_adv_y);
-
-  int evaluateFigures();
-  void calculateKnightsMoves();
-  void calculateBishopsMoves();
-  void calculateRooksMoves();
-  void calculateQueenMoves();
-  void calculateKnightsMobility();
-  void calculateBishopsMobility();
-  void calculateRooksMobility();
-  void calculateQueenMobility();
-
-  int evaluateFields();
 
  // ScoreType evaluateFianchetto() const;
 
