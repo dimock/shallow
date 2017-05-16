@@ -27,6 +27,8 @@ namespace NEngine
     vars_.push_back(details::Var{ "rookBehindBonus_", rookBehindBonus_, &rookBehindBonus_ });
     vars_.push_back(details::Var{ "protectedPawnPressure_", protectedPawnPressure_, &protectedPawnPressure_ });
     vars_.push_back(details::Var{ "unprotectedPawnPressure_", unprotectedPawnPressure_, &unprotectedPawnPressure_ });
+    vars_.push_back(details::Var{ "protectedPawnBishopTreat_", protectedPawnBishopTreat_, &protectedPawnBishopTreat_ });
+    vars_.push_back(details::Var{ "unprotectedPawnBishopTreat_", unprotectedPawnBishopTreat_, &unprotectedPawnBishopTreat_ });
 
     // rook on open column
     vars_.push_back(details::Var{ "openRook_", openRook_, &openRook_ });
@@ -72,8 +74,10 @@ namespace NEngine
     arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
     arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 60, 80, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
     arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 3, 5, 7, 9, 11, 13, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
-    arrs_.push_back(details::Arr{ "unstoppablePawn_", std::vector<int>{ 0, 10, 20, 30, 40, 50, 60, 0 }, unstoppablePawn_,
-                    sizeof(unstoppablePawn_)/sizeof(*unstoppablePawn_) });    
+    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 20, 25, 30, 35, 40, 45, 0 }, farKingPawn_,
+                    sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
+    arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 5, 7, 10, 15, 20, 30, 0 }, cangoPawn_,
+                    sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
     arrs_.push_back(details::Arr{ "oKingToPasserBonus_", std::vector<int>{ 0, 0, 2, 4, 6, 8, 10, 12 }, oKingToPasserBonus_,
                     sizeof(oKingToPasserBonus_)/sizeof(*oKingToPasserBonus_) });
     arrs_.push_back(details::Arr{ "myKingToPasserBonus_", std::vector<int>{ 6, 6, 5, 4, 3, 2, 1, 0 }, myKingToPasserBonus_,

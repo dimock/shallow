@@ -42,6 +42,7 @@ public:
 
   static  int8 s_whiteColors_[64];
   static uint8 s_transposeIndex_[64];
+  static uint64 s_whiteMask_;
 
   FiguresCounter()
   {

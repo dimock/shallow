@@ -491,6 +491,13 @@ namespace NEngine
     auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
     score.common_ = pop_count(pw_protected & attackers) * coeffs_->protectedPawnPressure_;
     score.common_ += pop_count(pw_unprotected & attackers) * coeffs_->unprotectedPawnPressure_;
+    // bishop treat
+    if(fmgr.bishops(color) == 1)
+    {
+      auto b_mask = fmgr.bishops_w(color) ? FiguresCounter::s_whiteMask_ : ~FiguresCounter::s_whiteMask_;
+      score.endGame_ += pop_count(pw_protected   & b_mask) * coeffs_->protectedPawnBishopTreat_;
+      score.endGame_ += pop_count(pw_unprotected & b_mask) * coeffs_->unprotectedPawnBishopTreat_;
+    }
     return score;
   }
 
@@ -714,6 +721,10 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
   Figure::Color ocolor = Figure::otherColor(color);
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
+  bool lessMaterial = (fmgr.knights(color)-fmgr.knights(ocolor)) * Figure::figureWeight_[Figure::TypeKnight]
+    + (fmgr.bishops(color)-fmgr.bishops(ocolor)) * Figure::figureWeight_[Figure::TypeBishop]
+    + (fmgr.rooks(color)-fmgr.rooks(ocolor)) * Figure::figureWeight_[Figure::TypeRook]
+    + (fmgr.queens(color)-fmgr.queens(ocolor)) * Figure::figureWeight_[Figure::TypeQueen] < 0;
 
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
@@ -791,13 +802,13 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
       can_go = true;
     }
 
-    // additional bonus if opponent's king can't go to my pawn's promotion field
-    score.common_ += can_go * coeffs_->passerPawn_[cy] >> 1;
+    // additional bonus if pawn can go forward
+    score.common_ += can_go * coeffs_->cangoPawn_[cy] >> 1;
     
     // opponent king could not go to my pawns promotion field
     if(king_far || !findRootToPawn(color, promo_pos, pawn_dist_promo+1))
     {
-      score.endGame_ += coeffs_->unstoppablePawn_[cy];
+      score.endGame_ += coeffs_->farKingPawn_[cy] >> lessMaterial;
     }
 
     // opponent king should be far from my pawn
