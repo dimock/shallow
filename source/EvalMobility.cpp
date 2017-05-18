@@ -23,7 +23,7 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
     int n = clear_lsb(knmask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += coeffs_->knightPsq_[p];
+    score.opening_ += evalCoeffs().knightPsq_[p];
     auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
     finfo_[color].attack_mask_ |= knight_moves;
     finfo_[color].knightAttacks_ |= knight_moves;
@@ -35,7 +35,7 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
     int n = clear_lsb(bimask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += coeffs_->bishopPsq_[p];
+    score.opening_ += evalCoeffs().bishopPsq_[p];
     auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
     finfo_[color].attack_mask_ |= bishop_moves;
     finfo_[color].bishopAttacks_ |= bishop_moves;
@@ -47,7 +47,7 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
     int n = clear_lsb(rmask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += coeffs_->rookPsq_[p];
+    score.opening_ += evalCoeffs().rookPsq_[p];
     auto rook_moves = magic_ns::rook_moves(n, mask_all_);
     finfo_[color].attack_mask_ |= rook_moves;
     finfo_[color].rookAttacks_ |= rook_moves;
@@ -58,9 +58,9 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
     bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
     if(no_pw_color && no_pw_ocolor)
-      score.common_ += coeffs_->openRook_;
+      score.common_ += evalCoeffs().openRook_;
     else if(no_pw_color || no_pw_ocolor)
-      score.common_ += coeffs_->openRook_ >> 2;
+      score.common_ += evalCoeffs().openRook_ >> 2;
   }
   // queens
   BitMask qmask = fmgr.queen_mask(color);
@@ -68,7 +68,7 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
     int n = clear_lsb(qmask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += coeffs_->queenPsq_[p];
+    score.opening_ += evalCoeffs().queenPsq_[p];
     auto queen_moves = magic_ns::queen_moves(n, mask_all_);
     finfo_[color].attack_mask_ |= queen_moves;
     finfo_[color].queenAttacks_ |= queen_moves;
@@ -99,26 +99,26 @@ Evaluator::FullScore Evaluator::evaluateMobility(Figure::Color color)
   for(auto queen_moves : finfo_[color].queenMasks_)
   {
     queen_moves &= q_blockers;
-    finfo_[color].queenMobility_ += coeffs_->queenMobility_[pop_count(queen_moves) & 31];
+    finfo_[color].queenMobility_ += evalCoeffs().queenMobility_[pop_count(queen_moves) & 31];
   }
 
   BitMask r_blockers = ((r_guard & ~r_attack) | r_allow) & color_mask_inv;
   for(auto rook_moves : finfo_[color].rookMasks_)
   {
     rook_moves &= r_blockers;
-    finfo_[color].rookMobility_ += coeffs_->rookMobility_[pop_count(rook_moves) & 15];
+    finfo_[color].rookMobility_ += evalCoeffs().rookMobility_[pop_count(rook_moves) & 15];
   }
 
   BitMask nb_blockers = ((nb_guard & ~nb_attack) | nb_allow) & color_mask_inv;
   for(auto knight_moves : finfo_[color].knightMasks_)
   {
     knight_moves &= nb_blockers;
-    finfo_[color].knightMobility_ += coeffs_->knightMobility_[pop_count(knight_moves) & 15];
+    finfo_[color].knightMobility_ += evalCoeffs().knightMobility_[pop_count(knight_moves) & 15];
   }
   for(auto bishop_moves : finfo_[color].bishopMasks_)
   {
     bishop_moves &= nb_blockers;
-    finfo_[color].bishopMobility_ += coeffs_->bishopMobility_[pop_count(bishop_moves) & 15];
+    finfo_[color].bishopMobility_ += evalCoeffs().bishopMobility_[pop_count(bishop_moves) & 15];
   }
 
   score.common_ += finfo_[color].knightMobility_;

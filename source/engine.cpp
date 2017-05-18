@@ -32,36 +32,14 @@ Engine::Engine() :
   for(auto& scontext : scontexts_)
   {
 #ifdef USE_HASH
-    scontext.eval_.initialize(&scontext.board_, &ehash_, &evalCoeffs_);
+    scontext.eval_.initialize(&scontext.board_, &ehash_);
 #else
-    scontext.eval_.initialize(&scontext.board_, nullptr, &evalCoeffs_);
+    scontext.eval_.initialize(&scontext.board_, nullptr);
 #endif
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
-void Engine::adjustEval(std::set<std::string> const& exclude,
-                        std::vector<details::Which> const& which,
-                        double percent)
-{
-  evalCoeffs_.random(exclude, which, percent);
-}
-
-void Engine::saveEval(std::string const& fname)
-{
-  evalCoeffs_.save(fname);
-}
-
-EvalCoefficients const& Engine::getEvals() const
-{
-  return evalCoeffs_;
-}
-
-void Engine::setEvals(EvalCoefficients const& e)
-{
-  evalCoeffs_ = e;
-}
-
 void Engine::needUpdate()
 {
   updateRequested_ = true;

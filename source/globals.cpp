@@ -10,14 +10,14 @@ namespace NEngine
 
 namespace details
 {
-  DeltaPosCounter const* g_deltaPosCounter_{};
-  BetweenMask const*     g_betweenMasks_{};
-  DistanceCounter const* g_distanceCounter_{};
-  MovesTable const*      g_movesTable_{};
-  FigureDir const*       g_figureDir_{};
-  PawnMasks const*       g_pawnMasks_{};
-  SpecialCasesDetector
-  const*                 g_specialCases_{};
+  EvalCoefficients const*     g_evalCoeffs_;
+  DeltaPosCounter const*      g_deltaPosCounter_{};
+  BetweenMask const*          g_betweenMasks_{};
+  DistanceCounter const*      g_distanceCounter_{};
+  MovesTable const*           g_movesTable_{};
+  FigureDir const*            g_figureDir_{};
+  PawnMasks const*            g_pawnMasks_{};
+  SpecialCasesDetector const* g_specialCases_{};
 }
 
 namespace
@@ -25,18 +25,19 @@ namespace
 
 class Globals
 {
-  std::unique_ptr<DeltaPosCounter> deltaPosCounter_;
-  std::unique_ptr<BetweenMask>     betweenMasks_;
-  std::unique_ptr<DistanceCounter> distanceCounter_;
-  std::unique_ptr<MovesTable>      movesTable_;
-  std::unique_ptr<FigureDir>       figureDir_;
-  std::unique_ptr<PawnMasks>       pawnMasks_;
-  std::unique_ptr<
-  SpecialCasesDetector>            specialCases_;
+  std::unique_ptr<EvalCoefficients>       evalCoeffs_;
+  std::unique_ptr<DeltaPosCounter>        deltaPosCounter_;
+  std::unique_ptr<BetweenMask>            betweenMasks_;
+  std::unique_ptr<DistanceCounter>        distanceCounter_;
+  std::unique_ptr<MovesTable>             movesTable_;
+  std::unique_ptr<FigureDir>              figureDir_;
+  std::unique_ptr<PawnMasks>              pawnMasks_;
+  std::unique_ptr<SpecialCasesDetector>   specialCases_;
 
 public:
   Globals()
   {
+    evalCoeffs_      = std::unique_ptr<EvalCoefficients>(new EvalCoefficients);
     deltaPosCounter_ = std::unique_ptr<DeltaPosCounter>(new DeltaPosCounter);
     betweenMasks_    = std::unique_ptr<BetweenMask>(new BetweenMask(*deltaPosCounter_));
     distanceCounter_ = std::unique_ptr<DistanceCounter>(new DistanceCounter);
@@ -45,6 +46,7 @@ public:
     pawnMasks_       = std::unique_ptr<PawnMasks>(new PawnMasks);
     specialCases_    = std::unique_ptr<SpecialCasesDetector>(new SpecialCasesDetector);
 
+    details::g_evalCoeffs_ = evalCoeffs_.get();
     details::g_deltaPosCounter_ = deltaPosCounter_.get();
     details::g_betweenMasks_ = betweenMasks_.get();
     details::g_distanceCounter_ = distanceCounter_.get();

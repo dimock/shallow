@@ -35,23 +35,6 @@ namespace
 
   const int delta_y_[2] = { -8, 8 };
 
-  // king position eval for BN-mat
-  const ScoreType bishopKnightMat_[64] =
-  {
-    16, 10, 6, 1, -2, -5, -12, -16,
-    10, 12, 5, -1, -3, -6, -14, -12,
-    5, 5, 4, -2, -4, -8, -8, -10,
-    -1, -1, -2, -6, -6, -6, -5, -4,
-    -4, -5, -6, -6, -6, -2, -1, -1,
-    -10, -8, -8, -4, -2, 4, 5, 5,
-    -12, -14, -6, -3, -1, 5, 12, 10,
-    -16, -12, -5, -2, 1, 6, 10, 16
-  };
-
-  const ScoreType kingToPawnDistanceMulti_ = 3;
-  const ScoreType knightToPawnDistanceMulti_ = 1;
-  const ScoreType pawnPromoBonus_ = 5;
-
   ScoreType evalKings1Pawn(Board const& board, Figure::Color pawnColor)
   {
     Figure::Color ocolor = Figure::otherColor(pawnColor);
@@ -62,12 +45,12 @@ namespace
     int dist_w = distanceCounter().getDistance(kw, pp);
     int dist_l = distanceCounter().getDistance(kl, pp);
     int y = pawn_colored_y_[pawnColor][p.y()];
-    ScoreType score = (7-dist_w + dist_l) * kingToPawnDistanceMulti_ + y * pawnPromoBonus_;
+    ScoreType score = (7-dist_w + dist_l) * evalCoeffs().kingToPawnDistanceMulti_ + evalCoeffs().passerPawn_[y];
     auto kn_mask = board.fmgr().knight_mask(ocolor);
     for(; kn_mask;)
     {
       int n = clear_lsb(kn_mask);
-      score += distanceCounter().getDistance(n, pp) * knightToPawnDistanceMulti_;
+      score += distanceCounter().getDistance(n, pp) * evalCoeffs().knightToPawnDistanceMulti_;
     }
     if(!pawnColor)
       score = -score;
@@ -77,129 +60,232 @@ namespace
 
 SpecialCasesDetector::SpecialCasesDetector()
 {
-  initSimple();
-  initComplex();
+  initUsual();
   initWinnerLoser();
 }
 
-void SpecialCasesDetector::initSimple()
+void SpecialCasesDetector::initUsual()
 {
-  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = -10;
-  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = -10;
-
-  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = +10;
-  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = +10;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = +20;
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = +20;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = -20;
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = -20;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = +10;
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = +10;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 2 } })] = -10;
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 2 } })] = -10;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = +10;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = -10;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = -30;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = -30;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = +30;
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = +30;
-
-  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = -30;
-
-  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 2 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = +30;
-
-  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = -10;
-
-  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = +10;
-
-  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = -10;
-
-  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = +10;
-
-  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = -20;
-
-  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = +20;
-
-  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = -20;
-
-  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = +20;
-}
-
-void SpecialCasesDetector::initComplex()
-{
-  auto bishops_vs_knight = [](Board const& board, Figure::Color bishopColor)
+  auto eval_king = [](Board const& board, Figure::Color winnerColor)
   {
-    auto knightColor = Figure::otherColor(bishopColor);
-    int npos = _lsb64(board.fmgr().knight_mask(knightColor));
-    int kpos = _lsb64(board.fmgr().king_mask(knightColor));
-    ScoreType score = 70;
-    score += distanceCounter().getDistance(npos, 32);
-    score += distanceCounter().getDistance(npos, 32) * 2;
-    if(bishopColor == Figure::ColorBlack)
+    auto loserColor = Figure::otherColor(winnerColor);
+    auto kw = board.kingPos(winnerColor);
+    auto kl = board.kingPos(loserColor);
+    auto score = (7 - distanceCounter().getDistance(kw, kl)) * evalCoeffs().kingToKingDistanceMulti_;
+    score -= evalCoeffs().kingPsqEg_[kl];
+    if(auto n_mask = board.fmgr().knight_mask(winnerColor))
+    {
+      auto np = _lsb64(n_mask);
+      score += (7 - distanceCounter().getDistance(kl, np)) * evalCoeffs().figureToKingDistanceMulti_;
+    }
+    if(auto b_mask = board.fmgr().bishop_mask(winnerColor))
+    {
+      auto bp = _lsb64(b_mask);
+      score += (7 - distanceCounter().getDistance(kl, bp)) * evalCoeffs().figureToKingDistanceMulti_;
+    }
+    if(!winnerColor)
       score = -score;
     return score;
   };
 
-  complexScases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [bishops_vs_knight](Board const& board)
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return -15 + eval_king(board, Figure::ColorBlack);
+  };
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return -15 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return +15 + eval_king(board, Figure::ColorWhite);
+  };
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return +15 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return +20 + eval_king(board, Figure::ColorWhite);
+  };
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return +20 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return -20 + eval_king(board, Figure::ColorBlack);
+  };
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return -20 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = [eval_king](Board const& board)
+  {
+    return -15 + eval_king(board, Figure::ColorBlack);
+  };
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = [eval_king](Board const& board)
+  {
+    return +40 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+  { Figure::TypeKnight, Figure::ColorBlack, 2 } })] = [eval_king](Board const& board)
+  {
+    return +15 + eval_king(board, Figure::ColorWhite);
+  };
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+  { Figure::TypeBishop, Figure::ColorBlack, 2 } })] = [eval_king](Board const& board)
+  {
+    return -40 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return +25 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return -25 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return -40 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return -50 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return +40 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return +50 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return -35 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 2 },
+  { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return +35 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
+  { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return -15 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return +15 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  {
+    return -15 + eval_king(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  {
+    return +15 + eval_king(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypePawn, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+  }; 
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
+    { Figure::TypePawn, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypePawn, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
+    { Figure::TypePawn, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+  };
+
+  auto bishops_vs_knight = [](Board const& board, Figure::Color winnerColor)
+  {
+    auto loserColor = Figure::otherColor(winnerColor);
+    auto kw = board.kingPos(winnerColor);
+    auto kl = board.kingPos(loserColor);
+    int npos = _lsb64(board.fmgr().knight_mask(loserColor));
+    auto score = 70 + (7 - distanceCounter().getDistance(kw, kl)) * evalCoeffs().kingToKingDistanceMulti_;
+    score -= evalCoeffs().kingPsqEg_[kl];
+    score += distanceCounter().getDistance(npos, kl) * evalCoeffs().figureToKingDistanceMulti_;
+    if(winnerColor == Figure::ColorBlack)
+      score = -score;
+    return score;
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
+  { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [bishops_vs_knight](Board const& board)
   {
     return bishops_vs_knight(board, Figure::ColorBlack);
   };
 
-  complexScases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 2 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [bishops_vs_knight](Board const& board)
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 2 },
+  { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [bishops_vs_knight](Board const& board)
   {
     return bishops_vs_knight(board, Figure::ColorWhite);
   };
@@ -213,40 +299,40 @@ void SpecialCasesDetector::initComplex()
       return -10 + 20*(Figure::ColorBlack == board.getColor());
     };
 
-    complexScases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-      { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
+    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
-      { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = force_xchg;
+    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
+    { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-      { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
+    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
-      { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
+    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
+    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-      { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
+    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-      { Figure::TypeBishop, Figure::ColorBlack, 1 },
-      { Figure::TypeKnight, Figure::ColorWhite, 1 },
-      { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
+    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-      { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
+    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
-      { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
+    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
+    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-      { Figure::TypeRook, Figure::ColorWhite, 1 } })] = force_xchg;
+    scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeRook, Figure::ColorBlack, 2 },
-      { Figure::TypeRook, Figure::ColorWhite, 2 } })] = force_xchg;
+    scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 2 },
+    { Figure::TypeRook, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    complexScases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
-      { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = force_xchg;
+    scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
+    { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = force_xchg;
   }
 }
 
@@ -326,7 +412,7 @@ void SpecialCasesDetector::initWinnerLoser()
     {
       kp = Figure::mirrorIndex_[kp];
     }
-    score += bishopKnightMat_[kp];
+    score += evalCoeffs().bishopKnightMat_[kp];
     int ndist = distanceCounter().getDistance(kn, kl);
     score -= ndist >> 1;
     return score;
@@ -570,8 +656,8 @@ void SpecialCasesDetector::initWinnerLoser()
       Index p(clear_lsb(pmask));
       Index pp(p.x(), winnerColor*7);
       int y = pawn_colored_y_[winnerColor][p.y()];
-      score += y * pawnPromoBonus_;
-      score += (7 - distanceCounter().getDistance(kw, pp) + distanceCounter().getDistance(kl, pp)) * kingToPawnDistanceMulti_;
+      score += evalCoeffs().passerPawn_[p];
+      score += (7 - distanceCounter().getDistance(kw, pp) + distanceCounter().getDistance(kl, pp)) * evalCoeffs().kingToPawnDistanceMulti_;
     }
     if(winnerColor == Figure::ColorBlack)
       score = -score;
@@ -637,13 +723,7 @@ void SpecialCasesDetector::initWinnerLoser()
     return score + (winnerColor ? fscore : -fscore);
   };
 
-  auto knight_and_pawn = [](Board const& board, Figure::Color winnerColor)
-  {
-    ScoreType score{};
-    return score;
-  };
-
-  // figure + pawn
+  // bishop + pawn
   winnerLoser_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [bishop_and_pawn](Board const& board)
   {
@@ -654,16 +734,6 @@ void SpecialCasesDetector::initWinnerLoser()
   {
     return bishop_and_pawn(board, Figure::ColorBlack);
   };
-  //winnerLoser_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
-  //  { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [knight_and_pawn](Board const& board)
-  //{
-  //  return knight_and_pawn(board, Figure::ColorBlack);
-  //};
-  //winnerLoser_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-  //  { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [knight_and_pawn](Board const& board)
-  //{
-  //  return knight_and_pawn(board, Figure::ColorWhite);
-  //};
 }
 
 boost::optional<ScoreType> SpecialCasesDetector::eval(Board const& board) const
@@ -682,11 +752,6 @@ boost::optional<ScoreType> SpecialCasesDetector::eval(Board const& board) const
   {
     auto iter = scases_.find(sc);
     if(iter != scases_.end())
-      return iter->second;
-  }
-  {
-    auto iter = complexScases_.find(sc);
-    if(iter != complexScases_.end())
       return (iter->second)(board);
   }
   if(board.isWinnerLoser())

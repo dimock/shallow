@@ -181,7 +181,7 @@ void see_perf_test(std::string const& fname)
 void optimizeFen(std::string const& ffname)
 {
   NShallow::Processor proc;
-  NEngine::EvalCoefficients evals{ proc.getEvals() };
+  NEngine::EvalCoefficients evals{ evalCoeffs() };
   int summ_min{ -1 };
   int iters_num{};
   int steps_num{};
@@ -217,18 +217,18 @@ void optimizeFen(std::string const& ffname)
     if(summ_min < 0 || summ_min > summ)
     {
       summ_min = summ;
-      proc.saveEval("eval.txt");
-      evals = proc.getEvals();
+      //proc.saveEval("eval.txt");
+      //evals = proc.getEvals();
       evals.currentToIninital();
     }
     if(++iters_num >= Niters)
     {
       iters_num = 0;
       steps_num++;
-      proc.setEvals(evals);
+      //proc.setEvals(evals);
       r *= dr;
     }
-    proc.adjustEval({}, {}, r);
+    //proc.adjustEval({}, {}, r);
     std::cout << iters_num << " iteration. " << steps_num << " step. current fails = " << summ << ". minimum fails = " << summ_min << std::endl;
     return steps_num < Nsteps;
   },
@@ -247,7 +247,7 @@ void evaluateFen(std::string const& ffname)
   {
     NShallow::Processor proc;
     NEngine::Evaluator eval;
-    eval.initialize(&e.board_, nullptr, &proc.getEvals());
+    eval.initialize(&e.board_, nullptr);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     std::cout << score << std::endl;
   },

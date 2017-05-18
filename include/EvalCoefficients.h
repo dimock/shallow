@@ -109,6 +109,14 @@ struct EvalCoefficients
   int queenPsq_[64]  = {};
   int kingPsqEg_[64] = {};
 
+  // for special cases
+  int kingToPawnDistanceMulti_{ 3 };
+  int knightToPawnDistanceMulti_{ 1 };
+  int kingToKingDistanceMulti_{ 2 };
+  int figureToKingDistanceMulti_{ 2 };
+
+  int bishopKnightMat_[64] = {};
+
   void save(std::string const& ofname);
   void random(std::set<std::string> const& exclude,
               std::vector<details::Which> const& which,

@@ -251,11 +251,10 @@ namespace NEngine
     { 7, 6, 5, 4, 3, 2, 1, 0 },
     { 0, 1, 2, 3, 4, 5, 6, 7 } };
 
-  void Evaluator::initialize(Board const* board, EHashTable* ehash, EvalCoefficients const* coeffs)
+  void Evaluator::initialize(Board const* board, EHashTable* ehash)
   {
     board_ = board;
     ehash_ = ehash;
-    coeffs_ = coeffs;
   }
 
   void Evaluator::prepare()
@@ -330,7 +329,6 @@ namespace NEngine
   ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
   {
     X_ASSERT(!board_, "Evaluator wasn't properly initialized");
-    X_ASSERT(!coeffs_, "Evaluation coefficients was not set");
 
     if(ehash_)
       ehash_->prefetch(board_->pawnCode());
@@ -489,14 +487,14 @@ namespace NEngine
     auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
     auto pw_unprotected = pw_mask ^ pw_protected;
     auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
-    score.common_ = pop_count(pw_protected & attackers) * coeffs_->protectedPawnPressure_;
-    score.common_ += pop_count(pw_unprotected & attackers) * coeffs_->unprotectedPawnPressure_;
+    score.common_ = pop_count(pw_protected & attackers) * evalCoeffs().protectedPawnPressure_;
+    score.common_ += pop_count(pw_unprotected & attackers) * evalCoeffs().unprotectedPawnPressure_;
     // bishop treat
     if(fmgr.bishops(color) == 1)
     {
       auto b_mask = fmgr.bishops_w(color) ? FiguresCounter::s_whiteMask_ : ~FiguresCounter::s_whiteMask_;
-      score.endGame_ += pop_count(pw_protected   & b_mask) * coeffs_->protectedPawnBishopTreat_;
-      score.endGame_ += pop_count(pw_unprotected & b_mask) * coeffs_->unprotectedPawnBishopTreat_;
+      score.endGame_ += pop_count(pw_protected   & b_mask) * evalCoeffs().protectedPawnBishopTreat_;
+      score.endGame_ += pop_count(pw_unprotected & b_mask) * evalCoeffs().unprotectedPawnBishopTreat_;
     }
     return score;
   }
@@ -504,7 +502,7 @@ namespace NEngine
   ScoreType Evaluator::evaluateKingPsqEg(Figure::Color color) const
   {
     int p = finfo_[color].king_pos_;
-    return coeffs_->knightPsq_[p];
+    return evalCoeffs().knightPsq_[p];
   }
 
   Evaluator::FullScore Evaluator::hashedEvaluation()
@@ -599,7 +597,7 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
     return{};
 
   FullScore score;
-  score.endGame_ = fmgr.pawns(color) * coeffs_->pawnEndgameBonus_;
+  score.endGame_ = fmgr.pawns(color) * evalCoeffs().pawnEndgameBonus_;
 
   static int promo_y[] = { 0, 7 };
   static int delta_y[] = { -1, +1 };
@@ -621,17 +619,17 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
     int cy = colored_y_[color][idx.y()];
     
     // lets move forward
-    score.common_ += coeffs_->forwardPawn_[cy];
+    score.common_ += evalCoeffs().forwardPawn_[cy];
 
     // 1. center pawns
     if(x == 3 || x == 4) // D, E columns
     {
-      score.opening_ += coeffs_->centerPawn_[cy];
+      score.opening_ += evalCoeffs().centerPawn_[cy];
     }
 
     // 2. passed pawn
     {
-      auto coeffPassed = coeffs_->passerPawn_[cy];
+      auto coeffPassed = evalCoeffs().passerPawn_[cy];
       bool passer = (opmsk & pawnMasks().mask_passed(color, n)) == 0ULL;
       x_passers |= passer << x;
       bool quadpasser = (pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL;
@@ -652,12 +650,12 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
       auto const& dblmsk = pawnMasks().mask_doubled(x);
       auto num_dbl = pop_count(pmask & dblmsk);
       X_ASSERT(num_dbl <= 0, "doubled pawns number is zero or negative");
-      score.common_ += (num_dbl - 1) * coeffs_->doubledPawn_;
+      score.common_ += (num_dbl - 1) * evalCoeffs().doubledPawn_;
     }
 
     // 4. isolated pawn
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
-    score.common_ += isolated * coeffs_->isolatedPawn_;
+    score.common_ += isolated * evalCoeffs().isolatedPawn_;
 
     if(!isolated)
     {
@@ -669,18 +667,18 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
         X_ASSERT(closest_y < 0 || closest_y > 7, "backward mask calculation error - invalid next y position");
         BitMask pmask_after = betweenMasks().between(n, Index(idx.x(), closest_y));
         bool is_blocked  = ((finfo_[ocolor].pawnAttacks_ | opmsk) & pmask_after) != 0ULL;
-        score.common_ += is_blocked * coeffs_->backwardPawn_;
+        score.common_ += is_blocked * evalCoeffs().backwardPawn_;
       }
       // 6. forward but not supported
       else if(!couldBeSupported(idx, color, ocolor, pmask, opmsk))
       {
-        score.common_ += coeffs_->unsupportedPawn_;
+        score.common_ += evalCoeffs().unsupportedPawn_;
       }
       // 7. unprotected
       else
       {
         bool is_unprotected = (pawnMasks().mask_supported(color, idx) & pmask) == 0ULL;
-        score.common_ += is_unprotected * coeffs_->unprotectedPawn_;
+        score.common_ += is_unprotected * evalCoeffs().unprotectedPawn_;
       }
     }
   }
@@ -694,7 +692,7 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
       ymax >>= 3;
       int cy = colored_y_[color][ymax];
       int num = pop_count(multi);
-      score.common_ += coeffs_->passerGroup_[cy] * (num-1);
+      score.common_ += evalCoeffs().passerGroup_[cy] * (num-1);
     }
   }
 
@@ -761,13 +759,13 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
     {
       int rpos = color ? _msb64(behind_msk) : _lsb64(behind_msk);
       if ( board_->is_nothing_between(n, rpos, inv_mask_all_) )
-        score.common_ += coeffs_->rookBehindBonus_;
+        score.common_ += evalCoeffs().rookBehindBonus_;
     }
     else if ( o_behind_msk ) // may be opponent's rook - give penalty
     {
       int rpos = color ? _msb64(o_behind_msk) : _lsb64(o_behind_msk);
       if ( board_->is_nothing_between(n, rpos, inv_mask_all_) )
-        score.common_ -= coeffs_->rookBehindBonus_;
+        score.common_ -= evalCoeffs().rookBehindBonus_;
     }
     
     // pawn can go to the next line
@@ -803,22 +801,22 @@ Evaluator::FullScore Evaluator::passerEvaluation(Figure::Color color) const
     }
 
     // additional bonus if pawn can go forward
-    score.common_ += can_go * coeffs_->cangoPawn_[cy] >> 1;
+    score.common_ += can_go * evalCoeffs().cangoPawn_[cy] >> 1;
     
     // opponent king could not go to my pawns promotion field
     if(king_far || !findRootToPawn(color, promo_pos, pawn_dist_promo+1))
     {
-      score.endGame_ += coeffs_->farKingPawn_[cy] >> lessMaterial;
+      score.endGame_ += evalCoeffs().farKingPawn_[cy] >> lessMaterial;
     }
 
     // opponent king should be far from my pawn
     int dist_to_oking = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
-    score.endGame_ += coeffs_->oKingToPasserBonus_[dist_to_oking];
+    score.endGame_ += evalCoeffs().oKingToPasserBonus_[dist_to_oking];
 
     // small bonus for short distance to my king
     // double if opponent has no pawns
     int dist_to_myking = distanceCounter().getDistance(finfo_[color].king_pos_, n);
-    score.endGame_ += coeffs_->myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
+    score.endGame_ += evalCoeffs().myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
   }
   return score;
 }
@@ -889,7 +887,7 @@ Evaluator::FullScore Evaluator::evaluateKingSafety(Figure::Color color) const
   score.opening_ += evaluateCastle(color, ocolor, ctype, ki_pos);
 
   int cy = colored_y_[color][ky] - 1;
-  score.opening_ += coeffs_->roamingKing_ * cy * (cy > 0);
+  score.opening_ += evalCoeffs().roamingKing_ * cy * (cy > 0);
 
   // pawns shield
   static const BitMask pawns_shield_mask[2][2][3] =
@@ -982,17 +980,17 @@ Evaluator::FullScore Evaluator::evaluateKingSafety(Figure::Color color) const
 
   if(ctype >= 0)
   {
-    int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0) * coeffs_->pawnShieldA_
-      + ((pawns_shield_mask[color][ctype][1] & pmask) != 0) * coeffs_->pawnShieldB_
-      + ((pawns_shield_mask[color][ctype][2] & pmask) != 0) * coeffs_->pawnShieldC_;
+    int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0) * evalCoeffs().pawnShieldA_
+      + ((pawns_shield_mask[color][ctype][1] & pmask) != 0) * evalCoeffs().pawnShieldB_
+      + ((pawns_shield_mask[color][ctype][2] & pmask) != 0) * evalCoeffs().pawnShieldC_;
     
-    int shield_penalty = ((pawns_penalty_mask[ctype][0] & pmask) == 0) * coeffs_->pawnPenaltyA_
-      + ((pawns_penalty_mask[ctype][1] & pmask) == 0) * coeffs_->pawnPenaltyB_
-      + ((pawns_penalty_mask[ctype][2] & pmask) == 0) * coeffs_->pawnPenaltyC_;
+    int shield_penalty = ((pawns_penalty_mask[ctype][0] & pmask) == 0) * evalCoeffs().pawnPenaltyA_
+      + ((pawns_penalty_mask[ctype][1] & pmask) == 0) * evalCoeffs().pawnPenaltyB_
+      + ((pawns_penalty_mask[ctype][2] & pmask) == 0) * evalCoeffs().pawnPenaltyC_;
 
-    int opponent_penalty = ((opponent_pawn_mask[color][ctype][0] & opmask) != 0) * coeffs_->opponentPawnA_
-      + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0) * coeffs_->opponentPawnB_
-      + ((opponent_pawn_mask[color][ctype][2] & opmask) != 0) * coeffs_->opponentPawnC_;
+    int opponent_penalty = ((opponent_pawn_mask[color][ctype][0] & opmask) != 0) * evalCoeffs().opponentPawnA_
+      + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0) * evalCoeffs().opponentPawnB_
+      + ((opponent_pawn_mask[color][ctype][2] & opmask) != 0) * evalCoeffs().opponentPawnC_;
 
     score.opening_ += shield_bonus;
     score.opening_ += shield_penalty;
@@ -1013,7 +1011,7 @@ int Evaluator::evaluateCastle(Figure::Color color, Figure::Color ocolor, int cas
       set_mask_bit(A1)|set_mask_bit(B1)|set_mask_bit(C1)|set_mask_bit(A2)|set_mask_bit(B2)|set_mask_bit(C2)} };
 
   if(castleType < 0 && !board_->castling(color))
-    return coeffs_->castleImpossible_;
+    return evalCoeffs().castleImpossible_;
 
   // fake castle
   if ( !board_->castling(color) && castleType >= 0 )
@@ -1023,9 +1021,9 @@ int Evaluator::evaluateCastle(Figure::Color color, Figure::Color ocolor, int cas
     {
       Index r_pos( _lsb64(r_mask) );
       if(castleType == 0 && r_pos.x() > ki_pos.x() || castleType == 1 && r_pos.x() < ki_pos.x())
-        return coeffs_->fakeCastle_;
+        return evalCoeffs().fakeCastle_;
     }
-    return coeffs_->castleBonus_;
+    return evalCoeffs().castleBonus_;
   }
   return 0;
 }
@@ -1043,35 +1041,35 @@ int Evaluator::evaluateBlockedKnights()
     case A8:
       if(board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= coeffs_->knightBlocked_;
+         score_w -= evalCoeffs().knightBlocked_;
       break;
 
     case A7:
       if(board_->isFigure(A6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= coeffs_->knightBlocked_;
+         score_w -= evalCoeffs().knightBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= coeffs_->knightBlocked_;
+        score_w -= evalCoeffs().knightBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= coeffs_->knightBlocked_;
+         score_w -= evalCoeffs().knightBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(H6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= coeffs_->knightBlocked_;
+         score_w -= evalCoeffs().knightBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= coeffs_->knightBlocked_;
+        score_w -= evalCoeffs().knightBlocked_;
       break;
     }
   }
@@ -1086,35 +1084,35 @@ int Evaluator::evaluateBlockedKnights()
     case A1:
       if(board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= coeffs_->knightBlocked_;
+         score_b -= evalCoeffs().knightBlocked_;
       break;
 
     case A2:
       if(board_->isFigure(A3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= coeffs_->knightBlocked_;
+         score_b -= evalCoeffs().knightBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= coeffs_->knightBlocked_;
+        score_b -= evalCoeffs().knightBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= coeffs_->knightBlocked_;
+         score_b -= evalCoeffs().knightBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(H3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= coeffs_->knightBlocked_;
+         score_b -= evalCoeffs().knightBlocked_;
       break;
 
     case G1:
       if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= coeffs_->knightBlocked_;
+        score_b -= evalCoeffs().knightBlocked_;
       break;
     }
   }
@@ -1132,48 +1130,48 @@ int Evaluator::evaluateBlockedBishops()
     {
     case A7:
       if(board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= coeffs_->bishopBlocked_;
+        score_w -= evalCoeffs().bishopBlocked_;
       break;
 
     case A6:
       if(board_->isFigure(B5, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(C6, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= coeffs_->bishopBlocked_;
+         score_w -= evalCoeffs().bishopBlocked_;
       break;
 
     case A8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= coeffs_->bishopBlocked_;
+        score_w -= evalCoeffs().bishopBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w -= coeffs_->bishopBlocked_;
+         score_w -= evalCoeffs().bishopBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= coeffs_->bishopBlocked_;
+        score_w -= evalCoeffs().bishopBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= coeffs_->bishopBlocked_;
+        score_w -= evalCoeffs().bishopBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w -= coeffs_->bishopBlocked_;
+         score_w -= evalCoeffs().bishopBlocked_;
       break;
 
     case H6:
       if(board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= coeffs_->bishopBlocked_;
+         score_w -= evalCoeffs().bishopBlocked_;
       break;
     }
   }
@@ -1187,48 +1185,48 @@ int Evaluator::evaluateBlockedBishops()
     {
     case A2:
       if(board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= coeffs_->bishopBlocked_;
+        score_b -= evalCoeffs().bishopBlocked_;
       break;
 
     case A3:
       if(board_->isFigure(B4, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(C3, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= coeffs_->bishopBlocked_;
+         score_b -= evalCoeffs().bishopBlocked_;
       break;
 
     case A1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= coeffs_->bishopBlocked_;
+        score_b -= evalCoeffs().bishopBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b -= coeffs_->bishopBlocked_;
+         score_b -= evalCoeffs().bishopBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= coeffs_->bishopBlocked_;
+        score_b -= evalCoeffs().bishopBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= coeffs_->bishopBlocked_;
+        score_b -= evalCoeffs().bishopBlocked_;
       break;
 
     case G1:
       if(board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b -= coeffs_->bishopBlocked_;
+         score_b -= evalCoeffs().bishopBlocked_;
       break;
 
     case H3:
       if(board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= coeffs_->bishopBlocked_;
+         score_b -= evalCoeffs().bishopBlocked_;
       break;
     }
   }
@@ -1249,7 +1247,7 @@ int Evaluator::evaluateBlockedRooks()
       Index n(clear_lsb(romask));
       BitMask block_mask = movesTable().blocked_rook(n);
       bool is_blocked = ((blockers & block_mask) == block_mask);
-      score -= is_blocked * coeffs_->rookBlocked_;
+      score -= is_blocked * evalCoeffs().rookBlocked_;
     }
     return score;
   };
@@ -1264,8 +1262,8 @@ ScoreType Evaluator::evaluateMaterialDiff()
   const FiguresManager & fmgr = board_->fmgr();
 
   // bonus for bishops
-  score += fmgr.bishops(Figure::ColorWhite) * coeffs_->bishopBonus_;
-  score -= fmgr.bishops(Figure::ColorBlack) * coeffs_->bishopBonus_;
+  score += fmgr.bishops(Figure::ColorWhite) * evalCoeffs().bishopBonus_;
+  score -= fmgr.bishops(Figure::ColorBlack) * evalCoeffs().bishopBonus_;
 
   // Knight or Bishop against 3 pawns
   int figuresDiff = (fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite)) -
@@ -1278,7 +1276,7 @@ ScoreType Evaluator::evaluateMaterialDiff()
   {
     Figure::Color strongColor = (Figure::Color)(figuresDiff > 0);
     int pawnsN = fmgr.pawns(strongColor) != 0;
-    score += figuresDiff * coeffs_->figureAgainstPawnBonus_[pawnsN];
+    score += figuresDiff * evalCoeffs().figureAgainstPawnBonus_[pawnsN];
   }
 
   // Knight|Bishop+2Pawns vs. Rook
@@ -1286,7 +1284,7 @@ ScoreType Evaluator::evaluateMaterialDiff()
   {
     Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
     int pawnsN = fmgr.pawns(strongColor) != 0;
-    score += rooksDiff * coeffs_->rookAgainstFigureBonus_[pawnsN];
+    score += rooksDiff * evalCoeffs().rookAgainstFigureBonus_[pawnsN];
   }
 
   return score;
@@ -1302,7 +1300,7 @@ ScoreType Evaluator::evaluateWinnerLoser()
   ScoreType score = fmgr.weight(win_color);
 
   // bonus for pawns
-  score += fmgr.pawns(win_color)*coeffs_->pawnEndgameBonus_;
+  score += fmgr.pawns(win_color)*evalCoeffs().pawnEndgameBonus_;
 
   Index king_pos_w = board_->kingPos(win_color);
   Index king_pos_l = board_->kingPos(lose_color);
@@ -1318,8 +1316,8 @@ ScoreType Evaluator::evaluateWinnerLoser()
     if(fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 1 && fmgr.knights(win_color) +fmgr.bishops(win_color) == 0)
     {
       weight_lose_fig = Figure::figureWeight_[Figure::TypePawn]
-        + (coeffs_->passerPawn_[7])
-        + coeffs_->pawnEndgameBonus_;
+        + (evalCoeffs().passerPawn_[7])
+        + evalCoeffs().pawnEndgameBonus_;
     }
     // if winner has more pawns than loser figures and also has some figure he must exchange all loser figures to pawns
     else if(fmgr.knights(lose_color)+fmgr.bishops(lose_color) > 0
@@ -1327,8 +1325,8 @@ ScoreType Evaluator::evaluateWinnerLoser()
             && fmgr.knights(lose_color)+fmgr.bishops(lose_color) < fmgr.pawns(win_color))
     {
       weight_lose_fig = Figure::figureWeight_[Figure::TypePawn]
-        + (coeffs_->passerPawn_[7])
-        + coeffs_->pawnEndgameBonus_;
+        + (evalCoeffs().passerPawn_[7])
+        + evalCoeffs().pawnEndgameBonus_;
     }
 
     score -= num_lose_figs * weight_lose_fig;

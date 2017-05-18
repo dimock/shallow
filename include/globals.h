@@ -6,20 +6,21 @@ Board.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <MovesTable.h>
 #include <FigureDirs.h>
 #include <SpecialCases.h>
+#include <EvalCoefficients.h>
 
 namespace NEngine
 {
 
 namespace details
 {
-  extern DeltaPosCounter const* g_deltaPosCounter_;
-  extern BetweenMask const*     g_betweenMasks_;
-  extern DistanceCounter const* g_distanceCounter_;
-  extern MovesTable const*      g_movesTable_;
-  extern FigureDir const*       g_figureDir_;
-  extern PawnMasks const*       g_pawnMasks_;
-  extern
-  SpecialCasesDetector const*   g_specialCases_;
+  extern EvalCoefficients const*      g_evalCoeffs_;
+  extern DeltaPosCounter const*       g_deltaPosCounter_;
+  extern BetweenMask const*           g_betweenMasks_;
+  extern DistanceCounter const*       g_distanceCounter_;
+  extern MovesTable const*            g_movesTable_;
+  extern FigureDir const*             g_figureDir_;
+  extern PawnMasks const*             g_pawnMasks_;
+  extern SpecialCasesDetector const*  g_specialCases_;
 }
 
 void initGlobals();
@@ -58,6 +59,11 @@ inline DistanceCounter const& distanceCounter()
 inline SpecialCasesDetector const& specialCases()
 {
   return *details::g_specialCases_;
+}
+
+inline EvalCoefficients const& evalCoeffs()
+{
+  return *details::g_evalCoeffs_;
 }
 
 } // NEngine

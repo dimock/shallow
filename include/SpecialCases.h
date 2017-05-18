@@ -20,12 +20,10 @@ public:
   boost::optional<ScoreType> eval(Board const& board) const;
 
 private:
-  void initSimple();
-  void initComplex();
+  void initUsual();
   void initWinnerLoser();
 
-  std::unordered_map<Scase, ScoreType> scases_;
-  std::unordered_map<Scase, std::function<ScoreType(Board const&)>> complexScases_;
+  std::unordered_map<Scase, std::function<ScoreType(Board const&)>> scases_;
   std::unordered_map<Scase, std::function<ScoreType(Board const&)>> winnerLoser_;
 };
 

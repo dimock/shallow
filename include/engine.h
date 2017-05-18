@@ -72,13 +72,6 @@ public:
   // initialize global arrays, tables, masks, etc. write them to it's board_
   Engine();
 
-  void adjustEval(std::set<std::string> const& exclude,
-                  std::vector<details::Which> const& which,
-                  double percent);
-  void saveEval(std::string const& fname);
-  EvalCoefficients const& getEvals() const;
-  void setEvals(EvalCoefficients const&);
-
   void clearHash();
   void setOptions(xOptions const& opts);
   void setCallbacks(xCallback callback);
@@ -164,7 +157,6 @@ private:
   SearchData sdata_;
   SearchParams sparams_;
   xOptions options_;
-  EvalCoefficients evalCoeffs_;
 
 #ifdef USE_HASH
   GHashTable hash_;

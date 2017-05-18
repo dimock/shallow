@@ -192,6 +192,28 @@ namespace NEngine
       sizeof(kingPsqEg_)/sizeof(*kingPsqEg_)
     });
 
+    // special cases
+    vars_.push_back(details::Var{ "kingToPawnDistanceMulti_", kingToPawnDistanceMulti_, &kingToPawnDistanceMulti_ });
+    vars_.push_back(details::Var{ "knightToPawnDistanceMulti_", knightToPawnDistanceMulti_, &knightToPawnDistanceMulti_ });
+    vars_.push_back(details::Var{ "kingToKingDistanceMulti_", kingToKingDistanceMulti_, &kingToKingDistanceMulti_ });
+    vars_.push_back(details::Var{ "figureToKingDistanceMulti_", figureToKingDistanceMulti_, &figureToKingDistanceMulti_ });
+    
+    // king position eval for BN-mat
+    arrs_.push_back(details::Arr{ "bishopKnightMat_", std::vector<int>
+      {
+         16,  10,   6,  1, -2, -5, -12, -16,
+         10,  12,   5, -1, -3, -6, -14, -12,
+          5,   5,   4, -2, -4, -8,  -8, -10,
+         -1,  -1,  -2, -6, -6, -6,  -5,  -4,
+         -4,  -5,  -6, -6, -6, -2,  -1,  -1,
+         -10, -8,  -8, -4, -2,  4,   5,   5,
+         -12, -14, -6, -3, -1,  5,  12,  10,
+         -16, -12, -5, -2,  1,  6,  10,  16
+      },
+      bishopKnightMat_,
+      sizeof(bishopKnightMat_)/sizeof(*bishopKnightMat_)
+    });
+
   for(auto& arr : arrs_)
   {
     for(size_t i = 0; i < arr.initial_.size() && i < arr.size_; ++i)

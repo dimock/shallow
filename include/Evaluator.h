@@ -149,7 +149,7 @@ public:
   
   //Evaluator();
 
-  void initialize(Board const* board, EHashTable* ehash, EvalCoefficients const* coeffs);
+  void initialize(Board const* board, EHashTable* ehash);
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
 
@@ -290,7 +290,6 @@ private:
 
   Board const* board_{ nullptr };
   EHashTable*  ehash_{ nullptr };
-  EvalCoefficients const* coeffs_{ nullptr };
 
   static const int colored_y_[2][8];
 
