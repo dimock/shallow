@@ -56,6 +56,12 @@ class Evaluator
     }
   };
 
+  struct PasserInfo
+  {
+    FullScore score;
+    int       most_y{ 0 };
+  };
+
   struct FieldsInfo
   {
     int king_pos_{-1};
@@ -203,7 +209,8 @@ private:
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
   FullScore evaluatePawns(Figure::Color color) const;
-  FullScore passerEvaluation(Figure::Color color) const;
+  PasserInfo passerEvaluation(Figure::Color color) const;
+  FullScore passerEvaluation() const;
   // search path from opponent king to pawn's promotion of given color
   bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const;
 

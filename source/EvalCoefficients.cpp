@@ -72,15 +72,15 @@ namespace NEngine
     // arrays
     arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 8, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
     arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 60, 80, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 60, 85, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
     arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 3, 5, 7, 9, 11, 13, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
-    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 20, 25, 30, 35, 40, 45, 0 }, farKingPawn_,
+    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 10, 15, 20, 30, 40, 50, 0 }, farKingPawn_,
                     sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
     arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 5, 7, 10, 15, 20, 30, 0 }, cangoPawn_,
                     sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
     arrs_.push_back(details::Arr{ "oKingToPasserBonus_", std::vector<int>{ 0, 0, 2, 4, 6, 8, 10, 12 }, oKingToPasserBonus_,
                     sizeof(oKingToPasserBonus_)/sizeof(*oKingToPasserBonus_) });
-    arrs_.push_back(details::Arr{ "myKingToPasserBonus_", std::vector<int>{ 6, 6, 5, 4, 3, 2, 1, 0 }, myKingToPasserBonus_,
+    arrs_.push_back(details::Arr{ "myKingToPasserBonus_", std::vector<int>{ 0, 12, 10, 8, 6, 4, 2, 0 }, myKingToPasserBonus_,
                     sizeof(myKingToPasserBonus_)/sizeof(*myKingToPasserBonus_) });
 
     // mobility
