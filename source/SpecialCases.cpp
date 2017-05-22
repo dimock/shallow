@@ -294,9 +294,7 @@ void SpecialCasesDetector::initUsual()
   {
     auto force_xchg = [](Board const& board)
     {
-      // consider current move side
-      // it should always be < 0 after consider move side again in caller
-      return -10 + 20*(Figure::ColorBlack == board.getColor());
+      return 0;
     };
 
     scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },

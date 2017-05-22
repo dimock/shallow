@@ -42,7 +42,7 @@ struct EvalCoefficients
   int isolatedPawn_{ -15 };
   int backwardPawn_{ -15 };
   int unsupportedPawn_{ -15 };
-  int unprotectedPawn_{ -5 };
+  int unprotectedPawn_{ -7 };
   int rookBehindBonus_{ 7 };
   int protectedPawnPressure_{ 3 };
   int unprotectedPawnPressure_{ 8 };
@@ -56,6 +56,10 @@ struct EvalCoefficients
   int bishopBonus_{ 10 };
   int figureAgainstPawnBonus_[2] = {};
   int rookAgainstFigureBonus_[2] = {};
+
+  // forks
+  int attackedByWeakBonus_{ 10 };
+  int forkBonus_{ 60 };
 
   // king
   int castleImpossible_{ -25 };
@@ -92,6 +96,11 @@ struct EvalCoefficients
   int passerGroup_[8] = {};
   int farKingPawn_[8] = {};
   int cangoPawn_[8] = {};
+  int canpromotePawn_[8] = {};
+  // distance between forwards
+  int closeToPromotion_[8] = {};
+  int oKingToPawnBonus_[8] = {};
+  int myKingToPawnBonus_[8] = {};
   int oKingToPasserBonus_[8] = {};
   int myKingToPasserBonus_[8] = {};
 

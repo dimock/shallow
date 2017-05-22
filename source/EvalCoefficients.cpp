@@ -41,6 +41,10 @@ namespace NEngine
     arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{35, 80}, rookAgainstFigureBonus_,
                     sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
 
+    // forks
+    vars_.push_back(details::Var{ "attackedByWeakBonus_", attackedByWeakBonus_, &attackedByWeakBonus_ });
+    vars_.push_back(details::Var{ "forkBonus_", forkBonus_, &forkBonus_ });
+
     // king
     vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
     vars_.push_back(details::Var{ "fakeCastle_", fakeCastle_, &fakeCastle_ });
@@ -72,12 +76,20 @@ namespace NEngine
     // arrays
     arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 8, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
     arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 60, 85, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
-    arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 3, 5, 7, 9, 11, 13, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 15, 20, 30, 50, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
+    arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 3, 5, 7, 11, 15, 19, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
     arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 10, 15, 20, 30, 40, 50, 0 }, farKingPawn_,
                     sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
-    arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 5, 7, 10, 15, 20, 30, 0 }, cangoPawn_,
+    arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 7, 10, 15, 20, 25, 40, 0 }, cangoPawn_,
                     sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
+    arrs_.push_back(details::Arr{ "canpromotePawn_", std::vector<int>{ 0, 7, 9, 13, 17, 21, 27, 0 }, canpromotePawn_,
+                    sizeof(canpromotePawn_)/sizeof(*canpromotePawn_) });
+    arrs_.push_back(details::Arr{ "closeToPromotion_", std::vector<int>{ 0, 5, 10, 15, 20, 25, 30, 35 }, closeToPromotion_,
+                    sizeof(closeToPromotion_)/sizeof(*closeToPromotion_) });
+    arrs_.push_back(details::Arr{ "oKingToPawnBonus_", std::vector<int>{ 0, 1, 2, 3, 4, 5, 6, 7 }, oKingToPawnBonus_,
+                    sizeof(oKingToPawnBonus_)/sizeof(*oKingToPawnBonus_) });
+    arrs_.push_back(details::Arr{ "myKingToPawnBonus_", std::vector<int>{ 0, 6, 5, 4, 3, 2, 1, 0 }, myKingToPawnBonus_,
+                    sizeof(myKingToPawnBonus_)/sizeof(*myKingToPawnBonus_) });
     arrs_.push_back(details::Arr{ "oKingToPasserBonus_", std::vector<int>{ 0, 0, 2, 4, 6, 8, 10, 12 }, oKingToPasserBonus_,
                     sizeof(oKingToPasserBonus_)/sizeof(*oKingToPasserBonus_) });
     arrs_.push_back(details::Arr{ "myKingToPasserBonus_", std::vector<int>{ 0, 12, 10, 8, 6, 4, 2, 0 }, myKingToPasserBonus_,

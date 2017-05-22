@@ -344,19 +344,9 @@ namespace NEngine
     else if(auto spec = specialCases().eval(*board_))
     {
       ScoreType score = *spec;
-      // consider current move side
-      if(Figure::ColorBlack  == board_->getColor())
-        score = -score;
+      score = considerColor(score);
       return score;
     }
-    //else if(board_->isWinnerLoser())
-    //{
-    //  ScoreType score = evaluateWinnerLoser();
-    //  // consider current move side
-    //  if(Figure::ColorBlack  == board_->getColor())
-    //    score = -score;
-    //  return score;
-    //}
 
     prepare();
 
@@ -394,6 +384,14 @@ namespace NEngine
       if(score0 < alpha0_ || score0 > betta0_)
         return score0;
     }
+
+    auto scoreKnights = evaluateKnights(Figure::ColorWhite);
+    scoreKnights -= evaluateKnights(Figure::ColorBlack);
+    score += scoreKnights;
+
+    auto scoreForks = evaluateForks(Figure::ColorWhite);
+    scoreForks -= evaluateForks(Figure::ColorBlack);
+    score.common_ += scoreForks;
 
     // take pawns eval from hash if possible
     auto pawnScore = hashedEvaluation();
@@ -687,9 +685,9 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
     auto multi = pawnMasks().mask_multi_passer(x_passers) & pmask;
     if(multi)
     {
-      int ymax = color ? _msb64(multi) : _lsb64(multi);
-      ymax >>= 3;
-      int cy = colored_y_[color][ymax];
+      int ymin = color ? _lsb64(multi) : _msb64(multi);
+      ymin >>= 3;
+      int cy = colored_y_[color][ymin];
       int num = pop_count(multi);
       score.common_ += evalCoeffs().passerGroup_[cy] * (num-1);
     }
@@ -703,9 +701,9 @@ Evaluator::FullScore Evaluator::passerEvaluation() const
   auto infoW = passerEvaluation(Figure::ColorWhite);
   auto infoB = passerEvaluation(Figure::ColorBlack);
   if(infoW.most_y > infoB.most_y && infoB.most_y > 0)
-    infoW.score.endGame_ += evalCoeffs().cangoPawn_[infoW.most_y];
+    infoW.score.endGame_ += evalCoeffs().closeToPromotion_[infoW.most_y - infoB.most_y];
   else if(infoB.most_y > infoW.most_y && infoW.most_y > 0)
-    infoB.score.endGame_ += evalCoeffs().cangoPawn_[infoB.most_y];
+    infoB.score.endGame_ += evalCoeffs().closeToPromotion_[infoB.most_y - infoW.most_y];
   infoW.score -= infoB.score;
   return infoW.score;
 }
@@ -741,9 +739,15 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
     int x = idx.x();
     int y = idx.y();
     int cy = colored_y_[color][idx.y()];
-    
-    if(cy > info.most_y)
-      info.most_y = cy;
+
+    // opponent king should be far from my pawn
+    // small bonus for short distance to my king
+    // double if opponent has no pawns
+    int dist_to_oking = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
+    int dist_to_myking = distanceCounter().getDistance(finfo_[color].king_pos_, n);
+
+    info.score.endGame_ += evalCoeffs().oKingToPawnBonus_[dist_to_oking];
+    info.score.endGame_ += evalCoeffs().myKingToPawnBonus_[dist_to_myking] * (1 + no_opawns);
 
     const uint64 & passmsk = pawnMasks().mask_passed(color, n);
     const uint64 & blckmsk = pawnMasks().mask_line_blocked(color, n);
@@ -751,17 +755,19 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
     if((opmsk & passmsk) || (pmask & blckmsk))
       continue;
 
+    // bonus for distance from passer to kings
+    info.score.endGame_ += evalCoeffs().oKingToPasserBonus_[dist_to_oking];
+    info.score.endGame_ += evalCoeffs().myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
+
+    if(cy > info.most_y)
+      info.most_y = cy;
+
     int promo_pos = x | (py<<3);
     
     bool king_far = false;
     int pawn_dist_promo = std::abs(py - y);
     int o_dist_promo = distanceCounter().getDistance(finfo_[ocolor].king_pos_, promo_pos) - (board_->color_ == ocolor);
     king_far = pawn_dist_promo < o_dist_promo;
-    
-    //// have bishop with color the same as promotion field's color
-    //Figure::Color pcolor = ((Figure::Color)FiguresCounter::s_whiteColors_[promo_pos]);
-    //if ( pcolor && fmgr.bishops_w(color) || !pcolor && fmgr.bishops_b(color) )
-    //  score += assistantBishop_;
     
     // my rook behind passed pawn - give bonus
     BitMask behind_msk = betweenMasks().from_dir(n, dir_behind[color]) & fmgr.rook_mask(color) ;
@@ -818,22 +824,13 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
     // all ahead fields are not occupied and not attacked | protected
     auto fwd_mask = pawnMasks().mask_line_blocked(color, n);
     bool can_promote = (fwd_mask & blockers_mask) == 0ULL;
-    info.score.common_ += can_promote * evalCoeffs().cangoPawn_[cy];
+    info.score.common_ += can_promote * evalCoeffs().canpromotePawn_[cy];
     
     // opponent king could not go to my pawns promotion field
     if(king_far || !findRootToPawn(color, promo_pos, pawn_dist_promo+1))
     {
       info.score.endGame_ += evalCoeffs().farKingPawn_[cy];
     }
-
-    // opponent king should be far from my pawn
-    int dist_to_oking = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
-    info.score.endGame_ += evalCoeffs().oKingToPasserBonus_[dist_to_oking];
-
-    // small bonus for short distance to my king
-    // double if opponent has no pawns
-    int dist_to_myking = distanceCounter().getDistance(finfo_[color].king_pos_, n);
-    info.score.endGame_ += evalCoeffs().myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
   }
   return info;
 }
@@ -1273,7 +1270,7 @@ int Evaluator::evaluateBlockedRooks()
   return score_w - score_b;
 }
 
-ScoreType Evaluator::evaluateMaterialDiff()
+ScoreType Evaluator::evaluateMaterialDiff() const
 {
   ScoreType score = 0;
   const FiguresManager & fmgr = board_->fmgr();
@@ -1307,6 +1304,40 @@ ScoreType Evaluator::evaluateMaterialDiff()
   return score;
 }
 
+
+ScoreType Evaluator::evaluateForks(Figure::Color color) const
+{
+  Figure::Color ocolor = Figure::otherColor(color);
+
+  BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
+  BitMask o_mask = board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | o_rq_mask;
+
+  BitMask pawn_fork = o_mask & finfo_[color].pawnAttacks_;
+  int pawnsN = pop_count(pawn_fork);
+  if ( pawnsN > 1 )
+    return evalCoeffs().forkBonus_;
+
+  BitMask kn_fork = o_rq_mask & finfo_[color].knightAttacks_;
+  int knightsN = pop_count(kn_fork);
+  if ( pawnsN+knightsN > 1 )
+    return evalCoeffs().forkBonus_;
+
+  if ( pawnsN+knightsN > 0 && color == board_->getColor() )
+    return evalCoeffs().attackedByWeakBonus_;
+
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+/********************************************************************************/
 
 ScoreType Evaluator::evaluateWinnerLoser()
 {
@@ -1899,30 +1930,7 @@ ScoreType Evaluator::evaluateWinnerLoser()
 //  return score;
 //}
 //
-//ScoreType Evaluator::evaluateForks(Figure::Color color)
-//{
-//  Figure::Color ocolor = Figure::otherColor(color);
-//
-//  BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-//  BitMask o_mask = board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | o_rq_mask;
-//
-//  BitMask pawn_fork = o_mask & finfo_[color].pawnAttacks_;
-//  int pawnsN = pop_count(pawn_fork);
-//  if ( pawnsN > 1 )
-//    return forkBonus_;
-//
-//  BitMask kn_fork = o_rq_mask & finfo_[color].kn_attack_mask_;
-//  int knightsN = pop_count(kn_fork);
-//  if ( pawnsN+knightsN > 1 )
-//    return forkBonus_;
-//
-//  if ( pawnsN+knightsN > 0 && color == board_->getColor() )
-//    return attackedByWeakBonus_;
-//
-//  return 0;
-//}
-//
-//
+
 //
 //
 //

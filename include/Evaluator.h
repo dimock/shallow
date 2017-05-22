@@ -192,6 +192,9 @@ private:
   // multiple coefficients for opening/endgame
   PhaseInfo detectPhase() const;
 
+  // find attack masks. it will be used by forks detector
+  FullScore evaluateKnights(Figure::Color color);
+
   // get from PSQ table
   // + fill attacked fileds masks
   FullScore evaluatePsq(Figure::Color color);
@@ -214,7 +217,10 @@ private:
   // search path from opponent king to pawn's promotion of given color
   bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const;
 
-  ScoreType evaluateMaterialDiff();
+  ScoreType evaluateMaterialDiff() const;
+
+   /// find knight and pawn forks
+   ScoreType evaluateForks(Figure::Color color) const;
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
@@ -252,9 +258,6 @@ private:
 
  // // queens mobility
  // void evaluateQueens();
-
- // /// find knight and pawn forks
- // ScoreType evaluateForks(Figure::Color color);
 
  // /// lazy eval.
  // ScoreType evaluateExpensive(GamePhase phase, int coef_o, int coef_e);
