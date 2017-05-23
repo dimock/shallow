@@ -50,7 +50,7 @@ struct EvalCoefficients
   int unprotectedPawnBishopTreat_{ 8 };
 
   // rook on open column
-  int openRook_{ 15 };
+  int semiopenRook_{ 14 };
 
   // material diff
   int bishopBonus_{ 10 };
@@ -93,6 +93,7 @@ struct EvalCoefficients
   int centerPawn_[8]  = {};
   int forwardPawn_[8] = {};
   int passerPawn_[8]  = {};
+  int passerPawnEg_[8] = {};
   int passerGroup_[8] = {};
   int farKingPawn_[8] = {};
   int cangoPawn_[8] = {};

@@ -66,10 +66,8 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     auto const& mask_col = pawnMasks().mask_column(Index(n).x());
     bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
     bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
-    if(no_pw_color && no_pw_ocolor)
-      score.common_ += evalCoeffs().openRook_;
-    else if(no_pw_color || no_pw_ocolor)
-      score.common_ += evalCoeffs().openRook_ >> 2;
+    score.common_ += no_pw_color  * evalCoeffs().semiopenRook_;
+    score.common_ += no_pw_ocolor * evalCoeffs().semiopenRook_;
   }
   // queens
   BitMask qmask = fmgr.queen_mask(color);
