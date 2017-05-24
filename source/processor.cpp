@@ -401,6 +401,14 @@ void Processor::hash2file(std::string const& fname)
   engine_.saveHash(fname);
 }
 
+void Processor::file2hash(std::string const& fname)
+{
+  if(is_thinking())
+    return;
+
+  engine_.loadHash(fname);
+}
+
 //////////////////////////////////////////////////////////////////////////
 void Processor::clear()
 {

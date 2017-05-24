@@ -93,7 +93,6 @@ struct EvalCoefficients
   int centerPawn_[8]  = {};
   int forwardPawn_[8] = {};
   int passerPawn_[8]  = {};
-  int passerPawnEg_[8] = {};
   int passerGroup_[8] = {};
   int farKingPawn_[8] = {};
   int cangoPawn_[8] = {};

@@ -512,7 +512,10 @@ bool fromFEN(std::string const& i_fen, Board& board)
       if('w' == c)
         board.color_ = Figure::ColorWhite;
       else if('b' == c)
+      {
         board.color_ = Figure::ColorBlack;
+        board.fmgr_.hashColor();
+      }
       else
         return false;
       ++i;

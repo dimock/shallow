@@ -627,20 +627,16 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
     // 2. passed pawn
     {
       auto coeffPassed = evalCoeffs().passerPawn_[cy];
-      auto coeffPassedEg = evalCoeffs().passerPawnEg_[cy];
       bool passer = (opmsk & pawnMasks().mask_passed(color, n)) == 0ULL;
       x_passers |= passer << x;
       bool quadpasser = (pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL;
       score.common_ += passer*coeffPassed;
-      score.endGame_ += passer*coeffPassedEg;
       {
         bool left  = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
         bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
         X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)) && (!passer) && quadpasser, "passed pawn was not detected");
         auto scoreSemipasser = ((coeffPassed >> 2) + (left || right) * (coeffPassed >> 2));
-        auto scoreSemipasserEg = ((coeffPassedEg >> 2) + (left || right) * (coeffPassedEg >> 2));
         score.common_ += quadpasser * scoreSemipasser * (!passer);
-        score.endGame_ += quadpasser * scoreSemipasserEg * (!passer);
       }
     }
 

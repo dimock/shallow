@@ -822,7 +822,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
 
-  if(hitem->flag_  != GHashTable::NoFlag && (int)hitem->depth_ >= depth && ply > 0)
+  if(hitem->flag_  != GHashTable::NoFlag && (int)hitem->depth_ >= depth && ply > 0 && hscore != 0)
   {
     if(GHashTable::Alpha == hitem->flag_ && hscore <= alpha)
     {
@@ -853,16 +853,16 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 /// insert data to hash table
 void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat)
 {
-  if (scontexts_[ictx].board_.repsCount() >= 3)
+  if (scontexts_[ictx].board_.repsCount() > 1)
     return;
 
   PackedMove pm = scontexts_[ictx].board_.packMove(move);
   GHashTable::Flag flag = GHashTable::NoFlag;
-  if ( scontexts_[ictx].board_.repsCount() < 2 )
+  if(score != 0)
   {
     if ( score <= alpha || !move )
       flag = GHashTable::Alpha;
-    else if ( score >= betta )
+    else if(score >= betta)
       flag = GHashTable::Betta;
     else
       flag = GHashTable::AlphaBetta;

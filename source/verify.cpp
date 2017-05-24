@@ -46,8 +46,8 @@ void Engine::loadHash(std::string const& fname)
   hash_.load(gfname);
 #endif
 
-  std::ifstream ifs(bfname, std::ios::in);
-  load(scontexts_[0].board_, ifs);
+  //std::ifstream ifs(bfname, std::ios::in);
+  //load(scontexts_[0].board_, ifs);
   load_history(hfname);
 }
 

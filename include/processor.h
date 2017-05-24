@@ -45,6 +45,7 @@ public:
   void fen2file(std::string const& fname);
   void pgn2file(std::string const& fname);
   void hash2file(std::string const& fname);
+  void file2hash(std::string const& fname);
   std::string toFEN();
 
   void clear();
