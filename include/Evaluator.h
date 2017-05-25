@@ -192,9 +192,6 @@ private:
   // multiple coefficients for opening/endgame
   PhaseInfo detectPhase() const;
 
-  // find attack masks. it will be used by forks detector
-  FullScore evaluateKnights(Figure::Color color);
-
   // get from PSQ table
   // + fill attacked fileds masks
   FullScore evaluatePsq(Figure::Color color);

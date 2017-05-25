@@ -385,14 +385,6 @@ namespace NEngine
         return score0;
     }
 
-    auto scoreKnights = evaluateKnights(Figure::ColorWhite);
-    scoreKnights -= evaluateKnights(Figure::ColorBlack);
-    score += scoreKnights;
-
-    auto scoreForks = evaluateForks(Figure::ColorWhite);
-    scoreForks -= evaluateForks(Figure::ColorBlack);
-    score.common_ += scoreForks;
-
     // take pawns eval from hash if possible
     auto pawnScore = hashedEvaluation();
 
@@ -430,6 +422,10 @@ namespace NEngine
     auto scorePsq = evaluatePsq(Figure::ColorWhite);
     scorePsq -= evaluatePsq(Figure::ColorBlack);
     score += scorePsq;
+
+    auto scoreForks = evaluateForks(Figure::ColorWhite);
+    scoreForks -= evaluateForks(Figure::ColorBlack);
+    score.common_ += scoreForks;
 
     auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
     scorePP -= evaluatePawnsPressure(Figure::ColorBlack);

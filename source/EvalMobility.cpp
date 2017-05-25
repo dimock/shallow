@@ -11,12 +11,11 @@ Evaluator.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
-Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
+Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
 {
   FullScore score{};
   auto const& fmgr = board_->fmgr();
   auto const ocolor = Figure::otherColor(color);
-
   // knights
   BitMask knmask = fmgr.knight_mask(color);
   for(; knmask;)
@@ -29,15 +28,6 @@ Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
     finfo_[color].knightAttacks_ |= knight_moves;
     finfo_[color].knightMasks_.push_back(knight_moves);
   }
-  return score;
-}
-
-Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
-{
-  FullScore score{};
-  auto const& fmgr = board_->fmgr();
-  auto const ocolor = Figure::otherColor(color);
-
   // bishops
   BitMask bimask = fmgr.bishop_mask(color);
   for(; bimask;)
