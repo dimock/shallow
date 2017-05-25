@@ -54,8 +54,9 @@ struct EvalCoefficients
 
   // material diff
   int bishopBonus_{ 10 };
-  int figureAgainstPawnBonus_[2] = {};
-  int rookAgainstFigureBonus_[2] = {};
+  int figureAgainstPawnBonus_[2]  = {};
+  int rookAgainstFigureBonus_[2]  = {};
+  int figuresAgainstRookBonus_[2] = {};
 
   // forks
   int attackedByWeakBonus_{ 10 };

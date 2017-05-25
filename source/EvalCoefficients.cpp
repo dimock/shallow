@@ -40,6 +40,8 @@ namespace NEngine
                     sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
     arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{35, 80}, rookAgainstFigureBonus_,
                     sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
+    arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{15, 50}, figuresAgainstRookBonus_,
+                    sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
 
     // forks
     vars_.push_back(details::Var{ "attackedByWeakBonus_", attackedByWeakBonus_, &attackedByWeakBonus_ });
@@ -103,8 +105,8 @@ namespace NEngine
     arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-25, -15, -5, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4},
                     rookMobility_, sizeof(rookMobility_)/sizeof(*rookMobility_) });
     arrs_.push_back(details::Arr{ "queenMobility_",
-                    std::vector<int>{-45, -35, -15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 10, 10,
-                    10, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12},
+                    std::vector<int>{-50, -40, -20, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                    14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29},
                     queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
 
     // PSQ-tables

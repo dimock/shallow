@@ -1302,6 +1302,14 @@ ScoreType Evaluator::evaluateMaterialDiff() const
     score += rooksDiff * evalCoeffs().rookAgainstFigureBonus_[pawnsN];
   }
 
+  // 2 figures vs. Rook
+  else if(!queensDiff && rooksDiff*figuresDiff == -2 && std::abs(rooksDiff) == 1)
+  {
+    Figure::Color rookColor = (Figure::Color)(rooksDiff > 0);
+    int pawnsN = fmgr.pawns(rookColor) != 0;
+    score -= rooksDiff * evalCoeffs().figuresAgainstRookBonus_[pawnsN];
+  }
+
   return score;
 }
 

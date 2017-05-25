@@ -83,6 +83,16 @@ void SpecialCasesDetector::initUsual()
       auto bp = _lsb64(b_mask);
       score += (7 - distanceCounter().getDistance(kl, bp)) * evalCoeffs().figureToKingDistanceMulti_;
     }
+    if(auto n_mask = board.fmgr().knight_mask(loserColor))
+    {
+      auto np = _lsb64(n_mask);
+      score += distanceCounter().getDistance(kl, np) * evalCoeffs().figureToKingDistanceMulti_;
+    }
+    if(auto b_mask = board.fmgr().bishop_mask(loserColor))
+    {
+      auto bp = _lsb64(b_mask);
+      score += distanceCounter().getDistance(kl, bp) * evalCoeffs().figureToKingDistanceMulti_;
+    }
     if(!winnerColor)
       score = -score;
     return score;
