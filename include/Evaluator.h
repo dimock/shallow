@@ -194,6 +194,7 @@ private:
 
   // get from PSQ table
   // + fill attacked fileds masks
+  FullScore evaluateKnights(Figure::Color color);
   FullScore evaluatePsq(Figure::Color color);
 
   FullScore evaluateMobility(Figure::Color color);

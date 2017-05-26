@@ -326,6 +326,9 @@ bool Processor::makeMove(std::string const& moveStr)
   if(!board.validateMove(move))
     return false;
 
+  //if(moveStr == "f6f5")
+  //  hash2file("D:\\Projects\\gitproj\\hash\\hash_f6f5_2");
+
   board.makeMove(move);
   board.verifyState();
   updateTiming();
@@ -429,7 +432,9 @@ boost::optional<bool> Processor::fromFEN(xCmd const& cmd)
 
 bool Processor::fromFEN(std::string const& fen)
 {
-  return engine_.fromFEN(fen);
+  bool r = engine_.fromFEN(fen);
+  //file2hash("D:\\Projects\\gitproj\\hash\\hash_f6f5");
+  return r;
 }
 
 void Processor::setBoard(NEngine::Board& board)

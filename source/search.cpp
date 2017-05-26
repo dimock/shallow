@@ -287,7 +287,7 @@ ScoreType Engine::alphaBetta0()
 
     if(!stopped())
     {
-      if(bDoSort)
+      if(bDoSort || sdata_.counter_ < 1)
         move.vsort_ = score + ScoreMax;
 
       if(score > alpha)
@@ -330,9 +330,15 @@ ScoreType Engine::alphaBetta0()
       std::advance(iter, sdata_.numOfMoves_);
       std::sort(scontexts_[0].moves_.begin(), iter);
     }
-    //// then sort all moves but 1st
-    //else if ( sdata_.numOfMoves_ > 2 )
-    //  std::sort(scontexts_[0].moves_+1, scontexts_[0].moves_ + sdata_.numOfMoves_);
+    // sort all moves but 1st
+    else if(sdata_.numOfMoves_ > 2)
+    {
+      auto iter1 = scontexts_[0].moves_.begin();
+      auto iter2 = scontexts_[0].moves_.begin();
+      iter1++;
+      std::advance(iter2, sdata_.numOfMoves_);
+      std::sort(iter1, iter2);
+    }
   }
 
   return alpha;

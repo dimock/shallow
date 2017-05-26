@@ -86,6 +86,7 @@ public:
 
   void clear()
   {
+    movesCount_ = 0;
     std::fill(buffer_.begin(), buffer_.end(), ITEM{});
   }
 
@@ -101,6 +102,7 @@ public:
 
   bool load(std::string const& fname)
   {
+    movesCount_ = 0;
     std::ifstream ifs(fname, std::ifstream::binary);
     if(!ifs)
       return false;

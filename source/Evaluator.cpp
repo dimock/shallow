@@ -385,6 +385,14 @@ namespace NEngine
         return score0;
     }
 
+    auto scoreKnights = evaluatePsq(Figure::ColorWhite);
+    scoreKnights -= evaluatePsq(Figure::ColorBlack);
+    score += scoreKnights;
+
+    auto scoreForks = evaluateForks(Figure::ColorWhite);
+    scoreForks -= evaluateForks(Figure::ColorBlack);
+    score.common_ += scoreForks;
+
     // take pawns eval from hash if possible
     auto pawnScore = hashedEvaluation();
 
@@ -422,10 +430,6 @@ namespace NEngine
     auto scorePsq = evaluatePsq(Figure::ColorWhite);
     scorePsq -= evaluatePsq(Figure::ColorBlack);
     score += scorePsq;
-
-    auto scoreForks = evaluateForks(Figure::ColorWhite);
-    scoreForks -= evaluateForks(Figure::ColorBlack);
-    score.common_ += scoreForks;
 
     auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
     scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
@@ -1301,8 +1305,9 @@ ScoreType Evaluator::evaluateMaterialDiff() const
   // 2 figures vs. Rook
   else if(!queensDiff && rooksDiff*figuresDiff == -2 && std::abs(rooksDiff) == 1)
   {
-    Figure::Color rookColor = (Figure::Color)(rooksDiff > 0);
-    int pawnsN = fmgr.pawns(rookColor) != 0;
+    Figure::Color rookColor  = (Figure::Color)(rooksDiff > 0);
+    Figure::Color ocolor = Figure::otherColor(rookColor);
+    int pawnsN = fmgr.pawns(rookColor) != 0 && fmgr.pawns(ocolor) != 0;
     score -= rooksDiff * evalCoeffs().figuresAgainstRookBonus_[pawnsN];
   }
 
