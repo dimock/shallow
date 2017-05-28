@@ -132,7 +132,7 @@ TacticalGenerator::TacticalGenerator(Board & board, const Move & hmove, Figure::
     eg_.generate(hmove_);
     order_ = oEscape;
   }
-  if(hmove_)
+  else if(hmove_)
     order_ = oHash;
 }
 
