@@ -385,8 +385,8 @@ namespace NEngine
         return score0;
     }
 
-    auto scoreKnights = evaluatePsq(Figure::ColorWhite);
-    scoreKnights -= evaluatePsq(Figure::ColorBlack);
+    auto scoreKnights = evaluateKnights(Figure::ColorWhite);
+    scoreKnights -= evaluateKnights(Figure::ColorBlack);
     score += scoreKnights;
 
     auto scoreForks = evaluateForks(Figure::ColorWhite);
