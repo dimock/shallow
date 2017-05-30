@@ -78,11 +78,11 @@ namespace NEngine
     // arrays
     arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 10, 8, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
     arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 50, 60, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
-    arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 5, 7, 9, 13, 17, 21, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
-    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 15, 20, 25, 30, 40, 50, 0 }, farKingPawn_,
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 15, 20, 30, 50, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
+    arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 3, 5, 7, 11, 15, 19, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
+    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 10, 15, 20, 30, 40, 50, 0 }, farKingPawn_,
                     sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
-    arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 10, 12, 15, 20, 25, 40, 0 }, cangoPawn_,
+    arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 7, 10, 15, 20, 25, 40, 0 }, cangoPawn_,
                     sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
     arrs_.push_back(details::Arr{ "canpromotePawn_", std::vector<int>{ 0, 7, 9, 13, 17, 21, 27, 0 }, canpromotePawn_,
                     sizeof(canpromotePawn_)/sizeof(*canpromotePawn_) });
