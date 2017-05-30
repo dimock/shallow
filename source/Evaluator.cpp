@@ -378,6 +378,10 @@ namespace NEngine
     // evaluate figures weight
     score.common_ = fmgr.weight() + evaluateMaterialDiff();
 
+    // pawns attack to king
+    score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
+    score.common_ -= evalCoeffs().pawnAttackBonus_ * ((finfo_[1].kingAttacks_ & finfo_[0].pawnAttacks_) != 0ULL);
+
     /// use lazy evaluation level 0
     {
       auto score0 = considerColor(score.common_);

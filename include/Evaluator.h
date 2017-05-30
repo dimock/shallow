@@ -84,7 +84,6 @@ class Evaluator
     xlist<BitMask, 10> bishopMasks_;
     xlist<BitMask, 10> rookMasks_;
     xlist<BitMask, 10> queenMasks_;
-    int attackersN_[Figure::TypesNum] = {};
   } finfo_[2];
 
 public:
