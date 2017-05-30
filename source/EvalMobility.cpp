@@ -27,7 +27,12 @@ Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
     finfo_[color].attack_mask_ |= knight_moves;
     finfo_[color].knightAttacks_ |= knight_moves;
     finfo_[color].knightMasks_.push_back(knight_moves);
+    finfo_[color].attackersN_[Figure::TypeKnight] += (finfo_[ocolor].kingAttacks_ & knight_moves) != 0ULL;
+    auto kn_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    finfo_[color].knightPressure_ += evalCoeffs().kingDistanceKnight_[kn_dist];
   }
+  score.common_ += finfo_[color].knightPressure_;
+  score.common_ += evalCoeffs().knightAttackBonus_[finfo_[color].attackersN_[Figure::TypeKnight] & 7];
   return score;
 }
 
@@ -36,8 +41,10 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   FullScore score{};
   auto const& fmgr = board_->fmgr();
   auto const ocolor = Figure::otherColor(color);
+  BitMask mask_no_queens = mask_all_ & ~(fmgr.queen_mask(color));
   // bishops
   BitMask bimask = fmgr.bishop_mask(color);
+  BitMask mask_all_no_bishops = mask_no_queens & ~bimask;
   for(; bimask;)
   {
     int n = clear_lsb(bimask);
@@ -47,9 +54,17 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     finfo_[color].attack_mask_ |= bishop_moves;
     finfo_[color].bishopAttacks_ |= bishop_moves;
     finfo_[color].bishopMasks_.push_back(bishop_moves);
+    // opponent's king attacks with x-ray
+    finfo_[color].attackersN_[Figure::TypeBishop] += ((finfo_[ocolor].kingAttacks_ & bishop_moves) != 0ULL)
+      || ((finfo_[ocolor].kingAttacks_ & magic_ns::bishop_moves(n, mask_all_no_bishops)) != 0ULL);
+    auto bi_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    finfo_[color].bishopPressure_ += evalCoeffs().kingDistanceBishop_[bi_dist];
   }
+  score.common_ += finfo_[color].bishopPressure_;
+  score.common_ += evalCoeffs().bishopAttackBonus_[finfo_[color].attackersN_[Figure::TypeBishop] & 7];
   // rooks
   BitMask rmask = fmgr.rook_mask(color);
+  BitMask mask_all_no_rooks = mask_no_queens & ~rmask;
   for(; rmask;)
   {
     int n = clear_lsb(rmask);
@@ -59,6 +74,11 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     finfo_[color].attack_mask_ |= rook_moves;
     finfo_[color].rookAttacks_ |= rook_moves;
     finfo_[color].rookMasks_.push_back(rook_moves);
+    // opponent's king attacks with x-ray
+    finfo_[color].attackersN_[Figure::TypeRook] += ((finfo_[ocolor].kingAttacks_ & rook_moves) != 0ULL)
+      || ((finfo_[ocolor].kingAttacks_ & magic_ns::rook_moves(n, mask_all_no_rooks)) != 0ULL);
+    auto r_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    finfo_[color].rookPressure_ += evalCoeffs().kingDistanceRook_[r_dist];
 
     // open column
     auto const& mask_col = pawnMasks().mask_column(Index(n).x());
@@ -67,6 +87,8 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     score.common_ += no_pw_color  * evalCoeffs().semiopenRook_;
     score.common_ += no_pw_ocolor * evalCoeffs().semiopenRook_;
   }
+  score.common_ += finfo_[color].rookPressure_;
+  score.common_ += evalCoeffs().rookAttackBonus_[finfo_[color].attackersN_[Figure::TypeRook] & 7];
   // queens
   BitMask qmask = fmgr.queen_mask(color);
   for(; qmask;)
@@ -78,7 +100,19 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     finfo_[color].attack_mask_ |= queen_moves;
     finfo_[color].queenAttacks_ |= queen_moves;
     finfo_[color].queenMasks_.push_back(queen_moves);
+    // opponent's king attacks with x-ray
+    finfo_[color].attackersN_[Figure::TypeQueen] += ((finfo_[ocolor].kingAttacks_ & magic_ns::rook_moves(n, mask_all_no_rooks)) != 0ULL)
+      || ((finfo_[ocolor].kingAttacks_ & magic_ns::bishop_moves(n, mask_all_no_bishops)) != 0ULL);
+    auto q_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    finfo_[color].queenPressure_ += evalCoeffs().kingDistanceQueen_[q_dist];
   }
+  score.common_ += finfo_[color].queenPressure_;
+  score.common_ += evalCoeffs().queenAttackBonus_[finfo_[color].attackersN_[Figure::TypeQueen] & 7];
+  int total_attackers = finfo_[color].attackersN_[Figure::TypeQueen] +
+    finfo_[color].attackersN_[Figure::TypeRook] +
+    finfo_[color].attackersN_[Figure::TypeBishop] +
+    finfo_[color].attackersN_[Figure::TypeKnight];
+  score.common_ += evalCoeffs().totalAttackBonus_[total_attackers & 15];
   return score;
 }
 

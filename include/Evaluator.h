@@ -69,6 +69,10 @@ class Evaluator
     int bishopMobility_{};
     int rookMobility_{};
     int queenMobility_{};
+    int knightPressure_{};
+    int bishopPressure_{};
+    int rookPressure_{};
+    int queenPressure_{};
     BitMask pawnAttacks_{};
     BitMask knightAttacks_{};
     BitMask bishopAttacks_{};
@@ -80,6 +84,7 @@ class Evaluator
     xlist<BitMask, 10> bishopMasks_;
     xlist<BitMask, 10> rookMasks_;
     xlist<BitMask, 10> queenMasks_;
+    int attackersN_[Figure::TypesNum] = {};
   } finfo_[2];
 
 public:

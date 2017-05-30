@@ -111,6 +111,19 @@ struct EvalCoefficients
   int rookMobility_[16]   = {};
   int queenMobility_[32]  = {};
 
+  // distance to opponent's king
+  int kingDistanceKnight_[8] = {};
+  int kingDistanceBishop_[8] = {};
+  int kingDistanceRook_[8] = {};
+  int kingDistanceQueen_[8] = {};
+
+  // fields near king attacks
+  int knightAttackBonus_[8] = {};
+  int bishopAttackBonus_[8] = {};
+  int rookAttackBonus_[8] = {};
+  int queenAttackBonus_[8] = {};
+  int totalAttackBonus_[16] = {};
+
   // PSQ-tables
   int pawnPsq_[64]   = {};
   int knightPsq_[64] = {};

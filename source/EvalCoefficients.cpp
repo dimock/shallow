@@ -109,6 +109,29 @@ namespace NEngine
                                       10,  11,  11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12},
                     queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
 
+    // bonus for distance to opponent's king
+    arrs_.push_back(details::Arr{ "kingDistanceKnight_", std::vector<int>{15, 12, 10, 7, 6, 1, 0, 0}, kingDistanceKnight_,
+                    sizeof(kingDistanceKnight_)/sizeof(*kingDistanceKnight_) });
+    arrs_.push_back(details::Arr{ "kingDistanceBishop_", std::vector<int>{15, 12, 10, 7, 5, 3, 1, 0}, kingDistanceBishop_,
+                    sizeof(kingDistanceBishop_)/sizeof(*kingDistanceBishop_) });
+    arrs_.push_back(details::Arr{ "kingDistanceRook_", std::vector<int>{20, 18, 13, 9, 7, 3, 1, 0}, kingDistanceRook_,
+                    sizeof(kingDistanceRook_)/sizeof(*kingDistanceRook_) });
+    arrs_.push_back(details::Arr{ "kingDistanceQueen_", std::vector<int>{40, 55, 45, 25, 12, 3, 1, 0}, kingDistanceQueen_,
+                    sizeof(kingDistanceQueen_)/sizeof(*kingDistanceQueen_) });
+
+    // fields near king attacks
+    arrs_.push_back(details::Arr{ "knightAttackBonus_", std::vector<int>{0, 5, 10, 10, 10, 10, 10, 10}, knightAttackBonus_,
+                    sizeof(knightAttackBonus_)/sizeof(*knightAttackBonus_) });
+    arrs_.push_back(details::Arr{ "bishopAttackBonus_", std::vector<int>{0, 5, 10, 10, 10, 10, 10, 10}, bishopAttackBonus_,
+                    sizeof(bishopAttackBonus_)/sizeof(*bishopAttackBonus_) });
+    arrs_.push_back(details::Arr{ "rookAttackBonus_", std::vector<int>{0, 10, 20, 20, 20, 20, 20, 20}, rookAttackBonus_,
+                    sizeof(rookAttackBonus_)/sizeof(*rookAttackBonus_) });
+    arrs_.push_back(details::Arr{ "queenAttackBonus_", std::vector<int>{0, 15, 30, 30, 30, 30, 30, 30}, queenAttackBonus_,
+                    sizeof(queenAttackBonus_)/sizeof(*queenAttackBonus_) });
+    arrs_.push_back(details::Arr{ "totalAttackBonus_", std::vector<int>{0, 5, 15, 30, 40, 50, 60, 70, 80,
+                    90, 100, 100, 100, 100, 100, 100, 100}, totalAttackBonus_,
+                    sizeof(totalAttackBonus_)/sizeof(*totalAttackBonus_) });
+
     // PSQ-tables
     // pawn
     arrs_.push_back(details::Arr{ "pawnPsq_", std::vector<int>
