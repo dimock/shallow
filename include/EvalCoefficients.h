@@ -50,7 +50,7 @@ struct EvalCoefficients
   int unprotectedPawnBishopTreat_{ 8 };
 
   // rook on open column
-  int semiopenRook_{ 14 };
+  int semiopenRook_{ 10 };
 
   // material diff
   int bishopBonus_{ 10 };
@@ -121,8 +121,8 @@ struct EvalCoefficients
   int pawnAttackBonus_ = {2};
   int knightAttackBonus_ = {5};
   int bishopAttackBonus_ = {5};
-  int rookAttackBonus_ = {7};
-  int queenAttackBonus_ = {10};
+  int rookAttackBonus_ = {6};
+  int queenAttackBonus_ = {8};
 
   // PSQ-tables
   int pawnPsq_[64]   = {};

@@ -249,9 +249,9 @@ public:
     ScoreType score = fmgr().weight(color_) - fmgr().weight(ocolor);
     if(score > betta + 2*Figure::figureWeight_[Figure::TypePawn]*2 && depth > 7*ONE_PLY)
     {
-      return std::max(0, depth - NullMove_PlyReduce - ONE_PLY);
+      return std::max(1, depth - NullMove_PlyReduce - ONE_PLY);
     }    
-    return std::max(0, depth - NullMove_PlyReduce);
+    return std::max(1, depth - NullMove_PlyReduce);
   }
 
   inline bool isWinnerLoser() const

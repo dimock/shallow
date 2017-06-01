@@ -250,7 +250,7 @@ ScoreType Engine::alphaBetta0()
 
       if(bDoSort || sdata_.counter_ < 1)
       {
-        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, bDoSort ? ScoreMax : -alpha, true);
+        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, bDoSort ? ScoreMax : -alpha, true, true);
         fullRange = true;
       }
       else
@@ -270,14 +270,14 @@ ScoreType Engine::alphaBetta0()
         }
 #endif
 
-        score = -alphaBetta(0, depth + depthInc2 - ONE_PLY - R, 1, -alpha-1, -alpha, strongMove);
+        score = -alphaBetta(0, depth + depthInc2 - ONE_PLY - R, 1, -alpha-1, -alpha, strongMove, true);
 
         if(!stopped() && score > alpha && R > 0)
-          score = -alphaBetta(0, depth + depthInc2 - ONE_PLY, 1, -alpha - 1, -alpha, strongMove);
+          score = -alphaBetta(0, depth + depthInc2 - ONE_PLY, 1, -alpha - 1, -alpha, strongMove, true);
 
         if(!stopped() && score > alpha)
         {
-          score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true);
+          score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
           fullRange = true;
         }
       }
@@ -345,7 +345,7 @@ ScoreType Engine::alphaBetta0()
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv)
+ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm)
 {
   prefetchHash(ictx);
 
@@ -412,8 +412,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   {
     if(
       !scontexts_[ictx].board_.underCheck()
+       && !pv
+       && allow_nm
        && scontexts_[ictx].board_.allowNullMove()
-       && depth >= scontexts_[ictx].board_.nullMoveDepthMin()
+       && depth > scontexts_[ictx].board_.nullMoveDepthMin()
        && std::abs(betta) < Figure::MatScore+MaxPly
        )
     {
@@ -421,7 +423,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
       // do null-move
       scontexts_[ictx].board_.makeNullMove();
-      ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false);
+      ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false, false);
       scontexts_[ictx].board_.unmakeNullMove();
 
       // verify null-move with shortened depth
@@ -476,7 +478,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_IID
   if (!hmove && depth >= 4 * ONE_PLY)
   {
-    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv);
+    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
     if(const HItem * hitem = hash_.find(scontexts_[ictx].board_.hashCode()))
     {
       X_ASSERT(hitem->hkey_ != scontexts_[ictx].board_.hashCode(), "invalid hash item found");
@@ -551,14 +553,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
          && std::abs(betta) < Figure::MatScore-MaxPly
          && std::abs(alpha) < Figure::MatScore-MaxPly)
       {
-        score = -alphaBetta(ictx, depth - Probcut_PlyReduce, ply+1, -betta_pc, -(betta_pc-1), pv);
+        score = -alphaBetta(ictx, depth - Probcut_PlyReduce, ply+1, -betta_pc, -(betta_pc-1), pv, true);
       }
 #endif
 
       if(score < betta_pc)
       {
         if(!counter)
-          score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv);
+          score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv, true);
         else
         {
           int depthInc2 = depthIncrement(ictx, move, false) + depthInc;
@@ -578,14 +580,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           }
 #endif
 
-          score = -alphaBetta(ictx, depth + depthInc2 - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
+          score = -alphaBetta(ictx, depth + depthInc2 - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, true);
           curr.reduced_ = false;
 
           if(!stopped() && score > alpha && R > 0)
-            score = -alphaBetta(ictx, depth + depthInc2 - ONE_PLY, ply + 1, -alpha - 1, -alpha, false);
+            score = -alphaBetta(ictx, depth + depthInc2 - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, true);
 
           if(!stopped() && score > alpha && score < betta)
-            score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply + 1, -betta, -alpha, pv);
+            score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply + 1, -betta, -alpha, pv, true);
         }
       }
     }
@@ -647,7 +649,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     sdata_.inc_nc();
 
     alpha = alpha0;
-    ScoreType score = -alphaBetta(ictx, depth, ply+1, -betta, -alpha, pv);
+    ScoreType score = -alphaBetta(ictx, depth, ply+1, -betta, -alpha, pv, true);
 
     scontexts_[ictx].board_.unmakeMove();
 
