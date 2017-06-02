@@ -222,7 +222,7 @@ void EscapeGenerator::generateUsual()
           Move nmove;
           nmove.set(pw_pos, *table, Figure::TypeKnight, false);
 
-          if ( (movesTable().caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) && board_.see(nmove) >= 0 )
+          if ( (movesTable().caps(Figure::TypeKnight, ch_pos) & board_.fmgr_.king_mask(ocolor)) )//&& board_.see(nmove) >= 0 )
             add(pw_pos, *table, Figure::TypeKnight, false);
         }
       }

@@ -58,5 +58,6 @@ void optimizeFen(std::string const& ffname);
 void evaluateFen(std::string const& ffname);
 void see_perf_test(std::string const& fname);
 void kpkTable(std::string const& fname);
+void speedTest();
 
 } // NEngine

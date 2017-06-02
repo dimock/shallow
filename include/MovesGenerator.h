@@ -349,6 +349,21 @@ public:
 
   void generate(const Move & hcap, Figure::Type thresholdType);
 
+  inline Move* test_move()
+  {
+    for(;;)
+    {
+      auto iter = std::max_element(moves_.begin(), moves_.end(),
+                                   [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      if(iter == moves_.end())
+        return nullptr;
+      auto* move = &*iter;
+      moves_.erase(iter);
+      return move;
+    }
+    return nullptr;
+  }
+
   inline Move* move()
   {
     for(;;)
@@ -453,6 +468,18 @@ public:
     return MovesGeneratorBase::find(m); 
   }
 
+  inline Move* test_move()
+  {
+    Move* move = nullptr;
+    auto iter = std::max_element(moves_.begin(), moves_.end(),
+      [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+    if(iter == moves_.end())
+      return nullptr;
+    move = &*iter;
+    moves_.erase(iter);
+    return move;
+  }
+
   inline Move* move()
   {
     if(takeHash_)
@@ -549,6 +576,39 @@ public:
   FastGenerator(Board & board, const Move & hmove, const Move & killer);
 
   Move* move();
+  
+  Move* test_move()
+  {
+    if(order_ == oHash)
+    {
+      order_ = oGenCaps;
+    }
+    if(order_ == oEscapes)
+    {
+      return eg_.test_move();
+    }
+    if(order_ == oGenCaps)
+    {
+      cg_.generate(hmove_, Figure::TypePawn);
+      order_ = oCaps;
+    }
+    if(order_ == oCaps)
+    {
+      if(auto* move = cg_.test_move())
+        return move;
+      order_ = oGenUsual;
+    }
+    if(order_ == oGenUsual)
+    {
+      ug_.generate(hmove_, killer_);
+      order_ = oUsual;
+    }
+    if(order_ == oUsual)
+    {
+      return ug_.move();
+    }
+    return nullptr;
+  }
 
   bool singleReply() const
   {
@@ -578,6 +638,21 @@ class ChecksGenerator : public MovesGeneratorBase<64>
 public:
 
   ChecksGenerator(Board & board);
+
+  Move* test_move()
+  {
+    for(;;)
+    {
+      auto iter = std::max_element(moves_.begin(), moves_.end(),
+                                   [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      if(iter == moves_.end())
+        return nullptr;
+      auto* move = &*iter;
+      moves_.erase(iter);
+      return move;
+    }
+    return nullptr;
+  }
 
   Move* move()
   {
@@ -634,6 +709,43 @@ public:
   TacticalGenerator(Board & board, const Move & hmove, Figure::Type thresholdType, int depth);
 
   Move* move();
+
+  Move* test_move()
+  {
+    if(order_ == oEscape)
+    {
+      return eg_.test_move();
+    }
+    if(order_ == oHash)
+    {
+      order_ = oGenCaps;
+    }
+    if(order_ == oGenCaps)
+    {
+      cg_.generate(hmove_, thresholdType_);
+      order_ = oCaps;
+    }
+    if(order_ == oCaps)
+    {
+      if(auto* cap = cg_.test_move())
+      {
+        return cap;
+      }
+      if(depth_ < 0)
+        return nullptr;
+      order_ = oGenChecks;
+    }
+    if(order_ == oGenChecks)
+    {
+      chg_.generate(hmove_);
+      order_ = oChecks;
+    }
+    if(order_ == oChecks)
+    {
+      return chg_.test_move();
+    }
+    return nullptr;
+  }
 
   Move* weak()
   {

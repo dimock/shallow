@@ -3,6 +3,7 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
 #include <xtests.h>
+#include <xoptimize.h>
 #include <xprotocol.h>
 #include <kpk.h>
 #include <iostream>
@@ -333,6 +334,21 @@ void kpkTable(std::string const& fname)
   }
   f << "};" << std::endl << std::endl;
   f << "} // NEngine" << std::endl;
+}
+
+
+void speedTest()
+{
+  SBoard<512> board;
+  fromFEN("", board);
+  auto t = std::chrono::high_resolution_clock::now();
+  xsearch(board, 4);
+  auto dt = std::chrono::high_resolution_clock::now() - t;
+  double dt_ms = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
+  int nps = (x_movesCounter / dt_ms) * 1000;
+  std::cout << x_movesCounter
+    << " moves; time: " << dt_ms/1000.0 << " (s);"
+    << " nps " << nps << std::endl;
 }
 
 } // NEngine
