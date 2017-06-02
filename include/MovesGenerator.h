@@ -291,6 +291,16 @@ public:
 
   void generate(const Move & hmove, const Move & killer);
 
+  inline Move* test_move()
+  {
+    auto iter = moves_.begin();
+    if(iter == moves_.end())
+      return nullptr;
+    auto* move = &*iter;
+    moves_.erase(iter);
+    return move;
+  }
+
   inline Move* move()
   {
     auto iter = count() == moves_.size()
@@ -353,8 +363,7 @@ public:
   {
     for(;;)
     {
-      auto iter = std::max_element(moves_.begin(), moves_.end(),
-                                   [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      auto iter = moves_.begin();
       if(iter == moves_.end())
         return nullptr;
       auto* move = &*iter;
@@ -471,8 +480,7 @@ public:
   inline Move* test_move()
   {
     Move* move = nullptr;
-    auto iter = std::max_element(moves_.begin(), moves_.end(),
-      [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+    auto iter = moves_.begin();
     if(iter == moves_.end())
       return nullptr;
     move = &*iter;
@@ -605,7 +613,7 @@ public:
     }
     if(order_ == oUsual)
     {
-      return ug_.move();
+      return ug_.test_move();
     }
     return nullptr;
   }
@@ -643,8 +651,7 @@ public:
   {
     for(;;)
     {
-      auto iter = std::max_element(moves_.begin(), moves_.end(),
-                                   [](Move const& m1, Move const& m2) { return m1.vsort_ < m2.vsort_; });
+      auto iter = moves_.begin();
       if(iter == moves_.end())
         return nullptr;
       auto* move = &*iter;
