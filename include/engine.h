@@ -145,7 +145,7 @@ private:
 
   struct SearchContext
   {
-    SBoard<Board::GameLength>     board_;
+    SBoard<Board, UndoInfo, Board::GameLength>     board_;
     Evaluator eval_;
     std::array<PlyStack, MaxPly+4>    plystack_;
     std::array<Move, Board::MovesMax> moves_;

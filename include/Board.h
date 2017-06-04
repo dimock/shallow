@@ -736,7 +736,7 @@ private:
   union
   {
     uint8  checking_[2];
-    uint16 checking_figs_;
+    uint16 checking_figs_{};
   };
 
   /// fields array 8 x 8
@@ -749,34 +749,34 @@ protected:
   UndoInfo* g_undoStack{};
 };
 
-template <int STACK_SIZE>
-class SBoard : public Board
+template <class B, class U, int STACK_SIZE>
+class SBoard : public B
 {
 public:
   SBoard() :
-    Board(),
+    B(),
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
   }
 
   SBoard(SBoard&& oboard) :
-    Board(std::move(oboard)),
+    B(std::move(oboard)),
     undoStackIntr_(std::move(oboard.undoStackIntr_))
   {
     g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
-  SBoard(SBoard<OTHER_SIZE>&& oboard) :
-    Board(std::move(oboard)),
+  SBoard(SBoard<B, U, OTHER_SIZE>&& oboard) :
+    B(std::move(oboard)),
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
   }
 
   SBoard(SBoard const& oboard) :
-    Board(oboard),
+    B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
@@ -784,16 +784,16 @@ public:
 
 
   template <int OTHER_SIZE>
-  SBoard(SBoard<OTHER_SIZE> const& oboard) :
-    Board(oboard),
+  SBoard(SBoard<B, U, OTHER_SIZE> const& oboard) :
+    B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
-  SBoard(SBoard<OTHER_SIZE> const& oboard, bool) :
-    Board(oboard),
+  SBoard(SBoard<B, U, OTHER_SIZE> const& oboard, bool) :
+    B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
@@ -801,42 +801,42 @@ public:
   }
 
   SBoard(Board const& oboard) :
-    Board(oboard),
+    B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
-  SBoard& operator = (SBoard<OTHER_SIZE>&& oboard)
+  SBoard& operator = (SBoard<B, U, OTHER_SIZE>&& oboard)
   {
-    this->Board::operator = (oboard);
+    this->B::operator = (oboard);
     g_undoStack = undoStackIntr_.data();
     return *this;
   }
 
-  SBoard& operator = (Board const& oboard)
+  SBoard& operator = (B const& oboard)
   {
-    this->Board::operator = (oboard);
+    this->B::operator = (oboard);
     g_undoStack = undoStackIntr_.data();
     return *this;
   }
 
-  SBoard(Board const& oboard, bool) :
-    Board(oboard),
+  SBoard(B const& oboard, bool) :
+    B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
     g_undoStack = undoStackIntr_.data();
     copyStack(oboard);
   }
 private:
-  void copyStack(Board const& oboard)
+  void copyStack(B const& oboard)
   {
     for(int i = 0; i < halfmovesCount() && i < undoStackIntr_.size(); ++i)
       g_undoStack[i] = oboard.undoInfo(i);
   }
 
-  std::vector<UndoInfo> undoStackIntr_;
+  std::vector<U> undoStackIntr_;
 };
 
 } // NEngine

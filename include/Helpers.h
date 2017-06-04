@@ -39,6 +39,14 @@ bool fromFEN(std::string const& i_fen, Board& board);
 /// save current position to FEN
 std::string toFEN(Board const& board);
 
+// check if there is nothing between 'from' and 'to'
+// inv_mask - inverted mask of all interesting figures
+inline bool is_nothing_between(int from, int to, const BitMask & inv_mask)
+{
+  const BitMask & btw_msk = betweenMasks().between(from, to);
+  return (btw_msk & inv_mask) == btw_msk;
+}
+
 struct XCounter
 {
   static int count_;

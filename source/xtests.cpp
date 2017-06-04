@@ -276,7 +276,7 @@ void kpkTable(std::string const& fname)
         for(int color = 0; color < 2; ++color)
         {
           Figure::Color ccolor = (Figure::Color)color;
-          SBoard<256> board;
+          SBoard<Board, UndoInfo, 256> board;
           board.initEmpty(ccolor);
           board.addFigure(Figure::ColorWhite, Figure::TypePawn, p);
           board.addFigure(Figure::ColorWhite, Figure::TypeKing, kw);
@@ -339,7 +339,7 @@ void kpkTable(std::string const& fname)
 
 void speedTest()
 {
-  SBoard<512> board;
+  SBoard<Board, UndoInfo, 512> board;
   fromFEN("", board);
   auto t = std::chrono::high_resolution_clock::now();
   xsearch(board, 4);

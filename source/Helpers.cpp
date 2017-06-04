@@ -902,7 +902,7 @@ bool save(const Board & board, std::ostream & os, bool write_prefix)
   else if(board.drawState())
     sres = "1/2-1/2";
 
-  SBoard<Board::GameLength> sboard(board, true);
+  SBoard<Board, UndoInfo, Board::GameLength> sboard(board, true);
 
   int num = sboard.halfmovesCount();
 

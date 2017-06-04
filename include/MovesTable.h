@@ -20,8 +20,7 @@ class MovesTable
   BitMask s_pawnsMoves_[2][64];
   BitMask s_pawnsFrom_[2][64];
   BitMask s_otherCaps_[8][64];
-  BitMask s_pawnPromotions_t_[2];
-  BitMask s_pawnPromotions_o_[2];
+  BitMask s_pawnPromotions_[2];
 
   // blocked rook
   BitMask s_blockedRook_[64];
@@ -87,17 +86,10 @@ public:
     return s_pawnsFrom_[color][pos];
   }
 
-  // transposed promotion mask
-  inline const BitMask & promote_t(int color) const
+  inline const BitMask & promote(int color) const
   {
     X_ASSERT( (unsigned)color > 1, "invalid color of promotion mask" );
-    return s_pawnPromotions_t_[color];
-  }
-
-  inline const BitMask & promote_o(int color) const
-  {
-    X_ASSERT( (unsigned)color > 1, "invalid color of promotion mask" );
-    return s_pawnPromotions_o_[color];
+    return s_pawnPromotions_[color];
   }
 
   inline const BitMask & caps(int type, int pos) const

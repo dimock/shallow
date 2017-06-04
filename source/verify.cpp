@@ -61,7 +61,7 @@ void Engine::logPV()
   std::ostringstream oss;
   oss << std::put_time(std::localtime(&tm), "%d:%m:%Y %H:%M:%S ");
 
-  SBoard<Board::GameLength> board(scontexts_[0].board_);
+  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[0].board_);
 
   oss << "iter " << sdata_.depth_ << " ";
   if(sdata_.best_)
@@ -93,7 +93,7 @@ void Engine::logMovies()
   if(!callbacks_.slog_)
     return;
 
-  SBoard<Board::GameLength> board(scontexts_[0].board_);
+  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[0].board_);
 
   auto fen = NEngine::toFEN(board);
 

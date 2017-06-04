@@ -64,7 +64,7 @@ void CapsGenerator::generate()
   const BitMask & pawn_msk = board_.fmgr_.pawn_mask(color);
   {
     static int pw_delta[] = { -8, +8 };
-    BitMask promo_msk = movesTable().promote_o(color);
+    BitMask promo_msk = movesTable().promote(color);
     promo_msk &= pawn_msk;
 
     for ( ; promo_msk; )

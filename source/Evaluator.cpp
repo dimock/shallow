@@ -493,9 +493,11 @@ namespace NEngine
     // bishop treat
     if(fmgr.bishops(color) == 1)
     {
-      auto b_mask = fmgr.bishops_w(color) ? FiguresCounter::s_whiteMask_ : ~FiguresCounter::s_whiteMask_;
-      score.endGame_ += pop_count(pw_protected   & b_mask) * evalCoeffs().protectedPawnBishopTreat_;
-      score.endGame_ += pop_count(pw_unprotected & b_mask) * evalCoeffs().unprotectedPawnBishopTreat_;
+      auto bi_mask = (fmgr.bishop_mask(color) & FiguresCounter::s_whiteMask_)
+        ?  FiguresCounter::s_whiteMask_
+        : ~FiguresCounter::s_whiteMask_;
+      score.endGame_ += pop_count(pw_protected   & bi_mask) * evalCoeffs().protectedPawnBishopTreat_;
+      score.endGame_ += pop_count(pw_unprotected & bi_mask) * evalCoeffs().unprotectedPawnBishopTreat_;
     }
     return score;
   }

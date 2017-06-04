@@ -13,7 +13,7 @@ namespace NEngine
 
 namespace xtests_details_ns
 {
-using FBoard = SBoard<16>;
+using FBoard = SBoard<Board, UndoInfo, 16>;
 };
 
 struct xEPD

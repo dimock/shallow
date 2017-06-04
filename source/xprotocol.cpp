@@ -92,7 +92,7 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
     return;
   }
 
-  NEngine::SBoard<NEngine::Board::GameLength> board(sres.board_);
+  NEngine::SBoard<NEngine::Board, NEngine::UndoInfo, NEngine::Board::GameLength> board(sres.board_);
   std::ostringstream oss;
 
   oss << sres.depth_ << " " << sres.score_ << " " << NTime::centi_seconds<int>(sres.dt_) << " " << sres.totalNodes_;
@@ -132,7 +132,7 @@ void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
     return;
   }
 
-  NEngine::SBoard<NEngine::Board::GameLength> board(sdata.board_);
+  NEngine::SBoard<NEngine::Board, NEngine::UndoInfo, NEngine::Board::GameLength> board(sdata.board_);
 
   int movesLeft = sdata.numOfMoves_ - sdata.counter_;
   std::ostringstream oss;
@@ -232,7 +232,7 @@ void xProtocolMgr::printUciStat(NEngine::SearchData const& sdata)
 
 void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
 {
-  NEngine::SBoard<NEngine::Board::GameLength> board(sres.board_);
+  NEngine::SBoard<NEngine::Board, NEngine::UndoInfo, NEngine::Board::GameLength> board(sres.board_);
 
   std::string pv_str;
   for(int i = 0; i < MaxPly && sres.pv_[i]; ++i)

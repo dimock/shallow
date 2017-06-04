@@ -26,8 +26,7 @@ MovesTable::MovesTable()
   // pawn promotions
   for (int color = 0; color < 2; ++color)
   {
-    s_pawnPromotions_t_[color] = 0;
-    s_pawnPromotions_o_[color] = 0;
+    s_pawnPromotions_[color] = 0;
 
     int y = color ? 6 : 1;
     for (int x = 0; x < 8; ++x)
@@ -35,10 +34,7 @@ MovesTable::MovesTable()
       int pp = x | (y << 3);
 
       // fill ordinary promotion mask
-      s_pawnPromotions_o_[color] |= set_mask_bit(pp);
-
-      // fill transposed promotion mask
-      s_pawnPromotions_t_[color] |= set_mask_bit(FiguresCounter::s_transposeIndex_[pp]);
+      s_pawnPromotions_[color] |= set_mask_bit(pp);
     }
   }
 }
