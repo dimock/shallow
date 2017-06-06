@@ -22,13 +22,15 @@ elseif(MSVC)
   add_definitions(-D_SBCS)
 endif()
 
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+
 find_package(Boost COMPONENTS filesystem REQUIRED)
 message(status "** Boost Include: ${Boost_INCLUDE_DIR}")
 message(status "** Boost Libraries dirs: ${Boost_LIBRARY_DIRS}")
 message(status "** Boost Libraries: ${Boost_LIBRARIES}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set( Boost_USE_STATIC_LIBS ON )
 include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
@@ -36,4 +38,5 @@ file(GLOB_RECURSE SOURCE_FILES source/*)
 file(GLOB_RECURSE INCLUDE_FILES include/*)
 
 add_executable(shallow ${SOURCE_FILES} ${INCLUDE_FILES})
-target_link_libraries(shallow ${Boost_LIBRARIES})
+target_link_libraries(shallow ${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY})
+# ${Boost_SYSTEM_LIBRARY})

@@ -47,8 +47,8 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   // bishops
   BitMask bimask = fmgr.bishop_mask(color);
   BitMask mask_all_no_bishops = mask_no_queens & ~bimask;
-  BitMask bishop_from_king    = magic_ns::bishop_moves(finfo_[ocolor].king_pos_, mask_all_) & inv_mask_all_;
-  BitMask rook_from_king      = magic_ns::rook_moves(finfo_[ocolor].king_pos_, mask_all_) & inv_mask_all_;
+  BitMask const& bishop_from_king = magic_ns::bishop_moves(finfo_[ocolor].king_pos_, mask_all_) & inv_mask_all_;
+  BitMask const& rook_from_king   = magic_ns::rook_moves(finfo_[ocolor].king_pos_, mask_all_) & inv_mask_all_;
   for(; bimask;)
   {
     int n = clear_lsb(bimask);
@@ -75,13 +75,13 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     int n = clear_lsb(rmask);
     int p = color ? Figure::mirrorIndex_[n] : n;
     score.opening_ += evalCoeffs().rookPsq_[p];
-    auto rook_moves = magic_ns::rook_moves(n, mask_all_);
+    auto const& rook_moves = magic_ns::rook_moves(n, mask_all_);
     finfo_[color].attack_mask_ |= rook_moves;
     finfo_[color].rookAttacks_ |= rook_moves;
     finfo_[color].rookMasks_.push_back(rook_moves);
     auto r_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
     // opponent's king attacks with x-ray
-    auto x_rook_moves = magic_ns::rook_moves(n, mask_all_no_rooks);
+    auto const& x_rook_moves = magic_ns::rook_moves(n, mask_all_no_rooks);
     bool could_attack = (finfo_[ocolor].kingAttacks_ & x_rook_moves) != 0ULL;
     bool could_check  = (rook_from_king & x_rook_moves) != 0ULL;
     finfo_[color].rookPressure_ += evalCoeffs().kingDistanceRook_[r_dist];
@@ -108,8 +108,8 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
     finfo_[color].queenMasks_.push_back(queen_moves);
     auto q_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
     // opponent's king attacks with x-ray
-    auto x_rook_moves   = magic_ns::rook_moves(n, mask_all_no_rooks);
-    auto x_bishop_moves = magic_ns::bishop_moves(n, mask_all_no_bishops);
+    auto const& x_rook_moves   = magic_ns::rook_moves(n, mask_all_no_rooks);
+    auto const& x_bishop_moves = magic_ns::bishop_moves(n, mask_all_no_bishops);
     bool could_attack   = ((finfo_[ocolor].kingAttacks_ & x_bishop_moves) != 0ULL)
       || ((finfo_[ocolor].kingAttacks_ & x_rook_moves) != 0ULL);
     bool could_check    = ((rook_from_king & x_rook_moves) | (bishop_from_king & x_bishop_moves)) != 0ULL;

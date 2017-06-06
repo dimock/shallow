@@ -16,12 +16,10 @@ int main(int argn, char *argv[])
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
 
-  NEngine::speedTest();
-  return 0;
- 
   if(argn > 1)
   {
-    NEngine::evaluateFen(argv[1]);
+    //NEngine::epdFolder(argv[1]);
+    NEngine::speedTest();
     return 0;
   }
 

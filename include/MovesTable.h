@@ -28,6 +28,9 @@ class MovesTable
   // king pressure mask: +1 square around king
   BitMask s_kingPressure_[64];
 
+  // bits between king and rook (color, type - kqkQ)
+  BitMask s_castleMasks_[2][2];
+
   void resetAllTables(int);
 
   void initPawns(int);
@@ -36,10 +39,17 @@ class MovesTable
   void initBishops(int);
   void initRooks(int);
   void initQueens(int);
+  void initCastle();
 
 public:
 
   MovesTable();
+
+  inline BitMask castleMasks(int color, int type) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)type > 1, "invalid castle color or type");
+    return s_castleMasks_[color][type];
+  }
 
   inline const int8 * pawn(int color, int pos) const
   {

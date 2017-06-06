@@ -66,6 +66,13 @@ inline T* make_aligned_array(std::vector<uint8>& arr, size_t size_)
 
 namespace nst
 {
+  enum bishop_rook_dirs
+  {
+    none,
+    rook,
+    bishop
+  };
+
   enum dirs
   {
     no_dir,

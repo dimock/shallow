@@ -296,9 +296,9 @@ void Board::makeMove(const Move & mv)
   const Figure::Color & color = color_;
   Figure::Color ocolor = Figure::otherColor(color);
 
-  // store masks - don't undo it to save time
-  undo.mask_[0] = fmgr_.mask(Figure::ColorBlack);
-  undo.mask_[1] = fmgr_.mask(Figure::ColorWhite);
+  //// store masks - don't undo it to save time
+  //undo.mask_[0] = fmgr_.mask(Figure::ColorBlack);
+  //undo.mask_[1] = fmgr_.mask(Figure::ColorWhite);
 
   Field & ffrom = getField(undo.from_);
   Field & fto   = getField(undo.to_);
@@ -563,8 +563,8 @@ void Board::unmakeMove()
     }
   }
 
-  // restore figures masks
-  fmgr_.restoreMasks(undo.mask_);
+  //// restore figures masks
+  //fmgr_.restoreMasks(undo.mask_);
 
   fiftyMovesCount_ = undo.fifty_moves_;
   repsCounter_ = undo.reps_counter_;

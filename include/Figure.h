@@ -73,7 +73,9 @@ public:
     tmask_[t] |= mask_set;
     mask_all_ |= mask_set;
 
-    X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::Type::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop] + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook] + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
+    X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::Type::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop]
+             + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
+             + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
     //X_ASSERT(count_ != pawns() + bishops() + knights() + rooks() + queens(), "invalid number of figures encountered");
   }
 
@@ -90,7 +92,9 @@ public:
     mask_all_ ^= mask_clear;
 
     X_ASSERT(tmask_[t] & set_mask_bit(p), "invalid mask");
-    X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop] + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook] + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
+    X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop]
+             + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
+             + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
     //X_ASSERT(count_ != pawns() + bishops() + knights() + rooks() + queens(), "invalid number of figures encountered");
   }
 
@@ -121,8 +125,8 @@ public:
   inline const BitMask & type_mask(const Figure::Type type) const { return tmask_[type]; }
   inline const BitMask & mask_all() const { return mask_all_; }
 
-  // temp. should be removed
-  inline void set_mask_all(BitMask const& m) { mask_all_ = m; }
+  //// temp. should be removed
+  //inline void set_mask_all(BitMask const& m) { mask_all_ = m; }
 
 private:
 
@@ -216,11 +220,11 @@ public:
     pawnCode_ ^= colorCode();
   }
 
-  inline void restoreMasks(const BitMask (& mask)[2])
-  {
-	  fcounter_[0].set_mask_all(mask[0]);
-    fcounter_[1].set_mask_all(mask[1]);
-  }
+  //inline void restoreMasks(const BitMask (& mask)[2])
+  //{
+	 // fcounter_[0].set_mask_all(mask[0]);
+  //  fcounter_[1].set_mask_all(mask[1]);
+  //}
 
   void restoreHash(const BitMask & hcode) { hashCode_ = hcode; }
   void restorePawnCode(const BitMask & pcode) { pawnCode_ = pcode; }
@@ -270,9 +274,9 @@ public:
 
 private:
 
-  FiguresCounter fcounter_[2];
   BitMask hashCode_{};
   BitMask pawnCode_{};
+  FiguresCounter fcounter_[2];
 };
 
 

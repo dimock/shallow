@@ -8,11 +8,12 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <kpk.h>
 #include <iostream>
 #include <fstream>
-#include <regex>
 #include <chrono>
 #include <iomanip>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace NEngine
 {
@@ -20,8 +21,8 @@ namespace NEngine
 namespace
 {
 
-std::ostream&
-operator << (std::ostream& os, xEPD const& epd)
+template <typename BOARD, typename MOVE, typename UNDO>
+std::ostream& operator << (std::ostream& os, xEPD<BOARD, MOVE, UNDO> const& epd)
 {
   os << toFEN(epd.board_) << "; moves: ";
   for(auto const& move : epd.moves_)
@@ -31,11 +32,11 @@ operator << (std::ostream& os, xEPD const& epd)
 }
 
 void optimizeFen(std::string const& ffname,
-                 xProcessFen_Callback const& process_cbk,
+                 xProcessFen_Callback<Board, Move, UndoInfo> const& process_cbk,
                  xDoOptimize_Callback const& optimize_cbk,
                  xTestFen_ErrorCallback const& err_cbk)
 {
-  FenTest ft(ffname, err_cbk);
+  FenTest<Board, Move, UndoInfo> ft(ffname, err_cbk);
   auto t = std::chrono::high_resolution_clock::now();
   for(;;)
   {
@@ -54,76 +55,10 @@ void optimizeFen(std::string const& ffname,
 }
 
 
-FenTest::FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
-{
-  std::regex r("([0-9pnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)([0-9a-hpnrqkPNBRQKOx+=!\\s\\-]+)(;[\\s]*)?([\\-]?[\\d]+)?");
-  std::ifstream ifs(ffname);
-  for(; ifs;)
-  {
-    std::string line;
-    std::getline(ifs, line);
-    boost::algorithm::trim(line);
-    if(line.empty())
-      continue;
-    if(line[0] == '#')
-      continue;
-    std::cout << line << std::endl;
-    std::smatch m;
-    if(!std::regex_search(line, m, r) || m.size() < 4)
-    {
-      ecbk("regex failed on line: " + line);
-      continue;
-    }
-    std::string fstr = m[1];
-    std::string mstr = m[3];
-    xEPD epd;
-    if(!fromFEN(fstr, epd.board_))
-    {
-      ecbk("invalid fen: " + fstr);
-      continue;
-    }
-    std::vector<std::string> str_moves;
-    boost::algorithm::split(str_moves, mstr, boost::is_any_of(" \t"), boost::token_compress_on);
-    for(auto const& smove : str_moves)
-    {
-      if(smove.empty())
-        continue;
-      if(Move move = strToMove(smove, epd.board_))
-      {
-        epd.moves_.push_back(move);
-      }
-    }
-    if(m.size() >= 6)
-    {
-      std::string sscore = m[5];
-      try
-      {
-        if(!sscore.empty())
-          epd.score_ = std::stoi(sscore);
-      }
-      catch(std::exception const&)
-      {}
-    }
-    push_back(std::move(epd));
-  }
-}
-
-void testFen(std::string const& ffname, xTestFen_Callback const& cbk, xTestFen_ErrorCallback const& ecbk)
-{
-  FenTest ft(ffname, ecbk);
-  auto t = std::chrono::high_resolution_clock::now();
-  for(size_t i = 0; i < ft.size(); ++i)
-  {
-    cbk(i, ft[i]);
-  }
-  auto dt = std::chrono::high_resolution_clock::now() - t;
-  std::cout << ft.size() << " moves; time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " (ms)" << std::endl;
-}
-
 void testSee(std::string const& ffname)
 {
-  NEngine::testFen(ffname,
-    [](size_t i, NEngine::xEPD& epd)
+  testFen<Board, Move, UndoInfo>(ffname,
+                                 [](size_t i, xEPD<Board, Move, UndoInfo>& epd)
     {
       for(auto const& move : epd.moves_)
       {
@@ -133,8 +68,8 @@ void testSee(std::string const& ffname)
           //if(v_old == v_new)
           return;
         std::cout << i << ": "
-          << NEngine::toFEN(epd.board_) << "  "
-          << NEngine::printSAN(epd.board_, move)
+          << toFEN(epd.board_) << "  "
+          << printSAN(epd.board_, move)
           << "  see old: " << v_old
           << "  see new: " << v_new
           << std::endl;
@@ -149,7 +84,7 @@ void testSee(std::string const& ffname)
 void see_perf_test(std::string const& fname)
 {
   int N = 1000000;
-  auto see_old_cbk = [N](size_t i, xEPD& epd)
+  auto see_old_cbk = [N](size_t i, xEPD<Board, Move, UndoInfo>& epd)
   {
     int x = 0;
     for(int n = 0; n < N; ++n)
@@ -161,7 +96,7 @@ void see_perf_test(std::string const& fname)
       }
     }
   };
-  auto see_new_cbk = [N](size_t i, xEPD& epd)
+  auto see_new_cbk = [N](size_t i, xEPD<Board, Move, UndoInfo>& epd)
   {
     int x = 0;
     for(int n = 0; n < N; ++n)
@@ -173,7 +108,7 @@ void see_perf_test(std::string const& fname)
       }
     }
   };
-  testFen(fname, see_new_cbk, [](std::string const& err)
+  testFen<Board, Move, UndoInfo>(fname, see_new_cbk, [](std::string const& err)
   {
     std::cout << "error: " << err << std::endl;
   });
@@ -191,7 +126,7 @@ void optimizeFen(std::string const& ffname)
   int Nsteps = 1;
   double r  = 0.1;
   double dr = 0.5;
-  optimizeFen(ffname, [&proc, depth](size_t i, xEPD& epd)
+  optimizeFen(ffname, [&proc, depth](size_t i, xEPD<Board, Move, UndoInfo>& epd)
   {
     std::cout << i << ": ";
     proc.setDepth(depth);
@@ -204,13 +139,13 @@ void optimizeFen(std::string const& ffname)
       return 1;
     }
     auto best = r->best_;
-    auto iter = std::find_if(epd.moves_.begin(), epd.moves_.end(), [&best](NEngine::Move const& move) { return move == best; });
+    auto iter = std::find_if(epd.moves_.begin(), epd.moves_.end(), [&best](Move const& move) { return move == best; });
     if(iter == epd.moves_.end())
     {
       std::cout << "-" << std::endl;
       return 1;
     }
-    std::cout << NEngine::printSAN(epd.board_, r->best_) << std::endl;
+    std::cout << printSAN(epd.board_, r->best_) << std::endl;
     return 0;
   },
   [&](int summ) -> bool
@@ -242,9 +177,9 @@ void optimizeFen(std::string const& ffname)
 
 void evaluateFen(std::string const& ffname)
 {
-  NEngine::testFen(
+  testFen<Board, Move, UndoInfo>(
     ffname,
-    [](size_t, NEngine::xEPD& e)
+    [](size_t, xEPD<Board, Move, UndoInfo>& e)
   {
     NShallow::Processor proc;
     NEngine::Evaluator eval;
@@ -339,7 +274,7 @@ void kpkTable(std::string const& fname)
 
 void speedTest()
 {
-  SBoard<Board, UndoInfo, 512> board;
+  SBoard<Board2, UndoInfo2, 512> board;
   fromFEN("", board);
   auto t = std::chrono::high_resolution_clock::now();
   xsearch(board, 4);
@@ -349,6 +284,62 @@ void speedTest()
   std::cout << x_movesCounter
     << " moves; time: " << dt_ms/1000.0 << " (s);"
     << " nps " << nps << std::endl;
+}
+
+std::vector<std::string> board2Test(std::string const& epdfile)
+{
+  std::vector<std::string> errors;
+  testFen<Board2, Move2, UndoInfo2>(epdfile,
+                                    [&errors](size_t i, xEPD<Board2, Move2, UndoInfo2>& epd)
+  {
+    auto ok = true;// xverifyMoves(epd.board_);
+    try
+    {
+      xsearch(epd.board_, 2);
+      std::cout << std::setw(4) << i << " verified with result: " << std::boolalpha << ok << std::endl;
+    }
+    catch(std::exception const& e)
+    {
+      epd.err_ = e.what();
+      ok = false;
+      std::cout << std::setw(4) << i << " failed with " << e.what() << std::endl;
+    }
+    if(!ok)
+      errors.push_back(epd.fen_ + "; "+ epd.err_);
+  },
+  [](std::string const& err)
+  {
+    std::cout << "Error: " << err << std::endl;
+  });
+  return errors;
+}
+
+void epdFolder(std::string const& folder)
+{
+  std::vector<std::string> errors;
+  boost::filesystem::path p(folder);
+  if(boost::filesystem::is_regular_file(boost::filesystem::status(p)))
+  {
+    auto errs = board2Test(folder);
+    errors.insert(errors.end(), errs.begin(), errs.end());
+  }
+  else if(boost::filesystem::is_directory(boost::filesystem::status(p)))
+  {
+    boost::filesystem::directory_iterator i{ p };
+    for(; i != boost::filesystem::directory_iterator{}; i++)
+    {
+      boost::filesystem::path pp{ *i };
+      std::string e = pp.extension().string();
+      boost::algorithm::to_lower(e);
+      if(e != ".epd")
+        continue;
+      auto errs = board2Test(pp.string());
+      errors.insert(errors.end(), errs.begin(), errs.end());
+    }
+  }
+  std::cout << "errors count: " << errors.size() << std::endl;
+  for(auto const& fen : errors)
+    std::cout << fen << std::endl;
 }
 
 } // NEngine

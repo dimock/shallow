@@ -11,6 +11,8 @@ namespace NEngine
 //////////////////////////////////////////////////////////////////////////
 MovesTable::MovesTable()
 {
+  initCastle();
+
   for (int i = 0; i < 64; ++i)
   {
     resetAllTables(i);
@@ -37,6 +39,15 @@ MovesTable::MovesTable()
       s_pawnPromotions_[color] |= set_mask_bit(pp);
     }
   }
+}
+
+void MovesTable::initCastle()
+{
+  s_castleMasks_[0][0] = set_mask_bit(61) | set_mask_bit(62);
+  s_castleMasks_[0][1] = set_mask_bit(57) | set_mask_bit(58) | set_mask_bit(59);
+
+  s_castleMasks_[1][0] = set_mask_bit(5) | set_mask_bit(6);
+  s_castleMasks_[1][1] = set_mask_bit(1) | set_mask_bit(2) | set_mask_bit(3);
 }
 
 void MovesTable::resetAllTables(int pos)

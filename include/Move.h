@@ -166,14 +166,14 @@ ALIGN_MSC(1) struct ALIGN_GCC(1) UndoInfo : public Move
   uint64 zcode_old_;
   uint64 zcode_pawn_;
 
-  /// figures masks
-  BitMask mask_[2];
+  ///// figures masks
+  //BitMask mask_[2];
 
   /// if this move is irreversible, we don't need to enumerate any move in fifty-move-rule detector
   bool  irreversible_;
 
   /// state of board after move
-  uint8 state_;
+  uint16 state_;
 
   /// en-passant position
   int8 en_passant_;
