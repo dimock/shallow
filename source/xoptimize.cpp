@@ -217,6 +217,17 @@ struct CapsGenerator2
     moves_.emplace_back(from, to, new_type);
   }
 
+  Move2* next()
+  {
+    if(iter_ != moves_.end())
+    {
+      auto* move = &*iter_;
+      ++iter_;
+      return move;
+    }
+    return nullptr;
+  }
+
   inline void generateCaps()
   {
     const Figure::Color color = board_.color();
@@ -439,10 +450,13 @@ struct CapsGenerator2
         add(ki_pos, to, Figure::TypeNone);
       }
     }
+
+    iter_ = moves_.begin();
   }
 
   BOARD const& board_;
   MovesList moves_;
+  typename MovesList::iterator iter_;
 };
 
 template <class BOARD, class MOVE>
@@ -457,6 +471,17 @@ struct ChecksGenerator2
   inline void add(int8 from, int8 to)
   {
     moves_.emplace_back(from, to, Figure::TypeNone);
+  }
+
+  Move2* next()
+  {
+    if(iter_ != moves_.end())
+    {
+      auto* move = &*iter_;
+      ++iter_;
+      return move;
+    }
+    return nullptr;
   }
 
   void generate()
@@ -684,6 +709,8 @@ struct ChecksGenerator2
         }
       }
     }
+
+    iter_ = moves_.begin();
   }
 
   void generate(Figure::Type type, int from)
@@ -707,6 +734,7 @@ struct ChecksGenerator2
 
   BOARD const& board_;
   MovesList moves_;
+  typename MovesList::iterator iter_;
 };
 
 template <class BOARD, class MOVE>
@@ -717,6 +745,17 @@ struct UsualGenerator2
   UsualGenerator2(BOARD const& board) :
     board_(board)
   {}
+
+  Move2* next()
+  {
+    if(iter_ != moves_.end())
+    {
+      auto* move = &*iter_;
+      ++iter_;
+      return move;
+    }
+    return nullptr;
+  }
 
   inline void add(int8 from, int8 to)
   {
@@ -815,10 +854,13 @@ struct UsualGenerator2
         add(ki_pos, to);
       }
     }
+
+    iter_ = moves_.begin();
   }
 
   BOARD const& board_;
   MovesList moves_;
+  typename MovesList::iterator iter_;
 };
 
 template <class BOARD, class MOVE>
@@ -1136,14 +1178,15 @@ struct EscapeGenerator2
         generateCaps();
       generateKingCaps();
       order_ = oCaps;
+      iter_ = caps_.begin();
     }
     if(order_ == oCaps)
     {
-      auto iter = caps_.begin();
-      if(iter != caps_.end())
+      if(iter_ != caps_.end())
       {
-        auto* move = &*iter;
-        caps_.erase(iter);
+        auto* move = &*iter_;
+        ++iter_;
+        //caps_.erase(iter);
         return move;
       }
       order_ = oGenUsual;
@@ -1154,14 +1197,15 @@ struct EscapeGenerator2
         generateUsual();
       generateKingUsual();
       order_ = oUsual;
+      iter_ = usual_.begin();
     }
     if(order_ == oUsual)
     {
-      auto iter = usual_.begin();
-      if(iter != usual_.end())
+      if(iter_ != usual_.end())
       {
-        auto* move = &*iter;
-        usual_.erase(iter);
+        auto* move = &*iter_;
+        //usual_.erase(iter);
+        ++iter_;
         return move;
       }
     }
@@ -1171,6 +1215,7 @@ struct EscapeGenerator2
   BOARD const& board_;
   MovesList caps_;
   MovesList usual_;
+  typename MovesList::iterator iter_;
   int king_pos_;
   BitMask protect_king_msk_;
   BitMask mask_all;
@@ -1205,13 +1250,16 @@ struct FastGenerator2
     }
     if(order_ == oCaps)
     {
-      auto iter = cg_.moves_.begin();
-      if(iter != cg_.moves_.end())
-      {
-        auto* move = &*iter;
-        cg_.moves_.erase(iter);
+      auto* move = cg_.next();
+      if(move)
         return move;
-      }
+      //auto iter = cg_.moves_.begin();
+      //if(iter != cg_.moves_.end())
+      //{
+      //  auto* move = &*iter;
+      //  cg_.moves_.erase(iter);
+      //  return move;
+      //}
       order_ = oGenUsual;
     }
     if(order_ == oGenUsual)
@@ -1221,13 +1269,15 @@ struct FastGenerator2
     }
     if(order_ == oUsual)
     {
-      auto iter = ug_.moves_.begin();
-      if(iter != ug_.moves_.end())
-      {
-        auto* move = &*iter;
-        ug_.moves_.erase(iter);
-        return move;
-      }
+      auto* move = ug_.next();
+      return move;
+      //auto iter = ug_.moves_.begin();
+      //if(iter != ug_.moves_.end())
+      //{
+      //  auto* move = &*iter;
+      //  ug_.moves_.erase(iter);
+      //  return move;
+      //}
     }
     return nullptr;
   }
@@ -1264,13 +1314,15 @@ struct TacticalGenerator2
     }
     if(order_ == oCaps)
     {
-      auto iter = cg_.moves_.begin();
-      if(iter != cg_.moves_.end())
-      {
-        auto* move = &*iter;
-        cg_.moves_.erase(iter);
+      //auto iter = cg_.moves_.begin();
+      //if(iter != cg_.moves_.end())
+      //{
+      //  auto* move = &*iter;
+      //  cg_.moves_.erase(iter);
+      //  return move;
+      //}
+      if(auto* move = cg_.next())
         return move;
-      }
       if(depth_ < 0)
         return nullptr;
       order_ = oGenChecks;
@@ -1282,13 +1334,14 @@ struct TacticalGenerator2
     }
     if(order_ == oChecks)
     {
-      auto iter = ckg_.moves_.begin();
-      if(iter != ckg_.moves_.end())
-      {
-        auto* move = &*iter;
-        ckg_.moves_.erase(iter);
-        return move;
-      }
+      return ckg_.next();
+      //auto iter = ckg_.moves_.begin();
+      //if(iter != ckg_.moves_.end())
+      //{
+      //  auto* move = &*iter;
+      //  ckg_.moves_.erase(iter);
+      //  return move;
+      //}
     }
     return nullptr;
   }
