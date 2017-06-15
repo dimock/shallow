@@ -757,14 +757,14 @@ public:
     B(),
     undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
   }
 
   SBoard(SBoard&& oboard) :
     B(std::move(oboard)),
     undoStackIntr_(std::move(oboard.undoStackIntr_))
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
@@ -772,14 +772,14 @@ public:
     B(std::move(oboard)),
     undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
   }
 
   SBoard(SBoard const& oboard) :
     B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
   }
 
 
@@ -788,7 +788,7 @@ public:
     B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
@@ -796,7 +796,7 @@ public:
     B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
     copyStack(oboard);
   }
 
@@ -804,21 +804,21 @@ public:
     B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
   }
 
   template <int OTHER_SIZE>
   SBoard& operator = (SBoard<B, U, OTHER_SIZE>&& oboard)
   {
     this->B::operator = (oboard);
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
     return *this;
   }
 
   SBoard& operator = (B const& oboard)
   {
     this->B::operator = (oboard);
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
     return *this;
   }
 
@@ -826,14 +826,14 @@ public:
     B(oboard),
     undoStackIntr_(STACK_SIZE)
   {
-    g_undoStack = undoStackIntr_.data();
+    B::g_undoStack = undoStackIntr_.data();
     copyStack(oboard);
   }
 private:
   void copyStack(B const& oboard)
   {
-    for(int i = 0; i < halfmovesCount() && i < undoStackIntr_.size(); ++i)
-      g_undoStack[i] = oboard.undoInfo(i);
+    for(int i = 0; i < B::halfmovesCount() && i < undoStackIntr_.size(); ++i)
+      B::g_undoStack[i] = oboard.undoInfo(i);
   }
 
   std::vector<U> undoStackIntr_;

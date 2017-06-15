@@ -10,6 +10,11 @@ xtests.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <functional>
 #include <regex>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <boost/algorithm/string.hpp>
 
 namespace NEngine
 {
@@ -68,26 +73,26 @@ inline void appendMove<Board2, Move2, UndoInfo2>(xEPD<Board2, Move2, UndoInfo2>&
 template <typename BOARD, typename MOVE, typename UNDO>
 class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 {
-
+  using base_class = std::vector<xEPD<BOARD, MOVE, UNDO>>;
 public:
   FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
   {
     std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnrqkPNBRQKOx+=!\\s\\-]+)?");
-    std::ifstream ifs(ffname);
+    ::std::ifstream ifs(ffname);
     for(; ifs;)
     {
-      std::string line;
-      std::getline(ifs, line);
-      boost::algorithm::trim(line);
-      if(line.empty())
+      ::std::string sline;
+      ::std::getline(ifs, sline);
+      boost::algorithm::trim(sline);
+      if(sline.empty())
         continue;
-      if(line[0] == '#')
+      if(sline[0] == '#')
         continue;
-      std::cout << line << std::endl;
+      std::cout << sline << std::endl;
       std::smatch m;
-      if(!std::regex_search(line, m, r) || m.size() < 4)
+      if(!std::regex_search(sline, m, r) || m.size() < 4)
       {
-        ecbk("regex failed on line: " + line);
+        ecbk("regex failed on line: " + sline);
         continue;
       }
       std::string fstr = m[1];
@@ -98,7 +103,7 @@ public:
         ecbk("invalid fen: " + fstr);
         continue;
       }
-      epd.fen_ = line;
+      epd.fen_ = sline;
       std::vector<std::string> str_moves;
       boost::algorithm::split(str_moves, mstr, boost::is_any_of(" \t"), boost::token_compress_on);
       for(auto const& smove : str_moves)
@@ -119,7 +124,7 @@ public:
         {
         }
       }
-      push_back(std::move(epd));
+      base_class::push_back(std::move(epd));
     }
   }
 };

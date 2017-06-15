@@ -824,7 +824,7 @@ struct UsualGenerator2
 template <class BOARD, class MOVE>
 struct EscapeGenerator2
 {
-  using MovesList = xlist<MOVE, 16>;
+  using MovesList = xlist<MOVE, BOARD::NumOfFields>;
 
   enum Order { oGenCaps, oCaps, oGenUsual, oUsual } order_{};
 
@@ -1244,8 +1244,8 @@ struct TacticalGenerator2
 
   enum Order { oEscape, oGenCaps, oCaps, oGenChecks, oChecks } order_{};
 
-  TacticalGenerator2(BOARD const& board) :
-    cg_(board), ckg_(board), eg_(board)
+  TacticalGenerator2(BOARD const& board, int depth) :
+    cg_(board), ckg_(board), eg_(board), depth_(depth)
   {
     if(!board.underCheck())
       order_ = oGenCaps;
@@ -1271,6 +1271,8 @@ struct TacticalGenerator2
         cg_.moves_.erase(iter);
         return move;
       }
+      if(depth_ < 0)
+        return nullptr;
       order_ = oGenChecks;
     }
     if(order_ == oGenChecks)
@@ -1294,15 +1296,16 @@ struct TacticalGenerator2
   CapsGenerator2<BOARD, MOVE> cg_;
   ChecksGenerator2<BOARD, MOVE> ckg_;
   EscapeGenerator2<BOARD, MOVE> eg_;
+  int depth_{};
 };
 
 } // namespace {}
 
 void xcaptures(Board2& board, int depth)
 {
-  if(board.drawState() || board.hasReps() || depth < -6)
+  if(board.drawState() || board.hasReps() || depth < -10)
     return;
-  TacticalGenerator2<Board2, Move2> tg(board);
+  TacticalGenerator2<Board2, Move2> tg(board, depth);
   for(;;)
   {
     auto* pmove = tg.next();
@@ -1330,7 +1333,30 @@ void xsearch(Board2& board, int depth)
     xcaptures(board, depth);
     return;
   }
+  //if(board.underCheck())
+  //{
+  //  EscapeGenerator2<Board2, Move2> eg(board);
+  //  for(;;)
+  //  {
+  //    auto* pmove = eg.next();
+  //    if(!pmove)
+  //      break;
+  //    auto& move = *pmove;
+  //    if(!board.validateMove(move))
+  //      continue;
+  //    //Board2 brd{ board };
+  //    board.makeMove(move);
+  //    //std::string fen = toFEN(board);
+  //    x_movesCounter++;
+  //    xsearch(board, depth-1);
+  //    board.unmakeMove(move);
+  //    X_ASSERT(brd != board, "board was not correctly restored");
+  //  }
+  //  return;
+  //}
   FastGenerator2<Board2, Move2> fg(board);
+  //xlist<Move2, Board2::MovesMax> moves;
+  //generate(board, moves);
   for(;;)
   {
     auto* pmove = fg.next();
@@ -1341,6 +1367,7 @@ void xsearch(Board2& board, int depth)
       continue;
     //Board2 brd{ board };
     board.makeMove(move);
+    //std::string fen = toFEN(board);
     x_movesCounter++;
     xsearch(board, depth-1);
     board.unmakeMove(move);
@@ -1766,7 +1793,7 @@ std::string toFEN(Board2 const& board)
       fen += '-';
 
     // 5 - fifty move rule
-    fen += " " + std::to_string(board.fiftyMovesCount());
+    fen += " " + std::to_string(static_cast<int>(board.fiftyMovesCount()));
 
     // 6 - moves counter
     fen += " " + std::to_string(board.movesCounter());
