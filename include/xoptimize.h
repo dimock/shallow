@@ -358,6 +358,7 @@ struct Board2
     return ((r_moves & through) && (r_moves & (r_mask | q_mask)));
   }
 
+  int see2(Move2 const& move) const;
   int see(Move2 const& move) const;
   
   // find 1st figure on the whole semi-line given by direction 'from' -> 'to'
