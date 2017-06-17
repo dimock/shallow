@@ -68,7 +68,8 @@ struct UndoInfo2
   BoardSaveData data_;
   uint8         mflags_;
   int8          eaten_type_;
-  int8          dummy_[6];
+  int8          king_pos_;
+  int8          dummy_[5];
 
   bool irreversible() const { return mflags_ & Irreversible; }
   bool capture() const { return mflags_ & Capture; }
@@ -290,9 +291,11 @@ struct Board2
   void setMovesCounter(int c);
 
   /// find king's position
-  inline int kingPos(Figure::Color c) const
+  inline int8 const& kingPos(Figure::Color c) const
   {
-    return _lsb64(fmgr_.king_mask(c));
+    X_ASSERT(_lsb64(fmgr_.king_mask(c)) != king_pos_[c], "invalid king position");
+    X_ASSERT(getField(king_pos_[c]).type() != Figure::TypeKing || getField(king_pos_[c]).color() != c, "no king on proper field");
+    return king_pos_[c];
   }
 
   bool invalidate();
@@ -626,6 +629,7 @@ private:
   /// fields array 8 x 8
   Field fields_[NumOfFields];
 
+  int8  king_pos_[2] = {};
 
 protected:
   UndoInfo2* g_undoStack{};

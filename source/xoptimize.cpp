@@ -238,8 +238,8 @@ struct CapsGenerator2
     const BitMask & black = fmgr.mask(Figure::ColorBlack);
     const BitMask & white = fmgr.mask(Figure::ColorWhite);
     BitMask mask_all = white | black;
-    int ki_pos  = board_.kingPos(color);
-    int oki_pos = board_.kingPos(ocolor);
+    auto const& ki_pos  = board_.kingPos(color);
+    auto const& oki_pos = board_.kingPos(ocolor);
 
     // generate pawn promotions
     const BitMask & pawn_msk = fmgr.pawn_mask(color);
@@ -492,7 +492,7 @@ struct ChecksGenerator2
     auto const& fmgr = board_.fmgr();
     BitMask mask_all = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
     BitMask mask_all_inv = ~mask_all;
-    int oki_pos = board_.kingPos(ocolor);
+    auto const& oki_pos = board_.kingPos(ocolor);
     auto const pawns = fmgr.pawn_mask(color) & ~movesTable().promote(color);
 
     // pawns
@@ -540,7 +540,7 @@ struct ChecksGenerator2
  
     // king
     {
-      int ki_pos = board_.kingPos(color);
+      auto const& ki_pos = board_.kingPos(color);
       BitMask all_but_king_mask = mask_all_inv | set_mask_bit(ki_pos);
       bool castle = false;
       // short castle
@@ -828,8 +828,8 @@ struct UsualGenerator2
     generate(Figure::TypeQueen, color, mask_all_inv);
 
     // kings movements
-    int ki_pos = board_.kingPos(color);
-    int oki_pos = board_.kingPos(ocolor);
+    auto const& ki_pos  = board_.kingPos(color);
+    auto const& oki_pos = board_.kingPos(ocolor);
     BitMask ki_mask = movesTable().caps(Figure::TypeKing, ki_pos) & mask_all_inv & ~movesTable().caps(Figure::TypeKing, oki_pos);
     if(ki_mask)
     {
@@ -874,8 +874,6 @@ struct EscapeGenerator2
     board_(board)
   {
     ocolor = Figure::otherColor(board_.color());
-    king_pos_ = board_.kingPos(board_.color());
-
     const uint64 & black = board_.fmgr().mask(Figure::ColorBlack);
     const uint64 & white = board_.fmgr().mask(Figure::ColorWhite);
     mask_all = white | black;
@@ -894,7 +892,7 @@ struct EscapeGenerator2
   inline void generateCaps()
   {
     const Figure::Color& color = board_.color();
-    protect_king_msk_ = betweenMasks().between(king_pos_, board_.checking());
+    protect_king_msk_ = betweenMasks().between(board_.kingPos(color), board_.checking());
     auto const& ch_pos = board_.checking();
 
     auto const& fmgr = board_.fmgr();
@@ -1141,14 +1139,14 @@ struct EscapeGenerator2
     const BitMask & o_mask = board_.fmgr().mask(ocolor);
 
     // captures
-    auto ki_mask = movesTable().caps(Figure::TypeKing, king_pos_) & o_mask;
+    auto ki_mask = movesTable().caps(Figure::TypeKing, board_.kingPos(color)) & o_mask;
     for(; ki_mask;)
     {
       int to = clear_lsb(ki_mask);
 
       auto const& field = board_.getField(to);
       X_ASSERT(!field || field.color() == color, "escape generator: try to put king to occupied field");
-      add_caps(king_pos_, to, Figure::TypeNone);
+      add_caps(board_.kingPos(color), to, Figure::TypeNone);
     }
   }
 
@@ -1159,14 +1157,14 @@ struct EscapeGenerator2
     const BitMask & o_mask = board_.fmgr().mask(ocolor);
 
     // usual moves
-    int oki_pos = board_.kingPos(ocolor);
-    auto ki_mask = movesTable().caps(Figure::TypeKing, king_pos_) & ~(mask_all | movesTable().caps(Figure::TypeKing, oki_pos));
+    auto ki_mask = movesTable().caps(Figure::TypeKing, board_.kingPos(color))
+      & ~(mask_all | movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor)));
     for(; ki_mask;)
     {
       int to = clear_lsb(ki_mask);
 
       X_ASSERT(board_.getField(to), "escape generator: try to put king to occupied field");
-      add_usual(king_pos_, to);
+      add_usual(board_.kingPos(color), to);
     }
   }
 
@@ -1216,7 +1214,6 @@ struct EscapeGenerator2
   MovesList caps_;
   MovesList usual_;
   typename MovesList::iterator iter_;
-  int king_pos_;
   BitMask protect_king_msk_;
   BitMask mask_all;
   Figure::Color ocolor;
@@ -1356,11 +1353,11 @@ struct TacticalGenerator2
 
 void xcaptures(Board2& board, int depth)
 {
-  if(board.drawState() || board.hasReps() || depth < -4)
+  if(board.drawState() || board.hasReps() || depth < -10)
     return;
   TacticalGenerator2<Board2, Move2> tg(board, depth);
-  try
-  {
+  //try
+  //{
     for(;;)
     {
       auto* pmove = tg.next();
@@ -1369,20 +1366,21 @@ void xcaptures(Board2& board, int depth)
       auto& move = *pmove;
       if(!board.validateMove(move))
         continue;
-      Board2 brd{ board };
+      board.see2(move);
+      //Board2 brd{ board };
       //std::string fen = toFEN(board);
       X_ASSERT(board.see(move) != board.see2(move), "SEE error");
       board.makeMove(move);
       x_movesCounter++;
       xcaptures(board, depth-1);
       board.unmakeMove(move);
-      X_ASSERT(brd != board, "board was not correctly restored");
+      //X_ASSERT(brd != board, "board was not correctly restored");
     }
-  }
-  catch(std::exception const& e)
-  {
-    throw std::runtime_error(toFEN(board) + "; " + e.what());
-  }
+  //}
+  //catch(std::exception const& e)
+  //{
+  //  throw std::runtime_error(toFEN(board) + "; " + e.what());
+  //}
 }
 
 void xsearch(Board2& board, int depth)
@@ -1394,8 +1392,8 @@ void xsearch(Board2& board, int depth)
     xcaptures(board, depth);
     return;
   }
-  try
-  {
+  //try
+  //{
     FastGenerator2<Board2, Move2> fg(board);
     for(;;)
     {
@@ -1405,32 +1403,23 @@ void xsearch(Board2& board, int depth)
       auto& move = *pmove;
       if(!board.validateMove(move))
         continue;
+      board.see2(move);
       //std::string fen = toFEN(board);
+      //Board2 brd{ board };
       X_ASSERT(board.see(move) != board.see2(move), "SEE error");
-      Board2 brd{ board };
 
-      if(depth == 2 && !board.underCheck())
-      {
-        board.makeNullMove();
-        x_movesCounter++;
-        xsearch(board, depth-1);
-        board.unmakeNullMove();
-      }
-      else
-      {
-        board.makeMove(move);
-        x_movesCounter++;
-        xsearch(board, depth-1);
-        board.unmakeMove(move);
-      }
+      board.makeMove(move);
+      x_movesCounter++;
+      xsearch(board, depth-1);
+      board.unmakeMove(move);
 
-      X_ASSERT(brd != board, "board was not correctly restored");
+      //X_ASSERT(brd != board, "board was not correctly restored");
     }
-  }
-  catch(std::exception const& e)
-  {
-    throw std::runtime_error(toFEN(board) + "; " + e.what());
-  }
+  //}
+  //catch(std::exception const& e)
+  //{
+  //  throw std::runtime_error(toFEN(board) + "; " + e.what());
+  //}
 }
 
 bool compare(std::vector<Move2> const& moves1, std::vector<Move2> const& moves2)
@@ -1533,6 +1522,9 @@ bool Board2::addFigure(const Figure::Color color, const Figure::Type type, int p
 
   fields_[pos].set(color, type);
   fmgr_.incr(color, type, pos);
+
+  if(type == Figure::TypeKing)
+    king_pos_[color] = pos;
 
   return false;
 }
@@ -2084,7 +2076,7 @@ bool Board2::validateMoveBruteforce(const Move2 & move) const
   BitMask mask_all = (fmgr_.mask(Figure::ColorWhite) | fmgr_.mask(Figure::ColorBlack));
   X_ASSERT(underCheck() != fieldAttacked(ocolor, kingPos(color()), ~mask_all), "king under attack differs from check flag");
   X_ASSERT(fieldAttacked(color(), kingPos(ocolor), ~mask_all), "opponents king is under check");
-  int king_pos = kingPos(color());
+  auto const& king_pos = kingPos(color());
   if(ffrom.type() == Figure::TypeKing)
   {
     X_ASSERT(move.from != king_pos, "king position is invalid");
@@ -2217,7 +2209,7 @@ bool Board2::validateMove(const Move2 & move) const
 
   // moving figure discovers check?
 
-  int ki_pos = kingPos(color());
+  auto const& ki_pos = kingPos(color());
   if(enpassant() > 0 && move.to == enpassant() && Figure::TypePawn == ffrom.type())
   {
     int ep_pos = enpassantPos();
@@ -2247,6 +2239,8 @@ void Board2::makeMove(const Move2 & move)
 
   // save general data
   undo.data_      = data_;
+  //// save king position
+  //undo.king_pos_ = king_pos_[color()];
   // save Zobrist keys
   undo.zcode_     = fmgr_.hashCode();
   undo.zcode_pw_  = fmgr_.pawnCode();
@@ -2301,6 +2295,7 @@ void Board2::makeMove(const Move2 & move)
       clear_castling(color(), 1);
       fmgr_.hashCastling(color(), 1);
     }
+    king_pos_[color()] = move.to;
   }
   // is castling still possible?
   else if((castle_k || castle_q) && ffrom.type() == Figure::TypeRook)
@@ -2427,6 +2422,7 @@ void Board2::unmakeMove(const Move2& move)
   Figure::Color ocolor = color();
 
   data_ = undo.data_;
+  //king_pos_[color()] = undo.king_pos_;
 
   movesCounter_ -= ocolor;
 
@@ -2445,6 +2441,8 @@ void Board2::unmakeMove(const Move2& move)
   {
     fmgr_.u_move(fto.color(), fto.type(), move.to, move.from);
     ffrom.set(fto.color(), fto.type());
+    if(ffrom.type() == Figure::TypeKing)
+      king_pos_[color()] = move.from;
   }
   fto.clear();
 
@@ -2537,7 +2535,7 @@ bool Board2::verifyCheckingFigure(int ch_pos, Figure::Color checking_color) cons
   int count = 0;
   int checking[2] = {};
   auto king_color = Figure::otherColor(checking_color);
-  int king_pos = kingPos(king_color);
+  auto const& king_pos = kingPos(king_color);
   for(int type = Figure::TypePawn; type < Figure::TypeKing; ++type)
   {
     BitMask mask = fmgr_.type_mask((Figure::Type)type, checking_color);
@@ -2590,7 +2588,7 @@ void Board2::detectCheck(Move2 const& move)
   data_.checking_ = 0;
   Figure::Color ocolor = Figure::otherColor(color());
   const Field & fto = getField(move.to);
-  int king_pos = kingPos(color());
+  auto const& king_pos = kingPos(color());
   auto const& king_mask = fmgr_.king_mask(color());
   auto mask_all = fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite);
   int epch{ -1 };
@@ -3003,7 +3001,6 @@ namespace
     BitMask last_b_[2] = {};
     BitMask last_r_[2] = {};
     BitMask all_mask_;
-    int ki_pos_[2];
     Figure::Color color_;
     bool promotion_;
     bool king_only_;
@@ -3015,11 +3012,9 @@ namespace
     {
       all_mask_ = fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite) | set_mask_bit(move_.to);
       color_ = board_.getField(move_.from).color();
-      ki_pos_[0] = board_.kingPos(Figure::ColorBlack);
-      ki_pos_[1] = board_.kingPos(Figure::ColorWhite);
       X_ASSERT((all_mask_ & set_mask_bit(move_.from)) == 0ULL, "no figure on field move.from");
-      X_ASSERT(discovered_check(move_.from, Figure::otherColor(color_), ki_pos_[color_]), "SEE move is illegal");
-      king_only_ = discovered_check(move_.from, color_, ki_pos_[Figure::otherColor(color_)]);
+      X_ASSERT(discovered_check(move_.from, Figure::otherColor(color_), board_.kingPos(color_)), "SEE move is illegal");
+      king_only_ = discovered_check(move_.from, color_, board_.kingPos(Figure::otherColor(color_)));
       if(king_only_)
         return;
       all_mask_ ^= set_mask_bit(move_.from);
@@ -3086,7 +3081,7 @@ namespace
       {
         // score == 0 means king's attack. it should be the very last one
         score = 0;
-        from = ki_pos_[color];
+        from = board_.kingPos(color);
         return true;
       }
       return false;
@@ -3097,7 +3092,7 @@ namespace
       while(mask)
       {
         from = clear_lsb(mask);
-        if(discovered_check(from, ocolor, ki_pos_[color]))
+        if(discovered_check(from, ocolor, board_.kingPos(color)))
           continue;
         X_ASSERT((all_mask_ & set_mask_bit(from)) == 0ULL, "no figure which is going to make move");
         all_mask_ ^= set_mask_bit(from);
@@ -3197,7 +3192,7 @@ int Board2::see2(const Move2 & move) const
     if(!see_calc.next(color, from, score))
       break;
     auto ocolor = Figure::otherColor(color);
-    see_calc.king_only_ = see_calc.discovered_check(from, color, see_calc.ki_pos_[ocolor]);
+    see_calc.king_only_ = see_calc.discovered_check(from, color, kingPos(ocolor));
     // assume this move is good if it was mine and I discover check
     if(see_calc.king_only_ && color == see_calc.color_)
       return 0;
