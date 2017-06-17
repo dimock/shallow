@@ -1408,10 +1408,22 @@ void xsearch(Board2& board, int depth)
       //std::string fen = toFEN(board);
       X_ASSERT(board.see(move) != board.see2(move), "SEE error");
       Board2 brd{ board };
-      board.makeMove(move);
-      x_movesCounter++;
-      xsearch(board, depth-1);
-      board.unmakeMove(move);
+
+      if(depth == 2 && !board.underCheck())
+      {
+        board.makeNullMove();
+        x_movesCounter++;
+        xsearch(board, depth-1);
+        board.unmakeNullMove();
+      }
+      else
+      {
+        board.makeMove(move);
+        x_movesCounter++;
+        xsearch(board, depth-1);
+        board.unmakeMove(move);
+      }
+
       X_ASSERT(brd != board, "board was not correctly restored");
     }
   }
@@ -1852,6 +1864,8 @@ void Board2::setMovesCounter(int c)
 {
   movesCounter_ = c;
   halfmovesCounter_ = (c - 1)*2 + !color();
+  if(data_.fiftyMovesCount_ > halfmovesCounter_)
+    data_.fiftyMovesCount_ = halfmovesCounter_;
 }
 
 bool Board2::invalidate()
@@ -2472,6 +2486,51 @@ void Board2::unmakeMove(const Move2& move)
   fmgr_.restoreHash(undo.zcode_);
   fmgr_.restorePawnCode(undo.zcode_pw_);
 }
+
+void Board2::makeNullMove()
+{
+  X_ASSERT(halfmovesCounter_ < 0 || halfmovesCounter_ >= GameLength, "number of halfmoves is invalid");
+  
+  halfmovesCounter_++;
+
+  auto& undo = lastUndo();
+
+  // save general data
+  undo.data_ = data_;
+  // save Zobrist keys
+  undo.zcode_ = fmgr_.hashCode();
+  undo.zcode_pw_ = fmgr_.pawnCode();
+  
+  X_ASSERT(data_.state_ != Ok, "try null-move on invalid state");
+
+  Figure::Color ocolor = Figure::otherColor(color());
+
+  // clear en-passant hash code
+  if(data_.en_passant_ >= 0)
+    fmgr_.hashEnPassant(enpassant(), ocolor);
+
+  data_.en_passant_ = -1;
+  
+  fmgr_.hashColor();
+  setColor(ocolor);
+}
+
+void Board2::unmakeNullMove()
+{
+  X_ASSERT(halfmovesCounter_ <= 0 || halfmovesCounter_ >= GameLength, "number of halfmoves is invalid");
+
+  auto& undo = lastUndo();
+
+  halfmovesCounter_--;
+
+  Figure::Color ocolor = color();
+
+  data_ = undo.data_;
+
+  fmgr_.restoreHash(undo.zcode_);
+  fmgr_.restorePawnCode(undo.zcode_pw_);
+}
+
 
 bool Board2::verifyCheckingFigure(int ch_pos, Figure::Color checking_color) const
 {

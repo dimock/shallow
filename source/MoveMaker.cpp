@@ -631,7 +631,7 @@ void Board::makeNullMove()
 
   if ( en_passant_ >= 0 )
   {
-    fmgr_.hashEnPassant(en_passant_, color_);
+    fmgr_.hashEnPassant(en_passant_, Figure::otherColor(color_));
     undo.en_passant_ = en_passant_;
     en_passant_ = -1;
   }

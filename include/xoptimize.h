@@ -141,6 +141,10 @@ struct Board2
   void makeMove(const Move2&);
   void unmakeMove(const Move2&);
 
+  /// null-move
+  void makeNullMove();
+  void unmakeNullMove();
+
   FiguresManager const& fmgr() const { return fmgr_; }
 
   /// always use this method to get field
