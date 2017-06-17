@@ -305,7 +305,7 @@ std::vector<std::string> board2Test(std::string const& epdfile)
       std::cout << std::setw(4) << i << " failed with " << e.what() << std::endl;
     }
     if(!ok)
-      errors.push_back(epd.fen_ + "; "+ epd.err_);
+      errors.push_back(epd.fen_ + "; error -> "+ epd.err_);
   },
   [](std::string const& err)
   {
@@ -338,8 +338,13 @@ void epdFolder(std::string const& folder)
     }
   }
   std::cout << "errors count: " << errors.size() << std::endl;
-  for(auto const& fen : errors)
-    std::cout << fen << std::endl;
+  std::ofstream ofs("errors.log");
+  ofs << "errors count: " << errors.size() << std::endl;
+  for(auto const& e : errors)
+  {
+    std::cout << e << std::endl;
+    ofs << e << std::endl;
+  }
 }
 
 } // NEngine

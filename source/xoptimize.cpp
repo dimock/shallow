@@ -1356,26 +1356,32 @@ struct TacticalGenerator2
 
 void xcaptures(Board2& board, int depth)
 {
-  if(board.drawState() || board.hasReps() || depth < -10)
+  if(board.drawState() || board.hasReps() || depth < -4)
     return;
   TacticalGenerator2<Board2, Move2> tg(board, depth);
-  for(;;)
+  try
   {
-    auto* pmove = tg.next();
-    if(!pmove)
-      break;
-    auto& move = *pmove;
-    if(!board.validateMove(move))
-      continue;
-    board.see2(move);
-    //Board2 brd{ board };
-    //std::string fen = toFEN(board);
-    //X_ASSERT(board.see(move) != board.see2(move), "SEE error");
-    board.makeMove(move);
-    x_movesCounter++;
-    xcaptures(board, depth-1);
-    board.unmakeMove(move);
-    //X_ASSERT(brd != board, "board was not correctly restored");
+    for(;;)
+    {
+      auto* pmove = tg.next();
+      if(!pmove)
+        break;
+      auto& move = *pmove;
+      if(!board.validateMove(move))
+        continue;
+      Board2 brd{ board };
+      //std::string fen = toFEN(board);
+      X_ASSERT(board.see(move) != board.see2(move), "SEE error");
+      board.makeMove(move);
+      x_movesCounter++;
+      xcaptures(board, depth-1);
+      board.unmakeMove(move);
+      X_ASSERT(brd != board, "board was not correctly restored");
+    }
+  }
+  catch(std::exception const& e)
+  {
+    throw std::runtime_error(toFEN(board) + "; " + e.what());
   }
 }
 
@@ -1388,47 +1394,30 @@ void xsearch(Board2& board, int depth)
     xcaptures(board, depth);
     return;
   }
-  //if(board.underCheck())
-  //{
-  //  EscapeGenerator2<Board2, Move2> eg(board);
-  //  for(;;)
-  //  {
-  //    auto* pmove = eg.next();
-  //    if(!pmove)
-  //      break;
-  //    auto& move = *pmove;
-  //    if(!board.validateMove(move))
-  //      continue;
-  //    //Board2 brd{ board };
-  //    board.makeMove(move);
-  //    //std::string fen = toFEN(board);
-  //    x_movesCounter++;
-  //    xsearch(board, depth-1);
-  //    board.unmakeMove(move);
-  //    X_ASSERT(brd != board, "board was not correctly restored");
-  //  }
-  //  return;
-  //}
-  FastGenerator2<Board2, Move2> fg(board);
-  //xlist<Move2, Board2::MovesMax> moves;
-  //generate(board, moves);
-  for(;;)
+  try
   {
-    auto* pmove = fg.next();
-    if(!pmove)
-      break;
-    auto& move = *pmove;
-    if(!board.validateMove(move))
-      continue;
-    board.see2(move);
-    //std::string fen = toFEN(board);
-    //X_ASSERT(board.see(move) != board.see2(move), "SEE error");
-    //Board2 brd{ board };
-    board.makeMove(move);
-    x_movesCounter++;
-    xsearch(board, depth-1);
-    board.unmakeMove(move);
-    //X_ASSERT(brd != board, "board was not correctly restored");
+    FastGenerator2<Board2, Move2> fg(board);
+    for(;;)
+    {
+      auto* pmove = fg.next();
+      if(!pmove)
+        break;
+      auto& move = *pmove;
+      if(!board.validateMove(move))
+        continue;
+      //std::string fen = toFEN(board);
+      X_ASSERT(board.see(move) != board.see2(move), "SEE error");
+      Board2 brd{ board };
+      board.makeMove(move);
+      x_movesCounter++;
+      xsearch(board, depth-1);
+      board.unmakeMove(move);
+      X_ASSERT(brd != board, "board was not correctly restored");
+    }
+  }
+  catch(std::exception const& e)
+  {
+    throw std::runtime_error(toFEN(board) + "; " + e.what());
   }
 }
 
@@ -2640,13 +2629,16 @@ void Board2::verifyChessDraw()
     return;
   }
 
-  if((fmgr_.pawns(Figure::ColorBlack) + fmgr_.rooks(Figure::ColorBlack) + fmgr_.queens(Figure::ColorBlack)
-    + fmgr_.pawns(Figure::ColorWhite) + fmgr_.rooks(Figure::ColorWhite) + fmgr_.queens(Figure::ColorWhite) == 0)
-    && (fmgr_.knights(Figure::ColorBlack) + fmgr_.bishops(Figure::ColorBlack)) < 2
-    && (fmgr_.knights(Figure::ColorWhite) + fmgr_.bishops(Figure::ColorWhite)) < 2)
+  if(!fmgr_.pawns(Figure::ColorBlack) && !fmgr_.pawns(Figure::ColorWhite))
   {
-    data_.state_ |= DrawInsuf;
-    return;
+    if((fmgr_.rooks(Figure::ColorBlack) + fmgr_.queens(Figure::ColorBlack)
+      + fmgr_.rooks(Figure::ColorWhite) + fmgr_.queens(Figure::ColorWhite) == 0)
+      && (fmgr_.knights(Figure::ColorBlack) + fmgr_.bishops(Figure::ColorBlack)) < 2
+      && (fmgr_.knights(Figure::ColorWhite) + fmgr_.bishops(Figure::ColorWhite)) < 2)
+    {
+      data_.state_ |= DrawInsuf;
+      return;
+    }
   }
 
   int reps = countReps(2, fmgr_.hashCode());
@@ -2873,7 +2865,7 @@ int Board2::see(const Move2 & move) const
       return Figure::figureWeight_[tfield.type()] - Figure::figureWeight_[ffield.type()];
   }
   // en-passant
-  else if(!tfield && ffield.type() == Figure::TypePawn && move.to == enpassant())
+  else if(!tfield && ffield.type() == Figure::TypePawn && move.to > 0 && move.to == enpassant())
   {
     X_ASSERT(getField(enpassantPos()).type() != Figure::TypePawn
              || getField(enpassantPos()).color() == color(),
@@ -3116,7 +3108,7 @@ int Board2::see2(const Move2 & move) const
       return Figure::figureWeight_[tfield.type()] - Figure::figureWeight_[ffield.type()];
   }
   // en-passant
-  else if(!tfield && ffield.type() == Figure::TypePawn && move.to == enpassant())
+  else if(!tfield && ffield.type() == Figure::TypePawn && move.to > 0 && move.to == enpassant())
   {
     X_ASSERT(getField(enpassantPos()).type() != Figure::TypePawn
              || getField(enpassantPos()).color() == color(),

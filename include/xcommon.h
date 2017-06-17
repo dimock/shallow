@@ -34,13 +34,13 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #endif
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
   #define X_ASSERT(v, msg) if ( v ) throw std::runtime_error(msg); else;
   #define TIMING_FLAG 0xFFF
-#else
-  #define X_ASSERT(v, msg)
-  #define TIMING_FLAG 0x3FFF
-#endif
+//#else
+//  #define X_ASSERT(v, msg)
+//  #define TIMING_FLAG 0x3FFF
+//#endif
 
 using int8    = std::int8_t;
 using uint8   = std::uint8_t;
