@@ -11,7 +11,7 @@ Helpers.h - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 struct Move;
-class Board;
+struct Board;
 
 enum class eMoveNotation
 {

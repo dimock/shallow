@@ -3,7 +3,7 @@
  *************************************************************/
 #pragma once
 
-#include <Board.h>
+#include <Move.h>
 #include <fstream>
 
 namespace NEngine
@@ -24,13 +24,11 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HItem
              flag_   : 2,
              threat_ : 1;
   };
-
   uint16     mask_{};
   };
 
-  uint8      movesCount_{};
-
-  PackedMove move_;
+  uint16     movesCount_{};
+  Move       move_;
 };
 
 ALIGN_MSC(16) struct ALIGN_GCC(16) HBucket
@@ -148,7 +146,7 @@ protected:
 
   std::vector<ITEM> buffer_;
   size_t szMask_{0};
-  uint8 movesCount_{0};
+  uint16 movesCount_{0};
 };
 
 class GHashTable : public HashTable<HBucket>
@@ -160,7 +158,7 @@ public:
   GHashTable(int size) : HashTable<HBucket>(size)
   {}
 
-  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const PackedMove & move, bool threat)
+  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat)
   {
     HBucket & hb = (*this)[hkey];
     HItem * hitem = hb.get(hkey);
@@ -183,7 +181,7 @@ public:
     hitem->flag_   = flag;
     hitem->threat_ = threat;
     hitem->movesCount_ = movesCount_;
-    hitem->move_ = move;
+    hitem->move_   = move;
   }
 
   const HItem * find(const uint64 & hkey) const
@@ -210,7 +208,7 @@ ALIGN_MSC(8) struct ALIGN_GCC(8) HEval
            initizalized_ : 1;
   };
 
-  uint32    mask_;
+  uint32   mask_;
   };
 };
 

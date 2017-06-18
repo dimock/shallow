@@ -16,7 +16,7 @@ namespace NShallow
 
 struct ReplyStruct
 {
-  NEngine::Board::State state_{};
+  NEngine::StateType state_{};
   NEngine::Move best_;
   std::string moveStr_;
   bool white_{ false };

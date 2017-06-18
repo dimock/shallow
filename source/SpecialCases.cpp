@@ -349,7 +349,7 @@ void SpecialCasesDetector::initWinnerLoser()
   auto kpkPassed = [](Board const& board, Figure::Color pawnColor)
   {
     auto loserColor = Figure::otherColor(pawnColor);
-    auto moveColor = board.getColor();
+    auto moveColor = board.color();
     int p = _lsb64(board.fmgr().pawn_mask(pawnColor));
     int kw = _lsb64(board.fmgr().king_mask(pawnColor));
     int kl = _lsb64(board.fmgr().king_mask(loserColor));
@@ -367,7 +367,7 @@ void SpecialCasesDetector::initWinnerLoser()
     ScoreType score{+10};
     auto loserColor = Figure::otherColor(pawnColor);
     auto xpawnColor = pawnColor;
-    auto moveColor = board.getColor();
+    auto moveColor = board.color();
     int p  = _lsb64(board.fmgr().pawn_mask(pawnColor));
     int kw = _lsb64(board.fmgr().king_mask(pawnColor));
     int kl = _lsb64(board.fmgr().king_mask(loserColor));
@@ -446,7 +446,7 @@ void SpecialCasesDetector::initWinnerLoser()
     int kn = _lsb64(board.fmgr().king_mask(knightColor));
     BitMask current = set_mask_bit(n);
     BitMask visited{current};
-    int p1 = p + deltay * (board.getColor() == pawnColor);
+    int p1 = p + deltay * (board.color() == pawnColor);
     BitMask blocked = ~(movesTable().pawnCaps(pawnColor, p1)
                         | board.fmgr().king_mask(pawnColor) | board.fmgr().king_mask(knightColor)
                         | (movesTable().caps(Figure::TypeKing, kp) & ~movesTable().caps(Figure::TypeKing, kn))
@@ -487,7 +487,7 @@ void SpecialCasesDetector::initWinnerLoser()
     int kb = _lsb64(board.fmgr().king_mask(bishopColor));
     BitMask current = set_mask_bit(b);
     BitMask visited{ current };
-    int p1 = p + deltay * (board.getColor() == pawnColor);
+    int p1 = p + deltay * (board.color() == pawnColor);
     BitMask blocked = ~(movesTable().pawnCaps(pawnColor, p1)
                         | board.fmgr().king_mask(pawnColor) | board.fmgr().bishop_mask(bishopColor)
                         | (movesTable().caps(Figure::TypeKing, kp) & ~movesTable().caps(Figure::TypeKing, kb))

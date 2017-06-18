@@ -73,12 +73,12 @@ eMoveNotation detectNotation(std::string const& str)
 Move parseSAN(const Board & board, std::string const& str)
 {
   if(str.empty())
-    return Move{0};
+    return Move{};
 
   // internal feature -> null-move
   if(str == s_nullmove)
   {
-    return Move{0};
+    return Move{};
   }
 
   Figure::Type type = Figure::Type::TypePawn;
@@ -100,15 +100,15 @@ Move parseSAN(const Board & board, std::string const& str)
   }
   else if(std::string(s).find("O-O-O") != std::string::npos) // long castle
   {
-    from = board.getColor() ? 4 : 60;
-    to = board.getColor() ? 2 : 58;
+    from = board.color() ? 4 : 60;
+    to = board.color() ? 2 : 58;
     s += 5;
     type = Figure::Type::TypeKing;
   }
   else if(std::string(s).find("O-O") != std::string::npos) // short castle
   {
-    from = board.getColor() ? 4 : 60;
-    to = board.getColor() ? 6 : 62;
+    from = board.color() ? 4 : 60;
+    to = board.color() ? 6 : 62;
     s += 3;
     type = Figure::Type::TypeKing;
   }
@@ -118,7 +118,7 @@ Move parseSAN(const Board & board, std::string const& str)
     // should be at least 2 chars
     size_t n = std::string(s).length();
     if(n < 2)
-      return false;
+      return Move{};
 
     if(isdigit(s[0]) && (iscolumn(s[1]) || 'x' == s[1])) // from row number
     {
@@ -145,7 +145,7 @@ Move parseSAN(const Board & board, std::string const& str)
 
     n = std::string(s).length();
     if(!*s || !iscolumn(s[0]) || n < 2)
-      return false;
+      return Move{};
 
     to = (s[0] - 'a') | ((s[1] - '1') << 3);
     s += 2;
@@ -156,15 +156,15 @@ Move parseSAN(const Board & board, std::string const& str)
       if('=' == s[0])
       {
         if(n < 2)
-          return false;
+          return Move{};
         s++;
         n = std::string(s).length();
       }
       if(n < 1)
-        return false;
+        return Move{};
       new_type = Figure::toFtype(s[0]);
       if(new_type < Figure::Type::TypeKnight || new_type > Figure::Type::TypeQueen)
-        return false;
+        return Move{};
       s++;
       n = std::string(s).length();
     }
@@ -176,36 +176,31 @@ Move parseSAN(const Board & board, std::string const& str)
   }
 
   if(to < 0)
-    return false;
+    return Move{};
 
   if(xfrom >= 0 && yfrom >= 0)
     from = xfrom | (yfrom << 3);
 
-  MovesGenerator mg(board);
-  for(;;)
+  auto moves = generate<Board, Move>(board);
+  for(auto m : moves)
   {
-    auto const* pm = mg.move();
-    if(!pm)
-      break;
-
-    auto const& m = *pm;
-    if(!board.validateMove(m))
+    if(!board.validateMoveBruteforce(m))
       continue;
 
-    const Field & field = board.getField(m.from_);
-
-    if(to == m.to_
-      && static_cast<Figure::Type>(m.new_type_) == new_type
+    bool mcapture = board.getField(m.to()) || (board.enpassant() == m.to() && m.to() > 0);
+    const auto& field = board.getField(m.from());
+    if(to == m.to()
+      && static_cast<Figure::Type>(m.new_type()) == new_type
       && field.type() == type
-      && ((m.capture_ != 0) == capture)
-      && (from > 0 && from == m.from_ || xfrom >= 0
-      && Index(m.from_).x() == xfrom || yfrom >= 0
-      && Index(m.from_).y() == yfrom || xfrom < 0 && yfrom < 0))
+      && (mcapture == capture)
+      && (from > 0 && from == m.from() || xfrom >= 0
+      && Index(m.from()).x() == xfrom || yfrom >= 0
+      && Index(m.from()).y() == yfrom || xfrom < 0 && yfrom < 0))
     {
       return m;
     }
   }
-  return Move{ 0 };
+  return Move{};
 }
 
 std::string printSAN(Board & board, const Move & move)
@@ -215,30 +210,22 @@ std::string printSAN(Board & board, const Move & move)
     return s_nullmove;
   }
 
-  Field field = board.getField(move.from_);
+  auto const& field = board.getField(move.from());
+  auto capture = board.getField(move.to()) || (board.enpassant() == move.to() && move.to() > 0);
 
   bool found = false;
   int disambiguations = 0;
   int same_x = 0, same_y = 0;
-  int xfrom = Index(move.from_).x();
-  int yfrom = Index(move.from_).y();
-  int xto = Index(move.to_).x();
-  int yto = Index(move.to_).y();
-  uint8 state = Board::State::Invalid;
+  int xfrom = Index(move.from()).x();
+  int yfrom = Index(move.from()).y();
+  int xto = Index(move.to()).x();
+  int yto = Index(move.to()).y();
+  StateType state = State::Invalid;
 
-//#ifndef NDEBUG
-//  Board board0(board);
-//#endif
-
-  MovesGenerator mg(board);
-  for(;;)
+  auto moves = generate<Board, Move>(board);
+  for(auto m : moves)
   {
-    auto const* pm = mg.move();
-    if(!pm)
-      break;
-
-    auto const& m = *pm;
-    if(!board.validateMove(m))
+    if(!board.validateMoveBruteforce(m))
     {
       X_ASSERT(move == m, "invalid move given to printSAN");
       continue;
@@ -248,23 +235,20 @@ std::string printSAN(Board & board, const Move & move)
     {
       board.makeMove(move);
       board.verifyState();
-      state = board.getState();
-      board.unmakeMove();
+      state = board.state();
+      board.unmakeMove(move);
       found = true;
     }
 
-    //X_ASSERT(board0 != board, "board is not restored by undo move method");
-
-    const Field & f = board.getField(m.from_);
-
-    if(m.to_ != move.to_ || f.type() != field.type() || m.new_type_ != move.new_type_)
+    const auto& f = board.getField(m.from());
+    if(m.to() != move.to() || f.type() != field.type() || m.new_type() != move.new_type())
       continue;
 
     // check for disambiguation in 'from' position
-    if(Index(m.from_).x() == xfrom)
+    if(Index(m.from()).x() == xfrom)
       same_x++;
 
-    if(Index(m.from_).y() == yfrom)
+    if(Index(m.from()).y() == yfrom)
       same_y++;
 
     disambiguations++;
@@ -274,9 +258,9 @@ std::string printSAN(Board & board, const Move & move)
     return "";
 
   std::string str;
-  if(field.type() == Figure::Type::TypeKing && (2 == move.to_ - move.from_ || -2 == move.to_ - move.from_))// castle
+  if(field.type() == Figure::Type::TypeKing && (2 == move.to() - move.from() || -2 == move.to() - move.from()))// castle
   {
-    if(move.to_ > move.from_) // short castle
+    if(move.to() > move.from()) // short castle
     {
       str += "O-O";
     }
@@ -292,7 +276,7 @@ std::string printSAN(Board & board, const Move & move)
       str += fromFtype(field.type());
     }
 
-    if(disambiguations > 1 || (field.type() == Figure::Type::TypePawn && move.capture_))
+    if(disambiguations > 1 || (field.type() == Figure::Type::TypePawn && capture))
     {
       if(same_x <= 1)
       {
@@ -312,7 +296,7 @@ std::string printSAN(Board & board, const Move & move)
       }
     }
     // capture
-    if(move.capture_)
+    if(capture)
     {
       str += 'x';
     }
@@ -320,18 +304,18 @@ std::string printSAN(Board & board, const Move & move)
     str += static_cast<char>('a' + xto);
     str += static_cast<char>('1' + yto);
 
-    if(move.new_type_ > 0)
+    if(move.new_type() > 0)
     {
       str += '=';
-      str += fromFtype((Figure::Type)move.new_type_);
+      str += fromFtype((Figure::Type)move.new_type());
     }
   }
 
-  if(Board::ChessMat & state)
+  if(ChessMat & state)
   {
     str += '#';
   }
-  else if(Board::UnderCheck & state)
+  else if(UnderCheck & state)
   {
     str += '+';
   }
@@ -341,11 +325,11 @@ std::string printSAN(Board & board, const Move & move)
 
 std::string moveToStr(const Move & move, bool wbf)
 {
-  if(move.from_ < 0 || move.to_ < 0)
+  if(move.from() < 0 || move.to() < 0)
     return "";
 
-  Index from(move.from_);
-  Index to(move.to_);
+  Index from(move.from());
+  Index to(move.to());
 
   std::string str;
   if(wbf)
@@ -358,10 +342,10 @@ std::string moveToStr(const Move & move, bool wbf)
   str += static_cast<char>('a' + to.x());
   str += static_cast<char>('1' + to.y());
 
-  if(move.new_type_ <= 0)
+  if(move.new_type() <= 0)
     return str;
 
-  switch(static_cast<Figure::Type>(move.new_type_))
+  switch(static_cast<Figure::Type>(move.new_type()))
   {
   case Figure::Type::TypeBishop:
     str += 'b';
@@ -386,77 +370,66 @@ std::string moveToStr(const Move & move, bool wbf)
 Move strToMove(std::string const& str, const Board & board)
 {
   if(str.empty())
-    return Move{ 0 };
+    return Move{};
 
   eMoveNotation mnot = detectNotation(str);
   if(mnot == eMoveNotation::mnUnknown)
-    return Move{ 0 };
+    return Move{};
   else if(mnot == eMoveNotation::mnSAN)
     return parseSAN(board, str);
 
   if(str.size() < 4)
-    return Move{ 0 };
+    return Move{};
 
-  Move move{ 0 };
-
-  Figure::Color color = board.getColor();
+  Figure::Color color = board.color();
   Figure::Color ocolor = Figure::otherColor(color);
 
   if(!iscolumn(str[0]) || !isdigit(str[1]) && !iscolumn(str[2]) && !isdigit(str[3]))
-    return false;
+    return Move{};
 
   int xfrom = str[0] - 'a';
   int yfrom = str[1] - '1';
   int xto = str[2] - 'a';
   int yto = str[3] - '1';
 
+  Figure::Type new_type{};
+  int from{}, to{};
   if(str.size() > 4 && isalpha(str[4]))
   {
     if('b' == str[4])
-      move.new_type_ = static_cast<int8>(Figure::Type::TypeBishop);
+      new_type = Figure::Type::TypeBishop;
     else if('n' == str[4])
-      move.new_type_ = static_cast<int8>(Figure::Type::TypeKnight);
+      new_type = Figure::Type::TypeKnight;
     else if('r' == str[4])
-      move.new_type_ = static_cast<int8>(Figure::Type::TypeRook);
+      new_type = Figure::Type::TypeRook;
     else if('q' == str[4])
-      move.new_type_ = static_cast<int8>(Figure::Type::TypeQueen);
+      new_type = Figure::Type::TypeQueen;
   }
 
-  move.from_ = Index(xfrom, yfrom);
-  move.to_ = Index(xto, yto);
+  from = Index(xfrom, yfrom);
+  to   = Index(xto, yto);
 
-  int to = move.to_;
-
-  const Field & ffrom = board.getField(move.from_);
+  const Field & ffrom = board.getField(from);
   if(!ffrom || ffrom.color() != color)
-    return Move{ 0 };
+    return Move{};
 
-  // maybe en-passant
-  if(ffrom.type() == Figure::Type::TypePawn && board.enpassant() == move.to_)
-  {
-    int dx = Index(move.to_).x() - Index(move.from_).x();
-    if(dx != 0)
-      to = board.enpassantPos();
-  }
-
-  const Field & fto = board.getField(to);
-  if(fto && fto.color() == ocolor)
-    move.capture_ = 1;
-
-  return board.possibleMove(move) ? move : Move{ 0 };
+  SMove move{ from, to, new_type };
+  return board.possibleMove(move) ? move : Move{};
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TODO: rewrite with std::string/std::regex/boost::trim/...
 /* rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 */
 bool fromFEN(std::string const& i_fen, Board& board)
 {
+  static std::string const stdFEN_ = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   board.clear();
 
   std::string fen = i_fen.empty() ? stdFEN_ : i_fen;
   boost::algorithm::trim(fen);
 
-  const char * s = fen.c_str();
+  const char* s = fen.c_str();
   int x = 0, y = 7;
   for(; s && y >= 0; ++s)
   {
@@ -486,8 +459,7 @@ bool fromFEN(std::string const& i_fen, Board& board)
       if(Figure::TypeNone == ftype)
         return false;
 
-      Index p(x, y);
-      board.addFigure(color, ftype, p);
+      board.addFigure(color, ftype, Index(x, y));
 
       if(++x > 7)
       {
@@ -510,11 +482,11 @@ bool fromFEN(std::string const& i_fen, Board& board)
     if(0 == i) // process move color
     {
       if('w' == c)
-        board.color_ = Figure::ColorWhite;
+        board.setColor(Figure::ColorWhite);
       else if('b' == c)
       {
-        board.color_ = Figure::ColorBlack;
-        board.fmgr_.hashColor();
+        board.setColor(Figure::ColorBlack);
+        board.hashColor();
       }
       else
         return false;
@@ -540,22 +512,18 @@ bool fromFEN(std::string const& i_fen, Board& board)
         {
         case 'k':
           board.set_castling(Figure::ColorBlack, 0);
-          board.fmgr_.hashCastling(Figure::ColorBlack, 0);
           break;
 
         case 'K':
           board.set_castling(Figure::ColorWhite, 0);
-          board.fmgr_.hashCastling(Figure::ColorWhite, 0);
           break;
 
         case 'q':
           board.set_castling(Figure::ColorBlack, 1);
-          board.fmgr_.hashCastling(Figure::ColorBlack, 1);
           break;
 
         case 'Q':
           board.set_castling(Figure::ColorWhite, 1);
-          board.fmgr_.hashCastling(Figure::ColorWhite, 1);
           break;
 
         default:
@@ -581,7 +549,7 @@ bool fromFEN(std::string const& i_fen, Board& board)
 
       Index enpassant(cx, cy);
 
-      if(board.color_)
+      if(board.color())
         cy--;
       else
         cy++;
@@ -589,11 +557,10 @@ bool fromFEN(std::string const& i_fen, Board& board)
       Index pawn_pos(cx, cy);
 
       Field & fp = board.getField(pawn_pos);
-      if(fp.type() != Figure::TypePawn || fp.color() == board.color_)
+      if(fp.type() != Figure::TypePawn || fp.color() == board.color())
         return false;
 
-      board.en_passant_ = enpassant;
-      board.fmgr_.hashEnPassant(board.en_passant_, fp.color());
+      board.setEnpassant(enpassant, fp.color());
       continue;
     }
 
@@ -612,14 +579,14 @@ bool fromFEN(std::string const& i_fen, Board& board)
         }
       }
 
-      board.fiftyMovesCount_ = atoi(str);
+      board.setFiftyMovesCount(atoi(str));
       ++i;
       continue;
     }
 
     if(4 == i) // moves counter
     {
-      board.movesCounter_ = atoi(s);
+      board.setMovesCounter(atoi(s));
       break;
     }
   }
@@ -669,90 +636,90 @@ std::string toFEN(Board const& board)
   }
 
   // 2 - color to move
+{
+  fen += ' ';
+  if(Figure::ColorBlack == board.color())
+    fen += 'b';
+  else
+    fen += 'w';
+}
+
+// 3 - castling possibility
+{
+  fen += ' ';
+  if(!board.castling())
   {
-    fen += ' ';
-    if(Figure::ColorBlack == board.color_)
-      fen += 'b';
-    else
-      fen += 'w';
+    fen += '-';
   }
-
-  // 3 - castling possibility
+  else
   {
-    fen += ' ';
-    if(!board.castling())
+    if(board.castling_K())
     {
-      fen += '-';
-    }
-    else
-    {
-      if(board.castling_K())
-      {
-        if(!board.verifyCastling(Figure::ColorWhite, 0))
-          return "";
-
-        fen += 'K';
-      }
-      if(board.castling_Q())
-      {
-        if(!board.verifyCastling(Figure::ColorWhite, 1))
-          return "";
-
-        fen += 'Q';
-      }
-      if(board.castling_k())
-      {
-        if(!board.verifyCastling(Figure::ColorBlack, 0))
-          return "";
-
-        fen += 'k';
-      }
-      if(board.castling_q())
-      {
-        if(!board.verifyCastling(Figure::ColorBlack, 1))
-          return "";
-
-        fen += 'q';
-      }
-    }
-  }
-
-  {
-    // 4 - en passant
-    fen += ' ';
-    if(board.en_passant_ >= 0)
-    {
-      Index ep_pos(board.en_passant_);
-
-      int x = ep_pos.x();
-      int y = ep_pos.y();
-
-      if(board.color_)
-        y--;
-      else
-        y++;
-
-      Index pawn_pos(x, y);
-      const Field & ep_field = board.getField(pawn_pos);
-      if(ep_field.color() == board.color_ || ep_field.type() != Figure::TypePawn)
+      if(!board.verifyCastling(Figure::ColorWhite, 0))
         return "";
 
-      char cx = 'a' + ep_pos.x();
-      char cy = '1' + ep_pos.y();
-      fen += cx;
-      fen += cy;
+      fen += 'K';
     }
-    else
-      fen += '-';
+    if(board.castling_Q())
+    {
+      if(!board.verifyCastling(Figure::ColorWhite, 1))
+        return "";
 
-    // 5 - fifty move rule
-    fen += " " + std::to_string(board.fiftyMovesCount_);
+      fen += 'Q';
+    }
+    if(board.castling_k())
+    {
+      if(!board.verifyCastling(Figure::ColorBlack, 0))
+        return "";
 
-    // 6 - moves counter
-    fen += " " + std::to_string(board.movesCounter_);
+      fen += 'k';
+    }
+    if(board.castling_q())
+    {
+      if(!board.verifyCastling(Figure::ColorBlack, 1))
+        return "";
+
+      fen += 'q';
+    }
   }
+}
 
-  return fen;
+{
+  // 4 - en passant
+  fen += ' ';
+  if(board.enpassant() > 0)
+  {
+    Index ep_pos(board.enpassant());
+
+    int x = ep_pos.x();
+    int y = ep_pos.y();
+
+    if(board.color())
+      y--;
+    else
+      y++;
+
+    Index pawn_pos(x, y);
+    const Field & ep_field = board.getField(pawn_pos);
+    if(ep_field.color() == board.color() || ep_field.type() != Figure::TypePawn)
+      return "";
+
+    char cx = 'a' + ep_pos.x();
+    char cy = '1' + ep_pos.y();
+    fen += cx;
+    fen += cy;
+  }
+  else
+    fen += '-';
+
+  // 5 - fifty move rule
+  fen += " " + std::to_string(static_cast<int>(board.fiftyMovesCount()));
+
+  // 6 - moves counter
+  fen += " " + std::to_string(board.movesCounter());
+}
+
+return fen;
 }
 
 bool load(Board & board, std::istream & is)
@@ -878,7 +845,7 @@ bool load(Board & board, std::istream & is)
     if(!move)
       return false;
 
-    if(!board.validateMove(move))
+    if(!board.validateMoveBruteforce(move))
       return false;
 
     board.makeMove(move);
@@ -894,7 +861,7 @@ bool save(const Board & board, std::ostream & os, bool write_prefix)
   std::string sres = "*";
   if(board.matState())
   {
-    if(board.getColor())
+    if(board.color())
       sres = "0-1";
     else
       sres = "1-0";
@@ -907,7 +874,7 @@ bool save(const Board & board, std::ostream & os, bool write_prefix)
   int num = sboard.halfmovesCount();
 
   while(sboard.halfmovesCount() > 0)
-    sboard.unmakeMove();
+    sboard.unmakeMove(sboard.lastUndo().move_);
 
   if(write_prefix)
   {
@@ -925,18 +892,18 @@ bool save(const Board & board, std::ostream & os, bool write_prefix)
 
   for(int i = 0; i < num; ++i)
   {
-    Figure::Color color = sboard.getColor();
+    Figure::Color color = sboard.color();
     int moveNum = sboard.movesCount();
 
     // stash move
-    Move move = board.undoInfo(i);
+    Move move = board.undoInfo(i).move_;
 
     auto str = printSAN(sboard, move);
     if(str.empty())
       return false;
 
     // now apply move
-    if(!sboard.validateMove(move))
+    if(!sboard.validateMoveBruteforce(move))
       return false;
 
     sboard.makeMove(move);

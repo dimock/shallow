@@ -188,8 +188,8 @@ void Engine::assemblePV(int ictx, const Move & move, bool checking, int ply)
     return;
 
   scontexts_[ictx].plystack_[ply].pv_[ply] = move;
-  scontexts_[ictx].plystack_[ply].pv_[ply].checkFlag_ = checking;
-  scontexts_[ictx].plystack_[ply].pv_[ply+1].clear();
+  //scontexts_[ictx].plystack_[ply].pv_[ply].checkFlag_ = checking;
+  scontexts_[ictx].plystack_[ply].pv_[ply+1] = {};
 
   for(int i = ply+1; i < MaxPly-1; ++i)
   {

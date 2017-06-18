@@ -54,28 +54,28 @@ xProtocolMgr::xProtocolMgr() :
   proc_.setCallback(xcbk);
 }
 
-void xProtocolMgr::outState(NEngine::Board::State state, bool white)
+void xProtocolMgr::outState(NEngine::StateType state, bool white)
 {
-  if(NEngine::Board::State::ChessMat & state)
+  if(NEngine::State::ChessMat & state)
   {
     if(white)
       os_ << "1-0 {White}" << std::endl;
     else
       os_ << "0-1 {Black}" << std::endl;
   }
-  else if(NEngine::Board::State::DrawInsuf & state)
+  else if(NEngine::State::DrawInsuf & state)
   {
     os_ << "1/2-1/2 {Draw by material insufficient}" << std::endl;
   }
-  else if(NEngine::Board::State::Stalemat & state)
+  else if(NEngine::State::Stalemat & state)
   {
     os_ << "1/2-1/2 {Stalemate}" << std::endl;
   }
-  else if(NEngine::Board::State::DrawReps & state)
+  else if(NEngine::State::DrawReps & state)
   {
     os_ << "1/2-1/2 {Draw by repetition}" << std::endl;
   }
-  else if(NEngine::Board::State::Draw50Moves & state)
+  else if(NEngine::State::Draw50Moves & state)
   {
     os_ << "1/2-1/2 {Draw by fifty moves rule}" << std::endl;
   }
@@ -101,10 +101,6 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
     oss << " ";
 
     auto pv = sres.pv_[i];
-    auto captured = pv.capture_;
-    pv.clearFlags();
-    pv.capture_ = captured;
-
     if(!board.possibleMove(pv))
       break;
 
@@ -112,7 +108,7 @@ void xProtocolMgr::printPV(NEngine::SearchResult const& sres)
     if(str.empty())
       break;
 
-    X_ASSERT(!board.validateMove(pv), "move is invalid but it is not detected by printSAN()");
+    X_ASSERT(!board.validateMoveBruteforce(pv), "move is invalid but it is not detected by printSAN()");
 
     board.makeMove(pv);
 
@@ -141,11 +137,7 @@ void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
   std::string outstr = oss.str();
 
   auto mv = sdata.best_;
-  uint8 captured = mv.capture_;
-  mv.clearFlags();
-  mv.capture_ = captured;
-
-  if(mv && board.validateMove(mv))
+  if(mv && board.validateMoveBruteforce(mv))
   {
     auto str = printSAN(board, mv);
     outstr += " " + str;
@@ -241,10 +233,6 @@ void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
       pv_str += " ";
 
     auto pv = sres.pv_[i];
-    uint8 captured = pv.capture_;
-    pv.clearFlags();
-    pv.capture_ = captured;
-
     if(!board.possibleMove(pv))
       break;
 
@@ -252,7 +240,7 @@ void xProtocolMgr::printInfo(NEngine::SearchResult const& sres)
     if(str.empty())
       break;
 
-    X_ASSERT(!board.validateMove(pv), "move is invalid but it is not detected by printSAN()");
+    X_ASSERT(!board.validateMoveBruteforce(pv), "move is invalid but it is not detected by printSAN()");
 
     board.makeMove(pv);
 
@@ -517,7 +505,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     {
       if(auto rs = proc_.move(cmd))
       {
-        if(NEngine::Board::isDraw(rs->state_) || NEngine::Board::ChessMat & rs->state_)
+        if(NEngine::Board::isDraw(rs->state_) || NEngine::ChessMat & rs->state_)
         {
           outState(rs->state_, rs->white_);
         }

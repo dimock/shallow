@@ -35,7 +35,7 @@ private:
   void setOption(const xCmd & cmd);
   void uciPosition(const xCmd & cmd);
   bool uciGo(const xCmd & cmd);
-  void outState(NEngine::Board::State state, bool white);
+  void outState(NEngine::StateType state, bool white);
 
   void printCmdDbg(xCmd const& cmd) const;
 

@@ -8,8 +8,6 @@
 namespace NEngine
 {
 
-class Board;
-
 #pragma pack (push, 1)
 
 ALIGN_MSC(1) class ALIGN_GCC(1) Field

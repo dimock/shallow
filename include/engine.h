@@ -13,11 +13,6 @@ engine.h - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
-class CapsGenerator;
-class MovesGenerator;
-class EscapeGenerator;
-class ChecksGenerator;
-
 struct PlyStack
 {
   PlyStack() {}
@@ -28,23 +23,17 @@ struct PlyStack
   void clearPV(int depth)
   {
     for(int i = 0; i < depth; ++i)
-      pv_[i].clear();
+      pv_[i] = {};
   }
 
   void clear(int ply)
   {
-    pv_[ply].clear();
-  }
-
-  void setKiller(const Move & killer)
-  {
-    if(!killer.capture_ && !killer.new_type_)
-      killer_ = killer;
+    pv_[ply] = {};
   }
 
   void clearKiller()
   {
-    killer_.clear();
+    killer_ = {};
   }
 };
 
@@ -60,11 +49,6 @@ struct SearchParams
 
 class Engine
 {
-  friend class CapsGenerator;
-  friend class MovesGenerator;
-  friend class EscapeGenerator;
-  friend class ChecksGenerator;
-
 public:
 
   static int xcounter_;
@@ -111,21 +95,17 @@ private:
   bool stopped() const { return stop_; }
   void testInput();
 
-  // testing of move generator
-  void enumerate();
-  void enumerate(int depth);
-
   // search routine
   ScoreType alphaBetta0();
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm);
   ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
-  int depthIncrement(int ictx, Move & move, bool pv) const;
-  void assemblePV(int ictx, const Move & move, bool checking, int ply);
+  int depthIncrement(int ictx, Move const& move, bool pv) const;
+  void assemblePV(int ictx, Move const & move, bool checking, int ply);
 
 
   // is given movement caused by previous. this mean that if we don't do this move we loose
   // we actually check if moved figure was attacked by previously moved one or from direction it was moved from
-  bool isRealThreat(int ictx, const Move & move);
+  //bool isRealThreat(int ictx, const Move & move);
 
 #ifdef USE_HASH
   void prefetchHash(int ictx);
@@ -148,7 +128,7 @@ private:
     SBoard<Board, UndoInfo, Board::GameLength>     board_;
     Evaluator eval_;
     std::array<PlyStack, MaxPly+4>    plystack_;
-    std::array<Move, Board::MovesMax> moves_;
+    std::array<SMove, Board::MovesMax> moves_;
   };
 
   // will be used in multi-threading mode???
@@ -163,28 +143,6 @@ private:
   EHashTable ehash_;
 #endif
 
-
-  /// for DEBUG, verification
-
-#ifdef VERIFY_ESCAPE_GENERATOR
-  void verifyEscapeGen(int ictx, const Move & hmove);
-#endif
-
-#ifdef VERIFY_CHECKS_GENERATOR
-  void verifyChecksGenerator(int ictx);
-#endif
-
-#ifdef VERIFY_CAPS_GENERATOR
-  void verifyCapsGenerator(int ictx);
-#endif
-
-#ifdef VERIFY_FAST_GENERATOR
-  void verifyFastGenerator(int ictx, const Move & hmove, const Move & killer);
-#endif
-
-#ifdef VERIFY_TACTICAL_GENERATOR
-  void verifyTacticalGenerator(int ictx);
-#endif
 
   void findSequence(int ictx, const Move & move, int ply, int depth, int counter, ScoreType alpha, ScoreType betta) const;
   void verifyGenerators(int ictx, const Move & hmove);

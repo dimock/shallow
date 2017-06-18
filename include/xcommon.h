@@ -56,6 +56,9 @@ using BitMask   = uint64;
 
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
 
+static const int NumOfFields = 64;
+
+
 template <class T, size_t ALIGN_BYTES = 16>
 inline T* make_aligned_array(std::vector<uint8>& arr, size_t size_)
 {
@@ -100,13 +103,6 @@ namespace nst
 #define VERIFY_LMR
 #define SINGULAR_EXT
 #undef USE_PROBCUT
-
-  //#define VERIFY_ESCAPE_GENERATOR
-  //#define VERIFY_CHECKS_GENERATOR
-  //#define VERIFY_CAPS_GENERATOR
-  //#define VERIFY_FAST_GENERATOR
-  //#define VERIFY_TACTICAL_GENERATOR
-  //#define VALIDATE_VALIDATOR
 
 static const int ONE_PLY = 20;
 static const int MaxPly = 64;

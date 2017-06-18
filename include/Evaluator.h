@@ -3,8 +3,10 @@
  *************************************************************/
 #pragma once
 
-#include <Board.h>
+#include <xoptimize.h>
 #include <EvalCoefficients.h>
+#include <Board.h>
+#include <HashTable.h>
 #include <xindex.h>
 #include <xlist.h>
 
@@ -187,7 +189,7 @@ private:
 
   ScoreType considerColor(ScoreType score) const
   {
-    return Figure::ColorBlack  == board_->getColor() ? -score : score;
+    return Figure::ColorBlack  == board_->color() ? -score : score;
   }
 
   /// calculates absolute position evaluation
@@ -245,7 +247,7 @@ private:
 
  // SpecialCases findSpecialCase() const;
  // ScoreType evaluateSpecial(SpecialCases sc) const;
-  ScoreType evaluateWinnerLoser();
+  //ScoreType evaluateWinnerLoser();
  // bool evaluateWinnerLoserSpecial(ScoreType & score);
  // ScoreType evaluateTrueWinnerLoser();
 

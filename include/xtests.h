@@ -66,10 +66,6 @@ inline void appendMove(xEPD<B, M, U>& epd, std::string const& smove)
   }
 }
 
-template <>
-inline void appendMove<Board2, Move2, UndoInfo2>(xEPD<Board2, Move2, UndoInfo2>& epd, std::string const& smove)
-{}
-
 template <typename BOARD, typename MOVE, typename UNDO>
 class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 {

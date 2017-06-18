@@ -8,7 +8,7 @@
 namespace NEngine
 {
 
-class Board;
+struct Board;
 
 class SpecialCasesDetector
 {

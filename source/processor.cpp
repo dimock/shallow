@@ -174,7 +174,7 @@ bool Processor::undo()
   auto& board = engine_.getBoard();
   if(board.halfmovesCount() > 0)
   {
-    board.unmakeMove();
+    board.unmakeMove(board.lastUndo().move_);
     return true;
   }
 
@@ -191,7 +191,7 @@ void Processor::setOptions(NEngine::xOptions const& opts)
 
 NEngine::Figure::Color Processor::color() const
 {
-  return engine_.getBoard().getColor();
+  return engine_.getBoard().color();
 }
 
 bool Processor::init()
@@ -243,8 +243,8 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
   ReplyStruct rep;
 
   auto & board = engine_.getBoard();
-  rep.white_ = NEngine::Figure::ColorWhite == board.getColor();
-  rep.state_ = static_cast<NEngine::Board::State>(board.getState());
+  rep.white_ = NEngine::Figure::ColorWhite == board.color();
+  rep.state_ = board.state();
 
   if(board.drawState() || board.matState())
     return rep;
@@ -255,17 +255,17 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
   NEngine::SearchResult sres;
   if(engine_.search(sres))
   {
-    if(board.validateMove(sres.best_))
+    if(board.validateMoveBruteforce(sres.best_))
     {
       board.makeMove(sres.best_);
       board.verifyState();
     }
     else
-      sres.best_.clear();
+      sres.best_ = {};
   }
   thinking_ = false;
 
-  rep.state_ = static_cast<NEngine::Board::State>(board.getState());
+  rep.state_ = board.state();
   rep.best_ = sres.best_;
   rep.moveStr_ = moveToStr(sres.best_, winboardFormat);
   rep.score_ = sres.score_;
@@ -286,8 +286,8 @@ boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
 
   ReplyStruct rep;
   auto& board = engine_.getBoard();
-  auto color = board.getColor();
-  rep.state_ = static_cast<NEngine::Board::State>(board.getState());
+  auto color = board.color();
+  rep.state_ = board.state();
   rep.white_ = NEngine::Figure::ColorWhite == color;
 
   if(board.drawState() || board.matState())
@@ -299,14 +299,14 @@ boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
     return boost::none;
   }
 
-  if(!board.validateMove(move))
+  if(!board.validateMoveBruteforce(move))
   {
     return boost::none;
   }
 
   board.makeMove(move);
   board.verifyState();
-  rep.state_ = static_cast<NEngine::Board::State>(board.getState());
+  rep.state_ = board.state();
   updateTiming();
 
   return rep;
@@ -323,7 +323,7 @@ bool Processor::makeMove(std::string const& moveStr)
   if(!move)
     return false;
 
-  if(!board.validateMove(move))
+  if(!board.validateMoveBruteforce(move))
     return false;
 
   //if(moveStr == "f6f5")
@@ -469,7 +469,7 @@ void Processor::editCmd(xCmd const& cmd)
   {
   case xType::xEdit:
     figureColor_ = NEngine::Figure::ColorWhite;
-    boardColor_ = engine_.getBoard().getColor();
+    boardColor_ = engine_.getBoard().color();
     break;
 
   case xType::xChgColor:

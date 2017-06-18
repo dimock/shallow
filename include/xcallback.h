@@ -3,8 +3,8 @@ xcallback.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <Board.h>
-#include <Move.h>
+#include <xoptimize.h>
+//#include <Move.h>
 #include <xtime.h>
 #include <array>
 #include <functional>
@@ -52,7 +52,7 @@ struct SearchData
   int plyMax_{};
   NTime::point tstart_{};
   NTime::point tprev_{};
-  Move best_;
+  SMove best_;
 };
 
 using query_input_command    = std::function<bool()>;

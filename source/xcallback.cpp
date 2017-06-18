@@ -8,9 +8,11 @@ namespace NEngine
 
 SearchResult::SearchResult()
 {
-  best_.clear();
+  best_ = {};
   for(auto& m : pv_)
-    m.clear();
+  {
+    m = {};
+  }
 }
 
 void SearchData::reset()
@@ -20,14 +22,14 @@ void SearchData::reset()
   totalNodes_ = 0;
   tprev_ = tstart_ = NTime::now();
   numOfMoves_ = 0;
-  best_.clear();
+  best_ = {};
   counter_ = 0;
   plyMax_ = 0;
 }
 
 void SearchData::restart()
 {
-  best_.clear();
+  best_ = {};
   nodesCount_ = 0;
   plyMax_ = 0;
   counter_ = 0;

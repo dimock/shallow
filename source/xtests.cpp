@@ -62,16 +62,11 @@ void testSee(std::string const& ffname)
     {
       for(auto const& move : epd.moves_)
       {
-        auto v_old = epd.board_.see_old(move);
-        auto v_new = epd.board_.see(move);
-        if((v_old < 0) == (v_new < 0))
-          //if(v_old == v_new)
-          return;
+        auto v= epd.board_.see(move);
         std::cout << i << ": "
           << toFEN(epd.board_) << "  "
           << printSAN(epd.board_, move)
-          << "  see old: " << v_old
-          << "  see new: " << v_new
+          << "  see result: " << v
           << std::endl;
       }
     },
@@ -91,8 +86,7 @@ void see_perf_test(std::string const& fname)
     {
       for(auto& move : epd.moves_)
       {
-        x += epd.board_.see_old(move);
-        move.seen_ = x != 0;
+        x += epd.board_.see(move);
       }
     }
   };
@@ -104,7 +98,6 @@ void see_perf_test(std::string const& fname)
       for(auto& move : epd.moves_)
       {
         x += epd.board_.see(move);
-        move.seen_ = x != 0;
       }
     }
   };
@@ -218,7 +211,7 @@ void kpkTable(std::string const& fname)
           board.addFigure(Figure::ColorBlack, Figure::TypeKing, kl);
           if(!board.invalidate())
             continue;
-          if(board.getState() != Board::State::Ok && board.getState() != Board::State::UnderCheck)
+          if(board.state() != State::Ok && board.state() != State::UnderCheck)
             continue;
           //proc.setTimePerMove(tm);
           proc.setDepth(22);
@@ -274,7 +267,7 @@ void kpkTable(std::string const& fname)
 
 void speedTest()
 {
-  SBoard<Board2, UndoInfo2, 512> board;
+  SBoard<Board, UndoInfo, 512> board;
   fromFEN("", board);
   auto t = std::chrono::high_resolution_clock::now();
   xsearch(board, 4);
@@ -289,13 +282,13 @@ void speedTest()
 std::vector<std::string> board2Test(std::string const& epdfile)
 {
   std::vector<std::string> errors;
-  testFen<Board2, Move2, UndoInfo2>(epdfile,
-                                    [&errors](size_t i, xEPD<Board2, Move2, UndoInfo2>& epd)
+  testFen<Board, Move, UndoInfo>(epdfile, [&errors](size_t i, xEPD<Board, Move, UndoInfo>& epd)
   {
-    auto ok = true;// xverifyMoves(epd.board_);
+    bool ok{true};
     try
     {
-      xsearch(epd.board_, 2);
+      ok = xverifyMoves(epd.board_);
+      //xsearch(epd.board_, 2);
       std::cout << std::setw(4) << i << " verified with result: " << std::boolalpha << ok << std::endl;
     }
     catch(std::exception const& e)

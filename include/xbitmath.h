@@ -366,7 +366,7 @@ public:
   }
 };
 
-class Board;
+struct Board;
 bool findRootToPawn(Board const& board,
                     BitMask const& inv_mask_all,
                     BitMask const& attack_mask_c,
