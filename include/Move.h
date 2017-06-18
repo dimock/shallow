@@ -12,6 +12,8 @@ struct Move
 
   Move() = default;
 
+  Move(bool) : mask{0} {}
+
   Move(int f, int t, Figure::Type n)
   {
     mask = f | (t << 6) | (n << 12);
@@ -45,6 +47,8 @@ struct SMove : public Move
 
   SMove() = default;
 
+  SMove(bool) : Move(true), sort_value{0} {}
+
   SMove(int f, int t, Figure::Type n) :
     Move(f, t, n)
   {
@@ -58,6 +62,10 @@ struct SMove : public Move
   inline bool operator < (SMove const& m) const
   {
     return sort_value < m.sort_value;
+  }
+  inline bool operator > (SMove const& m) const
+  {
+    return sort_value > m.sort_value;
   }
 };
 

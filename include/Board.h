@@ -432,9 +432,9 @@ struct Board
         getField(ki.to()) ||
         (enpassant() == ki.to() && getField(ki.from()).type() == Figure::TypePawn))
     {
-      return Move{};
+      return Move{true};
     }
-    return possibleMove(ki) ? ki : Move{};
+    return possibleMove(ki) ? ki : Move{true};
   }
 
   bool canBeReduced(Move const& move) const

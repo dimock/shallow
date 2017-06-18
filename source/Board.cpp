@@ -44,7 +44,7 @@ bool Board::possibleMove(const Move & move) const
     return false;
 
   // only kings move is possible
-  if(doubleCheck() && ffrom.type() != Figure::TypeKing)
+  if(underCheck() && doubleCheck() && ffrom.type() != Figure::TypeKing)
     return false;
 
   if(ffrom.type() != Figure::TypePawn && move.new_type() > 0)

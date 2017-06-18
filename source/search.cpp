@@ -59,7 +59,7 @@ bool Engine::search(SearchResult& sres)
       if(scontexts_[0].board_.validateMoveBruteforce(move))
         scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
     }
-    scontexts_[0].moves_[sdata_.numOfMoves_] = {};
+    scontexts_[0].moves_[sdata_.numOfMoves_] = SMove{ true };
   }
 
   sres.numOfMoves_ = sdata_.numOfMoves_;
@@ -201,10 +201,6 @@ ScoreType Engine::alphaBetta0()
 
   const bool bDoSort = sdata_.depth_ <= sortDepth;
 
-#ifdef LOG_PV
-  logMovies();
-#endif
-
   for(sdata_.counter_ = 0; sdata_.counter_ < sdata_.numOfMoves_; ++sdata_.counter_)
   {
     if(checkForStop())
@@ -213,88 +209,25 @@ ScoreType Engine::alphaBetta0()
     auto& move = scontexts_[0].moves_[sdata_.counter_];
     ScoreType score = -ScoreMax;
 
-    //if(!move.seen_)
-    //{
-    //  move.see_good_ = scontexts_[0].board_.see(move) >= 0;
-    //  move.seen_ = 1;
-    //}
-
-    //if(scontexts_[0].board_.isMoveThreat(move))
-    //  move.threat_ = 1;
-
     scontexts_[0].board_.makeMove(move);
     sdata_.inc_nc();
 
-    bool fullRange = false;
-
-    {
-      int depthInc = depthIncrement(0, move, true);
-      bool strongMove = (move.sort_value > (alpha-500)) || (sdata_.counter_ < numMovesNoReduce);
-
-      if(bDoSort || sdata_.counter_ < 1)
-      {
-        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, bDoSort ? ScoreMax : -alpha, true, true);
-        fullRange = true;
-      }
-      else
-      {
-        int depthInc2 = depthIncrement(0, move, strongMove);
-        int R = 0;
-
-
-#ifdef USE_LMR
-        if ( !check_escape &&
-          sdata_.counter_ >= numMovesNoReduce &&
-          depth > LMR_MinDepthLimit &&
-          //alpha > -Figure::MatScore-MaxPly && 
-          scontexts_[0].board_.canBeReduced(move) )
-        {
-          R = ONE_PLY;
-        }
-#endif
-
-        score = -alphaBetta(0, depth + depthInc2 - ONE_PLY - R, 1, -alpha-1, -alpha, strongMove, true);
-
-        if(!stopped() && score > alpha && R > 0)
-          score = -alphaBetta(0, depth + depthInc2 - ONE_PLY, 1, -alpha - 1, -alpha, strongMove, true);
-
-        if(!stopped() && score > alpha)
-        {
-          score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
-          fullRange = true;
-        }
-      }
-    }
+    int depthInc = (scontexts_[0].board_.underCheck()) ? ONE_PLY : 0;
+    if(!stopped())
+      score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
 
     scontexts_[0].board_.unmakeMove(move);
 
     if(!stopped())
     {
-      if(bDoSort || sdata_.counter_ < 1)
-        move.sort_value = score;
-
+      move.sort_value = score;
       if(score > alpha)
       {
-        move.sort_value = score;
         sdata_.best_ = move;
         alpha = score;
-
         assemblePV(0, move, scontexts_[0].board_.underCheck(), 0);
-
-        // bring best move to front, shift other moves 1 position right
-        if(!bDoSort)
-        {
-          for(int j = sdata_.counter_; j > 0; --j)
-            scontexts_[0].moves_[j] = scontexts_[0].moves_[j-1];
-          scontexts_[0].moves_[0] = sdata_.best_;
-        }
       }
-
-#ifdef LOG_PV
-      logPV();
-#endif
     }
-
 
     if(callbacks_.sendStats_ && sparams_.analyze_mode_)
       (callbacks_.sendStats_)(sdata_);
@@ -306,22 +239,24 @@ ScoreType Engine::alphaBetta0()
 
   if(!stopped())
   {
-    // full sort only on first iterations
-    if(bDoSort)
+    auto iter = scontexts_[0].moves_.begin();
+    std::advance(iter, sdata_.numOfMoves_);
+    std::sort(scontexts_[0].moves_.begin(), iter, [](SMove const& m1, SMove const& m2)
     {
-      auto iter = scontexts_[0].moves_.begin();
-      std::advance(iter, sdata_.numOfMoves_);
-      std::sort(scontexts_[0].moves_.begin(), iter);
-    }
-    // sort all moves but 1st
-    else if(sdata_.numOfMoves_ > 2)
+      return m1 > m2;
+    });
+    if(!(scontexts_[0].moves_[0] == sdata_.best_))
     {
-      auto iter1 = scontexts_[0].moves_.begin();
-      auto iter2 = scontexts_[0].moves_.begin();
-      iter1++;
-      std::advance(iter2, sdata_.numOfMoves_);
-      std::sort(iter1, iter2);
+      for(int i = 0; i < sdata_.numOfMoves_; ++i)
+      {
+        if(sdata_.best_ == scontexts_[0].moves_[i])
+        {
+          std::swap(scontexts_[0].moves_[i], scontexts_[0].moves_[0]);
+          break;
+        }
+      }
     }
+    X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
   }
 
   return alpha;
@@ -349,236 +284,49 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   ScoreType alpha0 = alpha;
 
-  Move hmove{};
-
-#ifdef USE_HASH
-  ScoreType hscore = -ScoreMax;
-  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
-  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
-  {
-    return hscore;
-  }
-#endif
-
   if(depth <= 0)
     return captures(ictx, depth, ply, alpha, betta, pv);
 
-  bool nm_threat = false, real_threat = false, mat_threat = false;
-
-  auto const& prev = scontexts_[ictx].board_.lastUndo();
-  bool check_escape = scontexts_[ictx].board_.underCheck();
-
-  if(options_.use_nullmove_)
-  {
-    if(
-      !scontexts_[ictx].board_.underCheck()
-       && !pv
-       && allow_nm
-       && scontexts_[ictx].board_.allowNullMove()
-       && depth > scontexts_[ictx].board_.nullMoveDepthMin()
-       && std::abs(betta) < Figure::MatScore+MaxPly
-       )
-    {
-      int null_depth = scontexts_[ictx].board_.nullMoveDepth(depth, betta);
-
-      // do null-move
-      scontexts_[ictx].board_.makeNullMove();
-      ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false, false);
-      scontexts_[ictx].board_.unmakeNullMove();
-
-      // verify null-move with shortened depth
-      if(nullScore >= betta)
-      {
-        depth = null_depth;
-        if(depth <= 0)
-          return captures(ictx, depth, ply, alpha, betta, pv);
-      }
-      else // may be we are in danger?
-      {
-        if(nullScore <= -Figure::MatScore+MaxPly) // mat threat?
-        {
-          if(prev.is_reduced())
-            return betta-1;
-          else
-            mat_threat = true;
-        }
-
-        nm_threat = true;
-      }
-    }
-  } // use nullmove
-
-#ifdef USE_FUTILITY_PRUNING
-  if ( !pv &&
-    !scontexts_[ictx].board_.underCheck() &&       
-    alpha > -Figure::MatScore+MaxPly &&
-    alpha < Figure::MatScore-MaxPly &&
-    depth <= 3*ONE_PLY && ply > 1 )
-  {
-    ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);
-    int delta = calculateDelta(alpha, score0);
-    if (!scontexts_[ictx].board_.isWinnerLoser())
-    {
-      if(depth <= ONE_PLY && delta > 0)
-      {
-        return captures(ictx, depth, ply, alpha, betta, pv, score0);
-      }
-      else if(depth <= 2*ONE_PLY && delta > Figure::figureWeight_[Figure::TypeQueen])
-      {
-        return captures(ictx, depth, ply, alpha, betta, pv, score0);
-      }
-      else if(delta > Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeKnight])
-      {
-        return captures(ictx, depth, ply, alpha, betta, pv, score0);
-      }
-    }
-  }
-#endif
-
-#ifdef USE_IID
-  if (!hmove && depth >= 4 * ONE_PLY)
-  {
-    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
-    if(const HItem * hitem = hash_.find(scontexts_[ictx].board_.fmgr().hashCode()))
-    {
-      X_ASSERT(hitem->hkey_ != scontexts_[ictx].board_.fmgr().hashCode(), "invalid hash item found");
-      hmove = hitem->move_;
-    }
-  }
-#endif
-
-  int counter = 0;
-  int depthInc = 0;
   ScoreType scoreBest = -ScoreMax;
-  Move best{};// , killer{};
+  Move best{true};
+  int counter{};
 
-  FastGenerator<Board, Move> fg(scontexts_[ictx].board_);// , hmove, scontexts_[ictx].plystack_[ply].killer_);
-  if(fg.singleReply())
-    depthInc += ONE_PLY;
-
-#ifdef SINGULAR_EXT
-  int  aboveAlphaN = 0;
-  bool wasExtended = false;
-  bool allMovesIterated = false;
-#endif
-
+  FastGenerator<Board, Move> fg(scontexts_[ictx].board_);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = fg.next();
     if(!pmove)
-    {
-#ifdef SINGULAR_EXT
-      allMovesIterated = true;
-#endif
       break;
-    }
+
     auto& move = *pmove;
-    //if(!scontexts_[ictx].board_.validateMove(move))
-    //  continue;
+    if(!scontexts_[ictx].board_.validateMove(move))
+      continue;
 
     ScoreType score = -ScoreMax;
-
-    //if(pv && !move.seen_)
-    //{
-    //  move.see_good_ = scontexts_[ictx].board_.see(move) >= 0;
-    //  move.seen_ = 1;
-    //}
-
-    //// detect some threat, like pawn's attack etc...
-    //// don't LMR such moves
-    //if(scontexts_[ictx].board_.isMoveThreat(move))
-    //  move.threat_ = 1;
 
     scontexts_[ictx].board_.makeMove(move);
     sdata_.inc_nc();
 
-    //findSequence(ictx, move, ply, depth, counter, alpha, betta);
-
-    auto& curr = scontexts_[ictx].board_.lastUndo();
-
-    int depthInc1 = depthIncrement(ictx, move, pv) + depthInc;
-
-    {
-      ScoreType betta_pc = betta + 300;
-#ifdef USE_PROBCUT
-      if(!pv
-         && move.capture_
-         && move.see_good_
-         && !check_escape
-         && depth >= Probcut_Depth
-         && std::abs(betta) < Figure::MatScore-MaxPly
-         && std::abs(alpha) < Figure::MatScore-MaxPly)
-      {
-        score = -alphaBetta(ictx, depth - Probcut_PlyReduce, ply+1, -betta_pc, -(betta_pc-1), pv, true);
-      }
-#endif
-
-      if(score < betta_pc)
-      {
-        if(!counter)
-          score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv, true);
-        else
-        {
-          int depthInc2 = depthIncrement(ictx, move, false) + depthInc;
-          int R = 0;
-
-#ifdef USE_LMR
-          if(!check_escape &&
-             sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-             depth >= LMR_DepthLimit &&
-             alpha > -Figure::MatScore-MaxPly &&
-             scontexts_[ictx].board_.canBeReduced(move))
-          {
-            R = ONE_PLY;
-            curr.mflags_ |= UndoInfo::Reduced;
-          }
-#endif
-
-          score = -alphaBetta(ictx, depth + depthInc2 - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, true);
-          curr.mflags_ &= ~UndoInfo::Reduced;
-
-          if(!stopped() && score > alpha && R > 0)
-            score = -alphaBetta(ictx, depth + depthInc2 - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, true);
-
-          if(!stopped() && score > alpha && score < betta)
-            score = -alphaBetta(ictx, depth + depthInc1 - ONE_PLY, ply + 1, -betta, -alpha, pv, true);
-        }
-      }
-    }
+    int depthInc = (scontexts_[0].board_.underCheck()) ? ONE_PLY : 0;
+    score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
 
     scontexts_[ictx].board_.unmakeMove(move);
 
     if(!stopped())
     {
-#ifdef SINGULAR_EXT
-      if ( pv && score > alpha0 )
-      {
-        aboveAlphaN++;
-        wasExtended = depthInc1 > 0;
-      }
-#endif
-
-      History & hist = history(scontexts_[ictx].board_.color(), move.from(), move.to());
       if(score > scoreBest)
       {
-        hist.inc_good();
         best = move;
         scoreBest = score;
         if(score > alpha)
         {
-          auto capture = scontexts_[ictx].board_.getField(move.to()) || (move.to() > 0 && scontexts_[ictx].board_.enpassant());
-          if(!capture)
-            scontexts_[ictx].plystack_[ply].killer_ = move;
           alpha = score;
           if(pv)
             assemblePV(ictx, move, scontexts_[ictx].board_.underCheck(), ply);
         }
       }
-      else
-        hist.inc_bad();
     }
 
-    // should be increased here to consider invalid moves!!!
     ++counter;
   }
 
@@ -588,61 +336,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(!counter)
   {
     scontexts_[ictx].board_.setNoMoves();
-
     scoreBest = scontexts_[ictx].eval_(alpha, betta);
-
     if(scontexts_[ictx].board_.matState())
       scoreBest += ply;
   }
 
-#ifdef SINGULAR_EXT
-  if ( aboveAlphaN == 1 && !fg.singleReply() && !wasExtended && allMovesIterated )
-  {
-    X_ASSERT( !best, "best move wasn't found but one move was" );
-
-    scontexts_[ictx].board_.makeMove(best);
-    sdata_.inc_nc();
-
-    alpha = alpha0;
-    ScoreType score = -alphaBetta(ictx, depth, ply+1, -betta, -alpha, pv, true);
-
-    scontexts_[ictx].board_.unmakeMove(best);
-
-    if ( !stopped() )
-    {
-      scoreBest = score;
-      if ( score > alpha )
-      {
-        alpha = score;
-        assemblePV(ictx, best, scontexts_[ictx].board_.underCheck(), ply);
-      }
-    }
-  }
-#endif
-
-  if(best)
-  {
-    History & hist = history(scontexts_[ictx].board_.color(), best.from(), best.to());
-    hist.inc_score(depth / ONE_PLY);
-
-//#if ((defined USE_LMR) && (defined VERIFY_LMR))
-//    // have to recalculate with full depth, or indicate threat in hash
-//    if ( !stopped() && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )
-//    {
-//      if(prev.reduced_)
-//        return betta-1;
-//      else
-//        real_threat = true;
-//    }
-//#endif
-  }
-
-#ifdef USE_HASH
-  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, real_threat);
-#endif
-
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
-
   return scoreBest;
 }
 
@@ -658,21 +357,8 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   if(stopped() || ply >= MaxPly)
     return Figure::DrawScore;
 
-  Move hmove{};
-
-#ifdef USE_HASH
-  ScoreType hscore = -ScoreMax;
-  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
-  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
-  {
-    return hscore;
-  }
-#endif
-
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
-  int delta = 0;
-  int depthInc = 0;
 
   if(!scontexts_[ictx].board_.underCheck())
   {
@@ -683,20 +369,15 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if(score0 >= betta)
       return score0;
 
-    delta = calculateDelta(alpha, score0);
     if(score0 > alpha)
       alpha = score0;
 
     scoreBest = score0;
   }
 
-  Move best{};
-  Figure::Type thresholdType = scontexts_[ictx].board_.isWinnerLoser() ? Figure::TypePawn : delta2type(delta);
+  Move best{true};
 
-  TacticalGenerator<Board, Move> tg(scontexts_[ictx].board_, depth);// , hmove, thresholdType, depth);
-  if(tg.singleReply())
-    depthInc += ONE_PLY;
-
+  TacticalGenerator<Board, Move> tg(scontexts_[ictx].board_, depth);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.next();
@@ -704,18 +385,19 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       break;
 
     auto& move = *pmove;
-    //if(!scontexts_[ictx].board_.validateMove(move))
-    //  continue;
+    if(!scontexts_[ictx].board_.validateMove(move))
+      continue;
+
+    if(scontexts_[ictx].board_.see(move) < 0)
+      continue;
 
     ScoreType score = -ScoreMax;
 
     scontexts_[ictx].board_.makeMove(move);
     sdata_.inc_nc();
 
-    {
-      int depthInc1 = depthInc + depthIncrement(ictx, move, false);
-      score = -captures(ictx, depth + depthInc1 - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax);
-    }
+    int depthInc = (scontexts_[0].board_.underCheck()) ? ONE_PLY : 0;
+    score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax);
 
     scontexts_[ictx].board_.unmakeMove(move);
 
@@ -742,12 +424,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       scoreBest = score0;
   }
 
-#ifdef USE_HASH
-  putCaptureHash(ictx, best);
-#endif
-
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
-
   return scoreBest;
 }
 

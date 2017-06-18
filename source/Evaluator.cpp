@@ -330,9 +330,6 @@ namespace NEngine
   {
     X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
-    if(ehash_)
-      ehash_->prefetch(board_->fmgr().pawnCode());
-
     if(board_->matState())
     {
       return -Figure::MatScore;
@@ -341,31 +338,46 @@ namespace NEngine
     {
       return Figure::DrawScore;
     }
-    else if(auto spec = specialCases().eval(*board_))
-    {
-      ScoreType score = *spec;
-      score = considerColor(score);
-      return score;
-    }
 
-    prepare();
+    return considerColor(board_->fmgr().weight());
 
-    // prepare lazy evaluation
-    if(alpha > -Figure::MatScore)
-    {
-      alpha0_ = (int)alpha - lazyThreshold0_;
-      alpha1_ = (int)alpha - lazyThreshold1_;
-    }
 
-    if(betta < +Figure::MatScore)
-    {
-      betta0_ = (int)betta + lazyThreshold0_;
-      betta1_ = (int)betta + lazyThreshold1_;
-    }
+    //if(ehash_)
+    //  ehash_->prefetch(board_->fmgr().pawnCode());
 
-    ScoreType score = evaluate();
-    X_ASSERT(score <= -ScoreMax || score >= ScoreMax, "invalid score");
-    return score;
+    //if(board_->matState())
+    //{
+    //  return -Figure::MatScore;
+    //}
+    //else if(board_->drawState())
+    //{
+    //  return Figure::DrawScore;
+    //}
+    //else if(auto spec = specialCases().eval(*board_))
+    //{
+    //  ScoreType score = *spec;
+    //  score = considerColor(score);
+    //  return score;
+    //}
+
+    //prepare();
+
+    //// prepare lazy evaluation
+    //if(alpha > -Figure::MatScore)
+    //{
+    //  alpha0_ = (int)alpha - lazyThreshold0_;
+    //  alpha1_ = (int)alpha - lazyThreshold1_;
+    //}
+
+    //if(betta < +Figure::MatScore)
+    //{
+    //  betta0_ = (int)betta + lazyThreshold0_;
+    //  betta1_ = (int)betta + lazyThreshold1_;
+    //}
+
+    //ScoreType score = evaluate();
+    //X_ASSERT(score <= -ScoreMax || score >= ScoreMax, "invalid score");
+    //return score;
   }
 
   ScoreType Evaluator::evaluate()
@@ -805,16 +817,16 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
       BitMask next_mask = set_mask_bit(next_pos);
       if((next_mask & finfo_[ocolor].attack_mask_) == 0)
         can_go = true;
-      else
-      {
-        Figure::Type type = Figure::TypeNone;
-        if(next_pos == promo_pos)
-          type = Figure::TypeQueen;
+      //else
+      //{
+      //  Figure::Type type = Figure::TypeNone;
+      //  if(next_pos == promo_pos)
+      //    type = Figure::TypeQueen;
 
-        Move move(n, next_pos, type);
-        ScoreType see_score = board_->see(move);
-        can_go = see_score >= 0;
-      }
+      //  Move move(n, next_pos, type);
+      //  ScoreType see_score = board_->see(move);
+      //  can_go = see_score >= 0;
+      //}
       // additional bonus if pawn can go forward
       info.score.common_ += can_go * evalCoeffs().cangoPawn_[cy];
     }

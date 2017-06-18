@@ -261,7 +261,7 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
       board.verifyState();
     }
     else
-      sres.best_ = {};
+      sres.best_ = {true};
   }
   thinking_ = false;
 

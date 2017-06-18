@@ -23,17 +23,17 @@ struct PlyStack
   void clearPV(int depth)
   {
     for(int i = 0; i < depth; ++i)
-      pv_[i] = {};
+      pv_[i] = Move{true};
   }
 
   void clear(int ply)
   {
-    pv_[ply] = {};
+    pv_[ply] = Move{ true };
   }
 
   void clearKiller()
   {
-    killer_ = {};
+    killer_ = Move{ true };
   }
 };
 

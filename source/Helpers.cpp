@@ -73,12 +73,12 @@ eMoveNotation detectNotation(std::string const& str)
 Move parseSAN(const Board & board, std::string const& str)
 {
   if(str.empty())
-    return Move{};
+    return Move{true};
 
   // internal feature -> null-move
   if(str == s_nullmove)
   {
-    return Move{};
+    return Move{true};
   }
 
   Figure::Type type = Figure::Type::TypePawn;
@@ -118,7 +118,7 @@ Move parseSAN(const Board & board, std::string const& str)
     // should be at least 2 chars
     size_t n = std::string(s).length();
     if(n < 2)
-      return Move{};
+      return Move{true};
 
     if(isdigit(s[0]) && (iscolumn(s[1]) || 'x' == s[1])) // from row number
     {
@@ -145,7 +145,7 @@ Move parseSAN(const Board & board, std::string const& str)
 
     n = std::string(s).length();
     if(!*s || !iscolumn(s[0]) || n < 2)
-      return Move{};
+      return Move{true};
 
     to = (s[0] - 'a') | ((s[1] - '1') << 3);
     s += 2;
@@ -156,15 +156,15 @@ Move parseSAN(const Board & board, std::string const& str)
       if('=' == s[0])
       {
         if(n < 2)
-          return Move{};
+          return Move{true};
         s++;
         n = std::string(s).length();
       }
       if(n < 1)
-        return Move{};
+        return Move{true};
       new_type = Figure::toFtype(s[0]);
       if(new_type < Figure::Type::TypeKnight || new_type > Figure::Type::TypeQueen)
-        return Move{};
+        return Move{true};
       s++;
       n = std::string(s).length();
     }
@@ -176,7 +176,7 @@ Move parseSAN(const Board & board, std::string const& str)
   }
 
   if(to < 0)
-    return Move{};
+    return Move{true};
 
   if(xfrom >= 0 && yfrom >= 0)
     from = xfrom | (yfrom << 3);
@@ -200,7 +200,7 @@ Move parseSAN(const Board & board, std::string const& str)
       return m;
     }
   }
-  return Move{};
+  return Move{true};
 }
 
 std::string printSAN(Board & board, const Move & move)
@@ -370,22 +370,22 @@ std::string moveToStr(const Move & move, bool wbf)
 Move strToMove(std::string const& str, const Board & board)
 {
   if(str.empty())
-    return Move{};
+    return Move{true};
 
   eMoveNotation mnot = detectNotation(str);
   if(mnot == eMoveNotation::mnUnknown)
-    return Move{};
+    return Move{true};
   else if(mnot == eMoveNotation::mnSAN)
     return parseSAN(board, str);
 
   if(str.size() < 4)
-    return Move{};
+    return Move{true};
 
   Figure::Color color = board.color();
   Figure::Color ocolor = Figure::otherColor(color);
 
   if(!iscolumn(str[0]) || !isdigit(str[1]) && !iscolumn(str[2]) && !isdigit(str[3]))
-    return Move{};
+    return Move{true};
 
   int xfrom = str[0] - 'a';
   int yfrom = str[1] - '1';
@@ -411,10 +411,10 @@ Move strToMove(std::string const& str, const Board & board)
 
   const Field & ffrom = board.getField(from);
   if(!ffrom || ffrom.color() != color)
-    return Move{};
+    return Move{true};
 
   SMove move{ from, to, new_type };
-  return board.possibleMove(move) ? move : Move{};
+  return board.possibleMove(move) ? move : Move{true};
 }
 
 
