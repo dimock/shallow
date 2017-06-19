@@ -261,7 +261,7 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
       board.verifyState();
     }
     else
-      sres.best_ = {true};
+      sres.best_ = NEngine::Move{true};
   }
   thinking_ = false;
 

@@ -299,8 +299,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       break;
 
     auto& move = *pmove;
-    if(!scontexts_[ictx].board_.validateMove(move))
-      continue;
+    X_ASSERT(!scontexts_[ictx].board_.validateMove(move), "invalid move got from generator");
 
     ScoreType score = -ScoreMax;
 
@@ -387,8 +386,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       break;
 
     auto& move = *pmove;
-    if(!scontexts_[ictx].board_.validateMove(move))
-      continue;
+    X_ASSERT(!scontexts_[ictx].board_.validateMove(move), "invalid move got from generator");
 
     if((!scontexts_[ictx].board_.underCheck() || counter > 0) && !scontexts_[ictx].board_.see(move, threshold))
       continue;

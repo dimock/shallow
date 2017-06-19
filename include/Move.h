@@ -12,7 +12,7 @@ struct Move
 
   Move() = default;
 
-  Move(bool) : mask{0} {}
+  explicit Move(bool) : mask{0} {}
 
   Move(int f, int t, Figure::Type n)
   {

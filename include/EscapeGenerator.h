@@ -323,11 +323,12 @@ struct EscapeGenerator
     }
     if(order_ == oCaps)
     {
-      if(iter_ != caps_.end())
+      while(iter_ != caps_.end())
       {
         auto* move = &*iter_;
         ++iter_;
-        return move;
+        if(board_.validateMove(*move))
+          return move;
       }
       order_ = oGenUsual;
     }
@@ -341,11 +342,12 @@ struct EscapeGenerator
     }
     if(order_ == oUsual)
     {
-      if(iter_ != usual_.end())
+      while(iter_ != usual_.end())
       {
         auto* move = &*iter_;
         ++iter_;
-        return move;
+        if(board_.validateMove(*move))
+          return move;
       }
     }
     return nullptr;

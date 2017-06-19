@@ -172,9 +172,9 @@ xlist<MOVE, NUM> generate(BOARD const& board)
 template <class BOARD, class MOVE>
 struct FastGenerator
 {
-  using MovesList = xlist<MOVE, BOARD::MovesMax>;
+  using MovesList = xlist<MOVE, NumOfFields>;
 
-  enum Order { oEscape, oGenCaps, oCaps, oGenUsual, oUsual } order_{};
+  enum Order { oEscape, oGenCaps, oCaps, oGenUsual, oUsual, oWeak } order_{};
 
   FastGenerator(BOARD const& board) :
     board_(board),
@@ -209,8 +209,9 @@ struct FastGenerator
     }
     if(order_ == oUsual)
     {
-      auto* move = ug_.next();
-      return move;
+      if(auto* move = ug_.next())
+        return move;
+      order_ = oWeak;
     }
     return nullptr;
   }
@@ -218,6 +219,7 @@ struct FastGenerator
   CapsGenerator<BOARD, MOVE> cg_;
   UsualGenerator<BOARD, MOVE> ug_;
   EscapeGenerator<BOARD, MOVE> eg_;
+  MovesList weak_;
   BOARD const& board_;
 };
 

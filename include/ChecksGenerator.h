@@ -23,11 +23,12 @@ struct ChecksGenerator
 
   MOVE* next()
   {
-    if(iter_ != moves_.end())
+    while(iter_ != moves_.end())
     {
       auto* move = &*iter_;
       ++iter_;
-      return move;
+      if(board_.validateMove(*move))
+        return move;
     }
     return nullptr;
   }

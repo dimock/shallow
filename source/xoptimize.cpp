@@ -23,8 +23,7 @@ void xcaptures(Board& board, int depth)
       if(!pmove)
         break;
       auto& move = *pmove;
-      if(!board.validateMove(move))
-        continue;
+      X_ASSERT(!board.validateMove(move), "invalid move");
       board.see(move, 0);
       //Board brd{ board };
       //std::string fen = toFEN(board);
@@ -59,8 +58,7 @@ void xsearch(Board& board, int depth)
       if(!pmove)
         break;
       auto& move = *pmove;
-      if(!board.validateMove(move))
-        continue;
+      X_ASSERT(!board.validateMove(move), "invalid move");
       board.see(move, 0);
       //std::string fen = toFEN(board);
       //Board brd{ board };
