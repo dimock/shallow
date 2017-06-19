@@ -370,58 +370,7 @@ struct Board
     return ((r_moves & through) && (r_moves & (r_mask | q_mask)));
   }
 
-  int see(Move const& move) const;
-
-  // find 1st figure on the whole semi-line given by direction 'from' -> 'to'
-  // mask gives all interesting figures
-  inline int find_first_index(int from, int to, const BitMask & mask) const
-  {
-    BitMask mask_from = mask & betweenMasks().from(from, to);
-    if(!mask_from)
-      return -1;
-
-    int index = from < to ? _lsb64(mask_from) : _msb64(mask_from);
-    return index;
-  }
-
-  // detect discovered check to king of 'kc' color
-  inline bool see_check(Figure::Color kc, uint8 from, uint8 ki_pos, const BitMask & all_mask_inv, const BitMask & a_brq_mask) const
-  {
-    // we need to verify if there is some attacker on line to king
-    const BitMask & from_msk = betweenMasks().from(ki_pos, from);
-
-    // no attachers at all
-    if(!(a_brq_mask & from_msk))
-      return false;
-
-    // is there some figure between king and field that we move from
-    BitMask all_mask_inv2 = (all_mask_inv | set_mask_bit(from));
-
-    if(is_something_between(ki_pos, from, all_mask_inv2))
-      return false;
-
-    int index = find_first_index(ki_pos, from, ~all_mask_inv2);
-    if(index < 0)
-      return false;
-
-    const Field & field = getField(index);
-
-    // figure is the same color as king
-    if(field.color() == kc)
-      return false;
-
-    // figure have to be in updated BRQ mask
-    if(!(set_mask_bit(index) & a_brq_mask))
-      return false;
-
-    X_ASSERT(field.type() < Figure::TypeBishop || field.type() > Figure::TypeQueen, "see: not appropriate attacker type");
-
-    // could figure attack king from it's position
-    if(figureDir().dir(field.type(), field.color(), index, ki_pos) >= 0)
-      return true;
-
-    return false;
-  }
+  bool see(Move const& move, int threshold) const;
 
   bool possibleMove(const Move & move) const;
   Move extractKiller(const Move & ki, const Move & hmove) const

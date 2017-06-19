@@ -22,7 +22,7 @@ struct SeeCalc
   BitMask all_mask_;
   Figure::Color color_;
   bool promotion_;
-  bool king_only_;
+  bool discovered_check_;
 
   SeeCalc(Board const& board, Move const& move) :
     board_(board),
@@ -33,8 +33,8 @@ struct SeeCalc
     color_ = board_.getField(move_.from()).color();
     X_ASSERT((all_mask_ & set_mask_bit(move_.from())) == 0ULL, "no figure on field move.from");
     X_ASSERT(discovered_check(move_.from(), Figure::otherColor(color_), board_.kingPos(color_)), "SEE move is illegal");
-    king_only_ = discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
-    if(king_only_)
+    discovered_check_ = discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
+    if(discovered_check_)
       return;
     all_mask_ ^= set_mask_bit(move_.from());
     promotion_ = (move_.to() >> 3) == 0 || (move_.to() >> 3) == 7;
@@ -42,7 +42,7 @@ struct SeeCalc
 
   inline bool next(Figure::Color color, int& from, int& score)
   {
-    return (!king_only_ && move_figure(color, from, score)) || move_king(color, from, score);
+    return (!discovered_check_ && move_figure(color, from, score)) || move_king(color, from, score);
   }
 
   inline bool move_figure(Figure::Color color, int& from, int& score)
@@ -167,18 +167,20 @@ struct SeeCalc
 
 } // end of namespace {} for SeeCalc
 
-int Board::see(const Move & move) const
+bool Board::see(const Move & move, int threshold) const
 {
   X_ASSERT(data_.state_ == Invalid, "try to SEE invalid board");
 
   const auto& ffield = getField(move.from());
   const auto& tfield = getField(move.to());
+  bool en_passant{ false };
 
   if(tfield.type())
   {
     // victim >= attacker
-    if(Figure::figureWeight_[tfield.type()] >= Figure::figureWeight_[ffield.type()])
-      return Figure::figureWeight_[tfield.type()] - Figure::figureWeight_[ffield.type()];
+    int tgain = Figure::figureWeight_[tfield.type()] - Figure::figureWeight_[ffield.type()];
+    if(tgain >= threshold)
+      return true;
   }
   // en-passant
   else if(!tfield && ffield.type() == Figure::TypePawn && move.to() > 0 && move.to() == enpassant())
@@ -186,23 +188,32 @@ int Board::see(const Move & move) const
     X_ASSERT(getField(enpassantPos()).type() != Figure::TypePawn
               || getField(enpassantPos()).color() == color(),
               "no en-passant pawn");
-    return 0;
+    if(Figure::figureWeight_[Figure::TypePawn] >= threshold)
+      return true;
+    en_passant = true;
   }
   // promotion with capture
   else if(tfield && (ffield.type() == Figure::TypePawn) && ((move.to() >> 3) == 0 || (move.to() >> 3) == 7))
   {
-    return Figure::figureWeight_[tfield.type()]-Figure::figureWeight_[Figure::TypePawn];
+    return true;
   }
 
-  int score_gain = (tfield) ? Figure::figureWeight_[tfield.type()] : 0;
-  int fscore = -Figure::figureWeight_[ffield.type()];
-
-  auto color = Figure::otherColor(ffield.color());
   SeeCalc see_calc(*this, move);
 
   // assume discovered check is always good
-  if(see_calc.king_only_)
-    return 0;
+  if(see_calc.discovered_check_)
+    return true;
+
+  if(en_passant)
+    return Figure::figureWeight_[Figure::TypePawn] >= threshold;
+
+  int score_gain = (tfield) ? Figure::figureWeight_[tfield.type()] : 0;
+  if(score_gain < threshold)
+    return false;
+
+  int fscore = -Figure::figureWeight_[ffield.type()];
+
+  auto color = Figure::otherColor(ffield.color());
 
   for(;;)
   {
@@ -211,28 +222,31 @@ int Board::see(const Move & move) const
     if(!see_calc.next(color, from, score))
       break;
     auto ocolor = Figure::otherColor(color);
-    see_calc.king_only_ = see_calc.discovered_check(from, color, kingPos(ocolor));
+    see_calc.discovered_check_ = see_calc.discovered_check(from, color, kingPos(ocolor));
     // assume this move is good if it was mine and I discover check
-    if(see_calc.king_only_ && color == see_calc.color_)
-      return 0;
+    if(see_calc.discovered_check_ && color == see_calc.color_)
+      return true;
     score_gain += fscore;
     // king's move always last
     if(score == 0)
       break;
     // already winner even if loose last moved figure
-    if(score_gain + score >= 0 && color == see_calc.color_)
-      return score_gain + score;
-    // could not gain something or already winner
-    if((score_gain < 0 && color == see_calc.color_)
-        || (score_gain >= 0 && color != see_calc.color_))
-    {
-      return score_gain;
-    }
+    if(score_gain + score >= threshold && color == see_calc.color_)
+      return true;
+    // loose even if take last moved figure
+    if(score_gain + score < threshold && color != see_calc.color_)
+      return false;
+    // could not gain something
+    if(score_gain < threshold && color == see_calc.color_)
+      return false;
+    // already winner
+    if(score_gain >= threshold && color != see_calc.color_)
+      return true;
     fscore = score;
     color = ocolor;
   }
 
-  return score_gain;
+  return score_gain >= threshold;
 }
 
 

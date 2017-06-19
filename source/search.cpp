@@ -359,6 +359,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
+  int threshold = 0;
 
   if(!scontexts_[ictx].board_.underCheck())
   {
@@ -369,6 +370,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if(score0 >= betta)
       return score0;
 
+    threshold = (int)alpha - (int)score0 - Position_Gain;
     if(score0 > alpha)
       alpha = score0;
 
@@ -388,7 +390,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if(!scontexts_[ictx].board_.validateMove(move))
       continue;
 
-    if(scontexts_[ictx].board_.see(move) < 0)
+    if((!scontexts_[ictx].board_.underCheck() || counter > 0) && !scontexts_[ictx].board_.see(move, threshold))
       continue;
 
     ScoreType score = -ScoreMax;

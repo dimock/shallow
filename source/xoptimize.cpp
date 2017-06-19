@@ -25,7 +25,7 @@ void xcaptures(Board& board, int depth)
       auto& move = *pmove;
       if(!board.validateMove(move))
         continue;
-      //board.see(move);
+      board.see(move, 0);
       //Board brd{ board };
       //std::string fen = toFEN(board);
       board.makeMove(move);
@@ -61,7 +61,7 @@ void xsearch(Board& board, int depth)
       auto& move = *pmove;
       if(!board.validateMove(move))
         continue;
-      //board.see(move);
+      board.see(move, 0);
       //std::string fen = toFEN(board);
       //Board brd{ board };
 

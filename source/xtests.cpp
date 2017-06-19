@@ -62,7 +62,7 @@ void testSee(std::string const& ffname)
     {
       for(auto const& move : epd.moves_)
       {
-        auto v= epd.board_.see(move);
+        auto v= epd.board_.see(move, 0);
         std::cout << i << ": "
           << toFEN(epd.board_) << "  "
           << printSAN(epd.board_, move)
@@ -86,7 +86,7 @@ void see_perf_test(std::string const& fname)
     {
       for(auto& move : epd.moves_)
       {
-        x += epd.board_.see(move);
+        x += epd.board_.see(move, 0);
       }
     }
   };
@@ -97,7 +97,7 @@ void see_perf_test(std::string const& fname)
     {
       for(auto& move : epd.moves_)
       {
-        x += epd.board_.see(move);
+        x += epd.board_.see(move, 0);
       }
     }
   };
