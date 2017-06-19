@@ -188,7 +188,7 @@ struct FastGenerator
   {
     if(order_ == oEscape)
     {
-      return eg_.next();
+      return eg_.next_see();
     }
     if(order_ == oGenCaps)
     {
@@ -197,9 +197,12 @@ struct FastGenerator
     }
     if(order_ == oCaps)
     {
-      auto* move = cg_.next();
-      if(move)
-        return move;
+      while(auto* move = cg_.next())
+      {
+        if(board_.see(*move, 0))
+          return move;
+        weak_.push_back(*move);
+      }
       order_ = oGenUsual;
     }
     if(order_ == oGenUsual)
@@ -212,6 +215,17 @@ struct FastGenerator
       if(auto* move = ug_.next())
         return move;
       order_ = oWeak;
+      iter_ = weak_.begin();
+    }
+    if(order_ == oWeak)
+    {
+      while(iter_ != weak_.end())
+      {
+        auto* move = &*iter_;
+        ++iter_;
+        X_ASSERT(!board_.validateMove(*move), "invalid weak move");
+        return move;
+      }
     }
     return nullptr;
   }
@@ -220,6 +234,7 @@ struct FastGenerator
   UsualGenerator<BOARD, MOVE> ug_;
   EscapeGenerator<BOARD, MOVE> eg_;
   MovesList weak_;
+  typename MovesList::iterator iter_;
   BOARD const& board_;
 };
 

@@ -12,7 +12,7 @@ struct EscapeGenerator
 {
   using MovesList = xlist<MOVE, NumOfFields>;
 
-  enum Order { oGenCaps, oCaps, oGenUsual, oUsual } order_{};
+  enum Order { oGenCaps, oCaps, oGenUsual, oUsual, oWeak } order_{};
 
   EscapeGenerator(BOARD const& board) :
     board_(board)
@@ -353,9 +353,68 @@ struct EscapeGenerator
     return nullptr;
   }
 
+  MOVE* next_see()
+  {
+    if(order_ == oGenCaps)
+    {
+      if(!board_.doubleCheck())
+        generateCaps();
+      generateKingCaps();
+      order_ = oCaps;
+      iter_ = caps_.begin();
+    }
+    if(order_ == oCaps)
+    {
+      while(iter_ != caps_.end())
+      {
+        auto* move = &*iter_;
+        ++iter_;
+        if(board_.validateMove(*move))
+        {
+          if(board_.see(*move, 0))
+            return move;
+          weak_.push_back(*move);
+        }
+      }
+      order_ = oGenUsual;
+    }
+    if(order_ == oGenUsual)
+    {
+      if(!board_.doubleCheck())
+        generateUsual();
+      generateKingUsual();
+      order_ = oUsual;
+      iter_ = usual_.begin();
+    }
+    if(order_ == oUsual)
+    {
+      while(iter_ != usual_.end())
+      {
+        auto* move = &*iter_;
+        ++iter_;
+        if(board_.validateMove(*move))
+          return move;
+      }
+      order_ = oWeak;
+      iter_ = weak_.begin();
+    }
+    if(order_ == oWeak)
+    {
+      while(iter_ != weak_.end())
+      {
+        auto* move = &*iter_;
+        ++iter_;
+        X_ASSERT(!board_.validateMove(*move), "invalid weak move");
+        return move;
+      }
+    }
+    return nullptr;
+  }
+
   BOARD const& board_;
   MovesList caps_;
   MovesList usual_;
+  MovesList weak_;
   typename MovesList::iterator iter_;
   BitMask protect_king_msk_;
   BitMask mask_all;
