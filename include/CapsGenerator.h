@@ -3,6 +3,7 @@
 #include <xcommon.h>
 #include <xlist.h>
 #include <Board.h>
+#include <xalgorithm.h>
 
 namespace NEngine
 {
@@ -18,7 +19,9 @@ struct CapsGenerator
 
   inline void add(int from, int to, Figure::Type new_type)
   {
-    moves_.emplace_back(from, to, new_type);
+    //moves_.emplace_back(from, to, new_type);
+    //moves_.back().sort_value = board_.sortValueOfCap(from, to, new_type);
+    insert_sorted(moves_, MOVE{ from, to, new_type, board_.sortValueOfCap(from, to, new_type) });
   }
 
   MOVE* next()
@@ -30,6 +33,17 @@ struct CapsGenerator
       if(board_.validateMove(*move))
         return move;
     }
+
+    //for(;;)
+    //{
+    //  auto it = std::max_element(moves_.begin(), moves_.end());
+    //  if(it == moves_.end())
+    //    break;
+    //  auto* move = &*it;
+    //  moves_.erase(it);
+    //  if(board_.validateMove(*move))
+    //    return move;
+    //}
     return nullptr;
   }
 

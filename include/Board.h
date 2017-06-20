@@ -435,6 +435,31 @@ struct Board
     else
       data_.state_ |= State::Stalemat;
   }
+  
+  inline SortValueType sortValueOfCap(int from, int to, Figure::Type new_type) const
+  {
+    const auto& fto   = getField(to);
+    const auto& ffrom = getField(from);
+    X_ASSERT(fto.type() != Figure::TypeNone && fto.color() != Figure::otherColor(color()), "invalid color of captured figure");
+    X_ASSERT(!ffrom, "no moving figure");
+    // en-passant case
+    if(ffrom.type() == Figure::TypePawn && to > 0 && to == enpassant())
+    {
+      X_ASSERT(fto.type() != Figure::TypeNone, "en-passant field is occupied");
+      X_ASSERT(getField(enpassantPos()).type() != Figure::TypePawn ||
+               getField(enpassantPos()).color() == color(), "no en-passant pawn");
+      return CaptureRecentlyBonus;
+    }
+    // MVV LVA
+    SortValueType sort_value = (Figure::figureWeight_[fto.type()] << 1) - Figure::figureWeight_[ffrom.type()];
+    // + promotion
+    if(new_type)
+      sort_value += Figure::figureWeight_[new_type];
+    // at first we try to eat recently moved opponent's figure
+    if(halfmovesCount() > 0 && lastUndo().move_.to() == to)
+      sort_value += CaptureRecentlyBonus;
+    return sort_value;
+  }
 
 private:
   // for initialization only

@@ -6,6 +6,7 @@
 #include <xprotocol.h>
 #include <magicbb.h>
 #include <xtests.h>
+#include <xlist.h>
 
 
 int main(int argn, char *argv[])

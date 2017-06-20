@@ -43,7 +43,7 @@ struct Move
 
 struct SMove : public Move
 {
-  int16  sort_value;
+  SortValueType  sort_value;
 
   SMove() = default;
 
@@ -51,6 +51,12 @@ struct SMove : public Move
 
   SMove(int f, int t, Figure::Type n) :
     Move(f, t, n)
+  {
+  }
+
+  SMove(int f, int t, Figure::Type n, SortValueType s) :
+    Move(f, t, n),
+    sort_value(s)
   {
   }
 
@@ -63,6 +69,7 @@ struct SMove : public Move
   {
     return sort_value < m.sort_value;
   }
+
   inline bool operator > (SMove const& m) const
   {
     return sort_value > m.sort_value;

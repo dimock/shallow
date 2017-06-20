@@ -51,8 +51,9 @@ using uint32  = std::uint32_t;
 using int64   = std::int64_t;
 using uint64  = std::uint64_t;
 
-using ScoreType = int16;
-using BitMask   = uint64;
+using ScoreType     = int16;
+using BitMask       = uint64;
+using SortValueType = int16;
 
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
 
@@ -103,6 +104,8 @@ namespace nst
 #define VERIFY_LMR
 #define SINGULAR_EXT
 #undef USE_PROBCUT
+
+static const SortValueType CaptureRecentlyBonus = 10;
 
 static const int ONE_PLY = 20;
 static const int MaxPly = 64;

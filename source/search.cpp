@@ -291,7 +291,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   Move best{true};
   int counter{};
 
-  FastGenerator<Board, Move> fg(scontexts_[ictx].board_);
+  FastGenerator<Board, SMove> fg(scontexts_[ictx].board_);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = fg.next();
@@ -378,7 +378,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   Move best{true};
 
-  TacticalGenerator<Board, Move> tg(scontexts_[ictx].board_, depth);
+  TacticalGenerator<Board, SMove> tg(scontexts_[ictx].board_, depth);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.next();

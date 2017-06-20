@@ -3,6 +3,7 @@
 #include <xcommon.h>
 #include <xlist.h>
 #include <Board.h>
+#include <xalgorithm.h>
 
 namespace NEngine
 {
@@ -26,6 +27,7 @@ struct EscapeGenerator
   inline void add_caps(int from, int to, Figure::Type new_type)
   {
     caps_.emplace_back(from, to, new_type);
+//    insert_sorted(caps_, MOVE{ from, to, new_type, board_.sortValueOfCap(from, to, new_type) });
   }
 
   inline void add_usual(int from, int to)
