@@ -171,8 +171,10 @@ int Engine::depthIncrement(int ictx, Move const & move, bool pv) const
     auto const& prev = scontexts_[ictx].board_.reverseUndo(1);
     auto const& curr = scontexts_[ictx].board_.lastUndo();
 
-    if(scontexts_[ictx].board_.getField(move.to()) && (prev.move_.to() == curr.move_.to() || curr.enpassant() == curr.move_.to()))
+    if(prev.move_.to() == curr.move_.to() && prev.eaten_type_ > 0)
+    {
       return depthInc + ONE_PLY;
+    }
   }
 
   return depthInc;
@@ -212,7 +214,7 @@ ScoreType Engine::alphaBetta0()
     scontexts_[0].board_.makeMove(move);
     sdata_.inc_nc();
 
-    int depthInc = (scontexts_[0].board_.underCheck()) ? ONE_PLY : 0;
+    int depthInc = scontexts_[0].board_.underCheck() ? ONE_PLY : 0;
     if(!stopped())
       score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
 
@@ -306,7 +308,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     scontexts_[ictx].board_.makeMove(move);
     sdata_.inc_nc();
 
-    int depthInc = (scontexts_[0].board_.underCheck()) ? ONE_PLY : 0;
+    int depthInc = scontexts_[0].board_.underCheck() ? ONE_PLY : 0;
     score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
 
     scontexts_[ictx].board_.unmakeMove(move);

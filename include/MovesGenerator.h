@@ -200,7 +200,10 @@ struct FastGenerator
       while(auto* move = cg_.next())
       {
         if(board_.see(*move, 0))
+        {
+          move->set_ok();
           return move;
+        }
         weak_.push_back(*move);
       }
       order_ = oGenUsual;

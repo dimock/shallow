@@ -26,8 +26,8 @@ struct EscapeGenerator
 
   inline void add_caps(int from, int to, Figure::Type new_type)
   {
-    caps_.emplace_back(from, to, new_type);
-//    insert_sorted(caps_, MOVE{ from, to, new_type, board_.sortValueOfCap(from, to, new_type) });
+//    caps_.emplace_back(from, to, new_type);
+    insert_sorted(caps_, MOVE{ from, to, new_type, board_.sortValueOfCap(from, to, new_type) });
   }
 
   inline void add_usual(int from, int to)
@@ -374,7 +374,10 @@ struct EscapeGenerator
         if(board_.validateMove(*move))
         {
           if(board_.see(*move, 0))
+          {
+            move->set_ok();
             return move;
+          }
           weak_.push_back(*move);
         }
       }
