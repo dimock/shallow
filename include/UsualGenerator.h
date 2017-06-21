@@ -3,6 +3,8 @@
 #include <xcommon.h>
 #include <xlist.h>
 #include <Board.h>
+#include <History.h>
+#include <xalgorithm.h>
 
 namespace NEngine
 {
@@ -25,12 +27,26 @@ struct UsualGenerator
       if(board_.validateMove(*move))
         return move;
     }
+
+
+    //for(;;)
+    //{
+    //  auto it = std::max_element(moves_.begin(), moves_.end());
+    //  if(it == moves_.end())
+    //    break;
+    //  auto* move = &*it;
+    //  moves_.erase(it);
+    //  if(board_.validateMove(*move))
+    //    return move;
+    //}
     return nullptr;
   }
 
   inline void add(int from, int to)
   {
-    moves_.emplace_back(from, to);
+    //moves_.emplace_back(from, to);
+    //moves_.back().sort_value = history(board_.color(), from, to).score();
+    insert_sorted(moves_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
   }
 
   inline void generate(int type, Figure::Color color, BitMask const& mask_all_inv)

@@ -8,6 +8,7 @@
 #include "Evaluator.h"
 #include <algorithm>
 #include <Helpers.h>
+#include <History.h>
 
 namespace NEngine
 {
@@ -272,13 +273,15 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(alpha >= Figure::MatScore-ply)
     return alpha;
 
+  auto& board = scontexts_[ictx].board_;
+
   if(ply < MaxPly-1)
   {
     scontexts_[ictx].plystack_[ply].clear(ply);
     scontexts_[ictx].plystack_[ply+1].clearKiller();
   }
 
-  if(scontexts_[ictx].board_.drawState() || scontexts_[ictx].board_.hasReps())
+  if(board.drawState() || board.hasReps())
     return Figure::DrawScore;
 
   if(stopped() || ply >= MaxPly)
@@ -293,7 +296,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   Move best{true};
   int counter{};
 
-  FastGenerator<Board, SMove> fg(scontexts_[ictx].board_);
+  FastGenerator<Board, SMove> fg(board);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = fg.next();
@@ -301,31 +304,35 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       break;
 
     auto& move = *pmove;
-    X_ASSERT(!scontexts_[ictx].board_.validateMove(move), "invalid move got from generator");
+    X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
     ScoreType score = -ScoreMax;
 
-    scontexts_[ictx].board_.makeMove(move);
+    board.makeMove(move);
     sdata_.inc_nc();
 
-    int depthInc = scontexts_[0].board_.underCheck() ? ONE_PLY : 0;
+    int depthInc = board.underCheck() ? ONE_PLY : 0;
     score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
 
-    scontexts_[ictx].board_.unmakeMove(move);
+    board.unmakeMove(move);
 
     if(!stopped())
     {
+      auto& hist = history(board.color(), move.from(), move.to());
       if(score > scoreBest)
       {
+        hist.inc_good();
         best = move;
         scoreBest = score;
         if(score > alpha)
         {
           alpha = score;
           if(pv)
-            assemblePV(ictx, move, scontexts_[ictx].board_.underCheck(), ply);
+            assemblePV(ictx, move, board.underCheck(), ply);
         }
       }
+      else
+        hist.inc_bad();
     }
 
     ++counter;
@@ -336,10 +343,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   if(!counter)
   {
-    scontexts_[ictx].board_.setNoMoves();
+    board.setNoMoves();
     scoreBest = scontexts_[ictx].eval_(alpha, betta);
-    if(scontexts_[ictx].board_.matState())
+    if(board.matState())
       scoreBest += ply;
+  }
+
+  if(best)
+  {
+    auto& hist = history(board.color(), best.from(), best.to());
+    hist.inc_score(depth / ONE_PLY);
   }
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -352,7 +365,9 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   if(alpha >= Figure::MatScore-ply)
     return alpha;
 
-  if(scontexts_[ictx].board_.drawState() || scontexts_[ictx].board_.hasReps())
+  auto& board = scontexts_[ictx].board_;
+
+  if(board.drawState() || board.hasReps())
     return Figure::DrawScore;
 
   if(stopped() || ply >= MaxPly)
@@ -362,7 +377,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   ScoreType scoreBest = -ScoreMax;
   int threshold = 0;
 
-  if(!scontexts_[ictx].board_.underCheck())
+  if(!board.underCheck())
   {
     // not initialized yet
     if(score0 == -ScoreMax)
@@ -380,7 +395,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   Move best{true};
 
-  TacticalGenerator<Board, SMove> tg(scontexts_[ictx].board_, depth);
+  TacticalGenerator<Board, SMove> tg(board, depth);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.next();
@@ -388,20 +403,20 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       break;
 
     auto& move = *pmove;
-    X_ASSERT(!scontexts_[ictx].board_.validateMove(move), "invalid move got from generator");
+    X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
-    if((!scontexts_[ictx].board_.underCheck() || counter > 0) && !scontexts_[ictx].board_.see(move, threshold))
+    if((!board.underCheck() || counter > 0) && !board.see(move, threshold))
       continue;
 
     ScoreType score = -ScoreMax;
 
-    scontexts_[ictx].board_.makeMove(move);
+    board.makeMove(move);
     sdata_.inc_nc();
 
-    int depthInc = (scontexts_[0].board_.underCheck()) ? ONE_PLY : 0;
+    int depthInc = board.underCheck() ? ONE_PLY : 0;
     score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax);
 
-    scontexts_[ictx].board_.unmakeMove(move);
+    board.unmakeMove(move);
 
     if(!stopped() && score > scoreBest)
     {
@@ -420,7 +435,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   if(!counter)
   {
-    if(scontexts_[ictx].board_.underCheck())
+    if(board.underCheck())
       scoreBest = -Figure::MatScore+ply;
     else
       scoreBest = score0;

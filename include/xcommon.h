@@ -53,7 +53,7 @@ using uint64  = std::uint64_t;
 
 using ScoreType     = int16;
 using BitMask       = uint64;
-using SortValueType = int16;
+using SortValueType = int32;
 
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
 

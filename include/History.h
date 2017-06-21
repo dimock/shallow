@@ -16,10 +16,9 @@ struct History
     bad_count_ = 0;
   }
 
-  unsigned score() const
+  SortValueType score() const
   {
-    //return score_;//((unsigned long long)score_ * good_count_) / (bad_count_ + good_count_ + 1);//
-    return mul_div(score_, good_count_, bad_count_);
+    return (((int64)score_ * good_count_) / (bad_count_ + good_count_ + 1));
   }
 
   void normalize(int n)
@@ -57,8 +56,6 @@ struct History
 
   void inc_score(int ds)
   {
-    if(ds < 1)
-      ds = 1;
     score_ += ds;
   }
 
@@ -73,6 +70,7 @@ extern History history_[2][NumOfFields][NumOfFields];
 
 void normalize_history(int n);
 void clear_history();
+void max_history();
 void save_history(std::string const& fname);
 void load_history(std::string const& fname);
 

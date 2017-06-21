@@ -32,7 +32,8 @@ struct EscapeGenerator
 
   inline void add_usual(int from, int to)
   {
-    usual_.emplace_back(from, to);
+//    usual_.emplace_back(from, to);
+    insert_sorted(usual_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
   }
 
   inline void generateCaps()
