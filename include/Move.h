@@ -39,6 +39,11 @@ struct Move
   {
     return (mask & (~(1<<15))) == (m.mask & (~(1<<15)));
   }
+
+  inline bool operator != (Move const& m) const
+  {
+    return (mask & (~(1<<15))) != (m.mask & (~(1<<15)));
+  }
 };
 
 struct SMove : public Move
@@ -70,7 +75,17 @@ struct SMove : public Move
     return sort_value < m.sort_value;
   }
 
+  inline bool operator <= (SMove const& m) const
+  {
+    return sort_value <= m.sort_value;
+  }
+
   inline bool operator > (SMove const& m) const
+  {
+    return sort_value > m.sort_value;
+  }
+
+  inline bool operator >= (SMove const& m) const
   {
     return sort_value > m.sort_value;
   }

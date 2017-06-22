@@ -330,6 +330,7 @@ namespace NEngine
   {
     X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
+#if 1
     if(board_->matState())
     {
       return -Figure::MatScore;
@@ -341,43 +342,44 @@ namespace NEngine
 
     return considerColor(board_->fmgr().weight());
 
+#else
+    if(ehash_)
+      ehash_->prefetch(board_->fmgr().pawnCode());
 
-    //if(ehash_)
-    //  ehash_->prefetch(board_->fmgr().pawnCode());
+    if(board_->matState())
+    {
+      return -Figure::MatScore;
+    }
+    else if(board_->drawState())
+    {
+      return Figure::DrawScore;
+    }
+    else if(auto spec = specialCases().eval(*board_))
+    {
+      ScoreType score = *spec;
+      score = considerColor(score);
+      return score;
+    }
 
-    //if(board_->matState())
-    //{
-    //  return -Figure::MatScore;
-    //}
-    //else if(board_->drawState())
-    //{
-    //  return Figure::DrawScore;
-    //}
-    //else if(auto spec = specialCases().eval(*board_))
-    //{
-    //  ScoreType score = *spec;
-    //  score = considerColor(score);
-    //  return score;
-    //}
+    prepare();
 
-    //prepare();
+    // prepare lazy evaluation
+    if(alpha > -Figure::MatScore)
+    {
+      alpha0_ = (int)alpha - lazyThreshold0_;
+      alpha1_ = (int)alpha - lazyThreshold1_;
+    }
 
-    //// prepare lazy evaluation
-    //if(alpha > -Figure::MatScore)
-    //{
-    //  alpha0_ = (int)alpha - lazyThreshold0_;
-    //  alpha1_ = (int)alpha - lazyThreshold1_;
-    //}
+    if(betta < +Figure::MatScore)
+    {
+      betta0_ = (int)betta + lazyThreshold0_;
+      betta1_ = (int)betta + lazyThreshold1_;
+    }
 
-    //if(betta < +Figure::MatScore)
-    //{
-    //  betta0_ = (int)betta + lazyThreshold0_;
-    //  betta1_ = (int)betta + lazyThreshold1_;
-    //}
-
-    //ScoreType score = evaluate();
-    //X_ASSERT(score <= -ScoreMax || score >= ScoreMax, "invalid score");
-    //return score;
+    ScoreType score = evaluate();
+    X_ASSERT(score <= -ScoreMax || score >= ScoreMax, "invalid score");
+    return score;
+#endif
   }
 
   ScoreType Evaluator::evaluate()

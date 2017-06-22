@@ -7,7 +7,8 @@
 #include <magicbb.h>
 #include <xtests.h>
 #include <xlist.h>
-
+#include <xalgorithm.h>
+#include <iomanip>
 
 int main(int argn, char *argv[])
 {
@@ -27,9 +28,6 @@ int main(int argn, char *argv[])
   //}
 
   for(; xpr.doCmd(););
-
-  //std::cout << "xcounter = " << NEngine::Engine::xcounter_ << std::endl;
-  //std::cout << "moves made = " << NEngine::XCounter::count_ << std::endl;
 
 	return 0;
 }

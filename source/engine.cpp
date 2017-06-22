@@ -184,12 +184,11 @@ void Engine::testInput()
 
 void Engine::assemblePV(int ictx, const Move & move, bool checking, int ply)
 {
-  if( /*ply > sdata_.depth_ || */ply >= MaxPly-1)
+  if(ply >= MaxPly-1)
     return;
 
   scontexts_[ictx].plystack_[ply].pv_[ply] = move;
-  //scontexts_[ictx].plystack_[ply].pv_[ply].checkFlag_ = checking;
-  scontexts_[ictx].plystack_[ply].pv_[ply+1] = {};
+  scontexts_[ictx].plystack_[ply].pv_[ply+1] = Move{true};
 
   for(int i = ply+1; i < MaxPly-1; ++i)
   {

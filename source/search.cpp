@@ -9,37 +9,12 @@
 #include <algorithm>
 #include <Helpers.h>
 #include <History.h>
+#include <xalgorithm.h>
 
 namespace NEngine
 {
 
 //////////////////////////////////////////////////////////////////////////
-inline Figure::Type delta2type(int delta)
-{
-  Figure::Type minimalType = Figure::TypePawn;
-
-#ifdef USE_DELTA_PRUNING
-  if ( delta > Figure::figureWeight_[Figure::TypeQueen] )
-    minimalType = Figure::TypeKing;
-  else if ( delta > Figure::figureWeight_[Figure::TypeRook] )
-    minimalType = Figure::TypeQueen;
-  else if ( delta > Figure::figureWeight_[Figure::TypeBishop] )
-    minimalType = Figure::TypeRook;
-  else if ( delta > Figure::figureWeight_[Figure::TypeKnight] )
-    minimalType = Figure::TypeBishop;
-  else if ( delta > Figure::figureWeight_[Figure::TypePawn] )
-    minimalType = Figure::TypeKnight;
-#endif
-
-  return minimalType;
-}
-
-inline int calculateDelta(ScoreType alpha, ScoreType score)
-{
-  int delta = (int)alpha - (int)score - Position_Gain;
-  return delta;
-}
-
 bool Engine::search(SearchResult& sres)
 {
 #ifdef USE_HASH
@@ -187,22 +162,16 @@ ScoreType Engine::alphaBetta0()
   if(stopped())
     return scontexts_[0].eval_(-ScoreMax, +ScoreMax);
 
+  auto& board = scontexts_[0].board_;
   if(sdata_.numOfMoves_ == 0)
   {
-    scontexts_[0].board_.setNoMoves();
+    board.setNoMoves();
     ScoreType score = scontexts_[0].eval_(-ScoreMax, +ScoreMax);
     return score;
   }
 
   ScoreType alpha = -ScoreMax;
-  ScoreType betta = +ScoreMax;
   const int depth = sdata_.depth_ * ONE_PLY;
-
-  bool check_escape = scontexts_[0].board_.underCheck();
-  int sortDepth = 4;
-  int numMovesNoReduce = 5;
-
-  const bool bDoSort = sdata_.depth_ <= sortDepth;
 
   for(sdata_.counter_ = 0; sdata_.counter_ < sdata_.numOfMoves_; ++sdata_.counter_)
   {
@@ -212,14 +181,14 @@ ScoreType Engine::alphaBetta0()
     auto& move = scontexts_[0].moves_[sdata_.counter_];
     ScoreType score = -ScoreMax;
 
-    scontexts_[0].board_.makeMove(move);
+    board.makeMove(move);
     sdata_.inc_nc();
 
-    int depthInc = scontexts_[0].board_.underCheck() ? ONE_PLY : 0;
+    int depthInc = board.underCheck() ? ONE_PLY : 0;
     if(!stopped())
-      score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
+      score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -ScoreMax, -alpha, true, true);
 
-    scontexts_[0].board_.unmakeMove(move);
+    board.unmakeMove(move);
 
     if(!stopped())
     {
@@ -228,7 +197,7 @@ ScoreType Engine::alphaBetta0()
       {
         sdata_.best_ = move;
         alpha = score;
-        assemblePV(0, move, scontexts_[0].board_.underCheck(), 0);
+        assemblePV(0, sdata_.best_, board.underCheck(), 0);
       }
     }
 
@@ -242,22 +211,13 @@ ScoreType Engine::alphaBetta0()
 
   if(!stopped())
   {
-    auto iter = scontexts_[0].moves_.begin();
-    std::advance(iter, sdata_.numOfMoves_);
-    std::sort(scontexts_[0].moves_.begin(), iter, [](SMove const& m1, SMove const& m2)
+    if(sdata_.numOfMoves_ > 1)
     {
-      return m1 > m2;
-    });
-    if(!(scontexts_[0].moves_[0] == sdata_.best_))
-    {
-      for(int i = 0; i < sdata_.numOfMoves_; ++i)
-      {
-        if(sdata_.best_ == scontexts_[0].moves_[i])
-        {
-          std::swap(scontexts_[0].moves_[i], scontexts_[0].moves_[0]);
-          break;
-        }
-      }
+      auto* b = scontexts_[0].moves_.data();
+      auto* e = b + sdata_.numOfMoves_;
+      std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
+      if(*b != sdata_.best_)
+        bring_to_front(b, e, sdata_.best_);
     }
     X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
   }
