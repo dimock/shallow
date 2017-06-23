@@ -184,9 +184,25 @@ ScoreType Engine::alphaBetta0()
     board.makeMove(move);
     sdata_.inc_nc();
 
-    int depthInc = board.underCheck() ? ONE_PLY : 0;
+    //int depthInc = depthIncrement(0, move, true);// board.underCheck() ? ONE_PLY : 0;
     if(!stopped())
-      score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -ScoreMax, -alpha, true, true);
+    {
+      if(!sdata_.counter_)
+      {
+        int depthInc = depthIncrement(0, move, true);
+        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -ScoreMax, -alpha, true, true);
+      }
+      else
+      {
+        int depthInc = depthIncrement(0, move, false);
+        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -alpha-1, -alpha, false, true);
+        if(!stopped() && score > alpha)
+        {
+          depthInc = depthIncrement(0, move, true);
+          score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -ScoreMax, -alpha, true, true);
+        }
+      }
+    }
 
     board.unmakeMove(move);
 
@@ -271,8 +287,22 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     board.makeMove(move);
     sdata_.inc_nc();
 
-    int depthInc = board.underCheck() ? ONE_PLY : 0;
-    score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
+    //int depthInc = board.underCheck() ? ONE_PLY : 0;
+    if(!counter)
+    {
+      int depthInc = depthIncrement(ictx, move, pv);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
+    }
+    else
+    {
+      int depthInc = depthIncrement(ictx, move, false);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -alpha-1, -alpha, false, true);
+      if(!stopped() && score > alpha && score < betta && pv)
+      {
+        depthInc = depthIncrement(0, move, pv);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
+      }
+    }
 
     board.unmakeMove(move);
 
