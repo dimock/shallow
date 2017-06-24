@@ -120,11 +120,11 @@ bool Board::hasReps(const Move & move) const
 
   // capture or pawn movement
   if(ffrom.type() == Figure::TypePawn || fto)
-    return 0;
+    return false;
 
   // castle
   if(ffrom.type() == Figure::TypeKing && castling(color()))
-    return 0;
+    return false;
 
   // 1st rook movement
   if(ffrom.type() == Figure::TypeRook)
@@ -132,7 +132,7 @@ bool Board::hasReps(const Move & move) const
     if((color() && (castling_K() && move.from() ==  0 || castling_Q() && move.from() ==  7)) ||
         (!color() && (castling_k() && move.from() == 56 || castling_q() && move.from() == 63)))
     {
-      return 0;
+      return false;
     }
   }
 

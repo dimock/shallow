@@ -478,7 +478,7 @@ void Engine::prefetchHash(int ictx)
 GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv)
 {
   auto& board = scontexts_[ictx].board_;
-  const HItem * hitem = hash_.find(board.fmgr().hashCode());
+  auto const* hitem = hash_.find(board.fmgr().hashCode());
   if(!hitem)
     return GHashTable::NoFlag;
 
@@ -508,7 +508,11 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
     if(hitem->flag_ > GHashTable::Alpha && hscore >= betta && hmove)
     {
-      if(!board.hasReps(hmove))
+      if(betta > 0 && board.hasReps(hmove))
+      {
+        return GHashTable::AlphaBetta;
+      }
+      else
       {
         ///// danger move was reduced - recalculate it with full depth
         //auto const& prev = scontexts_[ictx].board_.lastUndo();
@@ -546,14 +550,14 @@ void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType bet
     score += ply;
   else if ( score <= -Figure::MatScore+MaxPly )
     score -= ply;
-  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat);
+  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), score, depth / ONE_PLY, flag, move);
 }
 
 void Engine::putCaptureHash(int ictx, const Move & move)
 {
   if(!move || scontexts_[ictx].board_.hasReps())
     return;
-  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false);
+  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move);
 }
 #endif
 
