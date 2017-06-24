@@ -330,7 +330,7 @@ namespace NEngine
   {
     X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
-#if 1
+#if 0
     if(board_->matState())
     {
       return -Figure::MatScore;

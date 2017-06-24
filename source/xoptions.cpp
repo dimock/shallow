@@ -18,14 +18,6 @@ std::vector<xOptionInfo> all_options()
       "1024",
       "256",
       {},
-    },
-    {
-      "Nullmove",
-      "check",
-      "",
-      "",
-      "true",
-      {}
     }
   };
 }
