@@ -300,48 +300,48 @@ void SpecialCasesDetector::initUsual()
     return bishops_vs_knight(board, Figure::ColorWhite);
   };
 
-  // force exchange 1 x 1 same-weight figures to avoid 50 moves draw
-  {
-    auto force_xchg = [](Board const& board)
-    {
-      return 0;
-    };
+  //// force exchange 1 x 1 same-weight figures to avoid 50 moves draw
+  //{
+  //  auto force_xchg = [](Board const& board)
+  //  {
+  //    return 0;
+  //  };
 
-    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+  //  { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
-    { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
+  //  { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+  //  { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
-    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
+  //  { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+  //  { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+  //  { Figure::TypeBishop, Figure::ColorBlack, 1 },
+  //  { Figure::TypeKnight, Figure::ColorWhite, 1 },
+  //  { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+  //  { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
-    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
+  //  { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+  //  { Figure::TypeRook, Figure::ColorWhite, 1 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 2 },
-    { Figure::TypeRook, Figure::ColorWhite, 2 } })] = force_xchg;
+  //  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 2 },
+  //  { Figure::TypeRook, Figure::ColorWhite, 2 } })] = force_xchg;
 
-    scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
-    { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = force_xchg;
-  }
+  //  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
+  //  { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = force_xchg;
+  //}
 }
 
 void SpecialCasesDetector::initWinnerLoser()
@@ -747,6 +747,12 @@ void SpecialCasesDetector::initWinnerLoser()
 boost::optional<ScoreType> SpecialCasesDetector::eval(Board const& board) const
 {
   auto const& fmgr = board.fmgr();
+  if(fmgr.queens(Figure::ColorBlack) || fmgr.queens(Figure::ColorWhite)
+     || fmgr.rooks(Figure::ColorBlack)+fmgr.bishops(Figure::ColorBlack)+fmgr.knights(Figure::ColorBlack) > 2
+     || fmgr.rooks(Figure::ColorWhite)+fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite) > 2)
+  {
+    return boost::none;
+  }
   Scase sc{};
   for(int c = Figure::ColorBlack; c <= Figure::ColorWhite; ++c)
   {

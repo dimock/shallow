@@ -289,12 +289,6 @@ namespace NEngine
       finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
       finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
     }
-
-    alpha0_ = -ScoreMax;
-    betta0_ = +ScoreMax;
-
-    alpha1_ = -ScoreMax;
-    betta1_ = +ScoreMax;
   }
 
   //////////////////////////////////////////////////////////////////////////
@@ -333,19 +327,27 @@ namespace NEngine
       return score;
     }
 
-    prepare();
-
     // prepare lazy evaluation
     if(alpha > -Figure::MatScore)
     {
       alpha0_ = (int)alpha - lazyThreshold0_;
       alpha1_ = (int)alpha - lazyThreshold1_;
     }
+    else
+    {
+      alpha0_ = -ScoreMax;
+      alpha1_ = -ScoreMax;
+    }
 
     if(betta < +Figure::MatScore)
     {
       betta0_ = (int)betta + lazyThreshold0_;
       betta1_ = (int)betta + lazyThreshold1_;
+    }
+    else
+    {
+      betta0_ = +ScoreMax;
+      betta1_ = +ScoreMax;
     }
 
     ScoreType score = evaluate();
@@ -364,10 +366,6 @@ namespace NEngine
     // evaluate figures weight
     score.common_ = fmgr.weight() + evaluateMaterialDiff();
 
-    // pawns attack to king
-    score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
-    score.common_ -= evalCoeffs().pawnAttackBonus_ * ((finfo_[1].kingAttacks_ & finfo_[0].pawnAttacks_) != 0ULL);
-
     /// use lazy evaluation level 0
     {
       auto score0 = considerColor(score.common_);
@@ -375,31 +373,39 @@ namespace NEngine
         return score0;
     }
 
-    auto scoreKnights = evaluateKnights(Figure::ColorWhite);
-    scoreKnights -= evaluateKnights(Figure::ColorBlack);
-    score += scoreKnights;
-
-    auto scoreForks = evaluateForks(Figure::ColorWhite);
-    scoreForks -= evaluateForks(Figure::ColorBlack);
-    score.common_ += scoreForks;
+    prepare();
 
     // take pawns eval from hash if possible
     auto pawnScore = hashedEvaluation();
-
-    // basic king safety - pawn shield, castle
-    auto kingScore = evaluateKingSafety();
-
     score += pawnScore;
-    score += kingScore;
 
     // determine game phase (opening, middle or end game)
     auto phaseInfo = detectPhase();
 
+    //// pawns attack to king
+    //score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
+    //score.common_ -= evalCoeffs().pawnAttackBonus_ * ((finfo_[1].kingAttacks_ & finfo_[0].pawnAttacks_) != 0ULL);
+
+    //auto scoreKnights = evaluateKnights(Figure::ColorWhite);
+    //scoreKnights -= evaluateKnights(Figure::ColorBlack);
+    //score += scoreKnights;
+
+    //auto scoreForks = evaluateForks(Figure::ColorWhite);
+    //scoreForks -= evaluateForks(Figure::ColorBlack);
+    //score.common_ += scoreForks;
+
+    // basic king safety - pawn shield, castle
     if(phaseInfo.phase_ != EndGame)
     {
-      score.opening_ += evaluateBlockedKnights();
-      score.opening_ += evaluateBlockedBishops();
+      auto kingScore = evaluateKingSafety();
+      score.opening_ += kingScore;
     }
+
+    //if(phaseInfo.phase_ != EndGame)
+    //{
+    //  score.opening_ += evaluateBlockedKnights();
+    //  score.opening_ += evaluateBlockedBishops();
+    //}
 
     if(phaseInfo.phase_ != Opening)
     {
@@ -408,30 +414,30 @@ namespace NEngine
       score.endGame_ -= evaluateKingPsqEg(Figure::ColorBlack);
     }
 
-    /// use lazy evaluation level 1
-    {
-      auto score1 = considerColor(lipolScore(score, phaseInfo));
-      if(score1 < alpha1_ || score1 > betta1_)
-        return score1;
-    }
+    ///// use lazy evaluation level 1
+    //{
+    //  auto score1 = considerColor(lipolScore(score, phaseInfo));
+    //  if(score1 < alpha1_ || score1 > betta1_)
+    //    return score1;
+    //}
 
-    // PSQ - evaluation
-    // + attacked fields
-    auto scorePsq = evaluatePsq(Figure::ColorWhite);
-    scorePsq -= evaluatePsq(Figure::ColorBlack);
-    score += scorePsq;
+    //// PSQ - evaluation
+    //// + attacked fields
+    //auto scorePsq = evaluatePsq(Figure::ColorWhite);
+    //scorePsq -= evaluatePsq(Figure::ColorBlack);
+    //score += scorePsq;
 
-    auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-    scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-    score += scorePP;
+    //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+    //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+    //score += scorePP;
 
-    // detailed passer evaluation
-    auto passerScore = passerEvaluation();
-    score += passerScore;
+    //// detailed passer evaluation
+    //auto passerScore = passerEvaluation();
+    //score += passerScore;
 
-    auto mobilityScore = evaluateMobility(Figure::ColorWhite);
-    mobilityScore -= evaluateMobility(Figure::ColorBlack);
-    score += mobilityScore;
+    //auto mobilityScore = evaluateMobility(Figure::ColorWhite);
+    //mobilityScore -= evaluateMobility(Figure::ColorBlack);
+    //score += mobilityScore;
 
     auto result = considerColor(lipolScore(score, phaseInfo));
     return result;
@@ -491,7 +497,7 @@ namespace NEngine
   ScoreType Evaluator::evaluateKingPsqEg(Figure::Color color) const
   {
     int p = finfo_[color].king_pos_;
-    return evalCoeffs().knightPsq_[p];
+    return evalCoeffs().kingPsqEg_[p];
   }
 
   Evaluator::FullScore Evaluator::hashedEvaluation()
@@ -618,17 +624,20 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
 
     // 2. passed pawn
     {
-      auto coeffPassed = evalCoeffs().passerPawn_[cy];
-      bool passer = (opmsk & pawnMasks().mask_passed(color, n)) == 0ULL;
-      x_passers |= passer << x;
-      bool quadpasser = (pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL;
-      score.common_ += passer*coeffPassed;
+      if((opmsk & pawnMasks().mask_passed(color, n)) == 0ULL)
       {
-        bool left  = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
+        x_passers |= 1 << x;
+        score.common_ += evalCoeffs().passerPawn_[cy];
+      }
+      // quadpasser
+      else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
+      {
+        bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
         bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
-        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)) && (!passer) && quadpasser, "passed pawn was not detected");
+        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
+        auto const& coeffPassed = evalCoeffs().passerPawn_[cy];
         auto scoreSemipasser = ((coeffPassed >> 2) + (left || right) * (coeffPassed >> 2));
-        score.common_ += quadpasser * scoreSemipasser * (!passer);
+        score.common_ += scoreSemipasser;
       }
     }
 
@@ -865,19 +874,22 @@ int Evaluator::getCastleType(Figure::Color color) const
   return (!cking && !cqueen) * (-1) + cqueen;
 }
 
-Evaluator::FullScore Evaluator::evaluateKingSafety() const
+int Evaluator::evaluateKingSafety() const
 {
   auto score = evaluateKingSafety(Figure::ColorWhite);
   score -= evaluateKingSafety(Figure::ColorBlack);
   return score;
 }
 
-Evaluator::FullScore Evaluator::evaluateKingSafety(Figure::Color color) const
+int Evaluator::evaluateKingSafety(Figure::Color color) const
 {
+  if(board_->castling(color))
+    return 0;
+
   const FiguresManager & fmgr = board_->fmgr();
   auto pmask  = fmgr.pawn_mask(color);
 
-  FullScore score;
+  int score = 0;
   Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
   auto opmask = fmgr.pawn_mask(ocolor);
   Index ki_pos(finfo_[color].king_pos_);
@@ -890,10 +902,11 @@ Evaluator::FullScore Evaluator::evaluateKingSafety(Figure::Color color) const
 
   int delta_y[] = {-1, +1};
 
-  score.opening_ += evaluateCastle(color, ocolor, ctype, ki_pos);
+  score += evaluateCastle(color, ocolor, ctype, ki_pos);
 
   int cy = colored_y_[color][ky] - 1;
-  score.opening_ += evalCoeffs().roamingKing_ * cy * (cy > 0);
+  if(cy > 0)
+    score += evalCoeffs().roamingKing_ * cy;
 
   // pawns shield
   static const BitMask pawns_shield_mask[2][2][3] =
@@ -998,9 +1011,9 @@ Evaluator::FullScore Evaluator::evaluateKingSafety(Figure::Color color) const
       + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0) * evalCoeffs().opponentPawnB_
       + ((opponent_pawn_mask[color][ctype][2] & opmask) != 0) * evalCoeffs().opponentPawnC_;
 
-    score.opening_ += shield_bonus;
-    score.opening_ += shield_penalty;
-    score.opening_ += opponent_penalty;
+    score += shield_bonus;
+    score += shield_penalty;
+    score += opponent_penalty;
   }
   return score;
 }
@@ -1016,22 +1029,18 @@ int Evaluator::evaluateCastle(Figure::Color color, Figure::Color ocolor, int cas
     { set_mask_bit(G1)|set_mask_bit(H1)|set_mask_bit(G2)|set_mask_bit(H2),
       set_mask_bit(A1)|set_mask_bit(B1)|set_mask_bit(C1)|set_mask_bit(A2)|set_mask_bit(B2)|set_mask_bit(C2)} };
 
-  if(castleType < 0 && !board_->castling(color))
+  if(castleType < 0)
     return evalCoeffs().castleImpossible_;
 
   // fake castle
-  if ( !board_->castling(color) && castleType >= 0 )
+  BitMask r_mask = fmgr.rook_mask(color) & fake_castle_rook[color][castleType];
+  if ( r_mask )
   {
-    BitMask r_mask = fmgr.rook_mask(color) & fake_castle_rook[color][castleType];
-    if ( r_mask )
-    {
-      Index r_pos( _lsb64(r_mask) );
-      if(castleType == 0 && r_pos.x() > ki_pos.x() || castleType == 1 && r_pos.x() < ki_pos.x())
-        return evalCoeffs().fakeCastle_;
-    }
-    return evalCoeffs().castleBonus_;
+    Index r_pos( _lsb64(r_mask) );
+    if(castleType == 0 && r_pos.x() > ki_pos.x() || castleType == 1 && r_pos.x() < ki_pos.x())
+      return evalCoeffs().fakeCastle_;
   }
-  return 0;
+  return evalCoeffs().castleBonus_;
 }
 
 int Evaluator::evaluateBlockedKnights()

@@ -228,8 +228,8 @@ private:
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
-  FullScore evaluateKingSafety(Figure::Color color) const;
-  FullScore evaluateKingSafety() const;
+  int evaluateKingSafety(Figure::Color color) const;
+  int evaluateKingSafety() const;
   int evaluateCastle(Figure::Color color, Figure::Color ocolor, int castleType, Index const& ki_pos) const;
 
   int evaluateBlockedKnights();
