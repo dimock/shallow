@@ -297,40 +297,12 @@ namespace NEngine
     betta1_ = +ScoreMax;
   }
 
-  //bool Evaluator::discoveredCheck(int pt, Figure::Color acolor, const BitMask & brq_mask, int ki_pos, enum PinType pinType) const
-  //{
-  //  const BitMask & from_msk = betweenMasks().from(ki_pos, pt);
-  //  BitMask mask_all_ex = mask_all_ & ~set_mask_bit(pt);
-  //  mask_all_ex &= from_msk;
-  //  if ( (mask_all_ex & brq_mask) == 0 )
-  //    return false;
-  //
-  //  int apos = ki_pos < pt ? _lsb64(mask_all_ex) : _msb64(mask_all_ex);
-  //  if ( (set_mask_bit(apos) & brq_mask) == 0 ) // no BRQ on this field
-  //    return false;
-  //
-  //  const Field & afield = board_->getField(apos);
-  //  X_ASSERT( afield.color() != acolor || afield.type() < Figure::TypeBishop || afield.type() > Figure::TypeQueen, "discoveredCheck() - attacking figure isn't BRQ" );
-  //
-  //  nst::dirs d = figureDir().dir(ki_pos, pt);
-  //  if ( d == nst::no_dir )
-  //    return false;
-  //
-  //  if ( pinType == ptAll )
-  //    return true;
-  //
-  //  static PinType pin_types[10] = { ptAll, ptDiag, ptOrtho, ptDiag, ptOrtho, ptDiag, ptOrtho, ptDiag, ptOrtho };
-  //  
-  //  return pin_types[d] == pinType;
-  //}
-  //
-
   //////////////////////////////////////////////////////////////////////////
   ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
   {
     X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
-#if 1
+#if 0
     if(board_->matState())
     {
       return -Figure::MatScore;

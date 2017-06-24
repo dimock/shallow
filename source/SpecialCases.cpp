@@ -39,8 +39,8 @@ namespace
   {
     Figure::Color ocolor = Figure::otherColor(pawnColor);
     Index p(_lsb64(board.fmgr().pawn_mask(pawnColor)));
-    int kw = _lsb64(board.fmgr().king_mask(pawnColor));
-    int kl = _lsb64(board.fmgr().king_mask(ocolor));
+    int kw = board.kingPos(pawnColor);
+    int kl = board.kingPos(ocolor);
     Index pp(p.x(), pawnColor*7);
     int dist_w = distanceCounter().getDistance(kw, pp);
     int dist_l = distanceCounter().getDistance(kl, pp);
@@ -351,8 +351,8 @@ void SpecialCasesDetector::initWinnerLoser()
     auto loserColor = Figure::otherColor(pawnColor);
     auto moveColor = board.color();
     int p = _lsb64(board.fmgr().pawn_mask(pawnColor));
-    int kw = _lsb64(board.fmgr().king_mask(pawnColor));
-    int kl = _lsb64(board.fmgr().king_mask(loserColor));
+    int kw = board.kingPos(pawnColor);
+    int kl = board.kingPos(loserColor);
     if(pawnColor == Figure::ColorBlack)
     {
       p = Figure::mirrorIndex_[p];
@@ -369,8 +369,8 @@ void SpecialCasesDetector::initWinnerLoser()
     auto xpawnColor = pawnColor;
     auto moveColor = board.color();
     int p  = _lsb64(board.fmgr().pawn_mask(pawnColor));
-    int kw = _lsb64(board.fmgr().king_mask(pawnColor));
-    int kl = _lsb64(board.fmgr().king_mask(loserColor));
+    int kw = board.kingPos(pawnColor);
+    int kl = board.kingPos(loserColor);
     if(pawnColor == Figure::ColorBlack)
     {
       p  = Figure::mirrorIndex_[p];
@@ -409,8 +409,8 @@ void SpecialCasesDetector::initWinnerLoser()
   auto bishopKnightMat = [](Board const& board, Figure::Color winnerColor)
   {
     auto loserColor = Figure::otherColor(winnerColor);
-    int kw = _lsb64(board.fmgr().king_mask(winnerColor));
-    int kl = _lsb64(board.fmgr().king_mask(loserColor));
+    int kw = board.kingPos(winnerColor);
+    int kl = board.kingPos(loserColor);
     int bp = _lsb64(board.fmgr().bishop_mask(winnerColor));
     int kn = _lsb64(board.fmgr().knight_mask(winnerColor));
     int dist = distanceCounter().getDistance(kw, kl);
@@ -442,8 +442,8 @@ void SpecialCasesDetector::initWinnerLoser()
     auto knightColor = Figure::otherColor(pawnColor);
     auto p = _lsb64(board.fmgr().pawn_mask(pawnColor));
     auto n = _lsb64(board.fmgr().knight_mask(knightColor));
-    int kp = _lsb64(board.fmgr().king_mask(pawnColor));
-    int kn = _lsb64(board.fmgr().king_mask(knightColor));
+    int kp = board.kingPos(pawnColor);
+    int kn = board.kingPos(knightColor);
     BitMask current = set_mask_bit(n);
     BitMask visited{current};
     int p1 = p + deltay * (board.color() == pawnColor);
@@ -483,8 +483,8 @@ void SpecialCasesDetector::initWinnerLoser()
     auto bishopColor = Figure::otherColor(pawnColor);
     auto p = _lsb64(board.fmgr().pawn_mask(pawnColor));
     auto b = _lsb64(board.fmgr().bishop_mask(bishopColor));
-    int kp = _lsb64(board.fmgr().king_mask(pawnColor));
-    int kb = _lsb64(board.fmgr().king_mask(bishopColor));
+    int kp = board.kingPos(pawnColor);
+    int kb = board.kingPos(bishopColor);
     BitMask current = set_mask_bit(b);
     BitMask visited{ current };
     int p1 = p + deltay * (board.color() == pawnColor);
@@ -655,8 +655,8 @@ void SpecialCasesDetector::initWinnerLoser()
   auto figure_vs_pawns = [](Board const& board, Figure::Color winnerColor)
   {
     auto loserColor = Figure::otherColor(winnerColor);
-    int kw = _lsb64(board.fmgr().king_mask(winnerColor));
-    int kl = _lsb64(board.fmgr().king_mask(loserColor));
+    int kw = board.kingPos(winnerColor);
+    int kl = board.kingPos(loserColor);
     ScoreType score = board.fmgr().pawns(winnerColor) * 30;
     auto pmask = board.fmgr().pawn_mask(winnerColor);
     for(; pmask;)
@@ -762,7 +762,6 @@ boost::optional<ScoreType> SpecialCasesDetector::eval(Board const& board) const
     if(iter != scases_.end())
       return (iter->second)(board);
   }
-  if(board.isWinnerLoser())
   {
     auto iter = winnerLoser_.find(sc);
     if(iter != winnerLoser_.end())

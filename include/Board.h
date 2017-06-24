@@ -419,13 +419,6 @@ struct Board
     return std::max(1, depth - NullMove_PlyReduce);
   }
 
-  inline bool isWinnerLoser() const
-  {
-    auto ocolor = Figure::otherColor(color());
-    return fmgr_.pawns(color()) + fmgr_.rooks(color()) + fmgr_.queens(color()) > 0
-      && fmgr_.pawns(color()) + fmgr_.rooks(color()) + fmgr_.queens(color()) > 0;
-  }
-
   inline void setNoMoves()
   {
     if((State::Invalid == data_.state_) || (State::ChessMat & data_.state_) || drawState())
