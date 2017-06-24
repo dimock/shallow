@@ -34,6 +34,7 @@ struct Move
   int new_type() const { return (mask >> 12) & 7; }
   bool see_ok() const { return (mask >> 15) & 1; }
   void set_ok() { mask |= 1 << 15; }
+  void clear_ok() { mask &= ~(1 << 15); }
 
   inline bool operator == (Move const& m) const
   {

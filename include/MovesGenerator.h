@@ -174,14 +174,15 @@ struct FastGenerator
 {
   using MovesList = xlist<MOVE, NumOfFields>;
 
-  enum Order { oEscape, oGenCaps, oCaps, oGenUsual, oUsual, oWeak } order_{};
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak } order_{ oEscape };
 
-  FastGenerator(BOARD const& board) :
+  FastGenerator(BOARD const& board, MOVE const& hmove) :
     board_(board),
-    cg_(board), ug_(board), eg_(board)
+    cg_(board), ug_(board), eg_(board, hmove),
+    hmove_(hmove)
   {
     if(!board.underCheck())
-      order_ = oGenCaps;
+      order_ = oHash;
   }
 
   MOVE* next()
@@ -189,6 +190,15 @@ struct FastGenerator
     if(order_ == oEscape)
     {
       return eg_.next_see();
+    }
+    if(order_ == oHash)
+    {
+      order_ = oGenCaps;
+      if(hmove_)
+      {
+        hmove_.set_ok();
+        return &hmove_;
+      }
     }
     if(order_ == oGenCaps)
     {
@@ -199,6 +209,8 @@ struct FastGenerator
     {
       while(auto* move = cg_.next())
       {
+        if(*move == hmove_)
+          continue;
         if(board_.see(*move, 0))
         {
           move->set_ok();
@@ -215,8 +227,12 @@ struct FastGenerator
     }
     if(order_ == oUsual)
     {
-      if(auto* move = ug_.next())
+      while(auto* move = ug_.next())
+      {
+        if(*move == hmove_)
+          continue;
         return move;
+      }
       order_ = oWeak;
       iter_ = weak_.begin();
     }
@@ -225,6 +241,7 @@ struct FastGenerator
       while(iter_ != weak_.end())
       {
         auto* move = &*iter_;
+        X_ASSERT(*move == hmove_, "do move from hash second time");
         ++iter_;
         X_ASSERT(!board_.validateMove(*move), "invalid weak move");
         return move;
@@ -239,6 +256,7 @@ struct FastGenerator
   MovesList weak_;
   typename MovesList::iterator iter_;
   BOARD const& board_;
+  MOVE hmove_;
 };
 
 template <class BOARD, class MOVE>
@@ -246,14 +264,16 @@ struct TacticalGenerator
 {
   using MovesList = xlist<MOVE, BOARD::MovesMax>;
 
-  enum Order { oEscape, oGenCaps, oCaps, oGenChecks, oChecks } order_{};
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks } order_{ oEscape };
 
-  TacticalGenerator(BOARD const& board, int depth) :
+  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
     board_(board),
-    cg_(board), ckg_(board), eg_(board), depth_(depth)
+    cg_(board), ckg_(board), eg_(board, hmove),
+    hmove_(hmove),
+    depth_(depth)
   {
     if(!board.underCheck())
-      order_ = oGenCaps;
+      order_ = oHash;
   }
 
   MOVE* next()
@@ -262,6 +282,15 @@ struct TacticalGenerator
     {
       return eg_.next();
     }
+    if(order_ == oHash)
+    {
+      order_ = oGenCaps;
+      if(hmove_)
+      {
+        hmove_.set_ok();
+        return &hmove_;
+      }
+    }
     if(order_ == oGenCaps)
     {
       cg_.generateCaps();
@@ -269,8 +298,12 @@ struct TacticalGenerator
     }
     if(order_ == oCaps)
     {
-      if(auto* move = cg_.next())
+      while(auto* move = cg_.next())
+      {
+        if(*move == hmove_)
+          continue;
         return move;
+      }
       if(depth_ < 0)
         return nullptr;
       order_ = oGenChecks;
@@ -282,7 +315,12 @@ struct TacticalGenerator
     }
     if(order_ == oChecks)
     {
-      return ckg_.next();
+      while(auto* move = ckg_.next())
+      {
+        if(*move == hmove_)
+          continue;
+        return move;
+      }
     }
     return nullptr;
   }
@@ -291,6 +329,7 @@ struct TacticalGenerator
   ChecksGenerator<BOARD, MOVE> ckg_;
   EscapeGenerator<BOARD, MOVE> eg_;
   BOARD const& board_;
+  MOVE hmove_;
   int depth_{};
 };
 

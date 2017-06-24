@@ -14,7 +14,7 @@ void xcaptures(Board& board, int depth)
 {
   if(board.drawState() || board.hasReps() || depth < -10)
     return;
-  TacticalGenerator<Board, SMove> tg(board, depth);
+  TacticalGenerator<Board, SMove> tg(board, SMove{true}, depth);
   //try
   //{
     for(;;)
@@ -51,7 +51,7 @@ void xsearch(Board& board, int depth)
   }
   //try
   //{
-    FastGenerator<Board, SMove> fg(board);
+  FastGenerator<Board, SMove> fg(board, SMove{true});
     for(;;)
     {
       auto* pmove = fg.next();
@@ -101,7 +101,7 @@ bool xverifyMoves(Board& board)
 {
   bool ok = false;
   std::vector<Move> fmoves;
-  FastGenerator<Board, SMove> fg(board);
+  FastGenerator<Board, SMove> fg(board, SMove{true});
   for(;;)
   {
     auto* pmove = fg.next();

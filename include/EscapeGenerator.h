@@ -13,10 +13,11 @@ struct EscapeGenerator
 {
   using MovesList = xlist<MOVE, NumOfFields>;
 
-  enum Order { oGenCaps, oCaps, oGenUsual, oUsual, oWeak } order_{};
+  enum Order { oHash, oGenCaps, oCaps, oGenUsual, oUsual, oWeak } order_{ oHash };
 
-  EscapeGenerator(BOARD const& board) :
-    board_(board)
+  EscapeGenerator(BOARD const& board, MOVE const& hmove) :
+    board_(board),
+    hmove_(hmove)
   {
     ocolor = Figure::otherColor(board_.color());
     const auto& black = board_.fmgr().mask(Figure::ColorBlack);
@@ -316,6 +317,15 @@ struct EscapeGenerator
 
   MOVE* next()
   {
+    if(order_ == oHash)
+    {
+      order_ = oGenCaps;
+      if(hmove_)
+      {
+        hmove_.set_ok();
+        return &hmove_;
+      }
+    }
     if(order_ == oGenCaps)
     {
       if(!board_.doubleCheck())
@@ -330,6 +340,8 @@ struct EscapeGenerator
       {
         auto* move = &*iter_;
         ++iter_;
+        if(*move == hmove_)
+          continue;
         if(board_.validateMove(*move))
           return move;
       }
@@ -349,6 +361,8 @@ struct EscapeGenerator
       {
         auto* move = &*iter_;
         ++iter_;
+        if(*move == hmove_)
+          continue;
         if(board_.validateMove(*move))
           return move;
       }
@@ -358,6 +372,15 @@ struct EscapeGenerator
 
   MOVE* next_see()
   {
+    if(order_ == oHash)
+    {
+      order_ = oGenCaps;
+      if(hmove_)
+      {
+        hmove_.set_ok();
+        return &hmove_;
+      }
+    }
     if(order_ == oGenCaps)
     {
       if(!board_.doubleCheck())
@@ -372,6 +395,8 @@ struct EscapeGenerator
       {
         auto* move = &*iter_;
         ++iter_;
+        if(*move == hmove_)
+          continue;
         if(board_.validateMove(*move))
         {
           if(board_.see(*move, 0))
@@ -398,6 +423,8 @@ struct EscapeGenerator
       {
         auto* move = &*iter_;
         ++iter_;
+        if(*move == hmove_)
+          continue;
         if(board_.validateMove(*move))
           return move;
       }
@@ -409,6 +436,7 @@ struct EscapeGenerator
       while(iter_ != weak_.end())
       {
         auto* move = &*iter_;
+        X_ASSERT(*move == hmove_, "do move from hash second time");
         ++iter_;
         X_ASSERT(!board_.validateMove(*move), "invalid weak move");
         return move;
@@ -425,6 +453,7 @@ struct EscapeGenerator
   BitMask protect_king_msk_;
   BitMask mask_all;
   Figure::Color ocolor;
+  MOVE hmove_;
 }; // EscapeGenerator
 
 } // NEngine

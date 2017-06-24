@@ -264,6 +264,17 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     return scontexts_[ictx].eval_(alpha, betta);
 
   ScoreType alpha0 = alpha;
+  SMove hmove{true};
+  
+#ifdef USE_HASH
+  ScoreType hscore = -ScoreMax;
+  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
+  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  {
+    return hscore;
+  }
+  X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash"); 
+#endif
 
   if(depth <= 0)
     return captures(ictx, depth, ply, alpha, betta, pv);
@@ -272,7 +283,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   Move best{true};
   int counter{};
 
-  FastGenerator<Board, SMove> fg(board);
+  FastGenerator<Board, SMove> fg(board, hmove);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = fg.next();
@@ -287,7 +298,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     board.makeMove(move);
     sdata_.inc_nc();
 
-    //int depthInc = board.underCheck() ? ONE_PLY : 0;
     if(!counter)
     {
       int depthInc = depthIncrement(ictx, move, pv);
@@ -345,6 +355,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     hist.inc_score(depth / ONE_PLY);
   }
 
+#ifdef USE_HASH
+  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, false);
+#endif
+
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
   return scoreBest;
 }
@@ -362,6 +376,20 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   if(stopped() || ply >= MaxPly)
     return Figure::DrawScore;
+
+  SMove hmove{true};
+  
+#ifdef USE_HASH
+  ScoreType hscore = -ScoreMax;
+  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
+  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  {
+    return hscore;
+  }
+  X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
+  if(hmove && !board.getField(hmove.to()))
+    hmove = SMove{true};
+#endif
 
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
@@ -385,7 +413,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   Move best{true};
 
-  TacticalGenerator<Board, SMove> tg(board, depth);
+  TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.next();
@@ -395,7 +423,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
-    if((!board.underCheck() || counter > 0) && !board.see(move, threshold))
+    if((!board.underCheck() || counter > 0) && !move.see_ok() && !board.see(move, threshold))
       continue;
 
     ScoreType score = -ScoreMax;
@@ -431,6 +459,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       scoreBest = score0;
   }
 
+#ifdef USE_HASH
+  putCaptureHash(ictx, best);
+#endif
+
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
   return scoreBest;
 }
@@ -445,11 +477,12 @@ void Engine::prefetchHash(int ictx)
 
 GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv)
 {
-  const HItem * hitem = hash_.find(scontexts_[ictx].board_.fmgr().hashCode());
+  auto& board = scontexts_[ictx].board_;
+  const HItem * hitem = hash_.find(board.fmgr().hashCode());
   if(!hitem)
     return GHashTable::NoFlag;
 
-  X_ASSERT(hitem->hkey_ != scontexts_[ictx].board_.fmgr().hashCode(), "invalid hash item found");
+  X_ASSERT(hitem->hkey_ != board.fmgr().hashCode(), "invalid hash item found");
 
   hmove = hitem->move_;
   if(pv)
@@ -475,7 +508,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
     if(hitem->flag_ > GHashTable::Alpha && hscore >= betta && hmove)
     {
-      if(!scontexts_[ictx].board_.hasReps(hmove))
+      if(!board.hasReps(hmove))
       {
         ///// danger move was reduced - recalculate it with full depth
         //auto const& prev = scontexts_[ictx].board_.lastUndo();
