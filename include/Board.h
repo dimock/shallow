@@ -373,18 +373,11 @@ struct Board
   bool see(Move const& move, int threshold) const;
 
   bool possibleMove(const Move & move) const;
-  Move extractKiller(const Move & ki, const Move & hmove) const
-  {
-    if(!ki ||
-        (hmove == ki) ||
-        ki.new_type() ||
-        getField(ki.to()) ||
-        (enpassant() == ki.to() && getField(ki.from()).type() == Figure::TypePawn))
-    {
-      return Move{true};
-    }
-    return possibleMove(ki) ? ki : Move{true};
-  }
+  bool escapeMove(const Move& move) const;
+
+  // for validation only
+  bool moveExists(const Move& move) const;
+  bool hasMove() const;
 
   bool canBeReduced(Move const& move) const
   {

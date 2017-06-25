@@ -26,16 +26,30 @@ bool Engine::search(SearchResult& sres)
   // stash board to correctly print status later
   sres.board_ = scontexts_[0].board_;
   sdata_.board_ = scontexts_[0].board_;
+  auto& board = scontexts_[0].board_;
 
   {
-    auto moves = generate<Board, SMove>(scontexts_[0].board_);
+    auto moves = generate<Board, SMove>(board);
     for(auto move : moves)
     {
       move.sort_value = 0;
-      if(scontexts_[0].board_.validateMoveBruteforce(move))
+      if(board.validateMoveBruteforce(move))
         scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
     }
     scontexts_[0].moves_[sdata_.numOfMoves_] = SMove{ true };
+    if(auto const* hitem = hash_.find(board.fmgr().hashCode()))
+    {
+      if(hitem->move_)
+      {
+        SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
+        X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
+        X_ASSERT(!board.validateMove(best), "move from hash is invalid");
+        auto* b = scontexts_[0].moves_.data();
+        auto* e = b + sdata_.numOfMoves_;
+        if(*b != best)
+          bring_to_front(b, e, best);
+      }
+    }
   }
 
   sres.numOfMoves_ = sdata_.numOfMoves_;
@@ -283,7 +297,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   Move best{true};
   int counter{};
 
-  FastGenerator<Board, SMove> fg(board, hmove);
+  FastGenerator<Board, SMove> fg(board, hmove, scontexts_[ictx].plystack_[ply].killer_);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = fg.next();
@@ -294,7 +308,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
     ScoreType score = -ScoreMax;
-
     board.makeMove(move);
     sdata_.inc_nc();
 
@@ -326,6 +339,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         scoreBest = score;
         if(score > alpha)
         {
+          bool capture = move.new_type() || board.getField(move.to())
+            || (move.to() > 0 && board.enpassant() == move.to() && board.getField(move.from()).type() == Figure::TypePawn);
+          if(!capture)
+            scontexts_[ictx].plystack_[ply].killer_ = move;
           alpha = score;
           if(pv)
             assemblePV(ictx, move, board.underCheck(), ply);
@@ -346,7 +363,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     board.setNoMoves();
     scoreBest = scontexts_[ictx].eval_(alpha, betta);
     if(board.matState())
+    {
       scoreBest += ply;
+      X_ASSERT(board.hasMove(), "invalid mat detection");
+    }
   }
 
   if(best)
@@ -454,7 +474,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   if(!counter)
   {
     if(board.underCheck())
+    {
       scoreBest = -Figure::MatScore+ply;
+      X_ASSERT(board.hasMove(), "invalid mat detection");
+    }
     else
       scoreBest = score0;
   }

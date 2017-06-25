@@ -326,8 +326,8 @@ bool Processor::makeMove(std::string const& moveStr)
   if(!board.validateMoveBruteforce(move))
     return false;
 
-  //if(moveStr == "f6f5")
-  //  hash2file("D:\\Projects\\gitproj\\hash\\hash_f6f5_2");
+  //if(moveStr == "f6f8")
+  //  hash2file("D:\\Projects\\gitproj\\hash\\hash_f6f8");
 
   board.makeMove(move);
   board.verifyState();
@@ -433,7 +433,7 @@ boost::optional<bool> Processor::fromFEN(xCmd const& cmd)
 bool Processor::fromFEN(std::string const& fen)
 {
   bool r = engine_.fromFEN(fen);
-  //file2hash("D:\\Projects\\gitproj\\hash\\hash_f6f5");
+  //file2hash("D:\\Projects\\gitproj\\hash\\hash_f6f8");
   return r;
 }
 

@@ -13,11 +13,12 @@ struct EscapeGenerator
 {
   using MovesList = xlist<MOVE, NumOfFields>;
 
-  enum Order { oHash, oGenCaps, oCaps, oGenUsual, oUsual, oWeak } order_{ oHash };
+  enum Order { oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak } order_{ oHash };
 
-  EscapeGenerator(BOARD const& board, MOVE const& hmove) :
+  EscapeGenerator(BOARD const& board, MOVE const& hmove, MOVE const& killer = MOVE{ true }) :
     board_(board),
-    hmove_(hmove)
+    hmove_(hmove),
+    killer_(killer)
   {
     ocolor = Figure::otherColor(board_.color());
     const auto& black = board_.fmgr().mask(Figure::ColorBlack);
@@ -407,7 +408,20 @@ struct EscapeGenerator
           weak_.push_back(*move);
         }
       }
+      order_ = killer_ ? oKiller : oGenUsual;
+    }
+    if(order_ == oKiller)
+    {
+      X_ASSERT(!killer_, "try to make do non-exsisting killer");
       order_ = oGenUsual;
+      bool capture = killer_.new_type() || board_.getField(killer_.to())
+        || (killer_.to() > 0 && board_.enpassant() == killer_.to() && board_.getField(killer_.from()).type() == Figure::TypePawn);
+      if(!capture && board_.possibleMove(killer_) && board_.escapeMove(killer_) && board_.validateMove(killer_))
+      {
+        X_ASSERT(!board_.moveExists(killer_), "non-existing killer");
+        return &killer_;
+      }
+      X_ASSERT(!capture && board_.moveExists(killer_), "killer was not detected as valid move");
     }
     if(order_ == oGenUsual)
     {
@@ -423,7 +437,7 @@ struct EscapeGenerator
       {
         auto* move = &*iter_;
         ++iter_;
-        if(*move == hmove_)
+        if(*move == hmove_ || *move == killer_)
           continue;
         if(board_.validateMove(*move))
           return move;
@@ -454,6 +468,7 @@ struct EscapeGenerator
   BitMask mask_all;
   Figure::Color ocolor;
   MOVE hmove_;
+  MOVE killer_;
 }; // EscapeGenerator
 
 } // NEngine

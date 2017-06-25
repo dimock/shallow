@@ -17,7 +17,7 @@ struct PlyStack
 {
   PlyStack() {}
 
-  Move killer_;
+  SMove killer_;
   Move pv_[MaxPly+4];
 
   void clearPV(int depth)
@@ -33,7 +33,7 @@ struct PlyStack
 
   void clearKiller()
   {
-    killer_ = Move{ true };
+    killer_ = SMove{ true };
   }
 };
 

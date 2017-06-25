@@ -51,7 +51,7 @@ void xsearch(Board& board, int depth)
   }
   //try
   //{
-  FastGenerator<Board, SMove> fg(board, SMove{true});
+  FastGenerator<Board, SMove> fg(board, SMove{ true }, SMove{ true });
     for(;;)
     {
       auto* pmove = fg.next();
@@ -101,7 +101,7 @@ bool xverifyMoves(Board& board)
 {
   bool ok = false;
   std::vector<Move> fmoves;
-  FastGenerator<Board, SMove> fg(board, SMove{true});
+  FastGenerator<Board, SMove> fg(board, SMove{ true }, SMove{ true });
   for(;;)
   {
     auto* pmove = fg.next();

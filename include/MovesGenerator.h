@@ -176,10 +176,11 @@ struct FastGenerator
 
   enum Order { oEscape, oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak } order_{ oEscape };
 
-  FastGenerator(BOARD const& board, MOVE const& hmove) :
+  FastGenerator(BOARD const& board, MOVE const& hmove, MOVE const& killer) :
     board_(board),
-    cg_(board), ug_(board), eg_(board, hmove),
-    hmove_(hmove)
+    cg_(board), ug_(board), eg_(board, hmove, killer),
+    hmove_(hmove),
+    killer_(killer)
   {
     if(!board.underCheck())
       order_ = oHash;
@@ -218,7 +219,20 @@ struct FastGenerator
         }
         weak_.push_back(*move);
       }
+      order_ = killer_ ? oKiller : oGenUsual;
+    }
+    if(order_ == oKiller)
+    {
+      X_ASSERT(!killer_, "try to make do non-exsisting killer");
       order_ = oGenUsual;
+      bool capture = killer_.new_type() || board_.getField(killer_.to())
+        || (killer_.to() > 0 && board_.enpassant() == killer_.to() && board_.getField(killer_.from()).type() == Figure::TypePawn);
+      if(!capture && board_.possibleMove(killer_) && board_.validateMove(killer_))
+      {
+        X_ASSERT(!board_.moveExists(killer_), "non-existing killer");
+        return &killer_;
+      }
+      X_ASSERT(!capture && board_.moveExists(killer_), "killer was not detected as valid move");
     }
     if(order_ == oGenUsual)
     {
@@ -229,7 +243,7 @@ struct FastGenerator
     {
       while(auto* move = ug_.next())
       {
-        if(*move == hmove_)
+        if(*move == hmove_ || *move == killer_)
           continue;
         return move;
       }
@@ -257,6 +271,7 @@ struct FastGenerator
   typename MovesList::iterator iter_;
   BOARD const& board_;
   MOVE hmove_;
+  MOVE killer_;
 };
 
 template <class BOARD, class MOVE>

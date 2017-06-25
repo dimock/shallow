@@ -44,8 +44,8 @@ bool Board::possibleMove(const Move & move) const
     return false;
 
   // only kings move is possible
-  if(underCheck() && doubleCheck() && ffrom.type() != Figure::TypeKing)
-    return false;
+  if(underCheck() && doubleCheck())
+    return ffrom.type() == Figure::TypeKing;
 
   if(ffrom.type() != Figure::TypePawn && move.new_type() > 0)
     return false;
@@ -111,6 +111,50 @@ bool Board::possibleMove(const Move & move) const
   }
 
   return true;
+}
+
+bool Board::escapeMove(const Move& move) const
+{
+  X_ASSERT(!underCheck(), "do escape move but not under check");
+  X_ASSERT(move.new_type() || getField(move.to())
+           || (move.to() > 0 && enpassant() == move.to() && getField(move.from()).type() == Figure::TypePawn), "killer should not be capture");
+  if(getField(move.from()).type() == Figure::TypeKing)
+  {
+    X_ASSERT(getField(move.to()) && getField(move.to()).color() == color(), "capture own figure");
+    return true;
+  }
+  X_ASSERT(doubleCheck(), "double check but no-king move");
+  auto const& mask = betweenMasks().between(kingPos(color()), checking());
+  return mask & set_mask_bit(move.to());
+}
+
+bool Board::moveExists(const Move& move) const
+{
+  bool found{ false };
+  auto moves = generate<Board, Move>(*this);
+  for(auto m : moves)
+  {
+    if(!validateMoveBruteforce(m))
+      continue;
+    if(m == move)
+    {
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
+
+bool Board::hasMove() const
+{
+  auto moves = generate<Board, Move>(*this);
+  for(auto m : moves)
+  {
+    if(!validateMoveBruteforce(m))
+      continue;
+    return true;
+  }
+  return false;
 }
 
 bool Board::hasReps(const Move & move) const
