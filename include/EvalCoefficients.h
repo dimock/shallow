@@ -91,8 +91,6 @@ struct EvalCoefficients
   int queenKingAttack_{ 8 };
 
   // arrays
-  int centerPawn_[8]  = {};
-  int forwardPawn_[8] = {};
   int passerPawn_[8]  = {};
   int passerGroup_[8] = {};
   int farKingPawn_[8] = {};
@@ -123,14 +121,6 @@ struct EvalCoefficients
   int bishopAttackBonus_ = {5};
   int rookAttackBonus_ = {6};
   int queenAttackBonus_ = {8};
-
-  // PSQ-tables
-  int pawnPsq_[64]   = {};
-  int knightPsq_[64] = {};
-  int bishopPsq_[64] = {};
-  int rookPsq_[64]   = {};
-  int queenPsq_[64]  = {};
-  int kingPsqEg_[64] = {};
 
   // for special cases
   int kingToPawnDistanceMulti_{ 3 };

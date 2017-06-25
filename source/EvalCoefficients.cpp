@@ -76,8 +76,6 @@ namespace NEngine
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
     // arrays
-    arrs_.push_back(details::Arr{ "centerPawn_", std::vector<int>{ 0, -10, 0, 8, 7, 0, 0, 0 }, centerPawn_, sizeof(centerPawn_)/sizeof(*centerPawn_) });
-    arrs_.push_back(details::Arr{ "forwardPawn_", std::vector<int>{ 0, 0, 0, 3, 6, 10, 12, 0 }, forwardPawn_, sizeof(forwardPawn_)/sizeof(*forwardPawn_) });
     arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 50, 70, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
     arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 5, 7, 9, 11, 15, 19, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
     arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 10, 15, 20, 30, 40, 50, 0 }, farKingPawn_,
@@ -125,103 +123,6 @@ namespace NEngine
     vars_.push_back(details::Var{ "bishopAttackBonus_", bishopAttackBonus_, &bishopAttackBonus_ });
     vars_.push_back(details::Var{ "rookAttackBonus_", rookAttackBonus_, &rookAttackBonus_ });
     vars_.push_back(details::Var{ "queenAttackBonus_", queenAttackBonus_, &queenAttackBonus_ });
-
-    // PSQ-tables
-    // pawn
-    arrs_.push_back(details::Arr{ "pawnPsq_", std::vector<int>
-      {
-        0, 0, 0, 0, 0, 0, 0, 0,
-        5, 5, 5, 5, 5, 5, 5, 5,
-        0, 0, 3, 8, 8, 3, 0, 0,
-        0, 0, 2, 7, 7, 2, 0, 0,
-        0, 0, 1, 8, 8, 1, 0, 0,
-        2, 0, 0, 0, 0, 0, 0, 2,
-        2, 4, 4, -10, -10, 4, 4, 2,
-        0, 0, 0, 0, 0, 0, 0, 0
-      },
-      pawnPsq_,
-      sizeof(pawnPsq_)/sizeof(*pawnPsq_)
-    });
-
-    // knight
-    arrs_.push_back(details::Arr{ "knightPsq_", std::vector<int>
-      {
-        -8, -8, -8, -8, -8, -8, -8, -8,
-        -8, -8,  0,  0,  0,  0, -8, -8,
-        -5,  0,  3,  4,  4,  3,  0, -5,
-         0,  5,  5,  5,  5,  5,  5,  0,
-        -7,  0,  4,  5,  5,  4,  0, -7,
-        -8,  2,  4,  4,  4,  4,  2, -8,
-        -8, -8,  0,  2,  2,  0, -8, -8,
-        -8, -12,-5, -5, -5,  5, -12,-8
-      },
-      knightPsq_,
-      sizeof(knightPsq_)/sizeof(*knightPsq_)
-    });
-  
-    // bishop
-    arrs_.push_back(details::Arr{ "bishopPsq_", std::vector<int>
-      {
-        -8,  -4,  -4,  -4,  -4,  -4,  -4,  -8,
-        -2,   0,   0,   0,   0,   0,   0,  -2,
-         2,   0,   2,   6,   6,   2,   0,   2,
-        -2,   2,   2,   6,   6,   2,   2,  -2,
-        -2,   0,   6,   6,   6,   6,   0,  -2,
-         0,   6,   6,   6,   6,   6,   6,   0,
-        -2,   2,   0,   0,   0,   0,   2,  -2,
-        -5,  -4, -12,  -4,  -4, -12,  -4,  -5
-      },
-      bishopPsq_,
-      sizeof(bishopPsq_)/sizeof(*bishopPsq_)
-    });
-
-    // rook
-    arrs_.push_back(details::Arr{ "rookPsq_", std::vector<int>
-      {
-        10,  10,  10,  10,  10,  10,  10,  10,
-        15,  15,  15,  15,  15,  15,  15,  15,
-        -2,   0,   0,   0,   0,   0,   0,  -2,
-        -2,   0,   0,   0,   0,   0,   0,  -2,
-        -2,   0,   0,   0,   0,   0,   0,  -2,
-        -2,   0,   0,   0,   0,   0,   0,  -2,
-        -2,   0,   0,   0,   0,   0,   0,  -2,
-        -5,  -5,   0,   3,   3,   0,  -5,  -5
-      },
-      rookPsq_,
-      sizeof(rookPsq_)/sizeof(*rookPsq_)
-    });
-  
-    // queen
-    arrs_.push_back(details::Arr{ "queenPsq_", std::vector<int>
-      {
-         0,   0,   0,   0,   0,   0,   0,   0,
-         0,   0,   0,   0,   0,   0,   0,   0,
-        -2,   0,   2,   2,   2,   2,   0,  -2,
-        -2,   0,   2,   3,   3,   2,   0,  -2,
-         0,   0,   2,   3,   3,   2,   0,  -2,
-        -4,   0,   2,   2,   2,   2,   0,  -4,
-        -4,   0,   0,   1,   1,   0,   0,  -4,
-        -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5
-      },
-      queenPsq_,
-      sizeof(queenPsq_)/sizeof(*queenPsq_)
-    });
-    
-    // king
-    arrs_.push_back(details::Arr{ "kingPsqEg_", std::vector<int>
-      {
-        -14, -12, -10, -10, -10, -10, -12, -14,
-        -12,  -8,   0,   0,   0,   0,  -8, -12,
-        -10,  -4,   6,   8,   8,   6,  -4, -10,
-        -10,  -4,   8,  10,  10,   8,  -4, -10,
-        -10,  -4,   8,  10,  10,   8,  -4, -10,
-        -10,  -4,   6,   8,   8,   6,  -4, -10,
-        -12,  -8,   0,   0,   0,   0,  -8, -12,
-        -14, -12, -10, -10, -10, -10, -12, -14
-      },
-      kingPsqEg_,
-      sizeof(kingPsqEg_)/sizeof(*kingPsqEg_)
-    });
 
     // special cases
     vars_.push_back(details::Var{ "kingToPawnDistanceMulti_", kingToPawnDistanceMulti_, &kingToPawnDistanceMulti_ });

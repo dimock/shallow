@@ -77,8 +77,7 @@ struct UndoInfo
   Move          move_;
   uint8         mflags_;
   int8          eaten_type_;
-  int8          king_pos_;
-  int8          dummy_;
+  int32         psq32_;
 
   bool irreversible() const { return mflags_ & Irreversible; }
   bool capture() const { return mflags_ & Capture; }
@@ -299,7 +298,7 @@ struct Board
 
   bool invalidate();
   void verifyState();
-  void verifyChessDraw();
+  void verifyChessDraw(bool irreversibleLast);
   void findCheckingFigures(Figure::Color ocolor, int ki_pos);
 
   int halfmovesCount() const { return halfmovesCounter_; }

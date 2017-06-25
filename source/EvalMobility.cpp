@@ -11,6 +11,34 @@ Evaluator.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
+Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
+{
+  FullScore score{};
+  auto const& fmgr = board_->fmgr();
+  for(int type = Figure::TypePawn; type <= Figure::TypeKing; ++type)
+  {
+    {
+      auto mask = fmgr.type_mask((Figure::Type)type, Figure::ColorBlack);
+      for(; mask;)
+      {
+        auto p = clear_lsb(mask);
+        score.opening_ -= Figure::positionEvaluations_[0][type][p];
+        score.endGame_ -= Figure::positionEvaluations_[1][type][p];
+      }
+    }
+    {
+      auto mask = fmgr.type_mask((Figure::Type)type, Figure::ColorWhite);
+      for(; mask;)
+      {
+        auto p = Figure::mirrorIndex_[clear_lsb(mask)];
+        score.opening_ += Figure::positionEvaluations_[0][type][p];
+        score.endGame_ += Figure::positionEvaluations_[1][type][p];
+      }
+    }
+  }
+  return score;
+}
+
 Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
 {
   FullScore score{};
@@ -23,7 +51,6 @@ Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
   {
     int n = clear_lsb(knmask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += evalCoeffs().knightPsq_[p];
     auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
     finfo_[color].attack_mask_ |= knight_moves;
     finfo_[color].knightAttacks_ |= knight_moves;
@@ -38,7 +65,7 @@ Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
   return score;
 }
 
-Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
+Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
 {
   FullScore score{};
   auto const& fmgr = board_->fmgr();
@@ -53,7 +80,6 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
     int n = clear_lsb(bimask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += evalCoeffs().bishopPsq_[p];
     auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
     finfo_[color].attack_mask_   |= bishop_moves;
     finfo_[color].bishopAttacks_ |= bishop_moves;
@@ -74,7 +100,6 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
     int n = clear_lsb(rmask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += evalCoeffs().rookPsq_[p];
     auto const& rook_moves = magic_ns::rook_moves(n, mask_all_);
     finfo_[color].attack_mask_ |= rook_moves;
     finfo_[color].rookAttacks_ |= rook_moves;
@@ -101,7 +126,6 @@ Evaluator::FullScore Evaluator::evaluatePsq(Figure::Color color)
   {
     int n = clear_lsb(qmask);
     int p = color ? Figure::mirrorIndex_[n] : n;
-    score.opening_ += evalCoeffs().queenPsq_[p];
     auto queen_moves = magic_ns::queen_moves(n, mask_all_);
     finfo_[color].attack_mask_ |= queen_moves;
     finfo_[color].queenAttacks_ |= queen_moves;

@@ -25,17 +25,6 @@ extern const uint64 Figure::pawnCutoffMasks_[2] = { 0xfefefefefefefefe /* left *
 // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
 extern const ScoreType Figure::figureWeight_[7] = { 0, 90, 325, 325, 510, 995, 0 };
 
-//ScoreType Figure::positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos)
-//{
-//  X_ASSERT( stage > 1 || color > 1 || type > 7 || pos < 0 || pos > 63, "invalid figure params" );
-//
-//  uint8 cmask = ((int8)(color << 7)) >> 7;
-//  uint8 icmask = ~cmask;
-//  uint8 i = (mirrorIndex_[pos] & cmask) | (pos & icmask);
-//
-//  ScoreType e = Evaluator::positionEvaluations_[stage][type][i];
-//  return e;
-//}
 
 Figure::Type Figure::toFtype(char c)
 {

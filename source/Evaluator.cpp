@@ -18,132 +18,6 @@ namespace NEngine
   //int Evaluator::score_ex_max_ = 0;
   //
   //
-  //const ScoreType Evaluator::positionEvaluations_[2][8][64] = {
-  //  // begin
-  //  {
-  //    // empty
-  //    {},
-  //
-  //      // pawn
-  //    {
-  //      0,   0,   0,   0,   0,   0,   0,   0,
-  //      5,   5,   5,   5,   5,   5,   5,   5,
-  //      0,   0,   3,   8,   8,   3,   0,   0,
-  //      0,   0,   2,   7,   7,   2,   0,   0,
-  //      0,   0,   1,   8,   8,   1,   0,   0,
-  //      2,   0,   0,   0,   0,   0,   0,   2,
-  //      2,   4,   4, -10, -10,   4,   4,   2,
-  //      0,   0,   0,   0,   0,   0,   0,   0
-  //    },
-  //
-  //    // knight
-  //    {
-  //      -8,  -8,  -8,  -8,  -8,  -8,  -8,  -8,
-  //      -8,  -8,   0,   0,   0,   0,  -8,  -8,
-  //      -5,   0,   3,   4,   4,   3,   0,  -5,
-  //       0,   5,   5,   5,   5,   5,   5,   0,
-  //      -7,   0,   4,   5,   5,   4,   0,  -7,
-  //      -8,   2,   4,   4,   4,   4,   2,  -8,
-  //      -8,  -8,   0,   2,   2,   0,  -8,  -8,
-  //      -8, -12,  -5,  -5,  -5,  -5, -12,  -8
-  //    },
-  //
-  //    // bishop
-  //    {
-  //      -8,  -4,  -4,  -4,  -4,  -4,  -4,  -8,
-  //      -2,   0,   0,   0,   0,   0,   0,  -2,
-  //       2,   0,   2,   6,   6,   2,   0,   2,
-  //      -2,   2,   2,   6,   6,   2,   2,  -2,
-  //      -2,   0,   6,   6,   6,   6,   0,  -2,
-  //       0,   6,   6,   6,   6,   6,   6,   0,
-  //      -2,   2,   0,   0,   0,   0,   2,  -2,
-  //      -5,  -4, -12,  -4,  -4, -12,  -4,  -5
-  //    },
-  //
-  //    // rook
-  //    {
-  //     10,  10,  10,  10,  10,  10,  10,  10,
-  //     15,  15,  15,  15,  15,  15,  15,  15,
-  //     -2,   0,   0,   0,   0,   0,   0,  -2,
-  //     -2,   0,   0,   0,   0,   0,   0,  -2,
-  //     -2,   0,   0,   0,   0,   0,   0,  -2,
-  //     -2,   0,   0,   0,   0,   0,   0,  -2,
-  //     -2,   0,   0,   0,   0,   0,   0,  -2,
-  //     -5,  -5,   0,   3,   3,   0,  -5,  -5
-  //    },
-  //
-  //    // queen
-  //    {
-  //       0,   0,   0,   0,   0,   0,   0,   0,
-  //       0,   0,   0,   0,   0,   0,   0,   0,
-  //      -2,   0,   2,   2,   2,   2,   0,  -2,
-  //      -2,   0,   2,   3,   3,   2,   0,  -2,
-  //       0,   0,   2,   3,   3,   2,   0,  -2,
-  //      -4,   0,   2,   2,   2,   2,   0,  -4,
-  //      -4,   0,   0,   1,   1,   0,   0,  -4,
-  //      -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5
-  //    },
-  //
-  //
-  //    // king
-  //    {
-  //      -20, -20, -20, -20, -20, -20, -20, -20,
-  //      -20, -20, -20, -20, -20, -20, -20, -20,
-  //      -20, -20, -20, -20, -20, -20, -20, -20,
-  //      -20, -20, -20, -20, -20, -20, -20, -20,
-  //      -10, -16, -16, -20, -20, -16, -16, -10,
-  //      -4,  -8,   -8, -10, -10,  -8,  -8,  -4,
-  //       0,   0,   -2,  -8,  -8,  -2,   0,   0,
-  //       5,  12,    5,   0,   0,   5,  15,   5
-  //    },
-  //
-  //    {}
-  //  },
-  //
-  //    // end
-  //  {
-  //    // empty
-  //    {},
-  //
-  //      // pawn
-  //    {
-  //      0,   0,   0,   0,   0,   0,   0,   0,
-  //      16,  16,  16,  16, 16,  16,  16,  16,
-  //      12,  12,  12,  12, 12,  12,  12,  12,
-  //      8,   8,   8,   8,   8,   8,   8,   8,
-  //      5,   5,   5,   5,   5,   5,   5,   5,
-  //      3,   3,   3,   3,   3,   3,   3,   3,
-  //      0,   0,   0,   0,   0,   0,   0,   0,
-  //      0,   0,   0,   0,   0,   0,   0,   0
-  //    },
-  //
-  //    // knight
-  //    {},
-  //
-  //    // bishop
-  //    {},
-  //
-  //    // rook
-  //    {},
-  //
-  //    // queen
-  //    {},
-  //
-  //    // king
-  //    {
-  //      -14, -12, -10, -10, -10, -10, -12, -14,
-  //      -12,  -8,   0,   0,   0,   0,  -8, -12,
-  //      -10,  -4,   6,   8,   8,   6,  -4, -10,
-  //      -10,  -4,   8,  10,  10,   8,  -4, -10,
-  //      -10,  -4,   8,  10,  10,   8,  -4, -10,
-  //      -10,  -4,   6,   8,   8,   6,  -4, -10,
-  //      -12,  -8,   0,   0,   0,   0,  -8, -12,
-  //      -14, -12, -10, -10, -10, -10, -12, -14
-  //    },
-  //
-  //    {}
-  //  }
-  //};
   //
   //
   //const ScoreType Evaluator::pawnDoubled_  = -12;
@@ -401,18 +275,21 @@ namespace NEngine
       score.opening_ += kingScore;
     }
 
+    score.opening_ += fmgr.eval(0);
+    score.endGame_ += fmgr.eval(1);
+
     //if(phaseInfo.phase_ != EndGame)
     //{
     //  score.opening_ += evaluateBlockedKnights();
     //  score.opening_ += evaluateBlockedBishops();
     //}
 
-    if(phaseInfo.phase_ != Opening)
-    {
-      // king psq endgame
-      score.endGame_ += evaluateKingPsqEg(Figure::ColorWhite);
-      score.endGame_ -= evaluateKingPsqEg(Figure::ColorBlack);
-    }
+    //if(phaseInfo.phase_ != Opening)
+    //{
+    //  // king psq endgame
+    //  score.endGame_ += evaluateKingPsqEg(Figure::ColorWhite);
+    //  score.endGame_ -= evaluateKingPsqEg(Figure::ColorBlack);
+    //}
 
     ///// use lazy evaluation level 1
     //{
@@ -492,12 +369,6 @@ namespace NEngine
       score.endGame_ += pop_count(pw_unprotected & bi_mask) * evalCoeffs().unprotectedPawnBishopTreat_;
     }
     return score;
-  }
-
-  ScoreType Evaluator::evaluateKingPsqEg(Figure::Color color) const
-  {
-    int p = finfo_[color].king_pos_;
-    return evalCoeffs().kingPsqEg_[p];
   }
 
   Evaluator::FullScore Evaluator::hashedEvaluation()
@@ -612,15 +483,6 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
 
     int x  = idx.x();
     int cy = colored_y_[color][idx.y()];
-    
-    // lets move forward
-    score.common_ += evalCoeffs().forwardPawn_[cy];
-
-    // 1. center pawns
-    if(x == 3 || x == 4) // D, E columns
-    {
-      score.opening_ += evalCoeffs().centerPawn_[cy];
-    }
 
     // 2. passed pawn
     {

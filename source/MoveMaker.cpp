@@ -18,8 +18,6 @@ void Board::makeMove(const Move & move)
 
   // save general data
   undo.data_ = data_;
-  //// save king position
-  //undo.king_pos_ = king_pos_[color()];
   // save Zobrist keys
   undo.zcode_ = fmgr_.hashCode();
   undo.zcode_pw_ = fmgr_.pawnCode();
@@ -29,6 +27,8 @@ void Board::makeMove(const Move & move)
   undo.eaten_type_ = 0;
   // save move
   undo.move_ = move;
+  // save PSQ evak
+  undo.psq32_ = fmgr_.eval32();
   // set state
   data_.state_ = Ok;
 
@@ -170,7 +170,7 @@ void Board::makeMove(const Move & move)
   if(undo.irreversible())
   {
     data_.fiftyMovesCount_ = 0;
-    data_.repsCounter_ = 0;
+    data_.repsCounter_ = 1;
   }
   else
   {
@@ -183,7 +183,7 @@ void Board::makeMove(const Move & move)
   fmgr_.hashColor();
   setColor(ocolor);
 
-  verifyChessDraw();
+  verifyChessDraw(undo.irreversible());
 
   detectCheck(move);
 
@@ -203,7 +203,7 @@ void Board::unmakeMove(const Move& move)
   Figure::Color ocolor = color();
 
   data_ = undo.data_;
-  //king_pos_[color()] = undo.king_pos_;
+  fmgr_.resoreEval(undo.psq32_);
 
   movesCounter_ -= ocolor;
 

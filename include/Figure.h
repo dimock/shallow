@@ -20,6 +20,9 @@ namespace Figure
   extern const ScoreType figureWeight_[7]; // TypeNone, TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
   extern const uint8     mirrorIndex_[64];
 
+  // position evaluation. 0 - opening, 1 - endgame; color,type,pos
+  extern const ScoreType positionEvaluations_[2][8][64];
+
   inline Figure::Color otherColor(Figure::Color color)
   {
     //return (Figure::Color)((static_cast<int>(color) + 1) & 1);
@@ -28,7 +31,14 @@ namespace Figure
 
   const char * name(Type type);
 
-  //ScoreType positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos);
+  inline ScoreType positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos)
+  {
+    X_ASSERT( stage > 1 || color > 1 || type > 7 || pos < 0 || pos > 63, "invalid figure params" );
+    if(color)
+      return +positionEvaluations_[stage][type][mirrorIndex_[pos]];
+    else
+      return -positionEvaluations_[stage][type][pos];
+  }
 
   Figure::Type toFtype(char c);
 
@@ -76,7 +86,6 @@ public:
     X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::Type::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop]
              + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
              + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
-    //X_ASSERT(count_ != pawns() + bishops() + knights() + rooks() + queens(), "invalid number of figures encountered");
   }
 
   inline void decr(const Figure::Color c, const Figure::Type t, int p)
@@ -95,7 +104,6 @@ public:
     X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop]
              + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
              + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
-    //X_ASSERT(count_ != pawns() + bishops() + knights() + rooks() + queens(), "invalid number of figures encountered");
   }
 
   inline void move(const Figure::Color c, const Figure::Type t, int from, int to)
@@ -159,6 +167,8 @@ public:
     hashCode_ ^= uc;
     if(t == Figure::TypePawn)
       pawnCode_ ^= uc;      
+    eval_[0] += Figure::positionEvaluation(0, c, t, p);
+    eval_[1] += Figure::positionEvaluation(1, c, t, p);
   }
 
   inline void decr(const Figure::Color c, const Figure::Type t, int p)
@@ -168,6 +178,8 @@ public:
     hashCode_ ^= uc;
     if(t == Figure::TypePawn)
       pawnCode_ ^= uc;
+    eval_[0] -= Figure::positionEvaluation(0, c, t, p);
+    eval_[1] -= Figure::positionEvaluation(1, c, t, p);
   }
 
   inline void move(const Figure::Color c, const Figure::Type t, int from, int to)
@@ -184,6 +196,12 @@ public:
       pawnCode_ ^= uc0;
       pawnCode_ ^= uc1;
     }
+
+    eval_[0] -= Figure::positionEvaluation(0, c, t, from);
+    eval_[0] += Figure::positionEvaluation(0, c, t, to);
+
+    eval_[1] -= Figure::positionEvaluation(1, c, t, from);
+    eval_[1] += Figure::positionEvaluation(1, c, t, to);
 
     X_ASSERT(fcounter_[c].mask_all() & set_mask_bit(from), "invalid figures mask");
   }
@@ -220,18 +238,10 @@ public:
     pawnCode_ ^= colorCode();
   }
 
-  //inline void restoreMasks(const BitMask (& mask)[2])
-  //{
-	 // fcounter_[0].set_mask_all(mask[0]);
-  //  fcounter_[1].set_mask_all(mask[1]);
-  //}
-
   void restoreHash(const BitMask & hcode) { hashCode_ = hcode; }
   void restorePawnCode(const BitMask & pcode) { pawnCode_ = pcode; }
 
-  //inline int count(Figure::Color color) const { return fcounter_[color].count(); }
   inline int tcount(Figure::Type type, Figure::Color color) const { return fcounter_[color].tcount(type); }
-  //inline int count() const { return fcounter_[0].count() + fcounter_[1].count(); }
   inline int pawns(Figure::Color color) const { return fcounter_[color].pawns(); }
   inline int pawns() const { return pawns(Figure::ColorWhite) + pawns(Figure::ColorBlack); }
   inline int bishops(Figure::Color color) const { return fcounter_[color].bishops(); }
@@ -251,6 +261,11 @@ public:
 
   inline const BitMask & hashCode() const { return hashCode_; }
   inline const BitMask & pawnCode() const { return pawnCode_; }
+
+  inline const ScoreType eval(int stage) const { X_ASSERT(stage < 0 || stage > 1, "invalid stage"); return eval_[stage]; }
+
+  inline int32 eval32() const { return eval32_; }
+  inline void resoreEval(int32 ev32) { eval32_ = ev32; }
 
   inline const BitMask & code(const Figure::Color c, const Figure::Type t, int p) const
   {
@@ -277,6 +292,15 @@ private:
   BitMask hashCode_{};
   BitMask pawnCode_{};
   FiguresCounter fcounter_[2];
+
+  union
+  {
+    struct
+    {
+      ScoreType eval_[2];
+    };
+    int32 eval32_{};
+  };
 };
 
 

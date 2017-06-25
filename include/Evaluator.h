@@ -96,9 +96,6 @@ public:
 
  // static int score_ex_max_;
 
- // // position evaluation. 0 - opening, 1 - endgame; color,type,pos
- // static const ScoreType positionEvaluations_[2][8][64];
-
   const int lazyThreshold0_ = 400;// Figure::figureWeight_[Figure::TypePawn] * 4;
   const int lazyThreshold1_ = 300;// Figure::figureWeight_[Figure::TypePawn] * 3;
 
@@ -199,15 +196,16 @@ private:
   PhaseInfo detectPhase() const;
 
   // get from PSQ table
+  // bruteforce and slow
+  FullScore evaluatePsqBruteforce() const;
+
   // + fill attacked fileds masks
   FullScore evaluateKnights(Figure::Color color);
-  FullScore evaluatePsq(Figure::Color color);
+  FullScore evaluateFigures(Figure::Color color);
 
   FullScore evaluateMobility(Figure::Color color);
 
   FullScore evaluatePawnsPressure(Figure::Color color);
-
-  ScoreType evaluateKingPsqEg(Figure::Color color) const;
 
   // calculate or take from hash
   // pawns structure for middle & end game

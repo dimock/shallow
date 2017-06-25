@@ -26,7 +26,7 @@ struct Move
 
   operator bool() const
   {
-    return mask;
+    return mask != 0;
   }
 
   int from() const { return mask & 63; }

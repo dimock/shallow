@@ -187,6 +187,10 @@ ScoreType Engine::alphaBetta0()
   ScoreType alpha = -ScoreMax;
   const int depth = sdata_.depth_ * ONE_PLY;
 
+#ifndef NDEBUG
+  Board board0{ board };
+#endif
+
   for(sdata_.counter_ = 0; sdata_.counter_ < sdata_.numOfMoves_; ++sdata_.counter_)
   {
     if(checkForStop())
@@ -219,6 +223,7 @@ ScoreType Engine::alphaBetta0()
     }
 
     board.unmakeMove(move);
+    X_ASSERT(board != board0, "board undo error");
 
     if(!stopped())
     {
@@ -297,6 +302,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   Move best{true};
   int counter{};
 
+#ifndef NDEBUG
+  Board board0{ board };
+#endif
+
   FastGenerator<Board, SMove> fg(board, hmove, scontexts_[ictx].plystack_[ply].killer_);
   for(; alpha < betta && !checkForStop();)
   {
@@ -328,6 +337,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     }
 
     board.unmakeMove(move);
+    X_ASSERT(board != board0, "board undo error");
 
     if(!stopped())
     {
@@ -433,6 +443,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   Move best{true};
 
+#ifndef NDEBUG
+  Board board0{ board };
+#endif
+
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop();)
   {
@@ -455,6 +469,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax);
 
     board.unmakeMove(move);
+    X_ASSERT(board != board0, "board undo error");
 
     if(!stopped() && score > scoreBest)
     {

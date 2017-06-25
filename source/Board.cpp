@@ -267,7 +267,7 @@ bool Board::invalidate()
 
   X_ASSERT(isAttacked(ocolor, ki_pos) && !underCheck(), "invalid check detection");
 
-  verifyChessDraw();
+  verifyChessDraw(false);
 
   if(drawState())
     return true;
@@ -761,7 +761,7 @@ void Board::detectCheck(Move const& move)
   data_.checking_ = pt;
 }
 
-void Board::verifyChessDraw()
+void Board::verifyChessDraw(bool irreversibleLast)
 {
   if((data_.fiftyMovesCount_ == 100 && !underCheck()) || (data_.fiftyMovesCount_ > 100))
   {
@@ -780,12 +780,16 @@ void Board::verifyChessDraw()
       return;
     }
   }
+  
+  if(irreversibleLast)
+  {
+    X_ASSERT(data_.repsCounter_ != 1, "repetitions count should be 0");
+    return;
+  }
+  
+  data_.repsCounter_ = countReps(2, fmgr_.hashCode());
 
-  int reps = countReps(2, fmgr_.hashCode());
-  if(reps > data_.repsCounter_)
-    data_.repsCounter_ = reps;
-
-  if(reps >= 3)
+  if(data_.repsCounter_ >= 3)
     data_.state_ |= DrawReps;
 }
 
