@@ -56,6 +56,20 @@ class Evaluator
       endGame_ += other.endGame_;
       return *this;
     }
+
+    FullScore operator + (FullScore const& other) const
+    {
+      FullScore result{*this};
+      result.common_  += other.common_;
+      result.opening_ += other.opening_;
+      result.endGame_ += other.endGame_;
+      return result;
+    }
+
+    bool operator == (FullScore const& other) const
+    {
+      return common_ == other.common_ && opening_ == other.opening_ && endGame_ == other.endGame_;
+    }
   };
 
   struct PasserInfo
@@ -66,7 +80,6 @@ class Evaluator
 
   struct FieldsInfo
   {
-    int king_pos_{-1};
     int knightMobility_{};
     int bishopMobility_{};
     int rookMobility_{};
@@ -133,7 +146,6 @@ private:
   FullScore evaluateFigures(Figure::Color color);
 
   FullScore evaluateMobility(Figure::Color color);
-
   FullScore evaluatePawnsPressure(Figure::Color color);
 
   // calculate or take from hash
@@ -142,7 +154,15 @@ private:
   FullScore hashedEvaluation();
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
+
   FullScore evaluatePawns(Figure::Color color) const;
+  FullScore evaluatePawns() const
+  {
+    auto score = evaluatePawns(Figure::ColorWhite);
+    score -= evaluatePawns(Figure::ColorBlack);
+    return score;
+  }
+
   PasserInfo passerEvaluation(Figure::Color color) const;
   FullScore passerEvaluation() const;
   // search path from opponent king to pawn's promotion of given color
@@ -155,9 +175,23 @@ private:
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
+  
+  int evaluateCastle(Figure::Color color) const;
+  int evaluateCastle() const
+  {
+    auto score = evaluateCastle(Figure::ColorWhite);
+    score -= evaluateCastle(Figure::ColorBlack);
+    return score;
+  }
+
   int evaluateKingSafety(Figure::Color color) const;
-  int evaluateKingSafety() const;
-  int evaluateCastle(Figure::Color color, Figure::Color ocolor, int castleType, Index const& ki_pos) const;
+  FullScore evaluateKingSafety() const
+  {
+    FullScore score;
+    score.opening_ = evaluateKingSafety(Figure::ColorWhite);
+    score.opening_ -= evaluateKingSafety(Figure::ColorBlack);
+    return score;
+  }
 
   int evaluateBlockedKnights();
   int evaluateBlockedBishops();

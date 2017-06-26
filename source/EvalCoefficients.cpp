@@ -51,7 +51,6 @@ namespace NEngine
     vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
     vars_.push_back(details::Var{ "fakeCastle_", fakeCastle_, &fakeCastle_ });
     vars_.push_back(details::Var{ "castleBonus_", castleBonus_, &castleBonus_ });
-    vars_.push_back(details::Var{ "roamingKing_", roamingKing_, &roamingKing_ });
     vars_.push_back(details::Var{ "pawnShieldA_", pawnShieldA_, &pawnShieldA_ });
     vars_.push_back(details::Var{ "pawnShieldB_", pawnShieldB_, &pawnShieldB_ });
     vars_.push_back(details::Var{ "pawnShieldC_", pawnShieldC_, &pawnShieldC_ });

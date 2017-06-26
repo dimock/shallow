@@ -46,7 +46,7 @@ Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
   auto const ocolor = Figure::otherColor(color);
   // knights
   BitMask knmask = fmgr.knight_mask(color);
-  BitMask knight_from_king = movesTable().caps(Figure::TypeKnight, finfo_[ocolor].king_pos_) & inv_mask_all_;
+  BitMask knight_from_king = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor)) & inv_mask_all_;
   for(; knmask;)
   {
     int n = clear_lsb(knmask);
@@ -55,7 +55,7 @@ Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
     finfo_[color].attack_mask_ |= knight_moves;
     finfo_[color].knightAttacks_ |= knight_moves;
     finfo_[color].knightMasks_.push_back(knight_moves);
-    auto kn_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    auto kn_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
     bool could_check = (knight_from_king & knight_moves) != 0;
     bool could_attack = (finfo_[ocolor].kingAttacks_ & knight_moves) != 0ULL;
     finfo_[color].knightPressure_ += evalCoeffs().kingDistanceKnight_[kn_dist];
@@ -74,8 +74,8 @@ Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
   // bishops
   BitMask bimask = fmgr.bishop_mask(color);
   BitMask mask_all_no_bishops = mask_no_queens & ~bimask;
-  BitMask const& bishop_from_king = magic_ns::bishop_moves(finfo_[ocolor].king_pos_, mask_all_) & inv_mask_all_;
-  BitMask const& rook_from_king   = magic_ns::rook_moves(finfo_[ocolor].king_pos_, mask_all_) & inv_mask_all_;
+  BitMask const& bishop_from_king = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_) & inv_mask_all_;
+  BitMask const& rook_from_king = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_) & inv_mask_all_;
   for(; bimask;)
   {
     int n = clear_lsb(bimask);
@@ -87,7 +87,7 @@ Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
     // opponent's king attacks with x-ray
     auto x_bishop_moves = magic_ns::bishop_moves(n, mask_all_no_bishops);
     bool could_attack   = (finfo_[ocolor].kingAttacks_ & x_bishop_moves) != 0ULL;
-    auto bi_dist        = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    auto bi_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
     bool could_check    = (bishop_from_king & bishop_moves) != 0;
     finfo_[color].bishopPressure_ += evalCoeffs().kingDistanceBishop_[bi_dist];
     finfo_[color].bishopPressure_ += evalCoeffs().bishopAttackBonus_ * (could_attack || could_check);
@@ -104,7 +104,7 @@ Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
     finfo_[color].attack_mask_ |= rook_moves;
     finfo_[color].rookAttacks_ |= rook_moves;
     finfo_[color].rookMasks_.push_back(rook_moves);
-    auto r_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    auto r_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
     // opponent's king attacks with x-ray
     auto const& x_rook_moves = magic_ns::rook_moves(n, mask_all_no_rooks);
     bool could_attack = (finfo_[ocolor].kingAttacks_ & x_rook_moves) != 0ULL;
@@ -130,7 +130,7 @@ Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
     finfo_[color].attack_mask_ |= queen_moves;
     finfo_[color].queenAttacks_ |= queen_moves;
     finfo_[color].queenMasks_.push_back(queen_moves);
-    auto q_dist = distanceCounter().getDistance(n, finfo_[ocolor].king_pos_);
+    auto q_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
     // opponent's king attacks with x-ray
     auto const& x_rook_moves   = magic_ns::rook_moves(n, mask_all_no_rooks);
     auto const& x_bishop_moves = magic_ns::bishop_moves(n, mask_all_no_bishops);

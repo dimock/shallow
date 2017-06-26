@@ -155,7 +155,7 @@ public:
   void clear()
   {
     hashCode_ = 0ULL;
-    pawnCode_ = 0ULL;
+    kpwnCode_ = 0ULL;
     fcounter_[0].clear();
     fcounter_[1].clear();
   }
@@ -165,8 +165,8 @@ public:
     fcounter_[c].incr(c, t, p);
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
-    if(t == Figure::TypePawn)
-      pawnCode_ ^= uc;      
+    if(t == Figure::TypePawn || t == Figure::TypeKing)
+      kpwnCode_ ^= uc;      
     eval_[0] += Figure::positionEvaluation(0, c, t, p);
     eval_[1] += Figure::positionEvaluation(1, c, t, p);
   }
@@ -176,8 +176,8 @@ public:
     fcounter_[c].decr(c, t, p);
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
-    if(t == Figure::TypePawn)
-      pawnCode_ ^= uc;
+    if(t == Figure::TypePawn || t == Figure::TypeKing)
+      kpwnCode_ ^= uc;
     eval_[0] -= Figure::positionEvaluation(0, c, t, p);
     eval_[1] -= Figure::positionEvaluation(1, c, t, p);
   }
@@ -191,10 +191,10 @@ public:
     hashCode_ ^= uc0;
     hashCode_ ^= uc1;
 
-    if ( t == Figure::TypePawn)
+    if(t == Figure::TypePawn || t == Figure::TypeKing)
     {
-      pawnCode_ ^= uc0;
-      pawnCode_ ^= uc1;
+      kpwnCode_ ^= uc0;
+      kpwnCode_ ^= uc1;
     }
 
     eval_[0] -= Figure::positionEvaluation(0, c, t, from);
@@ -225,21 +225,23 @@ public:
   inline void hashEnPassant(uint8 pos, uint8 color)
   {
     hashCode_ ^= enpassantCode(pos, color);
+    kpwnCode_ ^= enpassantCode(pos, color);
   }
 
   inline void hashCastling(uint8 color, uint8 index /* 0 - short, 1 - long */)
   {
     hashCode_ ^= castleCode(color, index);
+    kpwnCode_ ^= castleCode(color, index);
   }
 
   inline void hashColor()
   {
     hashCode_ ^= colorCode();
-    pawnCode_ ^= colorCode();
+    kpwnCode_ ^= colorCode();
   }
 
   void restoreHash(const BitMask & hcode) { hashCode_ = hcode; }
-  void restorePawnCode(const BitMask & pcode) { pawnCode_ = pcode; }
+  void restoreKpwnCode(const BitMask & pcode) { kpwnCode_ = pcode; }
 
   inline int tcount(Figure::Type type, Figure::Color color) const { return fcounter_[color].tcount(type); }
   inline int pawns(Figure::Color color) const { return fcounter_[color].pawns(); }
@@ -260,7 +262,7 @@ public:
   inline const BitMask & type_mask(const Figure::Type type, const Figure::Color color) const { return fcounter_[color].type_mask(type); }
 
   inline const BitMask & hashCode() const { return hashCode_; }
-  inline const BitMask & pawnCode() const { return pawnCode_; }
+  inline const BitMask & kpwnCode() const { return kpwnCode_; }
 
   inline const ScoreType eval(int stage) const { X_ASSERT(stage < 0 || stage > 1, "invalid stage"); return eval_[stage]; }
 
@@ -290,7 +292,7 @@ public:
 private:
 
   BitMask hashCode_{};
-  BitMask pawnCode_{};
+  BitMask kpwnCode_{};
   FiguresCounter fcounter_[2];
 
   union

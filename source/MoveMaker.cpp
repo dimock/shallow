@@ -20,7 +20,7 @@ void Board::makeMove(const Move & move)
   undo.data_ = data_;
   // save Zobrist keys
   undo.zcode_ = fmgr_.hashCode();
-  undo.zcode_pw_ = fmgr_.pawnCode();
+  undo.zcode_kpw_ = fmgr_.kpwnCode();
   // clear flags
   undo.mflags_ = 0;
   // clear eaten type
@@ -263,7 +263,7 @@ void Board::unmakeMove(const Move& move)
   }
 
   fmgr_.restoreHash(undo.zcode_);
-  fmgr_.restorePawnCode(undo.zcode_pw_);
+  fmgr_.restoreKpwnCode(undo.zcode_kpw_);
 }
 
 void Board::makeNullMove()
@@ -278,7 +278,7 @@ void Board::makeNullMove()
   undo.data_ = data_;
   // save Zobrist keys
   undo.zcode_ = fmgr_.hashCode();
-  undo.zcode_pw_ = fmgr_.pawnCode();
+  undo.zcode_kpw_ = fmgr_.kpwnCode();
 
   X_ASSERT(data_.state_ != Ok, "try null-move on invalid state");
 
@@ -307,7 +307,7 @@ void Board::unmakeNullMove()
   data_ = undo.data_;
 
   fmgr_.restoreHash(undo.zcode_);
-  fmgr_.restorePawnCode(undo.zcode_pw_);
+  fmgr_.restoreKpwnCode(undo.zcode_kpw_);
 }
 
 } // NEngine

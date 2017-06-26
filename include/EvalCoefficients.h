@@ -66,7 +66,6 @@ struct EvalCoefficients
   int castleImpossible_{ -25 };
   int fakeCastle_{ -25 };
   int castleBonus_{ 12 };
-  int roamingKing_{ -12 };
   int pawnShieldA_{ 13 };
   int pawnShieldB_{ 12 };
   int pawnShieldC_{ 6 };

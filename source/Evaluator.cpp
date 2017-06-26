@@ -31,10 +31,6 @@ void Evaluator::prepare()
   finfo_[0] = FieldsInfo{};
   finfo_[1] = FieldsInfo{};
 
-  finfo_[0].king_pos_ = board_->kingPos(Figure::ColorBlack);
-  finfo_[1].king_pos_ = board_->kingPos(Figure::ColorWhite);
-
-
   // pawns attacks
   {
     const BitMask & pawn_msk_w = board_->fmgr().pawn_mask(Figure::ColorWhite);
@@ -49,8 +45,8 @@ void Evaluator::prepare()
 
   // attacked fields near king
   {
-    finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, finfo_[0].king_pos_);
-    finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, finfo_[1].king_pos_);
+    finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
+    finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
 
     finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
     finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
@@ -74,7 +70,7 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 #else
 
   if(ehash_)
-    ehash_->prefetch(board_->fmgr().pawnCode());
+    ehash_->prefetch(board_->fmgr().kpwnCode());
 
   if(board_->matState())
     return -Figure::MatScore;
@@ -137,8 +133,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   prepare();
 
   // take pawns eval from hash if possible
-  auto pawnScore = hashedEvaluation();
-  score += pawnScore;
+  auto hashedScore = hashedEvaluation();
+  score += hashedScore;
 
   // determine game phase (opening, middle or end game)
   auto phaseInfo = detectPhase();
@@ -154,13 +150,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //auto scoreForks = evaluateForks(Figure::ColorWhite);
   //scoreForks -= evaluateForks(Figure::ColorBlack);
   //score.common_ += scoreForks;
-
-  // basic king safety - pawn shield, castle
-  if(phaseInfo.phase_ != EndGame)
-  {
-    auto kingScore = evaluateKingSafety();
-    score.opening_ += kingScore;
-  }
 
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);
@@ -261,7 +250,7 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
 Evaluator::FullScore Evaluator::hashedEvaluation()
 {
   HEval * heval = 0;
-  const uint64 & code = board_->fmgr().pawnCode();
+  const uint64 & code = board_->fmgr().kpwnCode();
   uint32 hkey = (uint32)(code >> 32);
 
   if(ehash_)
@@ -274,12 +263,16 @@ Evaluator::FullScore Evaluator::hashedEvaluation()
       score.common_ = heval->common_;
       score.opening_ = heval->opening_;
       score.endGame_ = heval->endGame_;
+      X_ASSERT(!(score == evaluatePawns() + evaluateKingSafety()), "invalid pawns+king score in hash");
       return score;
     }
   }
 
-  auto score = evaluatePawns(Figure::ColorWhite);
-  score -= evaluatePawns(Figure::ColorBlack);
+  auto score = evaluatePawns();
+
+  // basic king safety - pawn shield
+  auto kingScore = evaluateKingSafety();
+  score += kingScore;
 
   if(heval)
   {
@@ -493,8 +486,8 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
     // opponent king should be far from my pawn
     // small bonus for short distance to my king
     // double if opponent has no pawns
-    int dist_to_oking = distanceCounter().getDistance(finfo_[ocolor].king_pos_, n);
-    int dist_to_myking = distanceCounter().getDistance(finfo_[color].king_pos_, n);
+    int dist_to_oking = distanceCounter().getDistance(board_->kingPos(ocolor), n);
+    int dist_to_myking = distanceCounter().getDistance(board_->kingPos(color), n);
 
     info.score.endGame_ += evalCoeffs().oKingToPawnBonus_[dist_to_oking];
     info.score.endGame_ += evalCoeffs().myKingToPawnBonus_[dist_to_myking] * (1 + no_opawns);
@@ -516,7 +509,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
     
     bool king_far = false;
     int pawn_dist_promo = std::abs(py - y);
-    int o_dist_promo = distanceCounter().getDistance(finfo_[ocolor].king_pos_, promo_pos) - (board_->color() == ocolor);
+    int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), promo_pos) - (board_->color() == ocolor);
     king_far = pawn_dist_promo < o_dist_promo;
     
     // my rook behind passed pawn - give bonus
@@ -623,13 +616,6 @@ int Evaluator::getCastleType(Figure::Color color) const
   return (!cking && !cqueen) * (-1) + cqueen;
 }
 
-int Evaluator::evaluateKingSafety() const
-{
-  auto score = evaluateKingSafety(Figure::ColorWhite);
-  score -= evaluateKingSafety(Figure::ColorBlack);
-  return score;
-}
-
 int Evaluator::evaluateKingSafety(Figure::Color color) const
 {
   if(board_->castling(color))
@@ -638,24 +624,8 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   const FiguresManager & fmgr = board_->fmgr();
   auto pmask  = fmgr.pawn_mask(color);
 
-  int score = 0;
   Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
   auto opmask = fmgr.pawn_mask(ocolor);
-  Index ki_pos(finfo_[color].king_pos_);
-
-  int kx = ki_pos.x();
-  int ky = ki_pos.y();
-
-  int ctype = getCastleType(color);
-  X_ASSERT(ctype < -1 || ctype > 1, "invalid castle type detected");
-
-  int delta_y[] = {-1, +1};
-
-  score += evaluateCastle(color, ocolor, ctype, ki_pos);
-
-  int cy = colored_y_[color][ky] - 1;
-  if(cy > 0)
-    score += evalCoeffs().roamingKing_ * cy;
 
   // pawns shield
   static const BitMask pawns_shield_mask[2][2][3] =
@@ -746,6 +716,8 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     },
   };
 
+  int score = 0;
+  auto ctype = getCastleType(color);
   if(ctype >= 0)
   {
     int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0) * evalCoeffs().pawnShieldA_
@@ -767,9 +739,13 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   return score;
 }
 
-int Evaluator::evaluateCastle(Figure::Color color, Figure::Color ocolor, int castleType, Index const& ki_pos) const
+int Evaluator::evaluateCastle(Figure::Color color) const
 {
   const FiguresManager & fmgr = board_->fmgr();
+  Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
+  Index ki_pos(board_->kingPos(color));
+  auto castleType = getCastleType(color);
+  X_ASSERT(castleType < -1 || castleType > 1, "invalid castle type detected");
 
   static const BitMask fake_castle_rook[2][2] = {
     { set_mask_bit(G8)|set_mask_bit(H8)|set_mask_bit(G7)|set_mask_bit(H7),
