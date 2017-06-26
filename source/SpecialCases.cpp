@@ -274,6 +274,38 @@ void SpecialCasesDetector::initUsual()
     return +10 + evalKings1Pawn(board, Figure::ColorWhite);
   };
 
+  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypePawn, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypePawn, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypePawn, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypePawn, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+  };
+
   auto bishops_vs_knight = [](Board const& board, Figure::Color winnerColor)
   {
     auto loserColor = Figure::otherColor(winnerColor);
