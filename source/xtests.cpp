@@ -176,7 +176,7 @@ void evaluateFen(std::string const& ffname)
   {
     NShallow::Processor proc;
     NEngine::Evaluator eval;
-    eval.initialize(&e.board_, nullptr);
+    eval.initialize(&e.board_, nullptr, nullptr);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     std::cout << score << std::endl;
   },

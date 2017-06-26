@@ -32,9 +32,9 @@ Engine::Engine() :
   for(auto& scontext : scontexts_)
   {
 #ifdef USE_HASH
-    scontext.eval_.initialize(&scontext.board_, &ehash_);
+    scontext.eval_.initialize(&scontext.board_, &ehash_, &hash_);
 #else
-    scontext.eval_.initialize(&scontext.board_, nullptr);
+    scontext.eval_.initialize(&scontext.board_, nullptr, nullptr);
 #endif
   }
 }

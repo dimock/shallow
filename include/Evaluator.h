@@ -90,82 +90,11 @@ class Evaluator
 
 public:
 
-	//// used to decide calculate null-move or not
-	//static const ScoreType nullMoveMargin_;
-	//static const ScoreType nullMoveVerifyMargin_;
-
- // static int score_ex_max_;
-
   const int lazyThreshold0_ = 400;// Figure::figureWeight_[Figure::TypePawn] * 4;
   const int lazyThreshold1_ = 300;// Figure::figureWeight_[Figure::TypePawn] * 3;
-
- // // evaluation constants
- // static const ScoreType bishopKnightMat_[64];
- // static const ScoreType pawnDoubled_, pawnIsolated_, pawnBackward_, pawnDisconnected_, pawnBlocked_, defendedBonus_;
- // static const ScoreType groupsPenalty_;
- // static const ScoreType assistantBishop_, rookBehindBonus_;
- // static const ScoreType semiopenRook_, openRook_, winloseBonus_;
- // static const ScoreType fakecastlePenalty_;
- // static const ScoreType castleImpossiblePenalty_;
- // static const ScoreType bishopBonus_;
- // static const ScoreType unstoppablePawn_;
- // static const ScoreType kingFarBonus_;
- // static const ScoreType pawnPassed_[8], passerCandidate_[8];//, pawnCanGo_[8];
- // static const ScoreType passersGroup_[8];
- // static const ScoreType mobilityBonus_[8][32];
- // static const ScoreType kingDistanceBonus_[8][8];
-	//static const ScoreType attackerNumberBonus_[8];
- // static const ScoreType attackedByWeakBonus_;
- // static const ScoreType forkBonus_;
- // static const ScoreType fianchettoBonus_;
- // static const ScoreType rookToKingBonus_;
-
- // /// material difference
- // static const ScoreType figureAgainstPawnBonus_[2];
- // static const ScoreType rookAgainstFigureBonus_[2];
-	//static const ScoreType rookAgainstPawnsBonus_[2];
-
- // // blocked bishop & knight
- // static const ScoreType bishopBlocked_;
- // static const ScoreType knightBlocked_;
-
- // // pinned
- // static const ScoreType pinnedKnight_;
- // static const ScoreType pinnedBishop_;
- // static const ScoreType pinnedRook_;
-
- // // pawns shield. penalty for absent pawn
- // static const ScoreType cf_columnOpened_;
- // static const ScoreType bg_columnOpened_;
- // static const ScoreType ah_columnOpened_;
-
- // static const ScoreType cf_columnSemiopened_;
- // static const ScoreType bg_columnSemiopened_;
- // static const ScoreType ah_columnSemiopened_;
-
- // static const ScoreType cf_columnCracked_;
- // static const ScoreType bg_columnCracked_;
- // static const ScoreType ah_columnCracked_;
-
- // static const ScoreType pawnBeforeKing_;
-
- // // pressure to opponent's king
- // static const ScoreType kingPawnPressure_;
- // //static const ScoreType kingKnightPressure_;
- // //static const ScoreType kingBishopPressure_;
- // //static const ScoreType kingRookPressure_;
- // //static const ScoreType kingQueenPressure_;
-  
-  //Evaluator();
-
-  void initialize(Board const* board, EHashTable* ehash);
+  void initialize(Board const* board, EHashTable* ehash, GHashTable* ghash);
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
-
-	///// evaluate material balance only
-	//ScoreType express() const;
-
- // bool isSpecialCase() const;
 
 private:
 
@@ -190,7 +119,7 @@ private:
   }
 
   /// calculates absolute position evaluation
-  ScoreType evaluate();
+  ScoreType evaluate(ScoreType alpha, ScoreType betta);
 
   // multiple coefficients for opening/endgame
   PhaseInfo detectPhase() const;
@@ -234,60 +163,6 @@ private:
   int evaluateBlockedBishops();
   int evaluateBlockedRooks();
 
- // ScoreType evaluateFianchetto() const;
-
- // // special cases
-
- // enum SpecialCases
- // {
- //   SC_None, SC_RBR_W, SC_RNR_W, SC_RBR_B, SC_RNR_B, SC_RF_B, SC_RF_W, SC_R2F_B, SC_R2F_W, SC_RFP_B, SC_RFP_W, SC_2NP_B, SC_2NP_W, SC_RPRF_W, SC_RPRF_B
- // };
-
- // SpecialCases findSpecialCase() const;
- // ScoreType evaluateSpecial(SpecialCases sc) const;
-  //ScoreType evaluateWinnerLoser();
- // bool evaluateWinnerLoserSpecial(ScoreType & score);
- // ScoreType evaluateTrueWinnerLoser();
-
- // /// bishops mobility and attacks
- // ScoreType evaluateBishops();
-
- // /// calculate field (bit-mask) attacked by knights, and mobility
- // ScoreType evaluateKnights();
-
- // // evaluate rooks mobility and open column
- // void evaluateRooks(bool eval_open);
-
- // // queens mobility
- // void evaluateQueens();
-
- // /// lazy eval.
- // ScoreType evaluateExpensive(GamePhase phase, int coef_o, int coef_e);
-
-	///// returns 1 if at least 1 field in mask is attacked from given pos (include X-Ray attacks)
-	//int isAttackingFields(int from, const BitMask & mask) const;
-
-	//ScoreType evaluateKingPressure() const;
-
-
- // inline void mobility_masks_LSB(int from, BitMask & mob_mask, const BitMask & di_mask) const
- // {
- //   BitMask mask_from = di_mask & mask_all_;
- //   mob_mask |= (mask_from) ? betweenMasks().between(from, _lsb64(mask_from)) : di_mask;
- // }
-
- // inline void mobility_masks_MSB(int from, BitMask & mob_mask, const BitMask & di_mask) const
- // {
- //   BitMask mask_from = di_mask & mask_all_;
- //   mob_mask |= (mask_from) ? betweenMasks().between(from, _msb64(mask_from)) : di_mask;
- // }
-
- // // used to find pinned figures
- // enum PinType { ptAll, ptOrtho, ptDiag };
- // // acolor - color of attacking side, ki_pos - attacked king pos
- // bool discoveredCheck(int pt, Figure::Color acolor, const BitMask & brq_mask, int ki_pos, enum PinType pinType) const;
-
-
   // sum of weights of all figures
   const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
@@ -302,6 +177,7 @@ private:
 
   Board const* board_{ nullptr };
   EHashTable*  ehash_{ nullptr };
+  GHashTable*  ghash_{ nullptr };
 
   static const int colored_y_[2][8];
 
