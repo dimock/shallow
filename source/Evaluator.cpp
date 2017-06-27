@@ -136,8 +136,19 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto hashedScore = hashedEvaluation();
   score += hashedScore;
 
+  // distance from king to figures
+  score += evaluateKpressure();
+
+  // penalty for lost or fake castle
+  score.opening_ += evaluateCastle();
+
   // determine game phase (opening, middle or end game)
   auto phaseInfo = detectPhase();
+
+  score.opening_ += fmgr.eval(0);
+  score.endGame_ += fmgr.eval(1);
+
+
 
   //// pawns attack to king
   //score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
@@ -151,8 +162,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //scoreForks -= evaluateForks(Figure::ColorBlack);
   //score.common_ += scoreForks;
 
-  score.opening_ += fmgr.eval(0);
-  score.endGame_ += fmgr.eval(1);
 
   //if(phaseInfo.phase_ != EndGame)
   //{
@@ -363,6 +372,7 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
 
     int x  = idx.x();
     int cy = colored_y_[color][idx.y()];
+    int py = promo_y[color];
 
     // 2. passed pawn
     {
@@ -370,6 +380,11 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
       {
         x_passers |= 1 << x;
         score.common_ += evalCoeffs().passerPawn_[cy];
+        Index pp(x, py);
+        int pawn_dist_promo = std::abs(py - idx.y()); 
+        int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
+        if(pawn_dist_promo < o_dist_promo)
+          score.endGame_ += evalCoeffs().farKingPawn_[cy] >> 1;
       }
       // quadpasser
       else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
@@ -622,10 +637,10 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     return 0;
 
   const FiguresManager & fmgr = board_->fmgr();
-  auto pmask  = fmgr.pawn_mask(color);
+  auto const& pmask  = fmgr.pawn_mask(color);
 
   Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
-  auto opmask = fmgr.pawn_mask(ocolor);
+  auto const& opmask = fmgr.pawn_mask(ocolor);
 
   // pawns shield
   static const BitMask pawns_shield_mask[2][2][3] =
@@ -716,31 +731,53 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     },
   };
 
+  static const int delta_y[2] = {-8, 8};
+
   int score = 0;
   auto ctype = getCastleType(color);
   if(ctype >= 0)
   {
-    int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0) * evalCoeffs().pawnShieldA_
-      + ((pawns_shield_mask[color][ctype][1] & pmask) != 0) * evalCoeffs().pawnShieldB_
-      + ((pawns_shield_mask[color][ctype][2] & pmask) != 0) * evalCoeffs().pawnShieldC_;
+    int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0ULL) * evalCoeffs().pawnShieldA_
+      + ((pawns_shield_mask[color][ctype][1] & pmask) != 0ULL) * evalCoeffs().pawnShieldB_
+      + ((pawns_shield_mask[color][ctype][2] & pmask) != 0ULL) * evalCoeffs().pawnShieldC_;
     
-    int shield_penalty = ((pawns_penalty_mask[ctype][0] & pmask) == 0) * evalCoeffs().pawnPenaltyA_
-      + ((pawns_penalty_mask[ctype][1] & pmask) == 0) * evalCoeffs().pawnPenaltyB_
-      + ((pawns_penalty_mask[ctype][2] & pmask) == 0) * evalCoeffs().pawnPenaltyC_;
+    int shield_penalty = ((pawns_penalty_mask[ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
+      + ((pawns_penalty_mask[ctype][1] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyB_
+      + ((pawns_penalty_mask[ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_;
 
-    int opponent_penalty = ((opponent_pawn_mask[color][ctype][0] & opmask) != 0) * evalCoeffs().opponentPawnA_
-      + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0) * evalCoeffs().opponentPawnB_
-      + ((opponent_pawn_mask[color][ctype][2] & opmask) != 0) * evalCoeffs().opponentPawnC_;
+    int opponent_penalty = ((opponent_pawn_mask[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnA_
+      + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnB_
+      + ((opponent_pawn_mask[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnC_;
 
     score += shield_bonus;
     score += shield_penalty;
     score += opponent_penalty;
+  }
+  else
+  {
+    score += evalCoeffs().castleImpossible_;
+    int above  = (board_->kingPos(color) + delta_y[color]) & 63;
+    int above1 = (above + delta_y[color]) & 63;
+    BitMask mabove{ set_mask_bit(above) };
+    BitMask mabove1{ set_mask_bit(above1) };
+    auto mleft   = (mabove  >> 1) & Figure::pawnCutoffMasks_[1];
+    auto mright  = (mabove  << 1) & Figure::pawnCutoffMasks_[0];
+    auto mleft1  = (mabove1 >> 1) & Figure::pawnCutoffMasks_[1];
+    auto mright1 = (mabove1 << 1) & Figure::pawnCutoffMasks_[0];
+    int shieldB = evalCoeffs().pawnShieldB_ >> 1;
+    int shieldC = evalCoeffs().pawnShieldC_ >> 1;
+    score += (((mabove | mabove1) & pmask) != 0ULL) * shieldB;
+    score += (((mleft  | mleft1 ) & pmask) != 0ULL) * shieldC;
+    score += (((mright | mright1) & pmask) != 0ULL) * shieldC;
   }
   return score;
 }
 
 int Evaluator::evaluateCastle(Figure::Color color) const
 {
+  if(board_->castling(color))
+    return 0;
+
   const FiguresManager & fmgr = board_->fmgr();
   Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
   Index ki_pos(board_->kingPos(color));
@@ -755,7 +792,7 @@ int Evaluator::evaluateCastle(Figure::Color color) const
       set_mask_bit(A1)|set_mask_bit(B1)|set_mask_bit(C1)|set_mask_bit(A2)|set_mask_bit(B2)|set_mask_bit(C2)} };
 
   if(castleType < 0)
-    return evalCoeffs().castleImpossible_;
+    return 0;
 
   // fake castle
   BitMask r_mask = fmgr.rook_mask(color) & fake_castle_rook[color][castleType];

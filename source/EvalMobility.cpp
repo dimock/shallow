@@ -11,6 +11,36 @@ Evaluator.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
+Evaluator::FullScore Evaluator::evaluateKpressure() const
+{
+  FullScore score{};
+  auto const& fmgr = board_->fmgr();
+  for(int type = Figure::TypeKnight; type <= Figure::TypeKing; ++type)
+  {
+    {
+      auto mask = fmgr.type_mask((Figure::Type)type, Figure::ColorBlack);
+      for(; mask;)
+      {
+        auto p = clear_lsb(mask);
+        
+        auto ki_dist = distanceCounter().getDistance(p, board_->kingPos(Figure::ColorWhite));
+        score.common_ -= Figure::kingDistanceBonus_[type][ki_dist];
+      }
+    }
+    {
+      auto mask = fmgr.type_mask((Figure::Type)type, Figure::ColorWhite);
+      for(; mask;)
+      {
+        auto n = clear_lsb(mask);
+
+        auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorBlack));
+        score.common_ += Figure::kingDistanceBonus_[type][ki_dist];
+      }
+    }
+  }
+  return score;
+}
+
 Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
 {
   FullScore score{};
@@ -22,6 +52,7 @@ Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
       for(; mask;)
       {
         auto p = clear_lsb(mask);
+        
         score.opening_ -= Figure::positionEvaluations_[0][type][p];
         score.endGame_ -= Figure::positionEvaluations_[1][type][p];
       }
@@ -30,7 +61,9 @@ Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
       auto mask = fmgr.type_mask((Figure::Type)type, Figure::ColorWhite);
       for(; mask;)
       {
-        auto p = Figure::mirrorIndex_[clear_lsb(mask)];
+        auto n = clear_lsb(mask);
+        auto p = Figure::mirrorIndex_[n];
+
         score.opening_ += Figure::positionEvaluations_[0][type][p];
         score.endGame_ += Figure::positionEvaluations_[1][type][p];
       }
@@ -58,7 +91,6 @@ Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
     auto kn_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
     bool could_check = (knight_from_king & knight_moves) != 0;
     bool could_attack = (finfo_[ocolor].kingAttacks_ & knight_moves) != 0ULL;
-    finfo_[color].knightPressure_ += evalCoeffs().kingDistanceKnight_[kn_dist];
     finfo_[color].knightPressure_ += evalCoeffs().knightAttackBonus_ * (could_attack || could_check);
   }
   score.common_ += finfo_[color].knightPressure_;
@@ -89,7 +121,6 @@ Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
     bool could_attack   = (finfo_[ocolor].kingAttacks_ & x_bishop_moves) != 0ULL;
     auto bi_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
     bool could_check    = (bishop_from_king & bishop_moves) != 0;
-    finfo_[color].bishopPressure_ += evalCoeffs().kingDistanceBishop_[bi_dist];
     finfo_[color].bishopPressure_ += evalCoeffs().bishopAttackBonus_ * (could_attack || could_check);
   }
   score.common_ += finfo_[color].bishopPressure_;
@@ -109,7 +140,6 @@ Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
     auto const& x_rook_moves = magic_ns::rook_moves(n, mask_all_no_rooks);
     bool could_attack = (finfo_[ocolor].kingAttacks_ & x_rook_moves) != 0ULL;
     bool could_check  = (rook_from_king & x_rook_moves) != 0ULL;
-    finfo_[color].rookPressure_ += evalCoeffs().kingDistanceRook_[r_dist];
     finfo_[color].rookPressure_ += evalCoeffs().rookAttackBonus_ * (could_attack || could_check);
 
     // open column
@@ -137,7 +167,6 @@ Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
     bool could_attack   = ((finfo_[ocolor].kingAttacks_ & x_bishop_moves) != 0ULL)
       || ((finfo_[ocolor].kingAttacks_ & x_rook_moves) != 0ULL);
     bool could_check    = ((rook_from_king & x_rook_moves) | (bishop_from_king & x_bishop_moves)) != 0ULL;
-    finfo_[color].queenPressure_ += evalCoeffs().kingDistanceQueen_[q_dist];
     finfo_[color].queenPressure_ += evalCoeffs().queenAttackBonus_ * (could_attack || could_check);
   }
   score.common_ += finfo_[color].queenPressure_;

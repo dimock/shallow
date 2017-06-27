@@ -27,7 +27,7 @@ void Board::makeMove(const Move & move)
   undo.eaten_type_ = 0;
   // save move
   undo.move_ = move;
-  // save PSQ evak
+  // save PSQ eval
   undo.psq32_ = fmgr_.eval32();
   // set state
   data_.state_ = Ok;

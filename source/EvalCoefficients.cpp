@@ -106,16 +106,6 @@ namespace NEngine
                                       10,  11,  11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12},
                     queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
 
-    // bonus for distance to opponent's king
-    arrs_.push_back(details::Arr{ "kingDistanceKnight_", std::vector<int>{15, 10, 7, 5, 3, 1, 0, 0}, kingDistanceKnight_,
-                    sizeof(kingDistanceKnight_)/sizeof(*kingDistanceKnight_) });
-    arrs_.push_back(details::Arr{ "kingDistanceBishop_", std::vector<int>{15, 10, 7, 5, 3, 1, 0, 0}, kingDistanceBishop_,
-                    sizeof(kingDistanceBishop_)/sizeof(*kingDistanceBishop_) });
-    arrs_.push_back(details::Arr{ "kingDistanceRook_", std::vector<int>{20, 15, 10, 7, 5, 3, 1, 0}, kingDistanceRook_,
-                    sizeof(kingDistanceRook_)/sizeof(*kingDistanceRook_) });
-    arrs_.push_back(details::Arr{ "kingDistanceQueen_", std::vector<int>{40, 55, 30, 15, 7, 3, 1, 0}, kingDistanceQueen_,
-                    sizeof(kingDistanceQueen_)/sizeof(*kingDistanceQueen_) });
-
     // fields near king attacks
     vars_.push_back(details::Var{ "pawnAttackBonus_", pawnAttackBonus_, &pawnAttackBonus_ });
     vars_.push_back(details::Var{ "knightAttackBonus_", knightAttackBonus_, &knightAttackBonus_ });

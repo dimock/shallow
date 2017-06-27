@@ -137,10 +137,6 @@ private:
   // multiple coefficients for opening/endgame
   PhaseInfo detectPhase() const;
 
-  // get from PSQ table
-  // bruteforce and slow
-  FullScore evaluatePsqBruteforce() const;
-
   // + fill attacked fileds masks
   FullScore evaluateKnights(Figure::Color color);
   FullScore evaluateFigures(Figure::Color color);
@@ -162,6 +158,9 @@ private:
     score -= evaluatePawns(Figure::ColorBlack);
     return score;
   }
+
+  FullScore evaluateKpressure() const;
+  FullScore evaluatePsqBruteforce() const;
 
   PasserInfo passerEvaluation(Figure::Color color) const;
   FullScore passerEvaluation() const;

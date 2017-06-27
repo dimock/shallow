@@ -22,6 +22,8 @@ namespace Figure
 
   // position evaluation. 0 - opening, 1 - endgame; color,type,pos
   extern const ScoreType positionEvaluations_[2][8][64];
+  // basic king pressure
+  extern const ScoreType kingDistanceBonus_[8][8];
 
   inline Figure::Color otherColor(Figure::Color color)
   {
@@ -142,7 +144,6 @@ private:
   BitMask   mask_all_;
   uint8     tcount_[8];
   ScoreType weight_;
-  //uint8     count_;
 };
 
 class FiguresManager
@@ -158,6 +159,7 @@ public:
     kpwnCode_ = 0ULL;
     fcounter_[0].clear();
     fcounter_[1].clear();
+    eval32_ = 0;
   }
 
   inline void incr(const Figure::Color c, const Figure::Type t, int p)
@@ -166,7 +168,7 @@ public:
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
     if(t == Figure::TypePawn || t == Figure::TypeKing)
-      kpwnCode_ ^= uc;      
+      kpwnCode_ ^= uc;
     eval_[0] += Figure::positionEvaluation(0, c, t, p);
     eval_[1] += Figure::positionEvaluation(1, c, t, p);
   }
@@ -196,7 +198,6 @@ public:
       kpwnCode_ ^= uc0;
       kpwnCode_ ^= uc1;
     }
-
     eval_[0] -= Figure::positionEvaluation(0, c, t, from);
     eval_[0] += Figure::positionEvaluation(0, c, t, to);
 
@@ -225,7 +226,6 @@ public:
   inline void hashEnPassant(uint8 pos, uint8 color)
   {
     hashCode_ ^= enpassantCode(pos, color);
-    kpwnCode_ ^= enpassantCode(pos, color);
   }
 
   inline void hashCastling(uint8 color, uint8 index /* 0 - short, 1 - long */)

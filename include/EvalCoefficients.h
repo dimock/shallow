@@ -108,12 +108,6 @@ struct EvalCoefficients
   int rookMobility_[16]   = {};
   int queenMobility_[32]  = {};
 
-  // distance to opponent's king
-  int kingDistanceKnight_[8] = {};
-  int kingDistanceBishop_[8] = {};
-  int kingDistanceRook_[8] = {};
-  int kingDistanceQueen_[8] = {};
-
   // fields near king attacks
   int pawnAttackBonus_ = {2};
   int knightAttackBonus_ = {5};
