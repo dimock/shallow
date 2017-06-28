@@ -359,7 +359,7 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
 
   Figure::Color ocolor = Figure::otherColor(color);
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
-
+  bool no_opawns = opmsk == 0ULL;
 
   uint8 x_visited{ 0 };
   uint8 x_passers{ 0 };
@@ -367,38 +367,20 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
   {
-    int n = clear_lsb(pawn_mask);
+    int const n = clear_lsb(pawn_mask);
     Index idx(n);
 
     int x  = idx.x();
     int cy = colored_y_[color][idx.y()];
     int py = promo_y[color];
 
-    // 2. passed pawn
-    {
-      if((opmsk & pawnMasks().mask_passed(color, n)) == 0ULL)
-      {
-        x_passers |= 1 << x;
-        score.common_ += evalCoeffs().passerPawn_[cy];
-        Index pp(x, py);
-        int pawn_dist_promo = std::abs(py - idx.y()); 
-        int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
-        if(pawn_dist_promo < o_dist_promo)
-          score.endGame_ += evalCoeffs().farKingPawn_[cy] >> 1;
-      }
-      // quadpasser
-      else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
-      {
-        bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
-        bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
-        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
-        auto const& coeffPassed = evalCoeffs().passerPawn_[cy];
-        auto scoreSemipasser = ((coeffPassed >> 2) + (left || right) * (coeffPassed >> 2));
-        score.common_ += scoreSemipasser;
-      }
-    }
+    int dist_to_oking = distanceCounter().getDistance(board_->kingPos(ocolor), n);
+    int dist_to_myking = distanceCounter().getDistance(board_->kingPos(color), n);
 
-    // 3. doubled pawn
+    score.endGame_ += evalCoeffs().oKingToPawnBonus_[dist_to_oking];
+    score.endGame_ += evalCoeffs().myKingToPawnBonus_[dist_to_myking] * (1 + no_opawns);
+
+    // doubled pawn
     if(!(x_visited & (1<<x)))
     {
       x_visited |= 1<<x;
@@ -408,46 +390,72 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
       score.common_ += (num_dbl - 1) * evalCoeffs().doubledPawn_;
     }
 
-    // 4. isolated pawn
+    // isolated pawn
+    bool unsupported{ false };
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     score.common_ += isolated * evalCoeffs().isolatedPawn_;
 
     if(!isolated)
     {
-      // 5. backward
+      // backward
       if(((pawnMasks().mask_backward(color, n) & pmask) == 0ULL))
       {
         // TODO: optimization required
         int closest_y = closestToBackward(idx.x(), idx.y(), pmask, color);
         X_ASSERT(closest_y < 0 || closest_y > 7, "backward mask calculation error - invalid next y position");
         BitMask pmask_after = betweenMasks().between(n, Index(idx.x(), closest_y));
-        bool is_blocked  = ((finfo_[ocolor].pawnAttacks_ | opmsk) & pmask_after) != 0ULL;
-        score.common_ += is_blocked * evalCoeffs().backwardPawn_;
+        bool blocked  = ((finfo_[ocolor].pawnAttacks_ | opmsk) & pmask_after) != 0ULL;
+        score.common_ += blocked * evalCoeffs().backwardPawn_;
       }
-      // 6. forward but not supported
+      // forward but not supported
       else if(!couldBeSupported(idx, color, ocolor, pmask, opmsk))
       {
+        unsupported = true;
         score.common_ += evalCoeffs().unsupportedPawn_;
       }
-      // 7. unprotected
+      // unprotected
       else
       {
-        bool is_unprotected = (pawnMasks().mask_supported(color, idx) & pmask) == 0ULL;
-        score.common_ += is_unprotected * evalCoeffs().unprotectedPawn_;
+        bool unprotected = (pawnMasks().mask_supported(color, n) & pmask) == 0ULL;
+        score.common_ += unprotected * evalCoeffs().unprotectedPawn_;
       }
     }
-  }
 
-  // 8. additional bonus for passers on neighbour columns
-  {
-    auto multi = pawnMasks().mask_multi_passer(x_passers) & pmask;
-    if(multi)
+    // passed pawn
     {
-      int ymin = color ? _lsb64(multi) : _msb64(multi);
-      ymin >>= 3;
-      int cy = colored_y_[color][ymin];
-      int num = pop_count(multi);
-      score.common_ += evalCoeffs().passerGroup_[cy] * (num-1);
+      auto const& coeffPassed = evalCoeffs().passerPawn_[cy];
+      if((opmsk & pawnMasks().mask_passed(color, n)) == 0ULL)
+      {
+        x_passers |= 1 << x;
+        score.common_ += coeffPassed;
+        // penalty is pawn is isolated
+        if(isolated || unsupported)
+          score.common_ -= coeffPassed >> 2;
+        // supported
+        else if(pawnMasks().mask_supported(color, n) & pmask)
+          score.common_ += coeffPassed >> 2;
+        Index pp(x, py);
+        int pawn_dist_promo = std::abs(py - idx.y());
+        int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
+        if(pawn_dist_promo < o_dist_promo)
+          score.endGame_ += evalCoeffs().farKingPawn_[cy] >> 1;
+        // bonus for distance from passer to kings
+        score.endGame_ += evalCoeffs().oKingToPasserBonus_[dist_to_oking];
+        score.endGame_ += evalCoeffs().myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
+      }
+      // quadpasser
+      else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
+      {
+        bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
+        bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
+        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
+        auto scoreSemipasser = ((coeffPassed >> 2) + (left || right) * (coeffPassed >> 2));
+        if(isolated || unsupported)
+          scoreSemipasser -= scoreSemipasser >> 2;
+        else if(pawnMasks().mask_supported(color, n) & pmask)
+          scoreSemipasser += scoreSemipasser >> 2;
+        score.common_ += scoreSemipasser;
+      }
     }
   }
 
@@ -498,14 +506,14 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
     int y = idx.y();
     int cy = colored_y_[color][idx.y()];
 
-    // opponent king should be far from my pawn
-    // small bonus for short distance to my king
-    // double if opponent has no pawns
-    int dist_to_oking = distanceCounter().getDistance(board_->kingPos(ocolor), n);
-    int dist_to_myking = distanceCounter().getDistance(board_->kingPos(color), n);
+    //// opponent king should be far from my pawn
+    //// small bonus for short distance to my king
+    //// double if opponent has no pawns
+    //int dist_to_oking = distanceCounter().getDistance(board_->kingPos(ocolor), n);
+    //int dist_to_myking = distanceCounter().getDistance(board_->kingPos(color), n);
 
-    info.score.endGame_ += evalCoeffs().oKingToPawnBonus_[dist_to_oking];
-    info.score.endGame_ += evalCoeffs().myKingToPawnBonus_[dist_to_myking] * (1 + no_opawns);
+    //info.score.endGame_ += evalCoeffs().oKingToPawnBonus_[dist_to_oking];
+    //info.score.endGame_ += evalCoeffs().myKingToPawnBonus_[dist_to_myking] * (1 + no_opawns);
 
     const uint64 & passmsk = pawnMasks().mask_passed(color, n);
     const uint64 & blckmsk = pawnMasks().mask_line_blocked(color, n);
@@ -513,9 +521,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color) const
     if((opmsk & passmsk) || (pmask & blckmsk))
       continue;
 
-    // bonus for distance from passer to kings
-    info.score.endGame_ += evalCoeffs().oKingToPasserBonus_[dist_to_oking];
-    info.score.endGame_ += evalCoeffs().myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
+    //// bonus for distance from passer to kings
+    //info.score.endGame_ += evalCoeffs().oKingToPasserBonus_[dist_to_oking];
+    //info.score.endGame_ += evalCoeffs().myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
 
     if(cy > info.most_y)
       info.most_y = cy;

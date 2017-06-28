@@ -75,9 +75,8 @@ namespace NEngine
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
     // arrays
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 50, 70, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
-    arrs_.push_back(details::Arr{ "passerGroup_", std::vector<int>{ 0, 5, 7, 9, 11, 15, 19, 0  }, passerGroup_, sizeof(passerGroup_)/sizeof(*passerGroup_) });
-    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 10, 15, 20, 30, 40, 50, 0 }, farKingPawn_,
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 60, 80, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
+    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 12, 16, 24, 32, 40, 0 }, farKingPawn_,
                     sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
     arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 10, 12, 15, 20, 25, 40, 0 }, cangoPawn_,
                     sizeof(cangoPawn_)/sizeof(*cangoPawn_) });

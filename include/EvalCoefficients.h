@@ -42,7 +42,7 @@ struct EvalCoefficients
   int isolatedPawn_{ -15 };
   int backwardPawn_{ -10 };
   int unsupportedPawn_{ -12 };
-  int unprotectedPawn_{ -12 };
+  int unprotectedPawn_{ -8 };
   int rookBehindBonus_{ 7 };
   int protectedPawnPressure_{ 3 };
   int unprotectedPawnPressure_{ 8 };
@@ -91,7 +91,6 @@ struct EvalCoefficients
 
   // arrays
   int passerPawn_[8]  = {};
-  int passerGroup_[8] = {};
   int farKingPawn_[8] = {};
   int cangoPawn_[8] = {};
   int canpromotePawn_[8] = {};

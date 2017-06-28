@@ -21,11 +21,12 @@ int main(int argn, char *argv[])
   //NEngine::speedTest();
   //return 0;
 
-  //if(argn > 1)
-  //{
-  //  NEngine::epdFolder(argv[1]);
-  //  return 0;
-  //}
+//  if(argn > 1)
+//  {
+////    NEngine::epdFolder(argv[1]);
+//    NEngine::evaluateFen(argv[1]);
+//    return 0;
+//  }
 
   for(; xpr.doCmd(););
 
