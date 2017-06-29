@@ -51,15 +51,16 @@ namespace NEngine
     vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });
     vars_.push_back(details::Var{ "fakeCastle_", fakeCastle_, &fakeCastle_ });
     vars_.push_back(details::Var{ "castleBonus_", castleBonus_, &castleBonus_ });
-    vars_.push_back(details::Var{ "pawnShieldA_", pawnShieldA_, &pawnShieldA_ });
-    vars_.push_back(details::Var{ "pawnShieldB_", pawnShieldB_, &pawnShieldB_ });
-    vars_.push_back(details::Var{ "pawnShieldC_", pawnShieldC_, &pawnShieldC_ });
     vars_.push_back(details::Var{ "pawnPenaltyA_", pawnPenaltyA_, &pawnPenaltyA_ });
     vars_.push_back(details::Var{ "pawnPenaltyB_", pawnPenaltyB_, &pawnPenaltyB_ });
     vars_.push_back(details::Var{ "pawnPenaltyC_", pawnPenaltyC_, &pawnPenaltyC_ });
     vars_.push_back(details::Var{ "opponentPawnA_", opponentPawnA_, &opponentPawnA_ });
     vars_.push_back(details::Var{ "opponentPawnB_", opponentPawnB_, &opponentPawnB_ });
     vars_.push_back(details::Var{ "opponentPawnC_", opponentPawnC_, &opponentPawnC_ });
+
+    arrs_.push_back(details::Arr{ "pawnShieldA_", std::vector<int>{16, 12}, pawnShieldA_, sizeof(pawnShieldA_)/sizeof(*pawnShieldA_) });
+    arrs_.push_back(details::Arr{ "pawnShieldB_", std::vector<int>{16, 12}, pawnShieldB_, sizeof(pawnShieldB_)/sizeof(*pawnShieldB_) });
+    arrs_.push_back(details::Arr{ "pawnShieldC_", std::vector<int>{ 6,  4}, pawnShieldC_, sizeof(pawnShieldC_)/sizeof(*pawnShieldC_) });
 
     // blocked figure
     vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
@@ -75,7 +76,7 @@ namespace NEngine
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
     // arrays
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 60, 80, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 50, 70, 0 }, passerPawn_, sizeof(passerPawn_)/sizeof(*passerPawn_) });
     arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 12, 16, 24, 32, 40, 0 }, farKingPawn_,
                     sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
     arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 10, 12, 15, 20, 25, 40, 0 }, cangoPawn_,

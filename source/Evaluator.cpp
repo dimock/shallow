@@ -413,12 +413,12 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
         unsupported = true;
         score.common_ += evalCoeffs().unsupportedPawn_;
       }
-      // unprotected
-      else
-      {
-        bool unprotected = (pawnMasks().mask_supported(color, n) & pmask) == 0ULL;
-        score.common_ += unprotected * evalCoeffs().unprotectedPawn_;
-      }
+    }
+
+    // unprotected
+    {
+      bool unprotected = (pawnMasks().mask_supported(color, n) & pmask) == 0ULL;
+      score.common_ += unprotected * evalCoeffs().unprotectedPawn_;
     }
 
     // passed pawn
@@ -651,22 +651,22 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   auto const& opmask = fmgr.pawn_mask(ocolor);
 
   // pawns shield
-  static const BitMask pawns_shield_mask[2][2][3] =
+  static const BitMask pawns_shield_mask[2][2][3][2] =
   {
     // black
     {
       // short
       {
-        set_mask_bit(H7)|set_mask_bit(H6),
-        set_mask_bit(G7)|set_mask_bit(G6),
-        set_mask_bit(F7)|set_mask_bit(F6)
+        { set_mask_bit(H7), set_mask_bit(H6) },
+        { set_mask_bit(G7), set_mask_bit(G6) },
+        { set_mask_bit(F7), set_mask_bit(F6) }
       },
 
       // long
       {
-        set_mask_bit(A7)|set_mask_bit(A6),
-        set_mask_bit(B7)|set_mask_bit(B6),
-        set_mask_bit(C7)|set_mask_bit(C6)
+        { set_mask_bit(A7), set_mask_bit(A6) },
+        { set_mask_bit(B7), set_mask_bit(B6) },
+        { set_mask_bit(C7), set_mask_bit(C6) }
       }
     },
 
@@ -674,16 +674,16 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     {
       // short
       {
-        set_mask_bit(H2)|set_mask_bit(H3),
-        set_mask_bit(G2)|set_mask_bit(G3),
-        set_mask_bit(F2)|set_mask_bit(F3)
+        { set_mask_bit(H2), set_mask_bit(H3) },
+        { set_mask_bit(G2), set_mask_bit(G3) },
+        { set_mask_bit(F2), set_mask_bit(F3) }
       },
 
       // long
       {
-        set_mask_bit(A2)|set_mask_bit(A3),
-        set_mask_bit(B2)|set_mask_bit(B3),
-        set_mask_bit(C2)|set_mask_bit(C3)
+        { set_mask_bit(A2), set_mask_bit(A3) },
+        { set_mask_bit(B2), set_mask_bit(B3) },
+        { set_mask_bit(C2), set_mask_bit(C3) }
       }
     }
   };
@@ -739,19 +739,35 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     },
   };
 
-  static const int delta_y[2] = {-8, 8};
-
-  int score = 0;
   auto ctype = getCastleType(color);
   if(ctype >= 0)
   {
-    int shield_bonus = ((pawns_shield_mask[color][ctype][0] & pmask) != 0ULL) * evalCoeffs().pawnShieldA_
-      + ((pawns_shield_mask[color][ctype][1] & pmask) != 0ULL) * evalCoeffs().pawnShieldB_
-      + ((pawns_shield_mask[color][ctype][2] & pmask) != 0ULL) * evalCoeffs().pawnShieldC_;
-    
-    int shield_penalty = ((pawns_penalty_mask[ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
+    int score = 0;
+    int shield_bonus = 0;
+    if(pawns_shield_mask[color][ctype][0][0] & pmask)
+      shield_bonus += evalCoeffs().pawnShieldA_[0];
+    else if(pawns_shield_mask[color][ctype][0][1] & pmask)
+      shield_bonus += evalCoeffs().pawnShieldA_[1];
+    else
+      shield_bonus += evalCoeffs().pawnPenaltyA_ >> 1;
+
+    if(pawns_shield_mask[color][ctype][1][0] & pmask)
+      shield_bonus += evalCoeffs().pawnShieldB_[0];
+    else if(pawns_shield_mask[color][ctype][1][1] & pmask)
+      shield_bonus += evalCoeffs().pawnShieldB_[1];
+    else
+      shield_bonus += evalCoeffs().pawnPenaltyB_ >> 1;
+
+    if(pawns_shield_mask[color][ctype][2][0] & pmask)
+      shield_bonus += evalCoeffs().pawnShieldC_[0];
+    else if(pawns_shield_mask[color][ctype][2][1] & pmask)
+      shield_bonus += evalCoeffs().pawnShieldC_[1];
+    else
+      shield_bonus += evalCoeffs().pawnPenaltyC_ >> 1;
+
+    int shield_penalty = (((pawns_penalty_mask[ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
       + ((pawns_penalty_mask[ctype][1] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyB_
-      + ((pawns_penalty_mask[ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_;
+      + ((pawns_penalty_mask[ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_) >> 1;
 
     int opponent_penalty = ((opponent_pawn_mask[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnA_
       + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnB_
@@ -760,25 +776,60 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     score += shield_bonus;
     score += shield_penalty;
     score += opponent_penalty;
+
+    return score;
   }
   else
   {
-    score += evalCoeffs().castleImpossible_;
-    int above  = (board_->kingPos(color) + delta_y[color]) & 63;
-    int above1 = (above + delta_y[color]) & 63;
-    BitMask mabove{ set_mask_bit(above) };
-    BitMask mabove1{ set_mask_bit(above1) };
-    auto mleft   = (mabove  >> 1) & Figure::pawnCutoffMasks_[1];
-    auto mright  = (mabove  << 1) & Figure::pawnCutoffMasks_[0];
+    static const int delta_y[2] = { -8, 8 };
+    int score = evalCoeffs().castleImpossible_;
+
+    int above1 = (board_->kingPos(color) + delta_y[color]) & 63;
+    int above2 = (above1 + delta_y[color]) & 63;
+    BitMask mabove1{ set_mask_bit(board_->kingPos(color)) | set_mask_bit(above1) };
+    BitMask mabove2{ set_mask_bit(above2) };
     auto mleft1  = (mabove1 >> 1) & Figure::pawnCutoffMasks_[1];
     auto mright1 = (mabove1 << 1) & Figure::pawnCutoffMasks_[0];
-    int shieldB = evalCoeffs().pawnShieldB_ >> 1;
-    int shieldC = evalCoeffs().pawnShieldC_ >> 1;
-    score += (((mabove | mabove1) & pmask) != 0ULL) * shieldB;
-    score += (((mleft  | mleft1 ) & pmask) != 0ULL) * shieldC;
-    score += (((mright | mright1) & pmask) != 0ULL) * shieldC;
+    auto mleft2  = (mabove2 >> 1) & Figure::pawnCutoffMasks_[1];
+    auto mright2 = (mabove2 << 1) & Figure::pawnCutoffMasks_[0];
+
+    if(mabove1 & pmask)
+      score += evalCoeffs().pawnShieldB_[0] >> 1;
+    else if(mabove2 & pmask)
+      score += evalCoeffs().pawnShieldB_[1] >> 1;
+    else
+      score += evalCoeffs().pawnPenaltyB_;
+
+    if((board_->kingPos(color) & 7) > 3) // right side
+    {
+      if(mleft1 & pmask)
+        score += evalCoeffs().pawnShieldC_[0] >> 1;
+      else if(mleft2 & pmask)
+        score += evalCoeffs().pawnShieldC_[1] >> 1;
+      else
+        score += evalCoeffs().pawnPenaltyC_;
+
+      if(mright1 & pmask)
+        score += evalCoeffs().pawnShieldA_[0] >> 1;
+      else if(mright2 & pmask)
+        score += evalCoeffs().pawnShieldA_[1] >> 1;
+      else
+        score += evalCoeffs().pawnPenaltyA_;
+    }
+    else // left side
+    {
+      if(mleft1 & pmask)
+        score += evalCoeffs().pawnShieldA_[0] >> 1;
+      else if(mleft2 & pmask)
+        score += evalCoeffs().pawnShieldA_[1] >> 1;
+
+      if(mright1 & pmask)
+        score += evalCoeffs().pawnShieldC_[0] >> 1;
+      else if(mright2 & pmask)
+        score += evalCoeffs().pawnShieldC_[1] >> 1;
+    }
+    return score;
   }
-  return score;
 }
 
 int Evaluator::evaluateCastle(Figure::Color color) const

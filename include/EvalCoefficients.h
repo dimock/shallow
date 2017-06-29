@@ -42,7 +42,7 @@ struct EvalCoefficients
   int isolatedPawn_{ -15 };
   int backwardPawn_{ -10 };
   int unsupportedPawn_{ -12 };
-  int unprotectedPawn_{ -8 };
+  int unprotectedPawn_{ -6 };
   int rookBehindBonus_{ 7 };
   int protectedPawnPressure_{ 3 };
   int unprotectedPawnPressure_{ 8 };
@@ -66,15 +66,16 @@ struct EvalCoefficients
   int castleImpossible_{ -25 };
   int fakeCastle_{ -25 };
   int castleBonus_{ 12 };
-  int pawnShieldA_{ 13 };
-  int pawnShieldB_{ 12 };
-  int pawnShieldC_{ 6 };
-  int pawnPenaltyA_{ -20 };
-  int pawnPenaltyB_{ -15 };
+  int pawnPenaltyA_{ -24 };
+  int pawnPenaltyB_{ -24 };
   int pawnPenaltyC_{ -6 };
   int opponentPawnA_{ -20 };
   int opponentPawnB_{ -15 };
   int opponentPawnC_{ -10 };
+
+  int pawnShieldA_[2] = {};
+  int pawnShieldB_[2] = {};
+  int pawnShieldC_[2] = {};
 
   // blocked figure
   int knightBlocked_{ 60 };
