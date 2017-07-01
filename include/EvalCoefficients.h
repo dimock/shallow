@@ -42,7 +42,7 @@ struct EvalCoefficients
   int isolatedPawn_{ -15 };
   int backwardPawn_{ -10 };
   int unsupportedPawn_{ -12 };
-  int unprotectedPawn_{ -6 };
+  int unprotectedPawn_{ -8 };
   int rookBehindBonus_{ 7 };
   int protectedPawnPressure_{ 3 };
   int unprotectedPawnPressure_{ 8 };
@@ -66,11 +66,11 @@ struct EvalCoefficients
   int castleImpossible_{ -25 };
   int fakeCastle_{ -25 };
   int castleBonus_{ 12 };
-  int pawnPenaltyA_{ -24 };
-  int pawnPenaltyB_{ -24 };
+  int pawnPenaltyA_{ -15 };
+  int pawnPenaltyB_{ -15 };
   int pawnPenaltyC_{ -6 };
-  int opponentPawnA_{ -20 };
-  int opponentPawnB_{ -15 };
+  int opponentPawnA_{ -15 };
+  int opponentPawnB_{ -12 };
   int opponentPawnC_{ -10 };
 
   int pawnShieldA_[2] = {};
@@ -92,15 +92,14 @@ struct EvalCoefficients
 
   // arrays
   int passerPawn_[8]  = {};
+  int semipasserPawn_[8] = {};
+  int protectedPasser_[8] = {};
   int farKingPawn_[8] = {};
   int cangoPawn_[8] = {};
   int canpromotePawn_[8] = {};
   // distance between forwards
   int closeToPromotion_[8] = {};
-  int oKingToPawnBonus_[8] = {};
-  int myKingToPawnBonus_[8] = {};
-  int oKingToPasserBonus_[8] = {};
-  int myKingToPasserBonus_[8] = {};
+  int kingToPawnBonus_[8] = {};
 
   // mobility
   int knightMobility_[16] = {};

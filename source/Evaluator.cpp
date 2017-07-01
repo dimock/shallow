@@ -377,8 +377,8 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
     int dist_to_oking = distanceCounter().getDistance(board_->kingPos(ocolor), n);
     int dist_to_myking = distanceCounter().getDistance(board_->kingPos(color), n);
 
-    score.endGame_ += evalCoeffs().oKingToPawnBonus_[dist_to_oking];
-    score.endGame_ += evalCoeffs().myKingToPawnBonus_[dist_to_myking] * (1 + no_opawns);
+    score.endGame_ -= evalCoeffs().kingToPawnBonus_[dist_to_oking];
+    score.endGame_ += evalCoeffs().kingToPawnBonus_[dist_to_myking];
 
     // doubled pawn
     if(!(x_visited & (1<<x)))
@@ -413,35 +413,28 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
         unsupported = true;
         score.common_ += evalCoeffs().unsupportedPawn_;
       }
-    }
-
-    // unprotected
-    {
-      bool unprotected = (pawnMasks().mask_supported(color, n) & pmask) == 0ULL;
-      score.common_ += unprotected * evalCoeffs().unprotectedPawn_;
+      // unprotected
+      else
+      {
+        bool unprotected = (pawnMasks().mask_supported(color, n) & pmask) == 0ULL;
+        score.common_ += unprotected * evalCoeffs().unprotectedPawn_;
+      }
     }
 
     // passed pawn
     {
-      auto const& coeffPassed = evalCoeffs().passerPawn_[cy];
       if((opmsk & pawnMasks().mask_passed(color, n)) == 0ULL)
       {
         x_passers |= 1 << x;
-        score.common_ += coeffPassed;
-        // penalty is pawn is isolated
-        if(isolated || unsupported)
-          score.common_ -= coeffPassed >> 2;
+        score.common_ += evalCoeffs().passerPawn_[cy];
         // supported
-        else if(pawnMasks().mask_supported(color, n) & pmask)
-          score.common_ += coeffPassed >> 2;
+        if(pawnMasks().mask_supported(color, n) & pmask)
+          score.common_ += evalCoeffs().protectedPasser_[cy];
         Index pp(x, py);
         int pawn_dist_promo = std::abs(py - idx.y());
         int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
         if(pawn_dist_promo < o_dist_promo)
           score.endGame_ += evalCoeffs().farKingPawn_[cy] >> 1;
-        // bonus for distance from passer to kings
-        score.endGame_ += evalCoeffs().oKingToPasserBonus_[dist_to_oking];
-        score.endGame_ += evalCoeffs().myKingToPasserBonus_[dist_to_myking] * (1 + no_opawns);
       }
       // quadpasser
       else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
@@ -449,11 +442,10 @@ Evaluator::FullScore Evaluator::evaluatePawns(Figure::Color color) const
         bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
         bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
         X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
-        auto scoreSemipasser = ((coeffPassed >> 2) + (left || right) * (coeffPassed >> 2));
-        if(isolated || unsupported)
-          scoreSemipasser -= scoreSemipasser >> 2;
-        else if(pawnMasks().mask_supported(color, n) & pmask)
-          scoreSemipasser += scoreSemipasser >> 2;
+        auto const& semipasserCoeff = evalCoeffs().semipasserPawn_[cy];
+        auto scoreSemipasser = ((semipasserCoeff >> 1) + (left || right) * (semipasserCoeff >> 1));
+        if(pawnMasks().mask_supported(color, n) & pmask)
+          scoreSemipasser += evalCoeffs().protectedPasser_[cy] >> 2;
         score.common_ += scoreSemipasser;
       }
     }
@@ -688,20 +680,39 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     }
   };
 
-  static const BitMask pawns_penalty_mask[2][3] =
+  static const BitMask pawns_penalty_mask[2][2][3] =
   {
-    // short
+    // black
     {
-      set_mask_bit(H7)|set_mask_bit(H6)|set_mask_bit(H5)|set_mask_bit(H4)|set_mask_bit(H3)|set_mask_bit(H2),
-      set_mask_bit(G7)|set_mask_bit(G6)|set_mask_bit(G5)|set_mask_bit(H4)|set_mask_bit(H3)|set_mask_bit(H2),
-      set_mask_bit(F7)|set_mask_bit(F6)|set_mask_bit(F5)|set_mask_bit(F4)|set_mask_bit(F3)|set_mask_bit(F2)
-    },
+      // short
+      {
+        set_mask_bit(H7)|set_mask_bit(H6)|set_mask_bit(H5),
+        set_mask_bit(G7)|set_mask_bit(G6)|set_mask_bit(G5),
+        set_mask_bit(F7)|set_mask_bit(F6)|set_mask_bit(F5)
+      },
 
-    // long
+      // long
+      {
+        set_mask_bit(A7)|set_mask_bit(A6)|set_mask_bit(A5),
+        set_mask_bit(B7)|set_mask_bit(B6)|set_mask_bit(B5),
+        set_mask_bit(C7)|set_mask_bit(C6)|set_mask_bit(C5)
+      }
+    },
+    // white
     {
-      set_mask_bit(A7)|set_mask_bit(A6)|set_mask_bit(A5)|set_mask_bit(A4)|set_mask_bit(A3)|set_mask_bit(A2),
-      set_mask_bit(B7)|set_mask_bit(B6)|set_mask_bit(B5)|set_mask_bit(B4)|set_mask_bit(B3)|set_mask_bit(B2),
-      set_mask_bit(C7)|set_mask_bit(C6)|set_mask_bit(C5)|set_mask_bit(C4)|set_mask_bit(C3)|set_mask_bit(C2)
+      // short
+      {
+        set_mask_bit(H4)|set_mask_bit(H3)|set_mask_bit(H2),
+        set_mask_bit(G4)|set_mask_bit(G3)|set_mask_bit(G2),
+        set_mask_bit(F4)|set_mask_bit(F3)|set_mask_bit(F2)
+      },
+
+      // long
+      {
+        set_mask_bit(A4)|set_mask_bit(A3)|set_mask_bit(A2),
+        set_mask_bit(B4)|set_mask_bit(B3)|set_mask_bit(B2),
+        set_mask_bit(C4)|set_mask_bit(C3)|set_mask_bit(C2)
+      }
     }
   };
 
@@ -765,11 +776,13 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     else
       shield_bonus += evalCoeffs().pawnPenaltyC_ >> 1;
 
-    int shield_penalty = (((pawns_penalty_mask[ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
-      + ((pawns_penalty_mask[ctype][1] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyB_
-      + ((pawns_penalty_mask[ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_) >> 1;
+    int shield_penalty =
+       (((pawns_penalty_mask[color][ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
+      + ((pawns_penalty_mask[color][ctype][1] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyB_
+      + ((pawns_penalty_mask[color][ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_) >> 1;
 
-    int opponent_penalty = ((opponent_pawn_mask[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnA_
+    int opponent_penalty =
+        ((opponent_pawn_mask[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnA_
       + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnB_
       + ((opponent_pawn_mask[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnC_;
 
