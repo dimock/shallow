@@ -140,8 +140,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto hashedScore = hashedEvaluation();
   score += hashedScore;
 
-  // distance from king to figures
-  score += evaluateKpressure();
+  //// distance from king to figures
+  //score += evaluateKpressure();
 
   // penalty for lost or fake castle
   score.opening_ += evaluateCastle();
@@ -152,18 +152,19 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);
 
-  score.opening_ += evaluateBlockedKnights();
-  if(phaseInfo.phase_ != EndGame)
-  {
-    score.opening_ += evaluateBlockedBishops();
-  }
+  score += evaluateKnights();
 
   auto scoreForks = evaluateForks(Figure::ColorWhite);
   scoreForks -= evaluateForks(Figure::ColorBlack);
   score.common_ += scoreForks;
 
-  score.common_ += evaluateOpenRook(Figure::ColorWhite);
-  score.common_ -= evaluateOpenRook(Figure::ColorBlack);
+  score += evaluateBishops();
+
+  score.common_ += evaluateRook(Figure::ColorWhite);
+  score.common_ -= evaluateRook(Figure::ColorBlack);
+
+  score.common_ += evaluateQueens(Figure::ColorWhite);
+  score.common_ -= evaluateQueens(Figure::ColorBlack);
 
   //// pawns attack to king
   //score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
@@ -874,239 +875,28 @@ int Evaluator::evaluateCastle(Figure::Color color) const
   return evalCoeffs().castleBonus_;
 }
 
-int Evaluator::evaluateBlockedKnights()
-{
-  int score_b = 0, score_w = 0;
-  BitMask knight_w = board_->fmgr().knight_mask(Figure::ColorWhite);
-  for(; knight_w;)
-  {
-    int n = clear_lsb(knight_w);
-    auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
-    finfo_[Figure::ColorWhite].attack_mask_ |= knight_moves;
-    finfo_[Figure::ColorWhite].knightAttacks_ |= knight_moves;
-
-    switch(n)
-    {
-    case A8:
-      if(board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn) ||
-         board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= evalCoeffs().knightBlocked_;
-      break;
-
-    case A7:
-      if(board_->isFigure(A6, Figure::ColorBlack, Figure::TypePawn) &&
-         board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= evalCoeffs().knightBlocked_;
-      break;
-
-    case B8:
-      if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= evalCoeffs().knightBlocked_;
-      break;
-
-    case H8:
-      if(board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn) ||
-         board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= evalCoeffs().knightBlocked_;
-      break;
-
-    case H7:
-      if(board_->isFigure(H6, Figure::ColorBlack, Figure::TypePawn) &&
-         board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= evalCoeffs().knightBlocked_;
-      break;
-
-    case G8:
-      if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= evalCoeffs().knightBlocked_;
-      break;
-    }
-  }
-
-  BitMask knight_b = board_->fmgr().knight_mask(Figure::ColorBlack);
-  for(; knight_b;)
-  {
-    int n = clear_lsb(knight_b);
-    auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
-    finfo_[Figure::ColorBlack].attack_mask_ |= knight_moves;
-    finfo_[Figure::ColorBlack].knightAttacks_ |= knight_moves;
-
-    switch(n)
-    {
-    case A1:
-      if(board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn) ||
-         board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= evalCoeffs().knightBlocked_;
-      break;
-
-    case A2:
-      if(board_->isFigure(A3, Figure::ColorWhite, Figure::TypePawn) &&
-         board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= evalCoeffs().knightBlocked_;
-      break;
-
-    case B1:
-      if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= evalCoeffs().knightBlocked_;
-      break;
-
-    case H1:
-      if(board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn) ||
-         board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= evalCoeffs().knightBlocked_;
-      break;
-
-    case H2:
-      if(board_->isFigure(H3, Figure::ColorWhite, Figure::TypePawn) &&
-         board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= evalCoeffs().knightBlocked_;
-      break;
-
-    case G1:
-      if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= evalCoeffs().knightBlocked_;
-      break;
-    }
-  }
-  return score_w - score_b;
-}
-
-int Evaluator::evaluateBlockedBishops()
-{
-  int score_b = 0, score_w = 0;
-  BitMask bimask_w = board_->fmgr().bishop_mask(Figure::ColorWhite);
-  for(; bimask_w;)
-  {
-    int n = clear_lsb(bimask_w);
-    switch(n)
-    {
-    case A7:
-      if(board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case A6:
-      if(board_->isFigure(B5, Figure::ColorBlack, Figure::TypePawn) &&
-         board_->isFigure(C6, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case A8:
-      if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case B8:
-      if(board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn) &&
-         (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn) ||
-         board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case H7:
-      if(board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case H8:
-      if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case G8:
-      if(board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn) &&
-         (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn) ||
-         board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case H6:
-      if(board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
-         board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn))
-         score_w -= evalCoeffs().bishopBlocked_;
-      break;
-    }
-  }
-
-  BitMask bimask_b = board_->fmgr().bishop_mask(Figure::ColorBlack);
-  for(; bimask_b;)
-  {
-    int n = clear_lsb(bimask_b);
-
-    switch(n)
-    {
-    case A2:
-      if(board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case A3:
-      if(board_->isFigure(B4, Figure::ColorWhite, Figure::TypePawn) &&
-         board_->isFigure(C3, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case A1:
-      if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case B1:
-      if(board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn) &&
-         (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn) ||
-         board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case H2:
-      if(board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case H1:
-      if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case G1:
-      if(board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn) &&
-         (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn) ||
-         board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b -= evalCoeffs().bishopBlocked_;
-      break;
-
-    case H3:
-      if(board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
-         board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn))
-         score_b -= evalCoeffs().bishopBlocked_;
-      break;
-    }
-  }
-  return score_w - score_b;
-}
-
-int Evaluator::evaluateBlockedRooks()
-{
-  auto evaluate_blocked = [this](Figure::Color color)
-  {
-    auto ocolor = Figure::otherColor(color);
-    auto blockers = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | board_->fmgr().knight_mask(ocolor);
-    BitMask romask = board_->fmgr().rook_mask(color);
-    int dy = (color<<1) - 1;
-    int score = 0;
-    for(; romask;)
-    {
-      Index n(clear_lsb(romask));
-      BitMask block_mask = movesTable().blocked_rook(n);
-      bool is_blocked = ((blockers & block_mask) == block_mask);
-      score -= is_blocked * evalCoeffs().rookBlocked_;
-    }
-    return score;
-  };
-  auto score_w = evaluate_blocked(Figure::ColorWhite);
-  auto score_b = evaluate_blocked(Figure::ColorBlack);
-  return score_w - score_b;
-}
+//int Evaluator::evaluateBlockedRooks()
+//{
+//  auto evaluate_blocked = [this](Figure::Color color)
+//  {
+//    auto ocolor = Figure::otherColor(color);
+//    auto blockers = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | board_->fmgr().knight_mask(ocolor);
+//    BitMask romask = board_->fmgr().rook_mask(color);
+//    int dy = (color<<1) - 1;
+//    int score = 0;
+//    for(; romask;)
+//    {
+//      Index n(clear_lsb(romask));
+//      BitMask block_mask = movesTable().blocked_rook(n);
+//      bool is_blocked = ((blockers & block_mask) == block_mask);
+//      score -= is_blocked * evalCoeffs().rookBlocked_;
+//    }
+//    return score;
+//  };
+//  auto score_w = evaluate_blocked(Figure::ColorWhite);
+//  auto score_b = evaluate_blocked(Figure::ColorBlack);
+//  return score_w - score_b;
+//}
 
 ScoreType Evaluator::evaluateMaterialDiff() const
 {
@@ -1150,7 +940,6 @@ ScoreType Evaluator::evaluateMaterialDiff() const
 
   return score;
 }
-
 
 ScoreType Evaluator::evaluateForks(Figure::Color color) const
 {

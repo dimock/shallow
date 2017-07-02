@@ -39,25 +39,6 @@ Evaluator::FullScore Evaluator::evaluateKpressure() const
   return score;
 }
 
-int Evaluator::evaluateOpenRook(Figure::Color color) const
-{
-  int score{ 0 };
-  auto const& fmgr = board_->fmgr();
-  auto mask = fmgr.type_mask(Figure::TypeRook, color);
-  for(; mask;)
-  {
-    auto p = clear_lsb(mask);
-    auto const& mask_col = pawnMasks().mask_column(p & 7);
-    bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
-    if(no_pw_color)
-      score += evalCoeffs().semiopenRook_;
-    bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(Figure::otherColor(color))) == 0ULL;
-    if(no_pw_ocolor)
-      score += evalCoeffs().semiopenRook_;
-  }
-  return score;
-}
-
 Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
 {
   FullScore score{};
@@ -89,30 +70,30 @@ Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
   return score;
 }
 
-Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
-{
-  FullScore score{};
-  auto const& fmgr = board_->fmgr();
-  auto const ocolor = Figure::otherColor(color);
-  // knights
-  BitMask knmask = fmgr.knight_mask(color);
-  BitMask knight_from_king = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor)) & inv_mask_all_;
-  for(; knmask;)
-  {
-    int n = clear_lsb(knmask);
-    int p = color ? Figure::mirrorIndex_[n] : n;
-    auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
-    finfo_[color].attack_mask_ |= knight_moves;
-    finfo_[color].knightAttacks_ |= knight_moves;
-    finfo_[color].knightMasks_.push_back(knight_moves);
-    auto kn_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    bool could_check = (knight_from_king & knight_moves) != 0;
-    bool could_attack = (finfo_[ocolor].kingAttacks_ & knight_moves) != 0ULL;
-    finfo_[color].knightPressure_ += evalCoeffs().knightAttackBonus_ * (could_attack || could_check);
-  }
-  score.common_ += finfo_[color].knightPressure_;
-  return score;
-}
+//Evaluator::FullScore Evaluator::evaluateKnights(Figure::Color color)
+//{
+//  FullScore score{};
+//  auto const& fmgr = board_->fmgr();
+//  auto const ocolor = Figure::otherColor(color);
+//  // knights
+//  BitMask knmask = fmgr.knight_mask(color);
+//  BitMask knight_from_king = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor)) & inv_mask_all_;
+//  for(; knmask;)
+//  {
+//    int n = clear_lsb(knmask);
+//    int p = color ? Figure::mirrorIndex_[n] : n;
+//    auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
+//    finfo_[color].attack_mask_ |= knight_moves;
+//    finfo_[color].knightAttacks_ |= knight_moves;
+//    finfo_[color].knightMasks_.push_back(knight_moves);
+//    auto kn_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
+//    bool could_check = (knight_from_king & knight_moves) != 0;
+//    bool could_attack = (finfo_[ocolor].kingAttacks_ & knight_moves) != 0ULL;
+//    finfo_[color].knightPressure_ += evalCoeffs().knightAttackBonus_ * (could_attack || could_check);
+//  }
+//  score.common_ += finfo_[color].knightPressure_;
+//  return score;
+//}
 
 Evaluator::FullScore Evaluator::evaluateFigures(Figure::Color color)
 {

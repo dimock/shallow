@@ -137,13 +137,6 @@ private:
   // multiple coefficients for opening/endgame
   PhaseInfo detectPhase() const;
 
-  // + fill attacked fileds masks
-  FullScore evaluateKnights(Figure::Color color);
-  FullScore evaluateFigures(Figure::Color color);
-
-  FullScore evaluateMobility(Figure::Color color);
-  FullScore evaluatePawnsPressure(Figure::Color color);
-
   // calculate or take from hash
   // pawns structure for middle & end game
   // + king's pawn shield???
@@ -162,7 +155,11 @@ private:
   FullScore evaluateKpressure() const;
   FullScore evaluatePsqBruteforce() const;
 
-  int evaluateOpenRook(Figure::Color color) const;
+  // attacked field, blocked, rooks on open column, basic king pressure == distance to king
+  FullScore evaluateKnights();
+  FullScore evaluateBishops();
+  int evaluateRook(Figure::Color color) const;
+  int evaluateQueens(Figure::Color color) const;
 
   PasserInfo passerEvaluation(Figure::Color color) const;
   FullScore passerEvaluation() const;
@@ -194,9 +191,14 @@ private:
     return score;
   }
 
-  int evaluateBlockedKnights();
-  int evaluateBlockedBishops();
-  int evaluateBlockedRooks();
+  //int evaluateBlockedRooks();
+
+  //// + fill attacked fileds masks
+  //FullScore evaluateKnights(Figure::Color color);
+  FullScore evaluateFigures(Figure::Color color);
+
+  FullScore evaluateMobility(Figure::Color color);
+  FullScore evaluatePawnsPressure(Figure::Color color);
 
   // sum of weights of all figures
   const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
