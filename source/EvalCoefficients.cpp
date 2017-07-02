@@ -44,8 +44,8 @@ namespace NEngine
                     sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
 
     // forks
-    vars_.push_back(details::Var{ "attackedByWeakBonus_", attackedByWeakBonus_, &attackedByWeakBonus_ });
     vars_.push_back(details::Var{ "forkBonus_", forkBonus_, &forkBonus_ });
+    vars_.push_back(details::Var{ "doublePawnAttack_", doublePawnAttack_, &doublePawnAttack_ });
 
     // king
     vars_.push_back(details::Var{ "castleImpossible_", castleImpossible_, &castleImpossible_ });

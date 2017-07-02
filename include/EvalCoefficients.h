@@ -59,8 +59,8 @@ struct EvalCoefficients
   int figuresAgainstRookBonus_[2] = {};
 
   // forks
-  int attackedByWeakBonus_{ 10 };
-  int forkBonus_{ 60 };
+  int forkBonus_{ 35 };
+  int doublePawnAttack_{ 50 };
 
   // king
   int castleImpossible_{ -25 };

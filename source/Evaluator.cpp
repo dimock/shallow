@@ -8,6 +8,7 @@
 #include <xindex.h>
 #include <magicbb.h>
 #include <xbitmath.h>
+#include <Helpers.h>
 
 namespace NEngine
 {
@@ -86,7 +87,10 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 
 ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 {
-  //std::string sfen = toFEN(*board_);
+#ifndef NDEBUG
+  std::string sfen = toFEN(*board_);
+#endif
+
   if(auto spec = specialCases().eval(*board_))
   {
     ScoreType score = *spec;
@@ -148,6 +152,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);
 
+  score.opening_ += evaluateBlockedKnights();
+  if(phaseInfo.phase_ != EndGame)
+  {
+    score.opening_ += evaluateBlockedBishops();
+  }
 
 
   //// pawns attack to king
@@ -158,23 +167,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //scoreKnights -= evaluateKnights(Figure::ColorBlack);
   //score += scoreKnights;
 
-  //auto scoreForks = evaluateForks(Figure::ColorWhite);
-  //scoreForks -= evaluateForks(Figure::ColorBlack);
-  //score.common_ += scoreForks;
+  auto scoreForks = evaluateForks(Figure::ColorWhite);
+  scoreForks -= evaluateForks(Figure::ColorBlack);
+  score.common_ += scoreForks;
 
-
-  //if(phaseInfo.phase_ != EndGame)
-  //{
-  //  score.opening_ += evaluateBlockedKnights();
-  //  score.opening_ += evaluateBlockedBishops();
-  //}
-
-  //if(phaseInfo.phase_ != Opening)
-  //{
-  //  // king psq endgame
-  //  score.endGame_ += evaluateKingPsqEg(Figure::ColorWhite);
-  //  score.endGame_ -= evaluateKingPsqEg(Figure::ColorBlack);
-  //}
 
   ///// use lazy evaluation level 1
   //{
@@ -884,6 +880,9 @@ int Evaluator::evaluateBlockedKnights()
   for(; knight_w;)
   {
     int n = clear_lsb(knight_w);
+    auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
+    finfo_[Figure::ColorWhite].attack_mask_ |= knight_moves;
+    finfo_[Figure::ColorWhite].knightAttacks_ |= knight_moves;
 
     switch(n)
     {
@@ -927,6 +926,9 @@ int Evaluator::evaluateBlockedKnights()
   for(; knight_b;)
   {
     int n = clear_lsb(knight_b);
+    auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
+    finfo_[Figure::ColorBlack].attack_mask_ |= knight_moves;
+    finfo_[Figure::ColorBlack].knightAttacks_ |= knight_moves;
 
     switch(n)
     {
@@ -1152,23 +1154,20 @@ ScoreType Evaluator::evaluateMaterialDiff() const
 ScoreType Evaluator::evaluateForks(Figure::Color color) const
 {
   Figure::Color ocolor = Figure::otherColor(color);
-
   BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
   BitMask o_mask = board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | o_rq_mask;
-
-  BitMask pawn_fork = o_mask & finfo_[color].pawnAttacks_;
+  auto pawn_msk = board_->fmgr().pawn_mask(color) & finfo_[color].pawnAttacks_;
+  auto pawn_att = color
+    ? ((pawn_msk << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk << 7) & Figure::pawnCutoffMasks_[1])
+    : ((pawn_msk >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk >> 9) & Figure::pawnCutoffMasks_[1]);
+  BitMask pawn_fork = o_mask & pawn_att;
   int pawnsN = pop_count(pawn_fork);
-  if ( pawnsN > 1 )
-    return evalCoeffs().forkBonus_;
-
+  if(pawnsN > 1)
+    return evalCoeffs().doublePawnAttack_;
   BitMask kn_fork = o_rq_mask & finfo_[color].knightAttacks_;
   int knightsN = pop_count(kn_fork);
-  if ( pawnsN+knightsN > 1 )
+  if(knightsN > 1 || (pawnsN+knightsN > 0 && color == board_->color()))
     return evalCoeffs().forkBonus_;
-
-  if ( pawnsN+knightsN > 0 && color == board_->color() )
-    return evalCoeffs().attackedByWeakBonus_;
-
   return 0;
 }
 
