@@ -66,9 +66,9 @@ struct EvalCoefficients
   int castleImpossible_{ -25 };
   int fakeCastle_{ -25 };
   int castleBonus_{ 12 };
-  int pawnPenaltyA_{ -15 };
-  int pawnPenaltyB_{ -15 };
-  int pawnPenaltyC_{ -6 };
+  int pawnPenaltyA_{ -10 };
+  int pawnPenaltyB_{ -10 };
+  int pawnPenaltyC_{ -4 };
   int opponentPawnA_{ -15 };
   int opponentPawnB_{ -12 };
   int opponentPawnC_{ -10 };

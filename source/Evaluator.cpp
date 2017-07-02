@@ -760,7 +760,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     else if(pawns_shield_mask[color][ctype][0][1] & pmask)
       shield_bonus += evalCoeffs().pawnShieldA_[1];
     else
-      shield_bonus += evalCoeffs().pawnPenaltyA_ >> 1;
+      shield_bonus += evalCoeffs().pawnPenaltyA_;
 
     if(pawns_shield_mask[color][ctype][1][0] & pmask)
       shield_bonus += evalCoeffs().pawnShieldB_[0];
@@ -777,9 +777,9 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
       shield_bonus += evalCoeffs().pawnPenaltyC_ >> 1;
 
     int shield_penalty =
-       (((pawns_penalty_mask[color][ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
+        ((pawns_penalty_mask[color][ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
       + ((pawns_penalty_mask[color][ctype][1] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyB_
-      + ((pawns_penalty_mask[color][ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_) >> 1;
+      + ((pawns_penalty_mask[color][ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_;
 
     int opponent_penalty =
         ((opponent_pawn_mask[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnA_
