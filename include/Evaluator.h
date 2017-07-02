@@ -162,6 +162,8 @@ private:
   FullScore evaluateKpressure() const;
   FullScore evaluatePsqBruteforce() const;
 
+  int evaluateOpenRook(Figure::Color color) const;
+
   PasserInfo passerEvaluation(Figure::Color color) const;
   FullScore passerEvaluation() const;
   // search path from opponent king to pawn's promotion of given color

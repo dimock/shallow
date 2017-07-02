@@ -76,11 +76,11 @@ namespace NEngine
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
     // arrays
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 50, 70, 0 }, passerPawn_,
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 12, 24, 35, 45, 60, 80, 0 }, passerPawn_,
                     sizeof(passerPawn_)/sizeof(*passerPawn_) });
     arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 4, 8, 12, 16, 20, 24, 0 }, semipasserPawn_,
                     sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });
-    arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 4, 6, 8, 10, 12, 18, 0 }, protectedPasser_,
+    arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 5, 7, 10, 12, 14, 20, 0 }, protectedPasser_,
                     sizeof(protectedPasser_)/sizeof(*protectedPasser_) });
     arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 12, 16, 24, 32, 40, 0 }, farKingPawn_,
                     sizeof(farKingPawn_)/sizeof(*farKingPawn_) });

@@ -158,6 +158,12 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
     score.opening_ += evaluateBlockedBishops();
   }
 
+  auto scoreForks = evaluateForks(Figure::ColorWhite);
+  scoreForks -= evaluateForks(Figure::ColorBlack);
+  score.common_ += scoreForks;
+
+  score.common_ += evaluateOpenRook(Figure::ColorWhite);
+  score.common_ -= evaluateOpenRook(Figure::ColorBlack);
 
   //// pawns attack to king
   //score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
@@ -166,11 +172,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //auto scoreKnights = evaluateKnights(Figure::ColorWhite);
   //scoreKnights -= evaluateKnights(Figure::ColorBlack);
   //score += scoreKnights;
-
-  auto scoreForks = evaluateForks(Figure::ColorWhite);
-  scoreForks -= evaluateForks(Figure::ColorBlack);
-  score.common_ += scoreForks;
-
 
   ///// use lazy evaluation level 1
   //{

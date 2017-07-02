@@ -22,7 +22,6 @@ Evaluator::FullScore Evaluator::evaluateKpressure() const
       for(; mask;)
       {
         auto p = clear_lsb(mask);
-        
         auto ki_dist = distanceCounter().getDistance(p, board_->kingPos(Figure::ColorWhite));
         score.common_ -= Figure::kingDistanceBonus_[type][ki_dist];
       }
@@ -31,12 +30,30 @@ Evaluator::FullScore Evaluator::evaluateKpressure() const
       auto mask = fmgr.type_mask((Figure::Type)type, Figure::ColorWhite);
       for(; mask;)
       {
-        auto n = clear_lsb(mask);
-
-        auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorBlack));
+        auto p = clear_lsb(mask);
+        auto ki_dist = distanceCounter().getDistance(p, board_->kingPos(Figure::ColorBlack));
         score.common_ += Figure::kingDistanceBonus_[type][ki_dist];
       }
     }
+  }
+  return score;
+}
+
+int Evaluator::evaluateOpenRook(Figure::Color color) const
+{
+  int score{ 0 };
+  auto const& fmgr = board_->fmgr();
+  auto mask = fmgr.type_mask(Figure::TypeRook, color);
+  for(; mask;)
+  {
+    auto p = clear_lsb(mask);
+    auto const& mask_col = pawnMasks().mask_column(p & 7);
+    bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
+    if(no_pw_color)
+      score += evalCoeffs().semiopenRook_;
+    bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(Figure::otherColor(color))) == 0ULL;
+    if(no_pw_ocolor)
+      score += evalCoeffs().semiopenRook_;
   }
   return score;
 }
