@@ -87,9 +87,9 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 
 ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 {
-#ifndef NDEBUG
-  std::string sfen = toFEN(*board_);
-#endif
+//#ifndef NDEBUG
+//  std::string sfen = toFEN(*board_);
+//#endif
 
   if(auto spec = specialCases().eval(*board_))
   {
@@ -166,6 +166,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.common_ += evaluateQueens(Figure::ColorWhite);
   score.common_ -= evaluateQueens(Figure::ColorBlack);
 
+  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+  score += scorePP;
+
   //// pawns attack to king
   //score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
   //score.common_ -= evalCoeffs().pawnAttackBonus_ * ((finfo_[1].kingAttacks_ & finfo_[0].pawnAttacks_) != 0ULL);
@@ -187,9 +191,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //scorePsq -= evaluatePsq(Figure::ColorBlack);
   //score += scorePsq;
 
-  //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-  //score += scorePP;
 
   //// detailed passer evaluation
   //auto passerScore = passerEvaluation();
@@ -236,7 +237,7 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   FullScore score{};
   auto const& fmgr = board_->fmgr();
   auto const ocolor = Figure::otherColor(color);
-  auto pw_mask = fmgr.pawn_mask(ocolor);
+  auto const& pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
   auto pw_unprotected = pw_mask ^ pw_protected;
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;

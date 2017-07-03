@@ -44,8 +44,8 @@ struct EvalCoefficients
   int unsupportedPawn_{ -12 };
   int unprotectedPawn_{ -8 };
   int rookBehindBonus_{ 7 };
-  int protectedPawnPressure_{ 3 };
-  int unprotectedPawnPressure_{ 8 };
+  int protectedPawnPressure_{ 2 };
+  int unprotectedPawnPressure_{ 5 };
   int protectedPawnBishopTreat_{ 3 };
   int unprotectedPawnBishopTreat_{ 8 };
 

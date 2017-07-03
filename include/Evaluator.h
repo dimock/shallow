@@ -95,6 +95,7 @@ class Evaluator
     BitMask queenAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
+    BitMask cango_mask_{};
     xlist<BitMask, 10> knightMasks_;
     xlist<BitMask, 10> bishopMasks_;
     xlist<BitMask, 10> rookMasks_;
@@ -155,11 +156,15 @@ private:
   FullScore evaluateKpressure() const;
   FullScore evaluatePsqBruteforce() const;
 
-  // attacked field, blocked, rooks on open column, basic king pressure == distance to king
+  // attacked field
+  // blocked knighs/bishops
+  // rooks on open column
+  // mobility
+  // basic king pressure == distance to king
   FullScore evaluateKnights();
   FullScore evaluateBishops();
-  int evaluateRook(Figure::Color color) const;
-  int evaluateQueens(Figure::Color color) const;
+  int evaluateRook(Figure::Color color);
+  int evaluateQueens(Figure::Color color);
 
   PasserInfo passerEvaluation(Figure::Color color) const;
   FullScore passerEvaluation() const;
