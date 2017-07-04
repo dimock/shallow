@@ -141,7 +141,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score += hashedScore;
 
   //// distance from king to figures
-  //score += evaluateKpressure();
+  //score += evaluateKpressureBasic();
 
   // penalty for lost or fake castle
   score.opening_ += evaluateCastle();
@@ -169,6 +169,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   score += scorePP;
+
+  auto scoreKPr = evaluateKingPressure(Figure::ColorWhite);
+  scoreKPr -= evaluateKingPressure(Figure::ColorBlack);
+  score.common_ += scoreKPr;
 
   //// pawns attack to king
   //score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
@@ -960,6 +964,30 @@ ScoreType Evaluator::evaluateForks(Figure::Color color) const
   if(knightsN > 1 || (pawnsN+knightsN > 0 && color == board_->color()))
     return evalCoeffs().forkBonus_;
   return 0;
+}
+
+int Evaluator::evaluateKingPressure(Figure::Color color) const
+{
+  int score{};
+  auto const ocolor = Figure::otherColor(color);
+  auto const& ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
+  
+  int pw_num = pop_count(finfo_[color].pawnAttacks_ & ki_fields);
+  score += pw_num * evalCoeffs().pawnKingAttack_;
+  
+  int kn_num = pop_count(finfo_[color].knightAttacks_ & ki_fields);
+  score += kn_num * evalCoeffs().knightKingAttack_;
+
+  int bi_num = pop_count(finfo_[color].bishopAttacks_ & ki_fields);
+  score += bi_num * evalCoeffs().bishopKingAttack_;
+
+  int r_num = pop_count(finfo_[color].rookAttacks_ & ki_fields);
+  score += r_num * evalCoeffs().rookKingAttack_;
+
+  int q_num = pop_count(finfo_[color].queenAttacks_ & ki_fields);
+  score += q_num * evalCoeffs().queenKingAttack_;
+
+  return score;
 }
 
 } //NEngine

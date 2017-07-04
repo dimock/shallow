@@ -84,9 +84,9 @@ struct EvalCoefficients
   int queenBlocked_{ 80 };
 
   // king attacks
-  int pawnKingAttack_{ 5 };
-  int knightKingAttack_{ 4 };
-  int bishopKingAttack_{ 4 };
+  int pawnKingAttack_{ 2 };
+  int knightKingAttack_{ 3 };
+  int bishopKingAttack_{ 3 };
   int rookKingAttack_{ 5 };
   int queenKingAttack_{ 8 };
 

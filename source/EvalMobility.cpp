@@ -11,7 +11,7 @@ Evaluator.cpp - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
-Evaluator::FullScore Evaluator::evaluateKpressure() const
+Evaluator::FullScore Evaluator::evaluateKpressureBasic() const
 {
   FullScore score{};
   auto const& fmgr = board_->fmgr();

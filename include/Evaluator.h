@@ -153,7 +153,7 @@ private:
     return score;
   }
 
-  FullScore evaluateKpressure() const;
+  FullScore evaluateKpressureBasic() const;
   FullScore evaluatePsqBruteforce() const;
 
   // attacked field
@@ -204,6 +204,8 @@ private:
 
   FullScore evaluateMobility(Figure::Color color);
   FullScore evaluatePawnsPressure(Figure::Color color);
+
+  int evaluateKingPressure(Figure::Color color) const;
 
   // sum of weights of all figures
   const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
