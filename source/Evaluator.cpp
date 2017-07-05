@@ -719,6 +719,23 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     }
   };
 
+  static const BitMask no_pawns_penalty_mask[2][3] =
+  {
+    // short
+    {
+      set_mask_bit(H7)|set_mask_bit(H6)|set_mask_bit(H5)|set_mask_bit(H4)|set_mask_bit(H3)|set_mask_bit(H2),
+      set_mask_bit(G7)|set_mask_bit(G6)|set_mask_bit(G5)|set_mask_bit(G4)|set_mask_bit(G3)|set_mask_bit(G2),
+      set_mask_bit(F7)|set_mask_bit(F6)|set_mask_bit(F5)|set_mask_bit(F4)|set_mask_bit(F3)|set_mask_bit(F2)
+    },
+
+    // long
+    {
+      set_mask_bit(A7)|set_mask_bit(A6)|set_mask_bit(A5)|set_mask_bit(A4)|set_mask_bit(A3)|set_mask_bit(A2),
+      set_mask_bit(B7)|set_mask_bit(B6)|set_mask_bit(B5)|set_mask_bit(B4)|set_mask_bit(B3)|set_mask_bit(B2),
+      set_mask_bit(C7)|set_mask_bit(C6)|set_mask_bit(C5)|set_mask_bit(C4)|set_mask_bit(C3)|set_mask_bit(C2)
+    }
+  };
+
   static const BitMask opponent_pawn_mask[2][2][3] =
   {
     // black
@@ -783,6 +800,11 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
         ((pawns_penalty_mask[color][ctype][0] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyA_
       + ((pawns_penalty_mask[color][ctype][1] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyB_
       + ((pawns_penalty_mask[color][ctype][2] & pmask) == 0ULL) * evalCoeffs().pawnPenaltyC_;
+
+    shield_penalty +=
+        ((no_pawns_penalty_mask[ctype][0] & pmask) == 0ULL) * evalCoeffs().noPawnPenaltyA_
+      + ((no_pawns_penalty_mask[ctype][1] & pmask) == 0ULL) * evalCoeffs().noPawnPenaltyB_
+      + ((no_pawns_penalty_mask[ctype][2] & pmask) == 0ULL) * evalCoeffs().noPawnPenaltyC_;
 
     int opponent_penalty =
         ((opponent_pawn_mask[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnA_
@@ -971,21 +993,30 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
   int score{};
   auto const ocolor = Figure::otherColor(color);
   auto const& ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
+  auto const& ki_fpress = movesTable().king_pressure(board_->kingPos(ocolor));
   
   int pw_num = pop_count(finfo_[color].pawnAttacks_ & ki_fields);
   score += pw_num * evalCoeffs().pawnKingAttack_;
   
   int kn_num = pop_count(finfo_[color].knightAttacks_ & ki_fields);
   score += kn_num * evalCoeffs().knightKingAttack_;
+  kn_num = pop_count(finfo_[color].knightAttacks_ & ki_fpress);
+  score += (kn_num * evalCoeffs().knightKingAttack_) >> 1;
 
   int bi_num = pop_count(finfo_[color].bishopAttacks_ & ki_fields);
   score += bi_num * evalCoeffs().bishopKingAttack_;
+  bi_num = pop_count(finfo_[color].bishopAttacks_ & ki_fpress);
+  score += (bi_num * evalCoeffs().bishopKingAttack_) >> 1;
 
   int r_num = pop_count(finfo_[color].rookAttacks_ & ki_fields);
   score += r_num * evalCoeffs().rookKingAttack_;
+  r_num = pop_count(finfo_[color].rookAttacks_ & ki_fpress);
+  score += (r_num * evalCoeffs().rookKingAttack_) >> 1;
 
   int q_num = pop_count(finfo_[color].queenAttacks_ & ki_fields);
   score += q_num * evalCoeffs().queenKingAttack_;
+  q_num = pop_count(finfo_[color].queenAttacks_ & ki_fpress);
+  score += (q_num * evalCoeffs().queenKingAttack_) >> 1;
 
   return score;
 }

@@ -54,6 +54,9 @@ namespace NEngine
     vars_.push_back(details::Var{ "pawnPenaltyA_", pawnPenaltyA_, &pawnPenaltyA_ });
     vars_.push_back(details::Var{ "pawnPenaltyB_", pawnPenaltyB_, &pawnPenaltyB_ });
     vars_.push_back(details::Var{ "pawnPenaltyC_", pawnPenaltyC_, &pawnPenaltyC_ });
+    vars_.push_back(details::Var{ "noPawnPenaltyA_", noPawnPenaltyA_, &noPawnPenaltyA_ });
+    vars_.push_back(details::Var{ "noPawnPenaltyB_", noPawnPenaltyB_, &noPawnPenaltyB_ });
+    vars_.push_back(details::Var{ "noPawnPenaltyC_", noPawnPenaltyC_, &noPawnPenaltyC_ });
     vars_.push_back(details::Var{ "opponentPawnA_", opponentPawnA_, &opponentPawnA_ });
     vars_.push_back(details::Var{ "opponentPawnB_", opponentPawnB_, &opponentPawnB_ });
     vars_.push_back(details::Var{ "opponentPawnC_", opponentPawnC_, &opponentPawnC_ });
