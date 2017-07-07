@@ -121,22 +121,26 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   {
     alpha0_ = (int)alpha - lazyThreshold0_;
     alpha1_ = (int)alpha - lazyThreshold1_;
+    alpha2_ = (int)alpha - lazyThreshold2_;
   }
   else
   {
     alpha0_ = -ScoreMax;
     alpha1_ = -ScoreMax;
+    alpha2_ = -ScoreMax;
   }
 
   if(betta < +Figure::MatScore)
   {
     betta0_ = (int)betta + lazyThreshold0_;
     betta1_ = (int)betta + lazyThreshold1_;
+    betta2_ = (int)betta + lazyThreshold2_;
   }
   else
   {
     betta0_ = +ScoreMax;
     betta1_ = +ScoreMax;
+    betta2_ = +ScoreMax;
   }
 
   const FiguresManager& fmgr = board_->fmgr();
@@ -154,18 +158,22 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   prepare();
 
+  // determine game phase (opening, middle or end game)
+  auto phaseInfo = detectPhase();
+
   // take pawns eval from hash if possible
   auto hashedScore = hashedEvaluation();
   score += hashedScore;
 
-  //// distance from king to figures
-  //score += evaluateKpressureBasic();
+  /// use lazy evaluation level 1
+  {
+    auto score1 = considerColor(lipolScore(score, phaseInfo));
+    if(score1 < alpha1_ || score1 > betta1_)
+      return score1;
+  }
 
   // penalty for lost or fake castle
   score.opening_ += evaluateCastle();
-
-  // determine game phase (opening, middle or end game)
-  auto phaseInfo = detectPhase();
 
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);
@@ -188,39 +196,16 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   score += scorePP;
 
+  /// use lazy evaluation level 2
+  {
+    auto score2 = considerColor(lipolScore(score, phaseInfo));
+    if(score2 < alpha2_ || score2 > betta2_)
+      return score2;
+  }
+
   auto scoreKPr = evaluateKingPressure(Figure::ColorWhite);
   scoreKPr -= evaluateKingPressure(Figure::ColorBlack);
   score.common_ += scoreKPr;
-
-  //// pawns attack to king
-  //score.common_ += evalCoeffs().pawnAttackBonus_ * ((finfo_[0].kingAttacks_ & finfo_[1].pawnAttacks_) != 0ULL);
-  //score.common_ -= evalCoeffs().pawnAttackBonus_ * ((finfo_[1].kingAttacks_ & finfo_[0].pawnAttacks_) != 0ULL);
-
-  //auto scoreKnights = evaluateKnights(Figure::ColorWhite);
-  //scoreKnights -= evaluateKnights(Figure::ColorBlack);
-  //score += scoreKnights;
-
-  ///// use lazy evaluation level 1
-  //{
-  //  auto score1 = considerColor(lipolScore(score, phaseInfo));
-  //  if(score1 < alpha1_ || score1 > betta1_)
-  //    return score1;
-  //}
-
-  //// PSQ - evaluation
-  //// + attacked fields
-  //auto scorePsq = evaluatePsq(Figure::ColorWhite);
-  //scorePsq -= evaluatePsq(Figure::ColorBlack);
-  //score += scorePsq;
-
-
-  //// detailed passer evaluation
-  //auto passerScore = passerEvaluation();
-  //score += passerScore;
-
-  //auto mobilityScore = evaluateMobility(Figure::ColorWhite);
-  //mobilityScore -= evaluateMobility(Figure::ColorBlack);
-  //score += mobilityScore;
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;
@@ -999,20 +984,17 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
     ki_fields |= castle_mask_[ocolor][ctype];
   }
 
-  int pw_num = pop_count(finfo_[color].pawnAttacks_ & ki_fields);
-  score += pw_num * evalCoeffs().pawnKingAttack_;
+  if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
+  {
+    int pw_num = pop_count(pw_att);
+    score += pw_num * evalCoeffs().pawnKingAttack_;
+  }
 
-  int kn_num = pop_count(finfo_[color].knightAttacks_ & ki_fields);
-  score += kn_num * evalCoeffs().knightKingAttack_;
-
-  //int bi_num = pop_count(finfo_[color].bishopAttacks_ & ki_fields);
-  //score += bi_num * evalCoeffs().bishopKingAttack_;
-
-  //int r_num = pop_count(finfo_[color].rookAttacks_ & ki_fields);
-  //score += r_num * evalCoeffs().rookKingAttack_;
-
-  //int q_num = pop_count(finfo_[color].queenAttacks_ & ki_fields);
-  //score += q_num * evalCoeffs().queenKingAttack_;
+  if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields))
+  {
+    int kn_num = pop_count(kn_att);
+    score += kn_num * evalCoeffs().knightKingAttack_;
+  }
 
   // x-ray attack
   auto const& fmgr = board_->fmgr();
@@ -1027,8 +1009,11 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
         continue;
       auto const& moves = magic_ns::bishop_moves(n, all_bq);
-      int bi_num = pop_count(moves & ki_fields);
-      score += bi_num * evalCoeffs().bishopKingAttack_;
+      if(auto bi_att = (moves & ki_fields))
+      {
+        int bi_num = pop_count(bi_att);
+        score += bi_num * evalCoeffs().bishopKingAttack_;
+      }
     }
   }
   {
@@ -1039,8 +1024,11 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
         continue;
       auto const& moves = magic_ns::bishop_moves(n, all_bq);
-      int q_num = pop_count(moves & ki_fields);
-      score += q_num * evalCoeffs().queenKingAttack_;
+      if(auto q_att = (moves & ki_fields))
+      {
+        int q_num = pop_count(q_att);
+        score += q_num * evalCoeffs().queenKingAttack_;
+      }
     }
   }
   auto rq_mask = fmgr.queen_mask(color) | fmgr.rook_mask(color);
@@ -1054,8 +1042,11 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
         continue;
       auto const& moves = magic_ns::rook_moves(n, all_rq);
-      int r_num = pop_count(moves & ki_fields);
-      score += r_num * evalCoeffs().rookKingAttack_;
+      if(auto r_att = (moves & ki_fields))
+      {
+        int r_num = pop_count(r_att);
+        score += r_num * evalCoeffs().rookKingAttack_;
+      }
     }
   }
   {
@@ -1066,8 +1057,11 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
         continue;
       auto const& moves = magic_ns::rook_moves(n, all_rq);
-      int q_num = pop_count(moves & ki_fields);
-      score += q_num * evalCoeffs().queenKingAttack_;
+      if(auto q_att = (moves & ki_fields))
+      {
+        int q_num = pop_count(q_att);
+        score += q_num * evalCoeffs().queenKingAttack_;
+      }
     }
   }
   return score;

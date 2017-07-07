@@ -104,8 +104,9 @@ class Evaluator
 
 public:
 
-  const int lazyThreshold0_ = 400;// Figure::figureWeight_[Figure::TypePawn] * 4;
-  const int lazyThreshold1_ = 300;// Figure::figureWeight_[Figure::TypePawn] * 3;
+  const int lazyThreshold0_ = 500;// Figure::figureWeight_[Figure::TypePawn] * 4;
+  const int lazyThreshold1_ = 400;// Figure::figureWeight_[Figure::TypePawn] * 3;
+  const int lazyThreshold2_ = 200;// Figure::figureWeight_[Figure::TypePawn] * 3;
   void initialize(Board const* board, EHashTable* ehash, GHashTable* ghash);
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
@@ -232,6 +233,8 @@ private:
   int betta0_{};
   int alpha1_{};
   int betta1_{};
+  int alpha2_{};
+  int betta2_{};
 };
 
 } // NEngine
