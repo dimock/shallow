@@ -75,7 +75,7 @@ bool Engine::fromFEN(std::string const& fen)
 {
   stop_ = false;
 
-  SBoard<Board, UndoInfo, 16> tboard(scontexts_[0].board_);
+  SBoard<Board, UndoInfo, Board::GameLength> tboard(scontexts_[0].board_);
 
   // verify FEN first
   if(!NEngine::fromFEN(fen, tboard))

@@ -319,6 +319,7 @@ struct Board
     int reps = 1;
     int i = halfmovesCounter_ - from;
     int stop = halfmovesCounter_ - data_.fiftyMovesCount_; // TODO: is it correct?
+    X_ASSERT(stop < 0, "stop in countReps is invalid");
     for(; i >= stop && reps < 3; i -= 2)
     {
       if(undoInfo(i).zcode_ == zcode)
