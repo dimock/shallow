@@ -224,6 +224,7 @@ private:
   GHashTable*  ghash_{ nullptr };
 
   static const int colored_y_[2][8];
+  static const BitMask castle_mask_[2][2];
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};

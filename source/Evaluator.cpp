@@ -17,6 +17,24 @@ const int Evaluator::colored_y_[2][8] = {
   { 7, 6, 5, 4, 3, 2, 1, 0 },
   { 0, 1, 2, 3, 4, 5, 6, 7 } };
 
+const BitMask Evaluator::castle_mask_[2][2] = {
+  {
+    set_mask_bit(F8) | set_mask_bit(G8) | set_mask_bit(H8) |
+    set_mask_bit(F7) | set_mask_bit(G7) | set_mask_bit(H7),
+
+    set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(C8) |
+    set_mask_bit(A7) | set_mask_bit(B7) | set_mask_bit(C7)
+  },
+
+  {
+    set_mask_bit(F1) | set_mask_bit(G1) | set_mask_bit(H1) |
+    set_mask_bit(F2) | set_mask_bit(G2) | set_mask_bit(H2),
+
+    set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(C1) |
+    set_mask_bit(A2) | set_mask_bit(B2) | set_mask_bit(C2)
+  }
+};
+
 void Evaluator::initialize(Board const* board, EHashTable* ehash, GHashTable* ghash)
 {
   board_ = board;
@@ -604,31 +622,13 @@ bool Evaluator::findRootToPawn(Figure::Color color, int promo_pos, int stepsMax)
 
 int Evaluator::getCastleType(Figure::Color color) const
 {
-  static const BitMask castle_mask[2][2] = {
-    {
-      set_mask_bit(F8) | set_mask_bit(G8) | set_mask_bit(H8) |
-      set_mask_bit(F7) | set_mask_bit(G7) | set_mask_bit(H7),
-
-      set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(C8) |
-      set_mask_bit(A7) | set_mask_bit(B7) | set_mask_bit(C7)
-    },
-
-    {
-      set_mask_bit(F1) | set_mask_bit(G1) | set_mask_bit(H1) |
-      set_mask_bit(F2) | set_mask_bit(G2) | set_mask_bit(H2),
-
-      set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(C1) |
-      set_mask_bit(A2) | set_mask_bit(B2) | set_mask_bit(C2)
-    }
-  };
-
   auto const& ki_mask = board_->fmgr().king_mask(color);
 
   // short
-  bool cking = (castle_mask[color][0] & ki_mask) != 0;
+  bool cking = (castle_mask_[color][0] & ki_mask) != 0;
 
   // long
-  bool cqueen = (castle_mask[color][1] & ki_mask) != 0;
+  bool cqueen = (castle_mask_[color][1] & ki_mask) != 0;
 
   // -1 == no castle
   return (!cking && !cqueen) * (-1) + cqueen;
@@ -992,32 +992,84 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
 {
   int score{};
   auto const ocolor = Figure::otherColor(color);
-  auto const& ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
-  auto const& ki_fpress = movesTable().king_pressure(board_->kingPos(ocolor));
-  
+  auto ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
+  auto ctype = getCastleType(ocolor);
+  if(ctype >= 0)
+  {
+    ki_fields |= castle_mask_[ocolor][ctype];
+  }
+
   int pw_num = pop_count(finfo_[color].pawnAttacks_ & ki_fields);
   score += pw_num * evalCoeffs().pawnKingAttack_;
-  
+
   int kn_num = pop_count(finfo_[color].knightAttacks_ & ki_fields);
   score += kn_num * evalCoeffs().knightKingAttack_;
-  kn_num = pop_count(finfo_[color].knightAttacks_ & ki_fpress);
-  score += (kn_num * evalCoeffs().knightKingAttack_) >> 1;
 
-  int bi_num = pop_count(finfo_[color].bishopAttacks_ & ki_fields);
-  score += bi_num * evalCoeffs().bishopKingAttack_;
-  bi_num = pop_count(finfo_[color].bishopAttacks_ & ki_fpress);
-  score += (bi_num * evalCoeffs().bishopKingAttack_) >> 1;
+  //int bi_num = pop_count(finfo_[color].bishopAttacks_ & ki_fields);
+  //score += bi_num * evalCoeffs().bishopKingAttack_;
 
-  int r_num = pop_count(finfo_[color].rookAttacks_ & ki_fields);
-  score += r_num * evalCoeffs().rookKingAttack_;
-  r_num = pop_count(finfo_[color].rookAttacks_ & ki_fpress);
-  score += (r_num * evalCoeffs().rookKingAttack_) >> 1;
+  //int r_num = pop_count(finfo_[color].rookAttacks_ & ki_fields);
+  //score += r_num * evalCoeffs().rookKingAttack_;
 
-  int q_num = pop_count(finfo_[color].queenAttacks_ & ki_fields);
-  score += q_num * evalCoeffs().queenKingAttack_;
-  q_num = pop_count(finfo_[color].queenAttacks_ & ki_fpress);
-  score += (q_num * evalCoeffs().queenKingAttack_) >> 1;
+  //int q_num = pop_count(finfo_[color].queenAttacks_ & ki_fields);
+  //score += q_num * evalCoeffs().queenKingAttack_;
 
+  // x-ray attack
+  auto const& fmgr = board_->fmgr();
+  auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
+  auto all_bq = mask_all_ ^ bq_mask;
+  X_ASSERT(all_bq != (mask_all_ & ~bq_mask), "invalid all but BQ mask");
+  {
+    auto b_mask = fmgr.bishop_mask(color);
+    for(; b_mask;)
+    {
+      auto n = clear_lsb(b_mask);
+      if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
+        continue;
+      auto const& moves = magic_ns::bishop_moves(n, all_bq);
+      int bi_num = pop_count(moves & ki_fields);
+      score += bi_num * evalCoeffs().bishopKingAttack_;
+    }
+  }
+  {
+    auto q_mask = fmgr.queen_mask(color);
+    for(; q_mask;)
+    {
+      auto n = clear_lsb(q_mask);
+      if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
+        continue;
+      auto const& moves = magic_ns::bishop_moves(n, all_bq);
+      int q_num = pop_count(moves & ki_fields);
+      score += q_num * evalCoeffs().queenKingAttack_;
+    }
+  }
+  auto rq_mask = fmgr.queen_mask(color) | fmgr.rook_mask(color);
+  auto all_rq = mask_all_ ^ rq_mask;
+  X_ASSERT(all_rq != (mask_all_ & ~rq_mask), "invalid all but RQ mask");
+  {
+    auto r_mask = fmgr.rook_mask(color);
+    for(; r_mask;)
+    {
+      auto n = clear_lsb(r_mask);
+      if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
+        continue;
+      auto const& moves = magic_ns::rook_moves(n, all_rq);
+      int r_num = pop_count(moves & ki_fields);
+      score += r_num * evalCoeffs().rookKingAttack_;
+    }
+  }
+  {
+    auto q_mask = fmgr.queen_mask(color);
+    for(; q_mask;)
+    {
+      auto n = clear_lsb(q_mask);
+      if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
+        continue;
+      auto const& moves = magic_ns::rook_moves(n, all_rq);
+      int q_num = pop_count(moves & ki_fields);
+      score += q_num * evalCoeffs().queenKingAttack_;
+    }
+  }
   return score;
 }
 
