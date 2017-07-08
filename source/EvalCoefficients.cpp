@@ -79,11 +79,11 @@ namespace NEngine
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
     // arrays
-    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 12, 24, 35, 45, 60, 80, 0 }, passerPawn_,
+    arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 13, 27, 36, 47, 62, 85, 0 }, passerPawn_,
                     sizeof(passerPawn_)/sizeof(*passerPawn_) });
     arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 4, 8, 12, 16, 20, 24, 0 }, semipasserPawn_,
                     sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });
-    arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 5, 7, 10, 12, 14, 20, 0 }, protectedPasser_,
+    arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 7, 9, 11, 13, 15, 22, 0 }, protectedPasser_,
                     sizeof(protectedPasser_)/sizeof(*protectedPasser_) });
     arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 12, 16, 24, 32, 40, 0 }, farKingPawn_,
                     sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
@@ -91,7 +91,7 @@ namespace NEngine
                     sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
     arrs_.push_back(details::Arr{ "canpromotePawn_", std::vector<int>{ 0, 7, 9, 13, 17, 21, 27, 0 }, canpromotePawn_,
                     sizeof(canpromotePawn_)/sizeof(*canpromotePawn_) });
-    arrs_.push_back(details::Arr{ "closeToPromotion_", std::vector<int>{ 0, 5, 10, 15, 20, 25, 30, 35 }, closeToPromotion_,
+    arrs_.push_back(details::Arr{ "closeToPromotion_", std::vector<int>{ 0, 2, 4, 5, 6, 7, 8, 9 }, closeToPromotion_,
                     sizeof(closeToPromotion_)/sizeof(*closeToPromotion_) });
     arrs_.push_back(details::Arr{ "kingToPawnBonus_", std::vector<int>{ 0, 6, 5, 4, 3, 2, 1, 0 }, kingToPawnBonus_,
                     sizeof(kingToPawnBonus_)/sizeof(*kingToPawnBonus_) });

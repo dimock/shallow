@@ -39,15 +39,15 @@ struct EvalCoefficients
   // pawns
   int pawnEndgameBonus_{ 15 };
   int doubledPawn_{ -12 };
-  int isolatedPawn_{ -16 };
+  int isolatedPawn_{ -12 };
   int backwardPawn_{ -12 };
-  int unsupportedPawn_{ -14 };
-  int unprotectedPawn_{ -10 };
-  int rookBehindBonus_{ 7 };
+  int unsupportedPawn_{ -12 };
+  int unprotectedPawn_{ -8 };
+  int rookBehindBonus_{ 5 };
   int protectedPawnPressure_{ 3 };
   int unprotectedPawnPressure_{ 7 };
-  int protectedPawnBishopTreat_{ 3 };
-  int unprotectedPawnBishopTreat_{ 8 };
+  int protectedPawnBishopTreat_{ 2 };
+  int unprotectedPawnBishopTreat_{ 5 };
 
   // rook on open column
   int semiopenRook_{ 10 };

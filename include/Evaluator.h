@@ -75,6 +75,8 @@ class Evaluator
   struct PasserInfo
   {
     FullScore score;
+    BitMask   passers_[2] = {};
+    bool      searched_passers_[2] = {};
     int       most_y{ 0 };
   };
 
@@ -142,16 +144,20 @@ private:
   // calculate or take from hash
   // pawns structure for middle & end game
   // + king's pawn shield???
-  FullScore hashedEvaluation();
+  PasserInfo hashedEvaluation();
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
 
-  FullScore evaluatePawns(Figure::Color color) const;
-  FullScore evaluatePawns() const
+  PasserInfo evaluatePawns(Figure::Color color) const;
+  PasserInfo evaluatePawns() const
   {
-    auto score = evaluatePawns(Figure::ColorWhite);
-    score -= evaluatePawns(Figure::ColorBlack);
-    return score;
+    auto info_w = evaluatePawns(Figure::ColorWhite);
+    auto info_b = evaluatePawns(Figure::ColorBlack);
+    info_w.score -= info_b.score;
+    info_w.searched_passers_[0] = true;
+    info_w.searched_passers_[1] = true;
+    info_w.passers_[0] = info_b.passers_[0];
+    return info_w;
   }
 
   FullScore evaluateKpressureBasic() const;
@@ -167,10 +173,15 @@ private:
   int evaluateRook(Figure::Color color);
   int evaluateQueens(Figure::Color color);
 
-  PasserInfo passerEvaluation(Figure::Color color) const;
-  FullScore passerEvaluation() const;
+  PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&) const;
+  FullScore passerEvaluation(PasserInfo const&) const;
+
   // search path from opponent king to pawn's promotion of given color
-  bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const;
+  // idea from CCRL
+  inline bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const
+  {
+    return NEngine::findRootToPawn(*board_, inv_mask_all_, finfo_[color].attack_mask_, color, promo_pos, stepsMax);
+  }
 
   ScoreType evaluateMaterialDiff() const;
 
