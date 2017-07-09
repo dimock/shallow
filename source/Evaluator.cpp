@@ -147,7 +147,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   FullScore score;
 
   // evaluate figures weight
-  score.common_ = fmgr.weight() + evaluateMaterialDiff();
+  score.common_ = fmgr.weight();
+  score += evaluateMaterialDiff();
 
   /// use lazy evaluation level 0
   {
@@ -880,14 +881,14 @@ int Evaluator::evaluateCastle(Figure::Color color) const
 //  return score_w - score_b;
 //}
 
-ScoreType Evaluator::evaluateMaterialDiff() const
+Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
 {
-  ScoreType score = 0;
+  FullScore score;
   const FiguresManager & fmgr = board_->fmgr();
 
   // bonus for bishops
-  score += fmgr.bishops(Figure::ColorWhite) * evalCoeffs().bishopBonus_;
-  score -= fmgr.bishops(Figure::ColorBlack) * evalCoeffs().bishopBonus_;
+  score.common_ += fmgr.bishops(Figure::ColorWhite) * evalCoeffs().bishopBonus_;
+  score.common_ -= fmgr.bishops(Figure::ColorBlack) * evalCoeffs().bishopBonus_;
 
   // Knight or Bishop against 3 pawns
   int figuresDiff = (fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite)) -
@@ -898,26 +899,22 @@ ScoreType Evaluator::evaluateMaterialDiff() const
 
   if(figuresDiff*pawnsDiff < 0 && !rooksDiff && !queensDiff)
   {
-    Figure::Color strongColor = (Figure::Color)(figuresDiff > 0);
-    int pawnsN = fmgr.pawns(strongColor) != 0;
-    score += figuresDiff * evalCoeffs().figureAgainstPawnBonus_[pawnsN];
+    score.opening_ += figuresDiff * evalCoeffs().figureAgainstPawnBonus_[0];
+    score.common_  += figuresDiff * evalCoeffs().figureAgainstPawnBonus_[1];
   }
 
   // Knight|Bishop+2Pawns vs. Rook
   else if(!queensDiff && (rooksDiff*figuresDiff == -1))
   {
-    Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
-    int pawnsN = fmgr.pawns(strongColor) != 0;
-    score += rooksDiff * evalCoeffs().rookAgainstFigureBonus_[pawnsN];
+    score.opening_ += rooksDiff * evalCoeffs().rookAgainstFigureBonus_[0];
+    score.common_  += rooksDiff * evalCoeffs().rookAgainstFigureBonus_[1];
   }
 
   // 2 figures vs. Rook
   else if(!queensDiff && rooksDiff*figuresDiff == -2 && std::abs(rooksDiff) == 1)
   {
-    Figure::Color rookColor  = (Figure::Color)(rooksDiff > 0);
-    Figure::Color ocolor = Figure::otherColor(rookColor);
-    int pawnsN = fmgr.pawns(rookColor) != 0 && fmgr.pawns(ocolor) != 0;
-    score -= rooksDiff * evalCoeffs().figuresAgainstRookBonus_[pawnsN];
+    score.opening_ -= rooksDiff * evalCoeffs().figuresAgainstRookBonus_[0];
+    score.common_  -= rooksDiff * evalCoeffs().figuresAgainstRookBonus_[1];
   }
 
   return score;

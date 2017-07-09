@@ -50,7 +50,8 @@ struct EvalCoefficients
   int unprotectedPawnBishopTreat_{ 5 };
 
   // rook on open column
-  int semiopenRook_{ 10 };
+  int semiopenRook_{ 5 };
+  int openRook_{ 20 };
 
   // material diff
   int bishopBonus_{ 15 };
@@ -64,7 +65,7 @@ struct EvalCoefficients
 
   // king
   int castleImpossible_{ -28 };
-  int fakeCastle_{ -30 };
+  int fakeCastle_{ -35 };
   int castleBonus_{ 10 };
   int pawnPenaltyA_{ -14 };
   int pawnPenaltyB_{ -14 };

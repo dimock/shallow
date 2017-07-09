@@ -22,9 +22,11 @@ public:
 private:
   void initUsual();
   void initWinnerLoser();
+  void initMatCases();
 
   std::unordered_map<Scase, std::function<ScoreType(Board const&)>> scases_;
   std::unordered_map<Scase, std::function<ScoreType(Board const&)>> winnerLoser_;
+  std::unordered_map<Scase, std::function<ScoreType(Board const&)>> matCases_;
 };
 
 }

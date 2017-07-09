@@ -183,10 +183,10 @@ private:
     return NEngine::findRootToPawn(*board_, inv_mask_all_, finfo_[color].attack_mask_, color, promo_pos, stepsMax);
   }
 
-  ScoreType evaluateMaterialDiff() const;
+  FullScore evaluateMaterialDiff() const;
 
-   /// find knight and pawn forks
-   ScoreType evaluateForks(Figure::Color color) const;
+  /// find knight and pawn forks
+  ScoreType evaluateForks(Figure::Color color) const;
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
