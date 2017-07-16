@@ -51,7 +51,6 @@ struct EvalCoefficients
 
   // rook on open column
   int semiopenRook_{ 10 };
-  int openRook_{ 25 };
 
   // material diff
   int bishopBonus_{ 15 };
@@ -65,7 +64,7 @@ struct EvalCoefficients
 
   // king
   int castleImpossible_{ -28 };
-  int fakeCastle_{ -35 };
+  int fakeCastle_{ -30 };
   int castleBonus_{ 10 };
   int pawnPenaltyA_{ -14 };
   int pawnPenaltyB_{ -14 };

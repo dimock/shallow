@@ -183,7 +183,7 @@ private:
     return NEngine::findRootToPawn(*board_, inv_mask_all_, finfo_[color].attack_mask_, color, promo_pos, stepsMax);
   }
 
-  FullScore evaluateMaterialDiff() const;
+  ScoreType evaluateMaterialDiff() const;
 
   /// find knight and pawn forks
   ScoreType evaluateForks(Figure::Color color) const;

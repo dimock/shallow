@@ -277,11 +277,9 @@ int Evaluator::evaluateRook(Figure::Color color)
     // open column
     auto const& mask_col = pawnMasks().mask_column(n & 7);
     bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
+    score += no_pw_color * evalCoeffs().semiopenRook_;
     bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
-    if(no_pw_color && no_pw_ocolor)
-      score += evalCoeffs().openRook_;
-    else if(no_pw_color || no_pw_ocolor)
-      score += evalCoeffs().semiopenRook_;
+    score += no_pw_ocolor * evalCoeffs().semiopenRook_;
     
     // king pressure
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
