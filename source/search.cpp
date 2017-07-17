@@ -282,7 +282,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(stopped() || ply >= MaxPly)
     return scontexts_[ictx].eval_(alpha, betta);
 
-  ScoreType alpha0 = alpha;
+  ScoreType const alpha0 = alpha;
   SMove hmove{true};
   
 #ifdef USE_HASH
@@ -306,12 +306,23 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   Board board0{ board };
 #endif
 
+#ifdef SINGULAR_EXT
+  int  aboveAlphaN = 0;
+  bool wasExtended = false;
+  bool allMovesIterated = false;
+#endif
+
   FastGenerator<Board, SMove> fg(board, hmove, scontexts_[ictx].plystack_[ply].killer_);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = fg.next();
     if(!pmove)
+    {
+#ifdef SINGULAR_EXT
+      allMovesIterated = true;
+#endif
       break;
+    }
 
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
@@ -319,15 +330,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     ScoreType score = -ScoreMax;
     board.makeMove(move);
     sdata_.inc_nc();
+    int depthInc = 0;
 
     if(!counter)
     {
-      int depthInc = depthIncrement(ictx, move, pv);
+      depthInc = depthIncrement(ictx, move, pv);
       score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
     }
     else
     {
-      int depthInc = depthIncrement(ictx, move, false);
+      depthInc = depthIncrement(ictx, move, false);
       score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -alpha-1, -alpha, false, true);
       if(!stopped() && score > alpha && score < betta && pv)
       {
@@ -341,6 +353,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     if(!stopped())
     {
+#ifdef SINGULAR_EXT
+      if(pv && score > alpha0)
+      {
+        aboveAlphaN++;
+        wasExtended = depthInc > 0;
+      }
+#endif
+
       auto& hist = history(board.color(), move.from(), move.to());
       if(score > scoreBest)
       {
@@ -384,6 +404,31 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& hist = history(board.color(), best.from(), best.to());
     hist.inc_score(depth / ONE_PLY);
   }
+
+#ifdef SINGULAR_EXT
+  if(pv && aboveAlphaN == 1 && !wasExtended && allMovesIterated)
+  {
+    X_ASSERT(!best, "best move wasn't found but one move was");
+
+    board.makeMove(best);
+    sdata_.inc_nc();
+
+    alpha = alpha0;
+    ScoreType score = -alphaBetta(ictx, depth, ply+1, -betta, -alpha, pv, true);
+
+    board.unmakeMove(best);
+
+    if(!stopped())
+    {
+      scoreBest = score;
+      if(score > alpha)
+      {
+        alpha = score;
+        assemblePV(ictx, best, board.underCheck(), ply);
+      }
+    }
+  }
+#endif
 
 #ifdef USE_HASH
   putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, false);
