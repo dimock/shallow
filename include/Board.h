@@ -310,6 +310,13 @@ struct Board
     return data_.repsCounter_ > 1;
   }
 
+  inline bool is_capture(Move const& move) const
+  {
+    X_ASSERT(!move || getField(move.to()).color() == color(), "invalid move given");
+    return getField(move.to())
+      || (getField(move.from()).type() == Figure::TypePawn && enpassant() > 0 && move.to() == enpassant());
+  }
+
   // after given move
   bool hasReps(const Move & move) const;
 

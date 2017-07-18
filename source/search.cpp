@@ -33,26 +33,44 @@ bool Engine::search(SearchResult& sres)
     for(auto move : moves)
     {
       move.sort_value = 0;
-      if(board.validateMoveBruteforce(move))
-        scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
+      if(!board.validateMoveBruteforce(move))
+        continue;
+      if(board.see(move, 0))
+        move.set_ok();
+      if(move.new_type() || board.is_capture(move))
+      {
+        if(move.see_ok())
+          move.sort_value = 10000000 + board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type());
+        else
+          move.sort_value = board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type()) - 10000;
+      }
+      else
+      {
+        board.makeMove(move);
+        move.sort_value = scontexts_[0].eval_(-ScoreMax, +ScoreMax);
+        if(!move.see_ok())
+          move.sort_value -= 10000;
+        board.unmakeMove(move);
+      }
+      scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
     }
     scontexts_[0].moves_[sdata_.numOfMoves_] = SMove{ true };
-    if(auto const* hitem = hash_.find(board.fmgr().hashCode()))
+    auto* b = scontexts_[0].moves_.data();
+    auto* e = b + sdata_.numOfMoves_;
+    std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
+    auto const* hitem = hash_.find(board.fmgr().hashCode());
+    if(hitem && hitem->move_)
     {
-      if(hitem->move_)
-      {
-        SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
-        X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
-        X_ASSERT(!board.validateMove(best), "move from hash is invalid");
-        auto* b = scontexts_[0].moves_.data();
-        auto* e = b + sdata_.numOfMoves_;
-        if(*b != best)
-          bring_to_front(b, e, best);
-      }
+      SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
+      X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
+      X_ASSERT(!board.validateMove(best), "move from hash is invalid");
+      bring_to_front(b, e, best);
     }
   }
 
   sres.numOfMoves_ = sdata_.numOfMoves_;
+  if(!sdata_.numOfMoves_)
+    return false;
 
   for(sdata_.depth_ = depth0_; !stopped() && sdata_.depth_ <= sparams_.depthMax_; ++sdata_.depth_)
   {
@@ -176,6 +194,8 @@ ScoreType Engine::alphaBetta0()
   if(stopped())
     return scontexts_[0].eval_(-ScoreMax, +ScoreMax);
 
+  X_ASSERT(sdata_.numOfMoves_ == 0, "no moves");
+
   auto& board = scontexts_[0].board_;
   if(sdata_.numOfMoves_ == 0)
   {
@@ -225,16 +245,19 @@ ScoreType Engine::alphaBetta0()
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
 
-    if(!stopped())
+    if(stopped())
+      break;
+
+    auto& hist = history(board.color(), move.from(), move.to());
+    if(score > alpha)
     {
-      move.sort_value = score;
-      if(score > alpha)
-      {
-        sdata_.best_ = move;
-        alpha = score;
-        assemblePV(0, sdata_.best_, board.underCheck(), 0);
-      }
+      hist.inc_good();
+      sdata_.best_ = move;
+      alpha = score;
+      assemblePV(0, sdata_.best_, board.underCheck(), 0);
     }
+    else
+      hist.inc_bad();
 
     if(callbacks_.sendStats_ && sparams_.analyze_mode_)
       (callbacks_.sendStats_)(sdata_);
@@ -244,19 +267,32 @@ ScoreType Engine::alphaBetta0()
   if(!stopped() && sdata_.counter_ == 1 && !sparams_.analyze_mode_)
     pleaseStop();
 
-  if(!stopped())
+  if(stopped())
+    return alpha;
+
+  if(sdata_.numOfMoves_ == 1)
+    return alpha;
+
+  if(sdata_.best_)
   {
-    if(sdata_.numOfMoves_ > 1)
-    {
-      auto* b = scontexts_[0].moves_.data();
-      auto* e = b + sdata_.numOfMoves_;
-      std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
-      if(*b != sdata_.best_)
-        bring_to_front(b, e, sdata_.best_);
-    }
-    X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
+    auto& hist = history(board.color(), sdata_.best_.from(), sdata_.best_.to());
+    hist.inc_score(sdata_.depth_ / ONE_PLY);
   }
 
+  auto* b = scontexts_[0].moves_.data();
+  auto* e = b + sdata_.numOfMoves_;
+  for(auto* m = b; m != e; ++m)
+  {
+    if(m->new_type() || board.is_capture(*m))
+      continue;
+    auto& hist = history(board.color(), m->from(), m->to());
+    m->sort_value = hist.score();
+  }
+  bring_to_front(b, e, sdata_.best_);
+  b++;
+  std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
+
+  X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
   return alpha;
 }
 

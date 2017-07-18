@@ -53,7 +53,7 @@ struct SMove : public Move
 
   SMove() = default;
 
-  SMove(bool) : Move(true), sort_value{0} {}
+  explicit SMove(bool) : Move(true), sort_value{0} {}
 
   SMove(int f, int t, Figure::Type n) :
     Move(f, t, n)
