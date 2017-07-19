@@ -344,7 +344,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
 #ifdef SINGULAR_EXT
   int  aboveAlphaN = 0;
-  bool wasExtended = false;
+  int  depthIncBest = 0;
   bool allMovesIterated = false;
 #endif
 
@@ -393,7 +393,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       if(pv && score > alpha0)
       {
         aboveAlphaN++;
-        wasExtended = depthInc > 0;
+        depthIncBest = depthInc;
       }
 #endif
 
@@ -442,7 +442,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 
 #ifdef SINGULAR_EXT
-  if(pv && aboveAlphaN == 1 && !wasExtended && allMovesIterated)
+  if(pv && aboveAlphaN == 1 && allMovesIterated)
   {
     X_ASSERT(!best, "best move wasn't found but one move was");
 
@@ -450,7 +450,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     sdata_.inc_nc();
 
     alpha = alpha0;
-    ScoreType score = -alphaBetta(ictx, depth, ply+1, -betta, -alpha, pv, true);
+    ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true);
 
     board.unmakeMove(best);
 

@@ -108,7 +108,7 @@ public:
 
   const int lazyThreshold0_ = 500;// Figure::figureWeight_[Figure::TypePawn] * 4;
   const int lazyThreshold1_ = 400;// Figure::figureWeight_[Figure::TypePawn] * 3;
-  const int lazyThreshold2_ = 200;// Figure::figureWeight_[Figure::TypePawn] * 3;
+  const int lazyThreshold2_ = 300;// Figure::figureWeight_[Figure::TypePawn] * 3;
   void initialize(Board const* board, EHashTable* ehash, GHashTable* ghash);
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
@@ -237,6 +237,7 @@ private:
 
   static const int colored_y_[2][8];
   static const BitMask castle_mask_[2][2];
+  static const BitMask king_attack_mask_[2][2];
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};

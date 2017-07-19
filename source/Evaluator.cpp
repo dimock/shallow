@@ -35,6 +35,28 @@ const BitMask Evaluator::castle_mask_[2][2] = {
   }
 };
 
+const BitMask Evaluator::king_attack_mask_[2][2] = {
+  {
+    set_mask_bit(F8) | set_mask_bit(G8) | set_mask_bit(H8) |
+    set_mask_bit(F7) | set_mask_bit(G7) | set_mask_bit(H7) |
+    set_mask_bit(F6) | set_mask_bit(G6) | set_mask_bit(H6),
+
+    set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(C8) |
+    set_mask_bit(A7) | set_mask_bit(B7) | set_mask_bit(C7) |
+    set_mask_bit(A6) | set_mask_bit(B6) | set_mask_bit(C6)
+  },
+
+  {
+    set_mask_bit(F1) | set_mask_bit(G1) | set_mask_bit(H1) |
+    set_mask_bit(F2) | set_mask_bit(G2) | set_mask_bit(H2) |
+    set_mask_bit(F3) | set_mask_bit(G3) | set_mask_bit(H3),
+
+    set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(C1) |
+    set_mask_bit(A2) | set_mask_bit(B2) | set_mask_bit(C2) |
+    set_mask_bit(A3) | set_mask_bit(B3) | set_mask_bit(C3)
+  }
+};
+
 void Evaluator::initialize(Board const* board, EHashTable* ehash, GHashTable* ghash)
 {
   board_ = board;
@@ -948,27 +970,36 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
 {
   int score{};
   auto const ocolor = Figure::otherColor(color);
+  auto const& fmgr = board_->fmgr();
   auto ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
   auto ctype = getCastleType(ocolor);
   if(ctype >= 0)
   {
-    ki_fields |= castle_mask_[ocolor][ctype];
+    ki_fields |= king_attack_mask_[ocolor][ctype];
   }
+  ki_fields &= ~finfo_[ocolor].pawnAttacks_;
+
+  int num_pawns   = 0;
+  int num_knights = 0;
+  int num_bishops = 0;
+  int num_rooks   = 0;
+  bool has_queen  = false;
 
   if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
   {
     int pw_num = pop_count(pw_att);
     score += pw_num * evalCoeffs().pawnKingAttack_;
+    num_pawns++;
   }
 
   if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields))
   {
     int kn_num = pop_count(kn_att);
     score += kn_num * evalCoeffs().knightKingAttack_;
+    num_knights++;
   }
 
   // x-ray attack
-  auto const& fmgr = board_->fmgr();
   auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
   auto all_bq = mask_all_ ^ bq_mask;
   X_ASSERT(all_bq != (mask_all_ & ~bq_mask), "invalid all but BQ mask");
@@ -984,6 +1015,7 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       {
         int bi_num = pop_count(bi_att);
         score += bi_num * evalCoeffs().bishopKingAttack_;
+        num_bishops++;
       }
     }
   }
@@ -999,6 +1031,7 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       {
         int q_num = pop_count(q_att);
         score += q_num * evalCoeffs().queenKingAttack_;
+        has_queen = true;
       }
     }
   }
@@ -1017,6 +1050,7 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       {
         int r_num = pop_count(r_att);
         score += r_num * evalCoeffs().rookKingAttack_;
+        num_rooks++;
       }
     }
   }
@@ -1032,9 +1066,16 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       {
         int q_num = pop_count(q_att);
         score += q_num * evalCoeffs().queenKingAttack_;
+        has_queen = true;
       }
     }
   }
+
+  // basic attacks
+  static const int number_of_attackers[8] = {0, 0, 32, 48, 64, 64, 64, 64};
+  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + has_queen, 7);
+  score = (score * number_of_attackers[num_total]) >> 5;
+
   return score;
 }
 
