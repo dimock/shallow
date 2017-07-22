@@ -444,10 +444,10 @@ struct Board
       return CaptureRecentlyBonus;
     }
     // MVV LVA
-    SortValueType sort_value = (Figure::figureWeight_[fto.type()] << 1) - Figure::figureWeight_[ffrom.type()];
+    SortValueType sort_value = (Figure::figureWeight_[fto.type()] * 3) - Figure::figureWeight_[ffrom.type()];
     // + promotion
     if(new_type)
-      sort_value += Figure::figureWeight_[new_type];
+      sort_value += Figure::figureWeight_[new_type] << 1;
     // at first we try to eat recently moved opponent's figure
     if(halfmovesCount() > 0 && lastUndo().move_.to() == to)
       sort_value += CaptureRecentlyBonus;

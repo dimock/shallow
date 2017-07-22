@@ -498,8 +498,8 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     return hscore;
   }
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
-  if(hmove && !board.getField(hmove.to()))
-    hmove = SMove{true};
+  //if(hmove && !board.getField(hmove.to()))
+  //  hmove = SMove{true};
 #endif
 
   int counter = 0;

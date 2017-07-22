@@ -146,6 +146,47 @@ struct SeeCalc
     return r_moves & (r_mask | q_mask);
   }
 
+  inline bool is_usual_check() const
+  {
+#ifndef NDEBUG
+    SBoard<Board, UndoInfo, Board::GameLength> sbrd{ board_ };
+    sbrd.makeMove(move_);
+    bool check_detected = sbrd.underCheck();
+    auto fen = toFEN(board_);
+#endif
+    auto ocolor = Figure::otherColor(color_);
+    auto ftype = board_.getField(move_.from()).type();
+    if(ftype == Figure::TypeKing)
+      return false;
+    auto to = move_.to();
+    if(ftype == Figure::TypePawn)
+    {
+      if(!move_.new_type())
+      {
+        bool result = movesTable().pawnCaps(color_, to) & board_.fmgr().king_mask(ocolor);
+        X_ASSERT(check_detected != result, "invalid check detected");
+        return result;
+      }
+      ftype = (Figure::Type)move_.new_type();
+    }
+    if(ftype == Figure::TypeKnight)
+    {
+      bool result = movesTable().caps(Figure::TypeKnight, to) & board_.fmgr().king_mask(ocolor);
+      X_ASSERT(check_detected != result, "invalid check detected");
+      return result;
+    }
+    int ok_pos = board_.kingPos(ocolor);
+    int dir = figureDir().dir(ftype, color_, to, ok_pos);
+    if(dir < 0)
+    {
+      X_ASSERT(check_detected, "check is not detected");
+      return false;
+    }
+    auto result = board_.is_nothing_between(to, ok_pos, ~all_mask_ | set_mask_bit(move_.from()));
+    X_ASSERT(check_detected != result, "invalid check detection");
+    return result;
+  }
+
   inline bool under_check(Figure::Color color, Figure::Color ocolor) const
   {
     if(board_.fmgr().pawn_mask(ocolor) & all_mask_ & movesTable().pawnCaps(color, move_.to()))
@@ -203,6 +244,12 @@ bool Board::see(const Move & move, int threshold) const
   // assume discovered check is always good
   if(see_calc.discovered_check_)
     return true;
+
+  // could be checkmate
+  if(threshold > 50 && see_calc.is_usual_check())
+  {
+    threshold = 0;
+  }
 
   if(en_passant)
     return Figure::figureWeight_[Figure::TypePawn] >= threshold;
