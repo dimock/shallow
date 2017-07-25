@@ -20,11 +20,13 @@ extern const uint8 Figure::mirrorIndex_[64] =
    0,  1,  2,  3,  4,  5,  6,  7
 };
 
-extern const uint64 Figure::pawnCutoffMasks_[2] = { 0xfefefefefefefefe /* left */, 0x7f7f7f7f7f7f7f7f /* right */ };
+extern const BitMask Figure::pawnCutoffMasks_[2] = { 0xfefefefefefefefe /* left */, 0x7f7f7f7f7f7f7f7f /* right */ };
 
 // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
 extern const ScoreType Figure::figureWeight_[7] = { 0, 90, 325, 325, 510, 995, 0 };
 
+extern const BitMask Figure::quaterBoard_[2][2] = { { 0xf0f0f0f000000000, 0x0f0f0f0f00000000 },
+                                                    { 0x00000000f0f0f0f0, 0x000000000f0f0f0f } };
 
 Figure::Type Figure::toFtype(char c)
 {

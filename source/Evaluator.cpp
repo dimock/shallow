@@ -219,6 +219,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   score += scorePP;
 
+  auto scoreGP = evaluateGeneralPressure(Figure::ColorWhite);
+  scoreGP -= evaluateGeneralPressure(Figure::ColorBlack);
+  score += scoreGP;
+
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
 
@@ -285,6 +289,19 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
     score.endGame_ += pop_count(pw_protected   & bi_mask) * evalCoeffs().protectedPawnBishopTreat_;
     score.endGame_ += pop_count(pw_unprotected & bi_mask) * evalCoeffs().unprotectedPawnBishopTreat_;
   }
+  return score;
+}
+
+Evaluator::FullScore Evaluator::evaluateGeneralPressure(Figure::Color color)
+{
+  FullScore score{};
+  auto const& fmgr = board_->fmgr();
+  auto const ocolor = Figure::otherColor(color);
+  auto king_left = (board_->kingPos(ocolor) & 7) < 4;
+  auto attacks_king  = finfo_[color].attack_mask_ & Figure::quaterBoard_[ocolor][king_left];
+  auto attacks_other = finfo_[color].attack_mask_ & Figure::quaterBoard_[ocolor][!king_left];
+  score.common_ += pop_count(attacks_other) * evalCoeffs().generalPressure_
+    + pop_count(attacks_king) * evalCoeffs().kingPressure_;
   return score;
 }
 
@@ -489,10 +506,17 @@ Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi) const
 {
   auto infoW = passerEvaluation(Figure::ColorWhite, pi);
   auto infoB = passerEvaluation(Figure::ColorBlack, pi);
-  if(infoW.most_y > infoB.most_y && infoB.most_y > 0)
+
+  if(infoW.most_y > infoB.most_y)
     infoW.score.endGame_ += evalCoeffs().closeToPromotion_[infoW.most_y - infoB.most_y];
-  else if(infoB.most_y > infoW.most_y && infoW.most_y > 0)
+  else if(infoB.most_y > infoW.most_y)
     infoB.score.endGame_ += evalCoeffs().closeToPromotion_[infoB.most_y - infoW.most_y];
+
+  //if(infoW.no_ofigures_ && infoW.most_unstoppable_y_ > infoB.most_unstoppable_y_)
+  //  infoW.score.endGame_ += evalCoeffs().forwardPasser_[infoW.most_unstoppable_y_ - infoB.most_unstoppable_y_];
+  //else if(infoB.no_ofigures_ && infoB.most_unstoppable_y_ > infoW.most_unstoppable_y_)
+  //  infoB.score.endGame_ += evalCoeffs().forwardPasser_[infoB.most_unstoppable_y_ - infoW.most_unstoppable_y_];
+
   infoW.score -= infoB.score;
   return infoW.score;
 }
@@ -518,6 +542,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
   BitMask blockers_mask = (~finfo_[color].attack_mask_ & finfo_[ocolor].attack_mask_) | fmgr.mask(color) | fmgr.mask(ocolor);
+  //info.no_ofigures_ = fmgr.knights(ocolor) + fmgr.bishops(ocolor) + fmgr.rooks(ocolor) + fmgr.queens(ocolor) == 0;
 
   BitMask pawn_mask = pmask;
   if(pi.searched_passers_[color])
@@ -560,41 +585,54 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     int next_pos = x | ((y+dy)<<3);
     X_ASSERT( ((y+dy)) > 7 || ((y+dy)) < 0, "pawn goes to invalid line" );
     
-    bool can_go = false;
-    
     // field is empty
     // check is it attacked by opponent
     auto const& next_field = board_->getField(next_pos);
     if(!next_field)
     {
       BitMask next_mask = set_mask_bit(next_pos);
-      if((next_mask & finfo_[ocolor].attack_mask_) == 0)
-        can_go = true;
       // additional bonus if pawn can go forward
-      info.score.common_ += can_go * evalCoeffs().cangoPawn_[cy];
+      if((next_mask & finfo_[ocolor].attack_mask_) == 0)
+        info.score.common_ += evalCoeffs().cangoPawn_[cy];
     }
     // field is occupied by my figure
     else if(next_field.color() == color)
     {
-      can_go = true;
       // small additional bonus if pawn potentially can go forward
-      info.score.common_ += (can_go * evalCoeffs().cangoPawn_[cy]) >> 1;
+      info.score.common_ += evalCoeffs().cangoPawn_[cy] >> 1;
     }
 
     // all ahead fields are not occupied and not attacked | protected
     auto fwd_mask = pawnMasks().mask_line_blocked(color, n);
     bool can_promote = (fwd_mask & blockers_mask) == 0ULL;
     info.score.common_ += can_promote * evalCoeffs().canpromotePawn_[cy];
-    
+
+    //bool unstoppablePasser = false;
+    //if(info.no_ofigures_)
+    //{
+    //  Index pp(x, py);
+    //  int pawn_dist_promo = std::abs(py - idx.y());
+    //  int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
+    //  if(pawn_dist_promo < o_dist_promo)
+    //    unstoppablePasser = true;
+    //}
     // opponent king could not go to my pawns promotion field
     int promo_pos = x | (py<<3);
     int pawn_dist_promo = std::abs(py - y);
     if(!findRootToPawn(color, promo_pos, pawn_dist_promo+1))
     {
       info.score.endGame_ += evalCoeffs().farKingPawn_[cy];
+      //unstoppablePasser = true;
     }
+    //if(unstoppablePasser)
+    //{
+    //  info.score.endGame_ += evalCoeffs().unstoppablePasser_;
+    //  if(cy > info.most_unstoppable_y_)
+    //    info.most_unstoppable_y_ = cy;
+    //}
   }
   info.most_y += (color == board_->color());
+  //info.most_unstoppable_y_ += (color == board_->color());
   return info;
 }
 
@@ -714,7 +752,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     }
   };
 
-  static const BitMask opponent_pawn_mask[2][2][3] =
+  static const BitMask opponent_pawn_mask_near[2][2][3] =
   {
     // black
     {
@@ -744,6 +782,40 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
         set_mask_bit(A2)|set_mask_bit(A3),
         set_mask_bit(B2)|set_mask_bit(B3),
         set_mask_bit(C2)|set_mask_bit(C3),
+      }
+    },
+  };
+
+  static const BitMask opponent_pawn_mask_far[2][2][3] =
+  {
+    // black
+    {
+      // short
+      {
+        set_mask_bit(H4)|set_mask_bit(H5),
+        set_mask_bit(G4)|set_mask_bit(G5),
+        set_mask_bit(F4)|set_mask_bit(F5)
+      },
+      // long
+      {
+        set_mask_bit(A4)|set_mask_bit(A5),
+        set_mask_bit(B4)|set_mask_bit(B5),
+        set_mask_bit(C4)|set_mask_bit(C5),
+      }
+    },
+    // white
+    {
+      // short
+      {
+        set_mask_bit(H4)|set_mask_bit(H5),
+        set_mask_bit(G4)|set_mask_bit(G5),
+        set_mask_bit(F4)|set_mask_bit(F5)
+      },
+      // long
+      {
+        set_mask_bit(A4)|set_mask_bit(A5),
+        set_mask_bit(B4)|set_mask_bit(B5),
+        set_mask_bit(C4)|set_mask_bit(C5),
       }
     },
   };
@@ -785,9 +857,14 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
       + ((no_pawns_penalty_mask[ctype][2] & pmask) == 0ULL) * evalCoeffs().noPawnPenaltyC_;
 
     int opponent_penalty =
-        ((opponent_pawn_mask[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnA_
-      + ((opponent_pawn_mask[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnB_
-      + ((opponent_pawn_mask[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnC_;
+        ((opponent_pawn_mask_near[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearA_
+      + ((opponent_pawn_mask_near[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearB_
+      + ((opponent_pawn_mask_near[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearC_;
+
+    opponent_penalty +=
+        ((opponent_pawn_mask_far[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnFarA_
+      + ((opponent_pawn_mask_far[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnFarB_
+      + ((opponent_pawn_mask_far[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnFarC_;
 
     score += shield_bonus;
     score += shield_penalty;
@@ -909,8 +986,8 @@ ScoreType Evaluator::evaluateMaterialDiff() const
   const FiguresManager & fmgr = board_->fmgr();
 
   // bonus for bishops
-  score += fmgr.bishops(Figure::ColorWhite) * evalCoeffs().bishopBonus_;
-  score -= fmgr.bishops(Figure::ColorBlack) * evalCoeffs().bishopBonus_;
+  score += evalCoeffs().bishopBonus_[fmgr.bishops(Figure::ColorWhite) & 3];
+  score -= evalCoeffs().bishopBonus_[fmgr.bishops(Figure::ColorBlack) & 3];
 
   // Knight or Bishop against 3 pawns
   int figuresDiff = (fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite)) -
@@ -984,6 +1061,7 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
   int num_bishops = 0;
   int num_rooks   = 0;
   bool has_queen  = false;
+  bool has_king = (finfo_[color].kingAttacks_ & ki_fields) != 0ULL;
 
   if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
   {
@@ -1073,8 +1151,9 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
 
   // basic attacks
   static const int number_of_attackers[8] = {0, 0, 32, 48, 64, 64, 64, 64};
-  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + has_queen, 7);
+  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + has_queen + has_king, 7);
   score = (score * number_of_attackers[num_total]) >> 5;
+  
 
   return score;
 }

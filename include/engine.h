@@ -120,7 +120,7 @@ private:
   xCallback callbacks_;
 
   // search data
-  static const int depth0_ = 2; // start depth
+  static const int depth0_ = 1; // start depth
   volatile bool stop_;
 
   struct SearchContext

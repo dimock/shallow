@@ -48,12 +48,15 @@ struct EvalCoefficients
   int unprotectedPawnPressure_{ 7 };
   int protectedPawnBishopTreat_{ 2 };
   int unprotectedPawnBishopTreat_{ 5 };
+  int kingPressure_{ 3 };
+  int generalPressure_{ 1 };
+  //int unstoppablePasser_{ 50 };
 
   // rook on open column
-  int semiopenRook_{ 10 };
+  int openRook_[4] = {};
 
   // material diff
-  int bishopBonus_{ 15 };
+  int bishopBonus_[4] = {};
   int figureAgainstPawnBonus_[2]  = {};
   int rookAgainstFigureBonus_[2]  = {};
   int figuresAgainstRookBonus_[2] = {};
@@ -72,9 +75,12 @@ struct EvalCoefficients
   int noPawnPenaltyA_{ -8 };
   int noPawnPenaltyB_{ -8 };
   int noPawnPenaltyC_{ -1 };
-  int opponentPawnA_{ -15 };
-  int opponentPawnB_{ -12 };
-  int opponentPawnC_{ -10 };
+  int opponentPawnNearA_{ -15 };
+  int opponentPawnNearB_{ -12 };
+  int opponentPawnNearC_{ -10 };
+  int opponentPawnFarA_{ -8 };
+  int opponentPawnFarB_{ -6 };
+  int opponentPawnFarC_{ -5 };
 
   int pawnShieldA_[2] = {};
   int pawnShieldB_[2] = {};
@@ -93,6 +99,13 @@ struct EvalCoefficients
   int rookKingAttack_{ 5 };
   int queenKingAttack_{ 10 };
 
+  // king threat
+  int knightThreat_{8};
+  int bishopThreat_{8};
+  int rookThreat_{15};
+  int queenThreat_{30};
+  int matThreat_{ 100 };
+
   // arrays
   int passerPawn_[8]  = {};
   int semipasserPawn_[8] = {};
@@ -103,6 +116,7 @@ struct EvalCoefficients
   // distance between forwards
   int closeToPromotion_[8] = {};
   int kingToPawnBonus_[8] = {};
+  //int forwardPasser_[8] = {};
 
   // mobility
   int knightMobility_[16] = {};

@@ -19,6 +19,8 @@ namespace Figure
   extern const BitMask pawnCutoffMasks_[2];
   extern const ScoreType figureWeight_[7]; // TypeNone, TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
   extern const uint8     mirrorIndex_[64];
+  // color, castle (K = 0, Q = 1)
+  extern const BitMask   quaterBoard_[2][2];
 
   // position evaluation. 0 - opening, 1 - endgame; color,type,pos
   extern const ScoreType positionEvaluations_[2][8][64];

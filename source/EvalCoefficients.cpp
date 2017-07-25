@@ -29,12 +29,17 @@ namespace NEngine
     vars_.push_back(details::Var{ "unprotectedPawnPressure_", unprotectedPawnPressure_, &unprotectedPawnPressure_ });
     vars_.push_back(details::Var{ "protectedPawnBishopTreat_", protectedPawnBishopTreat_, &protectedPawnBishopTreat_ });
     vars_.push_back(details::Var{ "unprotectedPawnBishopTreat_", unprotectedPawnBishopTreat_, &unprotectedPawnBishopTreat_ });
+    vars_.push_back(details::Var{ "generalPressure_", generalPressure_, &generalPressure_ });
+    vars_.push_back(details::Var{ "kingPressure_", kingPressure_, &kingPressure_ });
+    //vars_.push_back(details::Var{ "unstoppablePasser_", unstoppablePasser_, &unstoppablePasser_ });
 
     // rook on open column
-    vars_.push_back(details::Var{ "semiopenRook_", semiopenRook_, &semiopenRook_ });
+    arrs_.push_back(details::Arr{ "openRook_", std::vector<int>{ 0, 10, 30, 30}, openRook_,
+                    sizeof(openRook_)/sizeof(*openRook_) });
 
     // material diff
-    vars_.push_back(details::Var{ "bishopBonus_", bishopBonus_, &bishopBonus_ });
+    arrs_.push_back(details::Arr{ "bishopBonus_", std::vector<int>{ 0, 10, 50, 50}, bishopBonus_,
+                    sizeof(bishopBonus_)/sizeof(*bishopBonus_) });
 
     arrs_.push_back(details::Arr{ "figureAgainstPawnBonus_", std::vector<int>{ 25, 60}, figureAgainstPawnBonus_,
                     sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
@@ -57,9 +62,12 @@ namespace NEngine
     vars_.push_back(details::Var{ "noPawnPenaltyA_", noPawnPenaltyA_, &noPawnPenaltyA_ });
     vars_.push_back(details::Var{ "noPawnPenaltyB_", noPawnPenaltyB_, &noPawnPenaltyB_ });
     vars_.push_back(details::Var{ "noPawnPenaltyC_", noPawnPenaltyC_, &noPawnPenaltyC_ });
-    vars_.push_back(details::Var{ "opponentPawnA_", opponentPawnA_, &opponentPawnA_ });
-    vars_.push_back(details::Var{ "opponentPawnB_", opponentPawnB_, &opponentPawnB_ });
-    vars_.push_back(details::Var{ "opponentPawnC_", opponentPawnC_, &opponentPawnC_ });
+    vars_.push_back(details::Var{ "opponentPawnNearA_", opponentPawnNearA_, &opponentPawnNearA_ });
+    vars_.push_back(details::Var{ "opponentPawnNearB_", opponentPawnNearB_, &opponentPawnNearB_ });
+    vars_.push_back(details::Var{ "opponentPawnNearC_", opponentPawnNearC_, &opponentPawnNearC_ });
+    vars_.push_back(details::Var{ "opponentPawnFarA_", opponentPawnFarA_, &opponentPawnFarA_ });
+    vars_.push_back(details::Var{ "opponentPawnFarB_", opponentPawnFarB_, &opponentPawnFarB_ });
+    vars_.push_back(details::Var{ "opponentPawnFarC_", opponentPawnFarC_, &opponentPawnFarC_ });
 
     arrs_.push_back(details::Arr{ "pawnShieldA_", std::vector<int>{14, 10}, pawnShieldA_, sizeof(pawnShieldA_)/sizeof(*pawnShieldA_) });
     arrs_.push_back(details::Arr{ "pawnShieldB_", std::vector<int>{14, 10}, pawnShieldB_, sizeof(pawnShieldB_)/sizeof(*pawnShieldB_) });
@@ -78,6 +86,13 @@ namespace NEngine
     vars_.push_back(details::Var{ "rookKingAttack_", rookKingAttack_, &rookKingAttack_ });
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
+    // king threat
+    vars_.push_back(details::Var{ "knightThreat_", knightThreat_, &knightThreat_ });
+    vars_.push_back(details::Var{ "bishopThreat_", bishopThreat_, &bishopThreat_ });
+    vars_.push_back(details::Var{ "rookThreat_", rookThreat_, &rookThreat_ });
+    vars_.push_back(details::Var{ "queenThreat_", queenThreat_, &queenThreat_ });
+    vars_.push_back(details::Var{ "matThreat_", matThreat_, &matThreat_ });
+
     // arrays
     arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 13, 27, 36, 47, 62, 85, 0 }, passerPawn_,
                     sizeof(passerPawn_)/sizeof(*passerPawn_) });
@@ -95,6 +110,8 @@ namespace NEngine
                     sizeof(closeToPromotion_)/sizeof(*closeToPromotion_) });
     arrs_.push_back(details::Arr{ "kingToPawnBonus_", std::vector<int>{ 0, 6, 5, 4, 3, 2, 1, 0 }, kingToPawnBonus_,
                     sizeof(kingToPawnBonus_)/sizeof(*kingToPawnBonus_) });
+    //arrs_.push_back(details::Arr{ "forwardPasser_", std::vector<int>{ 0, 50, 100, 125, 150, 175, 200, 0 }, forwardPasser_,
+    //                sizeof(forwardPasser_)/sizeof(*forwardPasser_) });
 
     // mobility
     arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-25, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
