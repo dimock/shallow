@@ -99,11 +99,7 @@ class Evaluator
     BitMask queenAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
-    BitMask cango_mask_{};
-    xlist<BitMask, 10> knightMasks_;
-    xlist<BitMask, 10> bishopMasks_;
-    xlist<BitMask, 10> rookMasks_;
-    xlist<BitMask, 10> queenMasks_;
+    BitMask multiattack_mask_{};
   } finfo_[2];
 
 public:
@@ -174,6 +170,7 @@ private:
   FullScore evaluateBishops();
   int evaluateRook(Figure::Color color);
   int evaluateQueens(Figure::Color color);
+  int evaluateMobility(Figure::Color color);
 
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&) const;
   FullScore passerEvaluation(PasserInfo const&) const;

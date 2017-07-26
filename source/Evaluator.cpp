@@ -89,6 +89,9 @@ void Evaluator::prepare()
     finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
     finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
 
+    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
+    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
+
     finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
     finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
   }
@@ -214,6 +217,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.common_ += evaluateQueens(Figure::ColorWhite);
   score.common_ -= evaluateQueens(Figure::ColorBlack);
 
+  score.common_ += evaluateMobility(Figure::ColorWhite);
+  score.common_ -= evaluateMobility(Figure::ColorBlack);
 
   auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
@@ -302,6 +307,7 @@ Evaluator::FullScore Evaluator::evaluateGeneralPressure(Figure::Color color)
   auto attacks_other = finfo_[color].attack_mask_ & Figure::quaterBoard_[ocolor][!king_left];
   score.common_ += pop_count(attacks_other) * evalCoeffs().generalPressure_
     + pop_count(attacks_king) * evalCoeffs().kingPressure_;
+  //score.endGame_ += pop_count(finfo_[color].attack_mask_) * evalCoeffs().generalPressure_;
   return score;
 }
 
