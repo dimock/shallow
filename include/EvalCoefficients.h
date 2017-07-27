@@ -100,11 +100,11 @@ struct EvalCoefficients
   int queenKingAttack_{ 10 };
 
   // king threat
-  int knightThreat_{8};
-  int bishopThreat_{8};
-  int rookThreat_{15};
-  int queenThreat_{30};
-  int matThreat_{ 100 };
+  int knightChecking_{3};
+  int bishopChecking_{3};
+  int rookChecking_{5};
+  int queenChecking_{10};
+  int matThreat_{ 30 };
 
   // arrays
   int passerPawn_[8]  = {};

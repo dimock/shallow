@@ -307,7 +307,6 @@ Evaluator::FullScore Evaluator::evaluateGeneralPressure(Figure::Color color)
   auto attacks_other = finfo_[color].attack_mask_ & Figure::quaterBoard_[ocolor][!king_left];
   score.common_ += pop_count(attacks_other) * evalCoeffs().generalPressure_
     + pop_count(attacks_king) * evalCoeffs().kingPressure_;
-  //score.endGame_ += pop_count(finfo_[color].attack_mask_) * evalCoeffs().generalPressure_;
   return score;
 }
 
@@ -1066,7 +1065,7 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
   int num_knights = 0;
   int num_bishops = 0;
   int num_rooks   = 0;
-  bool has_queen  = false;
+  int num_queens  = 0;
   bool has_king = (finfo_[color].kingAttacks_ & ki_fields) != 0ULL;
 
   if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
@@ -1103,22 +1102,6 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       }
     }
   }
-  {
-    auto q_mask = fmgr.queen_mask(color);
-    for(; q_mask;)
-    {
-      auto n = clear_lsb(q_mask);
-      if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
-        continue;
-      auto const& moves = magic_ns::bishop_moves(n, all_bq);
-      if(auto q_att = (moves & ki_fields))
-      {
-        int q_num = pop_count(q_att);
-        score += q_num * evalCoeffs().queenKingAttack_;
-        has_queen = true;
-      }
-    }
-  }
   auto rq_mask = fmgr.queen_mask(color) | fmgr.rook_mask(color);
   auto all_rq = mask_all_ ^ rq_mask;
   X_ASSERT(all_rq != (mask_all_ & ~rq_mask), "invalid all but RQ mask");
@@ -1138,29 +1121,59 @@ int Evaluator::evaluateKingPressure(Figure::Color color) const
       }
     }
   }
+  auto brq_mask = bq_mask | rq_mask;
+  auto all_brq = mask_all_ ^ brq_mask;
   {
     auto q_mask = fmgr.queen_mask(color);
     for(; q_mask;)
     {
       auto n = clear_lsb(q_mask);
-      if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
+      if(!(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
         continue;
-      auto const& moves = magic_ns::rook_moves(n, all_rq);
+      auto const& moves = magic_ns::queen_moves(n, all_brq);
       if(auto q_att = (moves & ki_fields))
       {
         int q_num = pop_count(q_att);
         score += q_num * evalCoeffs().queenKingAttack_;
-        has_queen = true;
+        num_queens++;
       }
     }
   }
 
   // basic attacks
   static const int number_of_attackers[8] = {0, 0, 32, 48, 64, 64, 64, 64};
-  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + has_queen + has_king, 7);
+  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   score = (score * number_of_attackers[num_total]) >> 5;
-  
 
+  // could check
+  BitMask cango_mask = ~finfo_[ocolor].pawnAttacks_ & inv_mask_all_
+    & (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_)
+    & ~finfo_[ocolor].multiattack_mask_;
+  BitMask include_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
+
+  auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
+  kn_check &= finfo_[color].knightAttacks_ & (cango_mask | include_mask);
+
+  auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
+  auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
+  auto q_check = bi_check | r_check;
+  
+  bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
+  
+  cango_mask &= ~(finfo_[ocolor].bishopAttacks_ | finfo_[ocolor].knightAttacks_);
+  include_mask ^= fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor);
+  r_check &= finfo_[color].rookAttacks_ & (cango_mask | include_mask);
+
+  cango_mask &= ~finfo_[ocolor].rookAttacks_;
+  include_mask ^= fmgr.rook_mask(ocolor);
+  q_check &= finfo_[color].queenAttacks_ & (cango_mask | include_mask);
+
+  int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
+    + pop_count(bi_check) * evalCoeffs().bishopChecking_
+    + pop_count(r_check) * evalCoeffs().rookChecking_
+    + pop_count(q_check) * evalCoeffs().queenChecking_;
+
+  score += check_score;
   return score;
 }
 

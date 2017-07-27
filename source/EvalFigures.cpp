@@ -305,11 +305,12 @@ int Evaluator::evaluateMobility(Figure::Color color)
   BitMask cango_mask = ~finfo_[ocolor].pawnAttacks_ & ~fmgr.mask(color)
     & (finfo_[color].multiattack_mask_ | ~finfo_[ocolor].attack_mask_)
     & ~finfo_[ocolor].multiattack_mask_;
+  BitMask include_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
   BitMask knights = fmgr.knight_mask(color);
   for(; knights;)
   {
     int n = clear_lsb(knights);
-    auto knight_moves = movesTable().caps(Figure::TypeKnight, n) & cango_mask;
+    auto knight_moves = movesTable().caps(Figure::TypeKnight, n) & (cango_mask | include_mask);
     int num_moves = pop_count(knight_moves);
     score += evalCoeffs().knightMobility_[num_moves & 15];
   }
@@ -317,25 +318,27 @@ int Evaluator::evaluateMobility(Figure::Color color)
   for(; bishops;)
   {
     int n = clear_lsb(bishops);
-    auto bishop_moves = magic_ns::bishop_moves(n, mask_all_) & cango_mask;
+    auto bishop_moves = magic_ns::bishop_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(bishop_moves);
     score += evalCoeffs().bishopMobility_[num_moves & 15];
   }
   BitMask rooks = fmgr.rook_mask(color);
   cango_mask &= ~(finfo_[ocolor].knightAttacks_ | finfo_[ocolor].bishopAttacks_);
+  include_mask ^= fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor);
   for(; rooks;)
   {
     auto n = clear_lsb(rooks);
-    auto rook_moves = magic_ns::rook_moves(n, mask_all_) & cango_mask;
+    auto rook_moves = magic_ns::rook_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(cango_mask & rook_moves);
     score += evalCoeffs().rookMobility_[num_moves & 15];
   }
   BitMask queens = fmgr.queen_mask(color);
   cango_mask &= ~finfo_[ocolor].rookAttacks_;
+  include_mask ^= fmgr.rook_mask(ocolor);
   for(; queens;)
   {
     auto n = clear_lsb(queens);
-    auto queen_moves = magic_ns::queen_moves(n, mask_all_) & cango_mask;
+    auto queen_moves = magic_ns::queen_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(queen_moves);
     score += evalCoeffs().queenMobility_[num_moves & 31];
   }

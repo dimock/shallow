@@ -86,11 +86,11 @@ namespace NEngine
     vars_.push_back(details::Var{ "rookKingAttack_", rookKingAttack_, &rookKingAttack_ });
     vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
-    // king threat
-    vars_.push_back(details::Var{ "knightThreat_", knightThreat_, &knightThreat_ });
-    vars_.push_back(details::Var{ "bishopThreat_", bishopThreat_, &bishopThreat_ });
-    vars_.push_back(details::Var{ "rookThreat_", rookThreat_, &rookThreat_ });
-    vars_.push_back(details::Var{ "queenThreat_", queenThreat_, &queenThreat_ });
+    // king threat through check
+    vars_.push_back(details::Var{ "knightChecking_", knightChecking_, &knightChecking_ });
+    vars_.push_back(details::Var{ "bishopChecking_", bishopChecking_, &bishopChecking_ });
+    vars_.push_back(details::Var{ "rookChecking_", rookChecking_, &rookChecking_ });
+    vars_.push_back(details::Var{ "queenChecking_", queenChecking_, &queenChecking_ });
     vars_.push_back(details::Var{ "matThreat_", matThreat_, &matThreat_ });
 
     // arrays
