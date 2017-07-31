@@ -170,7 +170,7 @@ private:
   FullScore evaluateBishops();
   int evaluateRook(Figure::Color color);
   int evaluateQueens(Figure::Color color);
-  int evaluateMobility(Figure::Color color);
+  int evaluateMobilityAndKingPressure(Figure::Color color);
 
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&) const;
   FullScore passerEvaluation(PasserInfo const&) const;

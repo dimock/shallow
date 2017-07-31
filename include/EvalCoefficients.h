@@ -104,7 +104,9 @@ struct EvalCoefficients
   int bishopChecking_{3};
   int rookChecking_{5};
   int queenChecking_{10};
-  int matThreat_{ 30 };
+
+  // number of possible king moves
+  int kingMovesMultiplier_[8] = {};
 
   // arrays
   int passerPawn_[8]  = {};

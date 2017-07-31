@@ -130,9 +130,9 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 
 ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 {
-//#ifndef NDEBUG
-//  std::string sfen = toFEN(*board_);
-//#endif
+#ifndef NDEBUG
+  std::string sfen = toFEN(*board_);
+#endif
 
   if(auto spec = specialCases().eval(*board_))
   {
@@ -217,8 +217,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.common_ += evaluateQueens(Figure::ColorWhite);
   score.common_ -= evaluateQueens(Figure::ColorBlack);
 
-  score.common_ += evaluateMobility(Figure::ColorWhite);
-  score.common_ -= evaluateMobility(Figure::ColorBlack);
+  score.common_ += evaluateMobilityAndKingPressure(Figure::ColorWhite);
+  score.common_ -= evaluateMobilityAndKingPressure(Figure::ColorBlack);
 
   auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
@@ -231,16 +231,16 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
 
-  /// use lazy evaluation level 2
-  {
-    auto score2 = considerColor(lipolScore(score, phaseInfo));
-    if(score2 < alpha2_ || score2 > betta2_)
-      return score2;
-  }
+  ///// use lazy evaluation level 2
+  //{
+  //  auto score2 = considerColor(lipolScore(score, phaseInfo));
+  //  if(score2 < alpha2_ || score2 > betta2_)
+  //    return score2;
+  //}
 
-  auto scoreKPr = evaluateKingPressure(Figure::ColorWhite);
-  scoreKPr -= evaluateKingPressure(Figure::ColorBlack);
-  score.common_ += scoreKPr;
+  //auto scoreKPr = evaluateKingPressure(Figure::ColorWhite);
+  //scoreKPr -= evaluateKingPressure(Figure::ColorBlack);
+  //score.common_ += scoreKPr;
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;

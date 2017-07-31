@@ -91,7 +91,9 @@ namespace NEngine
     vars_.push_back(details::Var{ "bishopChecking_", bishopChecking_, &bishopChecking_ });
     vars_.push_back(details::Var{ "rookChecking_", rookChecking_, &rookChecking_ });
     vars_.push_back(details::Var{ "queenChecking_", queenChecking_, &queenChecking_ });
-    vars_.push_back(details::Var{ "matThreat_", matThreat_, &matThreat_ });
+
+    arrs_.push_back(details::Arr{ "kingMovesMultiplier_", std::vector<int>{ 64, 48, 32, 32, 32, 32, 32, 32 }, kingMovesMultiplier_,
+                    sizeof(kingMovesMultiplier_)/sizeof(*kingMovesMultiplier_) });
 
     // arrays
     arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 13, 27, 36, 47, 62, 85, 0 }, passerPawn_,

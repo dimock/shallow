@@ -297,51 +297,183 @@ int Evaluator::evaluateQueens(Figure::Color color)
   return score;
 }
 
-int Evaluator::evaluateMobility(Figure::Color color)
+int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 {
-  int score = 0;
+  int score_mob = 0;
+  int score_king = 0;
   auto const& fmgr = board_->fmgr();
   auto ocolor = Figure::otherColor(color);
+
+  // basic king pressure
+  auto ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
+  //int kimoves_num = std::min(pop_count(ki_fields & ~finfo_[color].attack_mask_ & inv_mask_all_), 7);
+  auto ctype = getCastleType(ocolor);
+  if(ctype >= 0)
+  {
+    ki_fields |= king_attack_mask_[ocolor][ctype];
+  }
+  ki_fields &= ~finfo_[ocolor].pawnAttacks_;
+
+  // number of king attackers
+  int num_pawns = 0;
+  int num_knights = 0;
+  int num_bishops = 0;
+  int num_rooks = 0;
+  int num_queens = 0;
+  bool has_king = (finfo_[color].kingAttacks_ & ki_fields) != 0ULL;
+
+  // pawns pressure
+  if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
+  {
+    int pw_num = pop_count(pw_att);
+    score_king += pw_num * evalCoeffs().pawnKingAttack_;
+    num_pawns++;
+  }
+
+  // knights pressure
+  if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields))
+  {
+    int kn_num = pop_count(kn_att);
+    score_king += kn_num * evalCoeffs().knightKingAttack_;
+    num_knights++;
+  }
+
   BitMask cango_mask = ~finfo_[ocolor].pawnAttacks_ & ~fmgr.mask(color)
     & (finfo_[color].multiattack_mask_ | ~finfo_[ocolor].attack_mask_)
     & ~finfo_[ocolor].multiattack_mask_;
-  BitMask include_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
+  BitMask include_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor)
+    | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
   BitMask knights = fmgr.knight_mask(color);
   for(; knights;)
   {
     int n = clear_lsb(knights);
     auto knight_moves = movesTable().caps(Figure::TypeKnight, n) & (cango_mask | include_mask);
     int num_moves = pop_count(knight_moves);
-    score += evalCoeffs().knightMobility_[num_moves & 15];
+    score_mob += evalCoeffs().knightMobility_[num_moves & 15];
   }
+  // knight check
+  auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
+  kn_check &= finfo_[color].knightAttacks_ & (cango_mask | include_mask);
+
+  auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
+  auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
+  auto q_check = bi_check | r_check;
+
+  // bishop check
+  bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
+
+  // x-ray bishop attack
+  auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
+  auto all_bq = mask_all_ ^ bq_mask;
+  X_ASSERT(all_bq != (mask_all_ & ~bq_mask), "invalid all but BQ mask");
+
   BitMask bishops = fmgr.bishop_mask(color);
   for(; bishops;)
   {
     int n = clear_lsb(bishops);
+    // mobility
     auto bishop_moves = magic_ns::bishop_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(bishop_moves);
-    score += evalCoeffs().bishopMobility_[num_moves & 15];
+    score_mob += evalCoeffs().bishopMobility_[num_moves & 15];
+    
+    // king pressure
+    if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
+      continue;
+    auto const& xray_moves = magic_ns::bishop_moves(n, all_bq);
+    if(auto bi_att = (xray_moves & ki_fields))
+    {
+      int bi_num = pop_count(bi_att);
+      score_king += bi_num * evalCoeffs().bishopKingAttack_;
+      num_bishops++;
+    }
   }
+
+  // x-ray rook attackes
+  auto rq_mask = fmgr.queen_mask(color) | fmgr.rook_mask(color);
+  auto all_rq = mask_all_ ^ rq_mask;
+  X_ASSERT(all_rq != (mask_all_ & ~rq_mask), "invalid all but RQ mask");
+
   BitMask rooks = fmgr.rook_mask(color);
   cango_mask &= ~(finfo_[ocolor].knightAttacks_ | finfo_[ocolor].bishopAttacks_);
   include_mask ^= fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor);
+  // rook check
+  r_check &= finfo_[color].rookAttacks_ & (cango_mask | include_mask);
+
   for(; rooks;)
   {
     auto n = clear_lsb(rooks);
+    // mobility
     auto rook_moves = magic_ns::rook_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(cango_mask & rook_moves);
-    score += evalCoeffs().rookMobility_[num_moves & 15];
+    score_mob += evalCoeffs().rookMobility_[num_moves & 15];
+
+    // king pressure
+    if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
+      continue;
+    auto const& xray_moves = magic_ns::rook_moves(n, all_rq);
+    if(auto r_att = (xray_moves & ki_fields))
+    {
+      int r_num = pop_count(r_att);
+      score_king += r_num * evalCoeffs().rookKingAttack_;
+      num_rooks++;
+    }
   }
+
+  // x-ray queen attacks
+  auto brq_mask = bq_mask | rq_mask;
+  auto all_brq = mask_all_ ^ brq_mask;
+  X_ASSERT(all_brq != (mask_all_ & ~brq_mask), "invalid all but BRQ mask");
+
   BitMask queens = fmgr.queen_mask(color);
   cango_mask &= ~finfo_[ocolor].rookAttacks_;
   include_mask ^= fmgr.rook_mask(ocolor);
+
+  // queen check
+  q_check &= finfo_[color].queenAttacks_ & (cango_mask | include_mask);
+
   for(; queens;)
   {
     auto n = clear_lsb(queens);
+    // mobility
     auto queen_moves = magic_ns::queen_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(queen_moves);
-    score += evalCoeffs().queenMobility_[num_moves & 31];
+    score_mob += evalCoeffs().queenMobility_[num_moves & 31];
+
+    // king pressure
+    if(!(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
+      continue;
+    auto const& xray_moves = magic_ns::queen_moves(n, all_brq);
+    if(auto q_att = (xray_moves & ki_fields))
+    {
+      int q_num = pop_count(q_att);
+      score_king += q_num * evalCoeffs().queenKingAttack_;
+      num_queens++;
+    }
   }
+
+  // basic attacks
+  static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
+  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
+  int coeff = number_of_attackers[num_total];
+  if(coeff > 0)
+  {
+    if(num_bishops > 1)
+      coeff += 16;
+    if(num_rooks > 0)
+      coeff += 10;
+    if(num_queens > 0)
+      coeff += 24;
+  }
+  score_king = (score_king * coeff) >> 5;
+
+  int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
+    + pop_count(bi_check) * evalCoeffs().bishopChecking_
+    + pop_count(r_check) * evalCoeffs().rookChecking_
+    + pop_count(q_check) * evalCoeffs().queenChecking_;
+
+  //check_score = (check_score * evalCoeffs().kingMovesMultiplier_[kimoves_num]) >> 5;
+
+  auto score = score_mob + score_king + check_score;
   return score;
 }
 
