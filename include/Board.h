@@ -386,6 +386,12 @@ struct Board
   bool moveExists(const Move& move) const;
   bool hasMove() const;
 
+  bool isWinnerLoser() const
+  {
+    return (fmgr_.weight(Figure::ColorBlack) == fmgr_.pawns(Figure::ColorBlack)*Figure::figureWeight_[Figure::TypePawn])
+        || (fmgr_.weight(Figure::ColorWhite) == fmgr_.pawns(Figure::ColorWhite)*Figure::figureWeight_[Figure::TypePawn]);
+  }
+
   bool canBeReduced(Move const& move) const
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
