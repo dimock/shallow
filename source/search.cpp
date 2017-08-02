@@ -334,6 +334,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(depth <= 0)
     return captures(ictx, depth, ply, alpha, betta, pv);
 
+  bool mat_threat{false};
+  bool nm_threat{false};
+  auto const& prev = board.lastUndo();
+
 #ifdef USE_NULL_MOVE
   if(
     !scontexts_[ictx].board_.underCheck()
@@ -357,6 +361,18 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       depth = null_depth;
       if(depth <= 0)
         return captures(ictx, depth, ply, alpha, betta, pv);
+    }
+    else // may be we are in danger?
+    {
+      if(nullScore <= -Figure::MatScore+MaxPly) // mat threat?
+      {
+        if(prev.is_reduced())
+          return betta-1;
+        else
+          mat_threat = true;
+      }
+    
+      nm_threat = true;
     }
   }
 #endif // null-move
@@ -401,6 +417,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   ScoreType scoreBest = -ScoreMax;
   Move best{true};
+  bool dont_reduce{ false };
   int counter{};
 
 #ifndef NDEBUG
@@ -433,6 +450,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     board.makeMove(move);
     sdata_.inc_nc();
     int depthInc = 0;
+    auto& curr = board.lastUndo();
+    bool check_or_cap = curr.capture() || board.underCheck();
 
     if(!counter)
     {
@@ -452,10 +471,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           scontexts_[ictx].board_.canBeReduced(move))
       {
         R = ONE_PLY;
+        curr.mflags_ |= UndoInfo::Reduced;
       }
 #endif
 
       score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply+1, -alpha-1, -alpha, false, true);
+      curr.mflags_ &= ~UndoInfo::Reduced;
+
       if(!stopped() && score > alpha && R > 0)
         score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -alpha-1, -alpha, false, true);
 
@@ -484,6 +506,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       {
         hist.inc_good();
         best = move;
+        dont_reduce = check_or_cap;
         scoreBest = score;
         if(score > alpha)
         {
@@ -517,12 +540,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     }
   }
 
-  if(best)
-  {
-    auto& hist = history(board.color(), best.from(), best.to());
-    hist.inc_score(depth / ONE_PLY);
-  }
-
 #ifdef SINGULAR_EXT
   if(pv && aboveAlphaN == 1 && allMovesIterated)
   {
@@ -548,8 +565,26 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 #endif
 
+  bool threat{ false };
+  if(best)
+  {
+    auto& hist = history(board.color(), best.from(), best.to());
+    hist.inc_score(depth / ONE_PLY);
+
+#if ((defined USE_LMR) && (defined VERIFY_LMR))
+    // have to recalculate with full depth, or indicate threat in hash
+    if ( !stopped() && !dont_reduce && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )
+    {
+      if(prev.is_reduced())
+        return betta-1;
+      else
+        threat = true;
+    }
+#endif
+  }
+
 #ifdef USE_HASH
-  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, false);
+  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, threat);
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -713,18 +748,19 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
       {
         return GHashTable::AlphaBetta;
       }
+#ifdef VERIFY_LMR
       else
       {
-        ///// danger move was reduced - recalculate it with full depth
-        //auto const& prev = scontexts_[ictx].board_.lastUndo();
-        //if(hitem->threat_ && prev.reduced_)
-        //{
-        //  hscore = betta-1;
-        //  return GHashTable::Alpha;
-        //}
-
+        /// danger move was reduced - recalculate it with full depth
+        auto const& prev = board.lastUndo();
+        if(hitem->threat_ && prev.is_reduced())
+        {
+          hscore = betta-1;
+          return GHashTable::Alpha;
+        }
         return GHashTable::Betta;
       }
+#endif
     }
   }
 
@@ -751,73 +787,71 @@ void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType bet
     score += ply;
   else if ( score <= -Figure::MatScore+MaxPly )
     score -= ply;
-  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), score, depth / ONE_PLY, flag, move);
+  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat);
 }
 
 void Engine::putCaptureHash(int ictx, const Move & move)
 {
   if(!move || scontexts_[ictx].board_.hasReps())
     return;
-  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move);
+  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false);
 }
 #endif
 
 
-////////////////////////////////////////////////////////////////////////////
-//// is given movement caused by previous? this mean that if we don't do this move we loose
-//// we actually test if moved figure was/will be attacked by previously moved one or from direction it was moved from
-//// or we should move our king even if we have a lot of other figures
-////////////////////////////////////////////////////////////////////////////
-//bool Engine::isRealThreat(int ictx, const Move & move)
-//{
-//  // don't need to forbid if our answer is capture or check ???
-//  if(move.capture_ || move.checkFlag_)
-//    return false;
-//
-//  const UndoInfo & prev = scontexts_[ictx].board_.undoInfoRev(0);
-//  if(!prev) // null-move
-//    return false;
-//
-//  Figure::Color  color = scontexts_[ictx].board_.getColor();
-//  Figure::Color ocolor = Figure::otherColor(color);
-//
-//  const Field & pfield = scontexts_[ictx].board_.getField(prev.to_);
-//  X_ASSERT(!pfield || pfield.color() != ocolor, "no figure of required color on the field it was move to while detecting threat");
-//
-//  // don't need forbid reduction of captures, checks, promotions and pawn's attack because we've already done it
-//  if(prev.capture_ || prev.new_type_ > 0 || prev.checkingNum_ > 0 || prev.threat_)
-//    return false;
-//
-//  /// we have to move king even if there a lot of figures
-//  if(scontexts_[ictx].board_.getField(move.from_).type() == Figure::TypeKing &&
-//    scontexts_[ictx].board_.fmgr().queens(color) > 0 &&
-//    scontexts_[ictx].board_.fmgr().rooks(color) > 0 &&
-//    scontexts_[ictx].board_.fmgr().knights(color) + scontexts_[ictx].board_.fmgr().bishops(color) > 0)
-//  {
-//    return true;
-//  }
-//
-//  const Field & cfield = scontexts_[ictx].board_.getField(move.from_);
-//  X_ASSERT(!cfield || cfield.color() != color, "no figure of required color in while detecting threat");
-//
-//  // we have to put figure under attack
-//  if(scontexts_[ictx].board_.ptAttackedBy(move.to_, prev.to_))
-//    return true;
-//
-//  // put our figure under attack, opened by prev movement
-//  if(scontexts_[ictx].board_.getAttackedFrom(ocolor, move.to_, prev.from_) >= 0)
-//    return true;
-//
-//  // prev move was attack, and we should escape from it
-//  if(scontexts_[ictx].board_.ptAttackedBy(move.from_, prev.to_))
-//    return true;
-//
-//  // our figure was attacked from direction, opened by prev movement
-//  if(scontexts_[ictx].board_.getAttackedFrom(ocolor, move.from_, prev.from_) >= 0)
-//    return true;
-//
-//  return false;
-//}
+//////////////////////////////////////////////////////////////////////////
+// is given movement caused by previous? this mean that if we don't do this move we loose
+// we actually test if moved figure was/will be attacked by previously moved one or from direction it was moved from
+// or we should move our king even if we have a lot of other figures
+//////////////////////////////////////////////////////////////////////////
+bool Engine::isRealThreat(int ictx, const Move & move)
+{
+  auto const& board = scontexts_[ictx].board_;
+
+  auto const& prev = board.lastUndo();
+  if(prev.is_nullmove())
+    return false;
+
+  auto const color = board.color();
+  auto const ocolor = Figure::otherColor(color);
+
+  auto const& pfield = scontexts_[ictx].board_.getField(prev.move_.to());
+  X_ASSERT(!pfield || pfield.color() != ocolor, "no figure of required color on the field it was move to while detecting threat");
+
+  // don't need forbid reduction of captures, checks, promotions and pawn's attack because we've already done it
+  if(prev.capture() || prev.move_.new_type() > 0 || prev.check() || prev.threat())
+    return false;
+
+  /// we have to move king even if there a lot of figures
+  if(scontexts_[ictx].board_.getField(move.from()).type() == Figure::TypeKing &&
+    scontexts_[ictx].board_.fmgr().queens(color) > 0 &&
+    scontexts_[ictx].board_.fmgr().rooks(color) > 0 &&
+    scontexts_[ictx].board_.fmgr().knights(color) + scontexts_[ictx].board_.fmgr().bishops(color) > 0)
+  {
+    return true;
+  }
+
+  auto const& cfield = scontexts_[ictx].board_.getField(move.from());
+  X_ASSERT(!cfield || cfield.color() != color, "no figure of required color in while detecting threat");
+
+  // we have to put figure under attack
+  if(board.ptAttackedBy(move.to(), prev.move_.to()))
+    return true;
+
+  // put our figure under attack, opened by prev movement
+  if(board.ptAttackedFrom(ocolor, move.to(), prev.move_.from()))
+    return true;
+
+  // prev move was attack, and we should escape from it
+  if(board.ptAttackedBy(move.from(), prev.move_.to()))
+    return true;
+
+  // our figure was attacked from direction, opened by prev movement
+  if(board.ptAttackedFrom(ocolor, move.from(), prev.move_.from()))
+    return true;
+
+  return false;
+}
 
 int Engine::xcounter_ = 0;
 

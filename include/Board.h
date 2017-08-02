@@ -68,7 +68,9 @@ struct UndoInfo
     Irreversible = 4,
     Check = 8,
     EnPassant = 16,
-    Reduced = 32
+    Reduced = 32,
+    Threat = 64,
+    Nullmove = 128
   };
 
   uint64        zcode_;
@@ -79,12 +81,16 @@ struct UndoInfo
   int8          eaten_type_;
   int32         psq32_;
 
-  bool irreversible() const { return mflags_ & Irreversible; }
-  bool capture() const { return mflags_ & Capture; }
-  bool castle() const { return mflags_ & Castle; }
-  bool is_enpassant() const { return mflags_ & EnPassant; }
   int8 enpassant() const { return data_.en_passant_; }
-  bool is_reduced() const { return mflags_ & Reduced; }
+
+  bool castle() const { return (mflags_ & Castle) != 0; }
+  bool capture() const { return (mflags_ & Capture) != 0; }
+  bool irreversible() const { return (mflags_ & Irreversible) != 0; }
+  bool check() const { return (mflags_ & Check) != 0; }
+  bool is_enpassant() const { return (mflags_ & EnPassant) != 0; }
+  bool is_reduced() const { return (mflags_ & Reduced) != 0; }
+  bool threat() const { return (mflags_ & Threat) != 0; }
+  bool is_nullmove() const { return (mflags_ & Nullmove) != 0; }
 };
 
 struct Board
@@ -395,8 +401,13 @@ struct Board
   bool canBeReduced(Move const& move) const
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
+    auto const& undo = lastUndo();
     return  ((hist.good()<<2) <= hist.bad()) &&
-      !(lastUndo().capture() || move.new_type() > 0 || /*undo.threat_ || */lastUndo().castle() || underCheck());
+      !(lastUndo().capture() || move.new_type() > 0
+#ifdef VERIFY_LMR
+      || undo.threat()
+#endif
+      || undo.castle() || underCheck());
   }
 
   inline bool allowNullMove() const
@@ -459,6 +470,17 @@ struct Board
       sort_value += CaptureRecentlyBonus;
     return sort_value;
   }
+
+  /// is pt attacked by figure in position 'p'
+  bool ptAttackedBy(int8 pt, int p) const;
+
+  /// mask_all is completely prepared, all figures are on their places
+  bool findDiscovered(int from, Figure::Color acolor, const BitMask & mask_all, const BitMask & brq_mask, int ki_pos) const;
+
+  /// is 'pt' attacked by figure of color 'acolor' if we remove figure from position 'from'
+  /// returns 'false' if 'pt' was already attacked from this direction
+  /// even if it is attacked by figure that occupies field 'from'
+  bool ptAttackedFrom(Figure::Color acolor, int8 pt, int8 from) const;
 
 private:
   // for initialization only

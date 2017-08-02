@@ -187,6 +187,9 @@ void Board::makeMove(const Move & move)
 
   detectCheck(move);
 
+  if(underCheck())
+    undo.mflags_ |= UndoInfo::Check;
+
   X_ASSERT(isAttacked(Figure::otherColor(color()), kingPos(color())) && !underCheck(), "check isn't detected");
   X_ASSERT(!isAttacked(Figure::otherColor(color()), kingPos(color())) && underCheck(), "detected check, that doesn't exist");
   X_ASSERT(isAttacked(color(), kingPos(Figure::otherColor(color()))), "our king is under check after undo");
@@ -274,6 +277,7 @@ void Board::makeNullMove()
 
   auto& undo = lastUndo();
 
+  undo.mflags_ = UndoInfo::Nullmove;
   // save general data
   undo.data_ = data_;
   // save Zobrist keys

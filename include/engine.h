@@ -105,7 +105,7 @@ private:
 
   // is given movement caused by previous. this mean that if we don't do this move we loose
   // we actually check if moved figure was attacked by previously moved one or from direction it was moved from
-  //bool isRealThreat(int ictx, const Move & move);
+  bool isRealThreat(int ictx, const Move & move);
 
 #ifdef USE_HASH
   void prefetchHash(int ictx);

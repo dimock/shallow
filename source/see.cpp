@@ -137,13 +137,13 @@ struct SeeCalc
       auto bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_f) & mask_all_t;
       auto const& bi_mask = fmgr_.bishop_mask(ocolor);
       auto const& q_mask = fmgr_.queen_mask(ocolor);
-      return bi_moves & (bi_mask | q_mask);
+      return (bi_moves & (bi_mask | q_mask)) != 0ULL;
     }
     X_ASSERT(dir != nst::rook, "invalid direction from point to point");
     auto r_moves = magic_ns::rook_moves(ki_pos, mask_all_f) & mask_all_t;
     auto const& r_mask = fmgr_.rook_mask(ocolor);
     auto const& q_mask = fmgr_.queen_mask(ocolor);
-    return r_moves & (r_mask | q_mask);
+    return (r_moves & (r_mask | q_mask)) != 0ULL;
   }
 
   inline bool is_usual_check() const
@@ -163,7 +163,7 @@ struct SeeCalc
     {
       if(!move_.new_type())
       {
-        bool result = movesTable().pawnCaps(color_, to) & board_.fmgr().king_mask(ocolor);
+        bool result = (movesTable().pawnCaps(color_, to) & board_.fmgr().king_mask(ocolor)) != 0ULL;
         X_ASSERT(check_detected != result, "invalid check detected");
         return result;
       }
@@ -171,7 +171,7 @@ struct SeeCalc
     }
     if(ftype == Figure::TypeKnight)
     {
-      bool result = movesTable().caps(Figure::TypeKnight, to) & board_.fmgr().king_mask(ocolor);
+      bool result = (movesTable().caps(Figure::TypeKnight, to) & board_.fmgr().king_mask(ocolor)) != 0ULL;
       X_ASSERT(check_detected != result, "invalid check detected");
       return result;
     }

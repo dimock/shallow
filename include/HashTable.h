@@ -160,7 +160,7 @@ public:
   GHashTable(int size) : HashTable<HBucket>(size)
   {}
 
-  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move)
+  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat)
   {
     HBucket & hb = (*this)[hkey];
     HItem * hitem = hb.get(hkey);
@@ -183,6 +183,7 @@ public:
     hitem->flag_   = flag;
     hitem->movesCount_ = movesCount_;
     hitem->move_   = move;
+    hitem->threat_ = threat;
   }
 
   const HItem * find(const uint64 & hkey) const

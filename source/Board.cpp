@@ -125,7 +125,7 @@ bool Board::escapeMove(const Move& move) const
   }
   X_ASSERT(doubleCheck(), "double check but no-king move");
   auto const& mask = betweenMasks().between(kingPos(color()), checking());
-  return mask & set_mask_bit(move.to());
+  return (mask & set_mask_bit(move.to())) != 0ULL;
 }
 
 bool Board::moveExists(const Move& move) const
@@ -814,6 +814,58 @@ bool Board::verifyCastling(const Figure::Color c, int t) const
     return false;
 
   return true;
+}
+
+bool Board::ptAttackedBy(int8 pt, int p) const
+{
+  const Field & field = getField(p);
+  int dir = figureDir().dir(field.type(), field.color(), p, pt);
+  if(dir < 0)
+    return false;
+
+  if(field.type() == Figure::TypeKnight)
+    return true;
+
+  const uint64 & mask = betweenMasks().between(p, pt);
+  const uint64 & black = fmgr_.mask(Figure::ColorBlack);
+  if((~black & mask) != mask)
+    return false;
+
+  const uint64 & white = fmgr_.mask(Figure::ColorWhite);
+  if((~white & mask) != mask)
+    return false;
+
+  return true;
+}
+
+/// returns field index of checking figure or -1 if not found
+/// mask_all is completely prepared, all figures are on their places
+bool Board::findDiscovered(int from, Figure::Color acolor, const BitMask & mask_all, const BitMask & brq_mask, int ki_pos) const
+{
+  const BitMask & from_msk = betweenMasks().from(ki_pos, from);
+  BitMask mask_all_ex = mask_all & from_msk;
+  if((mask_all_ex & brq_mask) == 0)
+    return false;
+
+  int apos = ki_pos < from ? _lsb64(mask_all_ex) : _msb64(mask_all_ex);
+  if((set_mask_bit(apos) & brq_mask) == 0) // no BRQ on this field
+    return false;
+
+  const Field & afield = getField(apos);
+  X_ASSERT(afield.color() != acolor || afield.type() < Figure::TypeBishop || afield.type() > Figure::TypeQueen,
+           "findDiscovered() - attacking figure isn't BRQ");
+
+  return figureDir().dir(afield.type(), afield.color(), apos, ki_pos) >= 0;
+}
+
+bool Board::ptAttackedFrom(Figure::Color acolor, int8 pt, int8 from) const
+{
+  BitMask mask_all = fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite);
+  BitMask brq_mask = fmgr_.bishop_mask(acolor) | fmgr_.rook_mask(acolor) | fmgr_.queen_mask(acolor);
+  const BitMask & btw_mask = betweenMasks().between(pt, from);
+  brq_mask &= ~btw_mask; // exclude all figures, that are between 'pt' and 'from'
+
+  return findDiscovered(from, acolor, mask_all, brq_mask, pt);
 }
 
 } // NEngine

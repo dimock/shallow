@@ -272,8 +272,8 @@ void speedTest()
   auto t = std::chrono::high_resolution_clock::now();
   xsearch(board, 4);
   auto dt = std::chrono::high_resolution_clock::now() - t;
-  double dt_ms = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
-  int nps = (x_movesCounter / dt_ms) * 1000;
+  auto dt_ms = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
+  int nps = int((x_movesCounter / (double)dt_ms) * 1000);
   std::cout << x_movesCounter
     << " moves; time: " << dt_ms/1000.0 << " (s);"
     << " nps " << nps << std::endl;
