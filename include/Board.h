@@ -318,7 +318,7 @@ struct Board
 
   inline bool is_capture(Move const& move) const
   {
-    X_ASSERT(!move || getField(move.to()).color() == color(), "invalid move given");
+    X_ASSERT(!move || getField(move.to()) && getField(move.to()).color() == color(), "invalid move given");
     return getField(move.to())
       || (getField(move.from()).type() == Figure::TypePawn && enpassant() > 0 && move.to() == enpassant());
   }

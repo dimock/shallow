@@ -160,7 +160,7 @@ bool Engine::search(SearchResult& sres)
 }
 
 //////////////////////////////////////////////////////////////////////////
-int Engine::depthIncrement(int ictx, Move const & move, bool pv) const
+int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) const
 {
   int depthInc = 0;
 
@@ -170,7 +170,7 @@ int Engine::depthIncrement(int ictx, Move const & move, bool pv) const
   if(!pv || !move.see_ok())
     return depthInc;
 
-  if(move.new_type())
+  if(move.new_type() || singular)
     return depthInc + ONE_PLY;
 
   // recapture
@@ -206,6 +206,7 @@ ScoreType Engine::alphaBetta0()
 
   ScoreType alpha = -ScoreMax;
   const int depth = sdata_.depth_ * ONE_PLY;
+  //bool check_escape = board.underCheck();
 
 #ifndef NDEBUG
   Board board0{ board };
@@ -227,16 +228,31 @@ ScoreType Engine::alphaBetta0()
     {
       if(!sdata_.counter_)
       {
-        int depthInc = depthIncrement(0, move, true);
+        int depthInc = depthIncrement(0, move, true, false);
         score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -ScoreMax, -alpha, true, true);
       }
       else
       {
-        int depthInc = depthIncrement(0, move, false);
-        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -alpha-1, -alpha, false, true);
+        int depthInc = depthIncrement(0, move, false, false);
+
+//        int R = 0;
+//#ifdef USE_LMR
+//        if(!check_escape &&
+//           sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+//           depth >= LMR_DepthLimit &&
+//           alpha > -Figure::MatScore-MaxPly &&
+//           board.canBeReduced(move))
+//        {
+//          R = ONE_PLY;
+//        }
+//#endif
+        score = -alphaBetta(0, depth + depthInc -/* R -*/ ONE_PLY, 1, -alpha-1, -alpha, false, true);
+        //if(!stopped() && score > alpha && R > 0)
+        //  score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -alpha - 1, -alpha, false, true);
+
         if(!stopped() && score > alpha)
         {
-          depthInc = depthIncrement(0, move, true);
+          depthInc = depthIncrement(0, move, true, false);
           score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -ScoreMax, -alpha, true, true);
         }
       }
@@ -320,10 +336,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   ScoreType const alpha0 = alpha;
   SMove hmove{true};
-  
+  bool singular = false;
+
 #ifdef USE_HASH
   ScoreType hscore = -ScoreMax;
-  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
+  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
   if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
     return hscore;
@@ -387,33 +404,36 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   {
     ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);
     int threshold = (int)alpha - (int)score0 - Position_Gain;
-    if(depth <= ONE_PLY && threshold > 0)
+    static const int thresholds_[4] = {0,
+      0,
+      Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn],
+      Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook] };
+    if(threshold > thresholds_[(depth/ONE_PLY) & 3])
     {
       return captures(ictx, depth, ply, alpha, betta, pv, score0);
     }
-    //else if(depth <= 2*ONE_PLY && threshold > Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn])
-    //{
-    //  return captures(ictx, depth, ply, alpha, betta, pv, score0);
-    //}
-    //else if(threshold > Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook])
-    //{
-    //  return captures(ictx, depth, ply, alpha, betta, pv, score0);
-    //}
   }
 #endif // futility pruning
 
-  //
-  //#ifdef USE_IID
-  //  if(!hmove && depth >= 4 * ONE_PLY)
-  //  {
-  //    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
-  //    if(const HItem * hitem = hash_.find(scontexts_[ictx].board_.fmgr().hashCode()))
-  //    {
-  //      X_ASSERT(hitem->hkey_ != scontexts_[ictx].board_.fmgr().hashCode(), "invalid hash item found");
-  //      hmove = hitem->move_;
-  //    }
-  //  }
-  //#endif
+
+#ifdef SINGULAR_EXT
+  int  aboveAlphaN = 0;
+  int  depthIncBest = 0;
+  bool allMovesIterated = false;
+#endif
+
+#ifdef USE_IID
+  if(!hmove && depth >= 4 * ONE_PLY)
+  {
+    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
+    if(const HItem * hitem = hash_.find(scontexts_[ictx].board_.fmgr().hashCode()))
+    {
+      X_ASSERT(hitem->hkey_ != scontexts_[ictx].board_.fmgr().hashCode(), "invalid hash item found");
+      (Move&)hmove = hitem->move_;
+      singular = hitem->singular_;
+    }
+  }
+#endif
 
   ScoreType scoreBest = -ScoreMax;
   Move best{true};
@@ -423,14 +443,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifndef NDEBUG
   Board board0{ board };
 #endif
-
-#ifdef SINGULAR_EXT
-  int  aboveAlphaN = 0;
-  int  depthIncBest = 0;
-  bool allMovesIterated = false;
-#endif
   
-  bool check_escape = scontexts_[ictx].board_.underCheck();
+  bool check_escape = board.underCheck();
   FastGenerator<Board, SMove> fg(board, hmove, scontexts_[ictx].plystack_[ply].killer_);
   for(; alpha < betta && !checkForStop();)
   {
@@ -455,12 +469,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     if(!counter)
     {
-      depthInc = depthIncrement(ictx, move, pv);
-      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
+      depthInc = depthIncrement(ictx, move, pv, singular);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, allow_nm);
     }
     else
     {
-      depthInc = depthIncrement(ictx, move, false);
+      depthInc = depthIncrement(ictx, move, false, false);
 
       int R = 0;
 #ifdef USE_LMR
@@ -475,16 +489,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
 #endif
 
-      score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply+1, -alpha-1, -alpha, false, true);
+      score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply+1, -alpha-1, -alpha, false, allow_nm);
       curr.mflags_ &= ~UndoInfo::Reduced;
 
       if(!stopped() && score > alpha && R > 0)
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -alpha-1, -alpha, false, true);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -alpha-1, -alpha, false, allow_nm);
 
       if(!stopped() && score > alpha && score < betta && pv)
       {
-        depthInc = depthIncrement(0, move, pv);
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, true);
+        depthInc = depthIncrement(0, move, pv, singular);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, allow_nm);
       }
     }
 
@@ -541,9 +555,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 
 #ifdef SINGULAR_EXT
-  if(pv && aboveAlphaN == 1 && allMovesIterated)
+  if(pv && !singular && aboveAlphaN == 1 && allMovesIterated)
   {
     X_ASSERT(!best, "best move wasn't found but one move was");
+
+    singular = true;
 
     board.makeMove(best);
     sdata_.inc_nc();
@@ -584,7 +600,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 
 #ifdef USE_HASH
-  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, threat);
+  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, threat, singular);
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -609,14 +625,13 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   
 #ifdef USE_HASH
   ScoreType hscore = -ScoreMax;
-  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv);
+  bool singular = false;
+  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
   if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
     return hscore;
   }
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
-  //if(hmove && !board.getField(hmove.to()))
-  //  hmove = SMove{true};
 #endif
 
   int counter = 0;
@@ -633,6 +648,8 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       return score0;
 
     threshold = (int)alpha - (int)score0 - Position_Gain;
+    if(threshold > Figure::figureWeight_[Figure::TypePawn] && board.isWinnerLoser())
+      threshold = Figure::figureWeight_[Figure::TypePawn];
     if(score0 > alpha)
       alpha = score0;
 
@@ -711,7 +728,7 @@ void Engine::prefetchHash(int ictx)
   hash_.prefetch(scontexts_[ictx].board_.fmgr().hashCode());
 }
 
-GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv)
+GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular)
 {
   auto& board = scontexts_[ictx].board_;
   auto const* hitem = hash_.find(board.fmgr().hashCode());
@@ -720,6 +737,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   X_ASSERT(hitem->hkey_ != board.fmgr().hashCode(), "invalid hash item found");
 
+  singular = hitem->singular_;
   hmove = hitem->move_;
   if(pv)
     return GHashTable::AlphaBetta;
@@ -768,7 +786,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 }
 
 /// insert data to hash table
-void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat)
+void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular)
 {
   if (scontexts_[ictx].board_.hasReps())
     return;
@@ -787,14 +805,14 @@ void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType bet
     score += ply;
   else if ( score <= -Figure::MatScore+MaxPly )
     score -= ply;
-  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat);
+  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat, singular);
 }
 
 void Engine::putCaptureHash(int ictx, const Move & move)
 {
   if(!move || scontexts_[ictx].board_.hasReps())
     return;
-  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false);
+  hash_.push(scontexts_[ictx].board_.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false, false);
 }
 #endif
 

@@ -102,7 +102,7 @@ namespace nst
 #define USE_NULL_MOVE
 #define USE_LMR
 #define VERIFY_LMR
-#undef SINGULAR_EXT
+#define SINGULAR_EXT
 #undef USE_PROBCUT
 
 static const SortValueType CaptureRecentlyBonus = 10;

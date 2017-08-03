@@ -20,6 +20,8 @@ struct EscapeGenerator
     hmove_(hmove),
     killer_(killer)
   {
+    if(killer_ == hmove_)
+      killer_ = MOVE{ true };
     ocolor = Figure::otherColor(board_.color());
     const auto& black = board_.fmgr().mask(Figure::ColorBlack);
     const auto& white = board_.fmgr().mask(Figure::ColorWhite);

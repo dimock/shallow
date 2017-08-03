@@ -20,9 +20,10 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HItem
 
   struct
   {
-  uint16     depth_  : 6,
-             flag_   : 2,
-             threat_ : 1;
+  uint16     depth_   : 6,
+             flag_    : 2,
+             threat_  : 1,
+             singular_: 1;
   };
   uint16     mask_{};
   };
@@ -160,7 +161,7 @@ public:
   GHashTable(int size) : HashTable<HBucket>(size)
   {}
 
-  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat)
+  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat, bool singular)
   {
     HBucket & hb = (*this)[hkey];
     HItem * hitem = hb.get(hkey);
@@ -184,6 +185,7 @@ public:
     hitem->movesCount_ = movesCount_;
     hitem->move_   = move;
     hitem->threat_ = threat;
+    hitem->singular_ = singular;
   }
 
   const HItem * find(const uint64 & hkey) const

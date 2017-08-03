@@ -96,14 +96,14 @@ struct EvalCoefficients
   int pawnKingAttack_{ 2 };
   int knightKingAttack_{ 3 };
   int bishopKingAttack_{ 3 };
-  int rookKingAttack_{ 5 };
-  int queenKingAttack_{ 10 };
+  int rookKingAttack_{ 6 };
+  int queenKingAttack_{ 12 };
 
   // king threat
   int knightChecking_{3};
   int bishopChecking_{3};
-  int rookChecking_{5};
-  int queenChecking_{10};
+  int rookChecking_{6};
+  int queenChecking_{12};
 
   // number of possible king moves
   int kingMovesMultiplier_[8] = {};

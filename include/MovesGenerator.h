@@ -182,6 +182,8 @@ struct FastGenerator
     hmove_(hmove),
     killer_(killer)
   {
+    if(killer_ == hmove_)
+      killer_ = MOVE{ true };
     if(!board.underCheck())
       order_ = oHash;
   }

@@ -45,7 +45,7 @@ namespace NEngine
                     sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
     arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{25, 60}, rookAgainstFigureBonus_,
                     sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
-    arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{20, 50}, figuresAgainstRookBonus_,
+    arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 40}, figuresAgainstRookBonus_,
                     sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
 
     // forks
@@ -120,10 +120,10 @@ namespace NEngine
                     sizeof(knightMobility_)/sizeof(*knightMobility_) });
     arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-25, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                     bishopMobility_, sizeof(bishopMobility_)/sizeof(*bishopMobility_) });
-    arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-15, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+    arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-35, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                     rookMobility_, sizeof(rookMobility_)/sizeof(*rookMobility_) });
     arrs_.push_back(details::Arr{ "queenMobility_",
-                    std::vector<int>{-35, -25, -7,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
+                    std::vector<int>{-45, -35, -7,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
                                       13,  14,  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28},
                     queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
 
