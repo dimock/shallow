@@ -205,7 +205,9 @@ void SpecialCasesDetector::initMatCases()
     }
     score += evalCoeffs().bishopKnightMat_[kp];
     int ndist = distanceCounter().getDistance(kn, kl);
-    score -= ndist >> 1;
+    int bdist = distanceCounter().getDistance(bp, kl);
+    score -= ndist;
+    score -= bdist >> 1;
     return score;
   };
   matCases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },

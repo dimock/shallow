@@ -206,7 +206,10 @@ ScoreType Engine::alphaBetta0()
 
   ScoreType alpha = -ScoreMax;
   const int depth = sdata_.depth_ * ONE_PLY;
-  //bool check_escape = board.underCheck();
+
+#ifdef USE_LMR0
+  bool check_escape = board.underCheck();
+#endif
 
 #ifndef NDEBUG
   Board board0{ board };
@@ -223,7 +226,6 @@ ScoreType Engine::alphaBetta0()
     board.makeMove(move);
     sdata_.inc_nc();
 
-    //int depthInc = depthIncrement(0, move, true);// board.underCheck() ? ONE_PLY : 0;
     if(!stopped())
     {
       if(!sdata_.counter_)
@@ -235,20 +237,20 @@ ScoreType Engine::alphaBetta0()
       {
         int depthInc = depthIncrement(0, move, false, false);
 
-//        int R = 0;
-//#ifdef USE_LMR
-//        if(!check_escape &&
-//           sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-//           depth >= LMR_DepthLimit &&
-//           alpha > -Figure::MatScore-MaxPly &&
-//           board.canBeReduced(move))
-//        {
-//          R = ONE_PLY;
-//        }
-//#endif
-        score = -alphaBetta(0, depth + depthInc -/* R -*/ ONE_PLY, 1, -alpha-1, -alpha, false, true);
-        //if(!stopped() && score > alpha && R > 0)
-        //  score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -alpha - 1, -alpha, false, true);
+        int R = 0;
+#ifdef USE_LMR0
+        if(!check_escape &&
+           sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+           depth >= LMR_DepthLimit &&
+           alpha > -Figure::MatScore-MaxPly &&
+           board.canBeReduced(move))
+        {
+          R = ONE_PLY;
+        }
+#endif
+        score = -alphaBetta(0, depth + depthInc - R - ONE_PLY, 1, -alpha-1, -alpha, false, true);
+        if(!stopped() && score > alpha && R > 0)
+          score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -alpha - 1, -alpha, false, true);
 
         if(!stopped() && score > alpha)
         {
@@ -555,27 +557,29 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 
 #ifdef SINGULAR_EXT
-  if(pv && !singular && aboveAlphaN == 1 && allMovesIterated)
+  if(!singular && (aboveAlphaN == 1 || counter == 1) && allMovesIterated)
   {
     X_ASSERT(!best, "best move wasn't found but one move was");
-
     singular = true;
 
-    board.makeMove(best);
-    sdata_.inc_nc();
-
-    alpha = alpha0;
-    ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true);
-
-    board.unmakeMove(best);
-
-    if(!stopped())
+    if(pv)
     {
-      scoreBest = score;
-      if(score > alpha)
+      board.makeMove(best);
+      sdata_.inc_nc();
+
+      alpha = alpha0;
+      ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true);
+
+      board.unmakeMove(best);
+
+      if(!stopped())
       {
-        alpha = score;
-        assemblePV(ictx, best, board.underCheck(), ply);
+        scoreBest = score;
+        if(score > alpha)
+        {
+          alpha = score;
+          assemblePV(ictx, best, board.underCheck(), ply);
+        }
       }
     }
   }
@@ -774,6 +778,8 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
         if(hitem->threat_ && prev.is_reduced())
         {
           hscore = betta-1;
+          if(board.hasReps(hmove))
+            return GHashTable::AlphaBetta;
           return GHashTable::Alpha;
         }
         return GHashTable::Betta;

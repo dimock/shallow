@@ -101,6 +101,7 @@ namespace nst
 #define USE_HASH
 #define USE_NULL_MOVE
 #define USE_LMR
+#undef USE_LMR0
 #define VERIFY_LMR
 #define SINGULAR_EXT
 #undef USE_PROBCUT

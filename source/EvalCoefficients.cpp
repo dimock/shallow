@@ -116,9 +116,9 @@ namespace NEngine
     //                sizeof(forwardPasser_)/sizeof(*forwardPasser_) });
 
     // mobility
-    arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-25, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
+    arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-30, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
                     sizeof(knightMobility_)/sizeof(*knightMobility_) });
-    arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-25, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+    arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-30, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                     bishopMobility_, sizeof(bishopMobility_)/sizeof(*bishopMobility_) });
     arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-35, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                     rookMobility_, sizeof(rookMobility_)/sizeof(*rookMobility_) });
@@ -143,14 +143,14 @@ namespace NEngine
     // king position eval for BN-mat
     arrs_.push_back(details::Arr{ "bishopKnightMat_", std::vector<int>
       {
-         16,  10,   6,  1, -2, -5, -12, -16,
-         10,  12,   5, -1, -3, -6, -14, -12,
-          5,   5,   4, -2, -4, -8,  -8, -10,
-         -1,  -1,  -2, -6, -6, -6,  -5,  -4,
-         -4,  -5,  -6, -6, -6, -2,  -1,  -1,
-         -10, -8,  -8, -4, -2,  4,   5,   5,
-         -12, -14, -6, -3, -1,  5,  12,  10,
-         -16, -12, -5, -2,  1,  6,  10,  16
+          20,  16,   8, -1, -2, -8, -16, -20,
+          16,  16,   8, -1, -3, -8, -16, -16,
+           8,   8,   6, -2, -4, -6,  -8,  -8,
+          -1,  -1,  -2, -8, -8, -4,  -3,  -2,
+          -2,  -3,  -4, -8, -8, -2,  -1,  -1,
+          -8,  -8,  -6, -4, -2,  6,   8,   8,
+         -16, -16,  -8, -3, -1,  8,  16,  16,
+         -20, -16,  -8, -2, -1,  8,  16,  20
       },
       bishopKnightMat_,
       sizeof(bishopKnightMat_)/sizeof(*bishopKnightMat_)
