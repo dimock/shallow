@@ -35,22 +35,14 @@ bool Engine::search(SearchResult& sres)
       move.sort_value = 0;
       if(!board.validateMoveBruteforce(move))
         continue;
-      if(board.see(move, 0))
-        move.set_ok();
       if(move.new_type() || board.is_capture(move))
       {
+        if(board.see(move, 0))
+          move.set_ok();
         if(move.see_ok())
           move.sort_value = 10000000 + board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type());
         else
           move.sort_value = board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type()) - 10000;
-      }
-      else
-      {
-        board.makeMove(move);
-        move.sort_value = scontexts_[0].eval_(-ScoreMax, +ScoreMax);
-        if(!move.see_ok())
-          move.sort_value -= 10000;
-        board.unmakeMove(move);
       }
       scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
     }

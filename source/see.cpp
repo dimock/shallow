@@ -24,7 +24,7 @@ struct SeeCalc
   bool promotion_;
   bool discovered_check_;
 
-  SeeCalc(Board const& board, Move const& move) :
+  SeeCalc(Board const& board, Move const& move, bool en_passant) :
     board_(board),
     move_(move),
     fmgr_(board.fmgr())
@@ -33,7 +33,10 @@ struct SeeCalc
     color_ = board_.getField(move_.from()).color();
     X_ASSERT((all_mask_ & set_mask_bit(move_.from())) == 0ULL, "no figure on field move.from");
     X_ASSERT(discovered_check(move_.from(), Figure::otherColor(color_), board_.kingPos(color_)), "SEE move is illegal");
-    discovered_check_ = discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
+    if(en_passant)
+      discovered_check_ = enpassant_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
+    else
+      discovered_check_ = discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
     if(discovered_check_)
       return;
     all_mask_ ^= set_mask_bit(move_.from());
@@ -123,6 +126,24 @@ struct SeeCalc
       return true;
     }
     return false;
+  }
+
+  inline bool enpassant_check(int from, Figure::Color ocolor, int ki_pos) const
+  {
+    auto epp = board_.enpassantPos();
+    auto mask_all_f = all_mask_ & ~set_mask_bit(from) & ~set_mask_bit(epp);
+    auto mask_all_t = mask_all_f & ~set_mask_bit(move_.to());
+    {
+      auto bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_f) & mask_all_t;
+      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      if((bi_moves & (bi_mask | q_mask)) != 0ULL)
+        return true;
+    }
+    auto r_moves = magic_ns::rook_moves(ki_pos, mask_all_f) & mask_all_t;
+    auto const& r_mask = fmgr_.rook_mask(ocolor);
+    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    return (r_moves & (r_mask | q_mask)) != 0ULL;
   }
 
   inline bool discovered_check(int from, Figure::Color ocolor, int ki_pos) const
@@ -239,7 +260,7 @@ bool Board::see(const Move & move, int threshold) const
     return true;
   }
 
-  SeeCalc see_calc(*this, move);
+  SeeCalc see_calc(*this, move, en_passant);
 
   // assume discovered check is always good
   if(see_calc.discovered_check_)

@@ -836,6 +836,9 @@ bool load(Board & board, std::istream & is)
     }
   }
 
+  if(smoves.empty())
+    return false;
+
   if(!fen_init)
     fromFEN("", board);
 

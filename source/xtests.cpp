@@ -10,6 +10,8 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <fstream>
 #include <chrono>
 #include <iomanip>
+#include <sstream>
+#include <unordered_set>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
@@ -62,7 +64,7 @@ void testSee(std::string const& ffname)
     {
       for(auto const& move : epd.moves_)
       {
-        auto v= epd.board_.see(move, 0);
+        auto v= epd.board_.see(move, 500);
         std::cout << i << ": "
           << toFEN(epd.board_) << "  "
           << printSAN(epd.board_, move)
@@ -337,6 +339,114 @@ void epdFolder(std::string const& folder)
   {
     std::cout << e << std::endl;
     ofs << e << std::endl;
+  }
+}
+
+void appendEPD(std::string const& fen, std::string const& bm, int score)
+{
+  static int counter = 0;
+  std::ostringstream oss;
+  oss << fen << " bm " << bm << "; \"test_" << counter << "\"" << std::endl;
+  std::ofstream ofs("result.epd", std::ostream::app);
+  std::cout << oss.str();
+  ofs << oss.str();
+  counter++;
+}
+
+void processBoardPGN(std::string const& pgn_file)
+{
+  static std::unordered_set<BitMask> existing_;
+  NTime::duration tm(NTime::from_milliseconds(500));
+  std::ifstream ifs(pgn_file);
+  for(;;)
+  {
+    SBoard<Board, UndoInfo, Board::GameLength> board;
+    std::cout << "loading from " << pgn_file << std::endl;
+    if(!load(board, ifs))
+    {
+      std::cout << "no games any more" << std::endl;
+      break;
+    }
+    std::cout << "loaded ok" << std::endl;
+
+    int num = board.halfmovesCount();
+    while(board.halfmovesCount() > 0)
+      board.unmakeMove(board.lastUndo().move_);
+
+    for(int i = 0; i < num; ++i)
+    {
+      Move move = board.undoInfo(i).move_;
+      board.makeMove(move);
+      if(!board.invalidate() || board.drawState() || board.matState())
+        break;
+      if(board.underCheck())
+      {
+        std::cout << "under check, skipping\n";
+        continue;
+      }
+      if(existing_.count(board.fmgr().hashCode()) > 0)
+      {
+        std::cout << "already exsists, skipping\n";
+        continue;
+      }
+      existing_.insert(board.fmgr().hashCode());
+
+      SBoard<Board, UndoInfo, Board::GameLength> sboard(board, true);
+      NEngine::Evaluator eval;
+      eval.initialize(&sboard, nullptr, nullptr);
+      auto score0 = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
+
+      NShallow::Processor proc;
+      //proc.setTimePerMove(tm);
+      proc.setDepth(4);
+      //proc.setScoreLimit(500);
+      proc.setBoard(sboard);
+      proc.clear();
+      auto r = proc.reply(false);
+      if(!r)
+      {
+        std::cout << "Error" << std::endl;
+        return;
+      }
+      auto rr = *r;
+      if(sboard.is_capture(rr.best_))
+      {
+        std::cout << "capture, skipping\n";
+        continue;
+      }
+      if(std::abs(rr.score_ - score0) > 20 || std::abs(rr.score_) > 300)
+      {
+        std::cout << "big score " << std::abs(rr.score_)  << " or diff " << std::abs(rr.score_ - score0) << ", skipping\n";
+        continue;
+      }
+      auto bm = printSAN(sboard, rr.best_);
+      auto sfen = toFEN(sboard);
+//      std::cout << sfen << " bm " << bm << " score " << rr.score_ << std::endl;
+      appendEPD(sfen, bm, rr.score_);
+    }
+  }
+}
+
+void pgnFolder(std::string const& folder)
+{
+  std::vector<std::string> errors;
+  boost::filesystem::path p(folder);
+  if(boost::filesystem::is_regular_file(boost::filesystem::status(p)))
+  {
+    std::string e = p.extension().string();
+    boost::algorithm::to_lower(e);
+    if(e != ".pgn")
+      return;
+    processBoardPGN(folder);
+  }
+  else if(boost::filesystem::is_directory(boost::filesystem::status(p)))
+  {
+    boost::filesystem::directory_iterator i{ p };
+    for(; i != boost::filesystem::directory_iterator{}; i++)
+    {
+      boost::filesystem::path pp{ *i };
+      pgnFolder(pp.string());
+    }
   }
 }
 
