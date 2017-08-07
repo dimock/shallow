@@ -26,6 +26,22 @@ namespace details
     size_t size_;
   };
 
+  struct Arr2
+  {
+    std::string name_;
+    std::vector<std::vector<int>> initial_;
+    int* parr_;
+    size_t size1_, size2_;
+  };
+
+  struct Arr3
+  {
+    std::string name_;
+    std::vector<std::vector<std::vector<int>>> initial_;
+    int* parr_;
+    size_t size1_, size2_, size3_;
+  };
+
   using Which = std::pair<std::string, double>;
 }
 
@@ -141,6 +157,12 @@ struct EvalCoefficients
 
   int bishopKnightMat_[64] = {};
 
+  // basic king pressure
+  int kingDistanceBonus_[8][8] = {};
+
+  // position evaluation. 0 - opening, 1 - endgame; color,type,pos
+  int positionEvaluations_[2][8][64] = {};
+
   void save(std::string const& ofname);
   void random(std::set<std::string> const& exclude,
               std::vector<details::Which> const& which,
@@ -154,6 +176,8 @@ private:
   std::unique_ptr<std::mt19937> gen;
   std::vector<details::Var> vars_;
   std::vector<details::Arr> arrs_;
+  std::vector<details::Arr2> arrs2_;
+  std::vector<details::Arr3> arrs3_;
 };
 
 }

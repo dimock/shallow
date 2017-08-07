@@ -132,14 +132,6 @@ const ScoreType positionEvaluations_[2][8][64] = {
   }
 };
 
-const ScoreType kingDistanceBonus_[8][8] = {
-  {},
-  {},
-  { 10, 8,   8, 7,  4,  1, 0, 0 },
-  { 10, 8,   8, 7,  4,  2, 1, 0 },
-  { 10, 10,  9, 6,  4,  2, 1, 0 },
-  { 15, 15, 15, 8,  6,  3, 1, 0 },
-};
 
 } // namespace Figure
 } // namespace NEngine

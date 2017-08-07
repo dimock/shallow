@@ -90,7 +90,7 @@ void SpecialCasesDetector::initMatCases()
     auto kw = board.kingPos(winnerColor);
     auto kl = board.kingPos(loserColor);
     auto score = (7 - distanceCounter().getDistance(kw, kl)) * evalCoeffs().kingToKingDistanceMulti_;
-    score -= Figure::positionEvaluations_[1][Figure::TypeKing][kl];
+    score -= evalCoeffs().positionEvaluations_[1][Figure::TypeKing][kl];
     score += board.fmgr().weight(winnerColor) + 20;
     if(!winnerColor)
       score = -score;
@@ -308,7 +308,7 @@ void SpecialCasesDetector::initUsual()
     auto kw = board.kingPos(winnerColor);
     auto kl = board.kingPos(loserColor);
     auto score = (7 - distanceCounter().getDistance(kw, kl)) * evalCoeffs().kingToKingDistanceMulti_;
-    score -= Figure::positionEvaluations_[1][Figure::TypeKing][kl];
+    score -= evalCoeffs().positionEvaluations_[1][Figure::TypeKing][kl];
     if(auto n_mask = board.fmgr().knight_mask(winnerColor))
     {
       auto np = _lsb64(n_mask);
@@ -549,7 +549,7 @@ void SpecialCasesDetector::initUsual()
     auto kl = board.kingPos(loserColor);
     int npos = _lsb64(board.fmgr().knight_mask(loserColor));
     auto score = 70 + (7 - distanceCounter().getDistance(kw, kl)) * evalCoeffs().kingToKingDistanceMulti_;
-    score -= Figure::positionEvaluations_[1][Figure::TypeKing][kl];
+    score -= evalCoeffs().positionEvaluations_[1][Figure::TypeKing][kl];
     score += distanceCounter().getDistance(npos, kl) * evalCoeffs().figureToKingDistanceMulti_;
     if(winnerColor == Figure::ColorBlack)
       score = -score;

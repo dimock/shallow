@@ -17,7 +17,7 @@ Evaluator::FullScore Evaluator::evaluateKnights()
 
     // king pressure
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorBlack));
-    score_w.common_ += Figure::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
+    score_w.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeKnight][ki_dist];
 
     switch(n)
     {
@@ -68,7 +68,7 @@ Evaluator::FullScore Evaluator::evaluateKnights()
 
     // king pressure
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorWhite));
-    score_b.common_ += Figure::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
+    score_b.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeKnight][ki_dist];
 
     switch(n)
     {
@@ -127,7 +127,7 @@ Evaluator::FullScore Evaluator::evaluateBishops()
 
     // king pressure
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorBlack));
-    score_w.common_ += Figure::kingDistanceBonus_[Figure::TypeBishop][ki_dist];
+    score_w.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeBishop][ki_dist];
 
     switch(n)
     {
@@ -192,7 +192,7 @@ Evaluator::FullScore Evaluator::evaluateBishops()
 
     // king pressure
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorWhite));
-    score_b.common_ += Figure::kingDistanceBonus_[Figure::TypeBishop][ki_dist];
+    score_b.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeBishop][ki_dist];
 
     switch(n)
     {
@@ -270,7 +270,7 @@ int Evaluator::evaluateRook(Figure::Color color)
     
     // king pressure
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score += Figure::kingDistanceBonus_[Figure::TypeRook][ki_dist];
+    score += evalCoeffs().kingDistanceBonus_[Figure::TypeRook][ki_dist];
   }
   return score;
 }
@@ -292,7 +292,7 @@ int Evaluator::evaluateQueens(Figure::Color color)
 
     // king pressure
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score += Figure::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
+    score += evalCoeffs().kingDistanceBonus_[Figure::TypeQueen][ki_dist];
   }
   return score;
 }
@@ -490,7 +490,7 @@ Evaluator::FullScore Evaluator::evaluateKpressureBasic() const
       {
         auto p = clear_lsb(mask);
         auto ki_dist = distanceCounter().getDistance(p, board_->kingPos(Figure::ColorWhite));
-        score.common_ -= Figure::kingDistanceBonus_[type][ki_dist];
+        score.common_ -= evalCoeffs().kingDistanceBonus_[type][ki_dist];
       }
     }
     {
@@ -499,7 +499,7 @@ Evaluator::FullScore Evaluator::evaluateKpressureBasic() const
       {
         auto p = clear_lsb(mask);
         auto ki_dist = distanceCounter().getDistance(p, board_->kingPos(Figure::ColorBlack));
-        score.common_ += Figure::kingDistanceBonus_[type][ki_dist];
+        score.common_ += evalCoeffs().kingDistanceBonus_[type][ki_dist];
       }
     }
   }
@@ -518,8 +518,8 @@ Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
       {
         auto p = clear_lsb(mask);
 
-        score.opening_ -= Figure::positionEvaluations_[0][type][p];
-        score.endGame_ -= Figure::positionEvaluations_[1][type][p];
+        score.opening_ -= evalCoeffs().positionEvaluations_[0][type][p];
+        score.endGame_ -= evalCoeffs().positionEvaluations_[1][type][p];
       }
     }
     {
@@ -529,8 +529,8 @@ Evaluator::FullScore Evaluator::evaluatePsqBruteforce() const
         auto n = clear_lsb(mask);
         auto p = Figure::mirrorIndex_[n];
 
-        score.opening_ += Figure::positionEvaluations_[0][type][p];
-        score.endGame_ += Figure::positionEvaluations_[1][type][p];
+        score.opening_ += evalCoeffs().positionEvaluations_[0][type][p];
+        score.endGame_ += evalCoeffs().positionEvaluations_[1][type][p];
       }
     }
   }

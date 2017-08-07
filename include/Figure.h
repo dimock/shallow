@@ -22,11 +22,6 @@ namespace Figure
   // color, castle (K = 0, Q = 1)
   extern const BitMask   quaterBoard_[2][2];
 
-  // position evaluation. 0 - opening, 1 - endgame; color,type,pos
-  extern const ScoreType positionEvaluations_[2][8][64];
-  // basic king pressure
-  extern const ScoreType kingDistanceBonus_[8][8];
-
   inline Figure::Color otherColor(Figure::Color color)
   {
     //return (Figure::Color)((static_cast<int>(color) + 1) & 1);
@@ -35,14 +30,7 @@ namespace Figure
 
   const char * name(Type type);
 
-  inline ScoreType positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos)
-  {
-    X_ASSERT( stage > 1 || color > 1 || type > 7 || pos < 0 || pos > 63, "invalid figure params" );
-    if(color)
-      return +positionEvaluations_[stage][type][mirrorIndex_[pos]];
-    else
-      return -positionEvaluations_[stage][type][pos];
-  }
+  ScoreType positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos);
 
   Figure::Type toFtype(char c);
 
