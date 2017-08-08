@@ -10,7 +10,7 @@ namespace NEngine
 
 namespace details
 {
-  EvalCoefficients const*     g_evalCoeffs_;
+  EvalCoefficients*           g_evalCoeffs_;
   DeltaPosCounter const*      g_deltaPosCounter_{};
   BetweenMask const*          g_betweenMasks_{};
   DistanceCounter const*      g_distanceCounter_{};

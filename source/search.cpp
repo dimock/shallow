@@ -778,8 +778,6 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
         if(hitem->threat_ && prev.is_reduced())
         {
           hscore = betta-1;
-          if(board.hasReps(hmove))
-            return GHashTable::AlphaBetta;
           return GHashTable::Alpha;
         }
         return GHashTable::Betta;

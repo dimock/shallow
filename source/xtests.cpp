@@ -51,7 +51,7 @@ void optimizeFen(std::string const& ffname,
       break;
   }
   auto dt = std::chrono::high_resolution_clock::now() - t;
-  std::cout << ft.size() << " moves; time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " (ms)" << std::endl;
+  std::cout << ft.size() << " cases; time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " (ms)" << std::endl;
 }
 
 }
@@ -186,6 +186,41 @@ void evaluateFen(std::string const& ffname)
   {
     std::cout << "Error: " << err_str << std::endl;
   });
+}
+
+void optimizeFenEval(std::string const& ffname)
+{
+  NEngine::EvalCoefficients evals{ evalCoeffs() };
+  NEngine::Evaluator eval;
+  int summ_min{ -1 };
+  int summ0 = -1;
+  int steps_num{};
+  int Nsteps = 10000;
+  double r = 0.25;
+  optimizeFen(ffname, [&eval](size_t i, xEPD<Board, Move, UndoInfo>& epd)
+  {
+    eval.initialize(&epd.board_, nullptr, nullptr);
+    auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
+    return std::abs(score - epd.score_);
+  },
+  [&](int summ) -> bool
+  {
+    if(summ_min < 0 || summ_min > summ)
+    {
+      summ_min = summ;
+      if(summ0 < 0)
+        summ0 = summ;
+      evalCoeffs().save("eval.txt");
+    }
+    evalCoeffs0().random({"bishopKnightMat_"}, {}, r, 0);
+    std::cout << steps_num << " step. current result = " << summ << ". best result = " << summ_min << ", initial result = " << summ0 <<  std::endl;
+    return ++steps_num < Nsteps;
+  },
+  [](std::string const& err)
+  {
+    std::cout << "error: " << err << std::endl;
+  });
+  std::cout << summ_min << std::endl;
 }
 
 void kpkTable(std::string const& fname)

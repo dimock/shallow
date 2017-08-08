@@ -33,21 +33,6 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "kingPressure_", kingPressure_, &kingPressure_ });
   //vars_.push_back(details::Var{ "unstoppablePasser_", unstoppablePasser_, &unstoppablePasser_ });
 
-  // rook on open column
-  arrs_.push_back(details::Arr{ "openRook_", std::vector<int>{ 0, 10, 30, 30}, openRook_,
-                  sizeof(openRook_)/sizeof(*openRook_) });
-
-  // material diff
-  arrs_.push_back(details::Arr{ "bishopBonus_", std::vector<int>{ 0, 10, 50, 50}, bishopBonus_,
-                  sizeof(bishopBonus_)/sizeof(*bishopBonus_) });
-
-  arrs_.push_back(details::Arr{ "figureAgainstPawnBonus_", std::vector<int>{ 25, 60}, figureAgainstPawnBonus_,
-                  sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
-  arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{25, 60}, rookAgainstFigureBonus_,
-                  sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
-  arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 40}, figuresAgainstRookBonus_,
-                  sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
-
   // forks
   vars_.push_back(details::Var{ "forkBonus_", forkBonus_, &forkBonus_ });
   vars_.push_back(details::Var{ "doublePawnAttack_", doublePawnAttack_, &doublePawnAttack_ });
@@ -69,10 +54,6 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "opponentPawnFarB_", opponentPawnFarB_, &opponentPawnFarB_ });
   vars_.push_back(details::Var{ "opponentPawnFarC_", opponentPawnFarC_, &opponentPawnFarC_ });
 
-  arrs_.push_back(details::Arr{ "pawnShieldA_", std::vector<int>{14, 10}, pawnShieldA_, sizeof(pawnShieldA_)/sizeof(*pawnShieldA_) });
-  arrs_.push_back(details::Arr{ "pawnShieldB_", std::vector<int>{14, 10}, pawnShieldB_, sizeof(pawnShieldB_)/sizeof(*pawnShieldB_) });
-  arrs_.push_back(details::Arr{ "pawnShieldC_", std::vector<int>{ 6, 4}, pawnShieldC_, sizeof(pawnShieldC_)/sizeof(*pawnShieldC_) });
-
   // blocked figure
   vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
   vars_.push_back(details::Var{ "knightBlocked_", knightBlocked_, &knightBlocked_ });
@@ -91,6 +72,40 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "bishopChecking_", bishopChecking_, &bishopChecking_ });
   vars_.push_back(details::Var{ "rookChecking_", rookChecking_, &rookChecking_ });
   vars_.push_back(details::Var{ "queenChecking_", queenChecking_, &queenChecking_ });
+
+  // fields near king attacks
+  vars_.push_back(details::Var{ "pawnAttackBonus_", pawnAttackBonus_, &pawnAttackBonus_ });
+  vars_.push_back(details::Var{ "knightAttackBonus_", knightAttackBonus_, &knightAttackBonus_ });
+  vars_.push_back(details::Var{ "bishopAttackBonus_", bishopAttackBonus_, &bishopAttackBonus_ });
+  vars_.push_back(details::Var{ "rookAttackBonus_", rookAttackBonus_, &rookAttackBonus_ });
+  vars_.push_back(details::Var{ "queenAttackBonus_", queenAttackBonus_, &queenAttackBonus_ });
+
+  // special cases
+  vars_.push_back(details::Var{ "kingToPawnDistanceMulti_", kingToPawnDistanceMulti_, &kingToPawnDistanceMulti_ });
+  vars_.push_back(details::Var{ "knightToPawnDistanceMulti_", knightToPawnDistanceMulti_, &knightToPawnDistanceMulti_ });
+  vars_.push_back(details::Var{ "kingToKingDistanceMulti_", kingToKingDistanceMulti_, &kingToKingDistanceMulti_ });
+  vars_.push_back(details::Var{ "figureToKingDistanceMulti_", figureToKingDistanceMulti_, &figureToKingDistanceMulti_ });
+
+
+  // Arrays
+  arrs_.push_back(details::Arr{ "pawnShieldA_", std::vector<int>{14, 10}, pawnShieldA_, sizeof(pawnShieldA_)/sizeof(*pawnShieldA_) });
+  arrs_.push_back(details::Arr{ "pawnShieldB_", std::vector<int>{14, 10}, pawnShieldB_, sizeof(pawnShieldB_)/sizeof(*pawnShieldB_) });
+  arrs_.push_back(details::Arr{ "pawnShieldC_", std::vector<int>{ 6, 4}, pawnShieldC_, sizeof(pawnShieldC_)/sizeof(*pawnShieldC_) });
+
+  // rook on open column
+  arrs_.push_back(details::Arr{ "openRook_", std::vector<int>{ 0, 10, 30, 30}, openRook_,
+                  sizeof(openRook_)/sizeof(*openRook_) });
+
+  // material diff
+  arrs_.push_back(details::Arr{ "bishopBonus_", std::vector<int>{ 0, 10, 50, 50}, bishopBonus_,
+                  sizeof(bishopBonus_)/sizeof(*bishopBonus_) });
+
+  arrs_.push_back(details::Arr{ "figureAgainstPawnBonus_", std::vector<int>{ 25, 60}, figureAgainstPawnBonus_,
+                  sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
+  arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{25, 60}, rookAgainstFigureBonus_,
+                  sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
+  arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 40}, figuresAgainstRookBonus_,
+                  sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
 
   arrs_.push_back(details::Arr{ "kingMovesMultiplier_", std::vector<int>{ 64, 48, 32, 32, 32, 32, 32, 32 }, kingMovesMultiplier_,
                   sizeof(kingMovesMultiplier_)/sizeof(*kingMovesMultiplier_) });
@@ -126,19 +141,6 @@ void EvalCoefficients::init()
                   std::vector<int>{-45, -35, -7, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
                   13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28},
                   queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
-
-  // fields near king attacks
-  vars_.push_back(details::Var{ "pawnAttackBonus_", pawnAttackBonus_, &pawnAttackBonus_ });
-  vars_.push_back(details::Var{ "knightAttackBonus_", knightAttackBonus_, &knightAttackBonus_ });
-  vars_.push_back(details::Var{ "bishopAttackBonus_", bishopAttackBonus_, &bishopAttackBonus_ });
-  vars_.push_back(details::Var{ "rookAttackBonus_", rookAttackBonus_, &rookAttackBonus_ });
-  vars_.push_back(details::Var{ "queenAttackBonus_", queenAttackBonus_, &queenAttackBonus_ });
-
-  // special cases
-  vars_.push_back(details::Var{ "kingToPawnDistanceMulti_", kingToPawnDistanceMulti_, &kingToPawnDistanceMulti_ });
-  vars_.push_back(details::Var{ "knightToPawnDistanceMulti_", knightToPawnDistanceMulti_, &knightToPawnDistanceMulti_ });
-  vars_.push_back(details::Var{ "kingToKingDistanceMulti_", kingToKingDistanceMulti_, &kingToKingDistanceMulti_ });
-  vars_.push_back(details::Var{ "figureToKingDistanceMulti_", figureToKingDistanceMulti_, &figureToKingDistanceMulti_ });
 
   // king position eval for BN-mat
   arrs_.push_back(details::Arr{ "bishopKnightMat_", std::vector<int>
@@ -432,7 +434,7 @@ void EvalCoefficients::currentToIninital()
   }
 }
 
-void EvalCoefficients::save(std::string const& ofname)
+void EvalCoefficients::save(std::string const& ofname) const
 {
   std::ofstream ofs(ofname);
   for(auto const& v : vars_)
@@ -446,15 +448,16 @@ void EvalCoefficients::save(std::string const& ofname)
     for(size_t i = 0; i < a.size_; ++i)
     {
       auto v = std::to_string(a.parr_[i]);
-      if((i & 7) == 0)
-        values += "        \n";
+      if(i > 0 && (i & 7) == 0)
+        values += "\n      ";
       values += v;
       if(i < a.size_-1)
         values += ", ";
     }
     ofs << "    arrs_.push_back(details::Arr{ \"" << a.name_
-      << "\", std::vector<int>{\n" << values
-      << "\n},\n    " << a.name_ << ",\n    sizeof(" << a.name_ << ")/sizeof(*" << a.name_ << ") });" << std::endl;
+      << "\", std::vector<int>{\n      " << values
+      << "\n    },\n    " << a.name_ << ",\n    sizeof(" << a.name_ << ")/sizeof(*" << a.name_ << ") });"
+      << std::endl << std::endl;
   }
   ofs << std::endl;
   for(auto const& a : arrs2_)
@@ -462,23 +465,35 @@ void EvalCoefficients::save(std::string const& ofname)
     std::string values;
     for(size_t i = 0; i < a.size1_; ++i)
     {
-      values += "        { ";
-      for(size_t j = 0; j < a.size2_; ++j)
+      values += "      {";
+      bool exists = false;
+      for(size_t j = 0; !exists && j < a.size2_; ++j)
       {
-        auto v = std::to_string(a.parr_[i*a.size2_ + j]);
-        values += v;
-        if(j < a.size2_)
-          values += ", ";
+        if(a.parr_[i*a.size2_ + j] != 0)
+          exists = true;
       }
-      values += " }";
+      if(exists)
+      {
+        values += " ";
+        for(size_t j = 0; j < a.size2_; ++j)
+        {
+          auto v = std::to_string(a.parr_[i*a.size2_ + j]);
+          values += v;
+          if(j < a.size2_)
+            values += ", ";
+        }
+        values += " ";
+      }
+      values += "}";
       if(i < a.size1_-1)
         values += ",";
       values += '\n';
     }
     ofs << "    arrs2_.push_back(details::Arr2{ \"" << a.name_
       << "\", std::vector<std::vector<int>>{\n" << values
-      << "\n},\n    " << a.name_ << ",\n    sizeof(" << a.name_ << ")/sizeof(*" << a.name_ << "),"
-      << "\n    sizeof(" << a.name_ << "[0])/sizeof(*" << a.name_ << "[0] });" << std::endl;
+      << "    },\n    reinterpret_cast<int*>(" << a.name_ << "),\n    sizeof(" << a.name_ << ")/sizeof(*" << a.name_ << "),"
+      << "\n    sizeof(" << a.name_ << "[0])/sizeof(*" << a.name_ << "[0]) });"
+      << std::endl << std::endl;
   }
   ofs << std::endl;
   for(auto const& a : arrs3_)
@@ -486,40 +501,50 @@ void EvalCoefficients::save(std::string const& ofname)
     std::string values;
     for(size_t i = 0; i < a.size1_; ++i)
     {
-      values += "        { ";
+      values += "      {";
       for(size_t j = 0; j < a.size2_; ++j)
       {
-        values += "      { ";
-        for(size_t k = 0; k < a.size3_; ++k)
+        bool exists = false;
+        for(size_t k = 0; !exists && k < a.size3_; ++k)
         {
-          auto v = std::to_string(a.parr_[i*a.size2_*a.size3_ + j*a.size3_ + k]);
-          values += v;
-          if((k & 7) == 0)
-            values += "        \n";
-          if(k < a.size3_)
-            values += ", ";
+          if(a.parr_[i*a.size2_*a.size3_ + j*a.size3_ + k] != 0)
+            exists = true;
         }
-        values += " }";
+        values += "\n        {";
+        if(exists)
+        {
+          for(size_t k = 0; k < a.size3_; ++k)
+          {
+            auto v = std::to_string(a.parr_[i*a.size2_*a.size3_ + j*a.size3_ + k]);
+            if((k & 7) == 0)
+              values += "\n          ";
+            values += v;
+            if(k < a.size3_-1)
+              values += ", ";
+          }
+          values += "\n        ";
+        }
+        values += "}";
         if(j < a.size2_-1)
           values += ",";
-        values += '\n';
       }
-      values += " }";
+      values += "\n      }";
       if(i < a.size1_-1)
         values += ",";
       values += '\n';
     }
     ofs << "    arrs3_.push_back(details::Arr3{ \"" << a.name_
-      << "\", std::vector<std::vector<int>>{\n" << values
-      << "\n},\n    " << a.name_ << ",\n    sizeof(" << a.name_ << ")/sizeof(*" << a.name_ << "),"
-      << "\n    sizeof(" << a.name_ << "[0])/sizeof(*" << a.name_ << "[0] });"
-      << "\n    sizeof(" << a.name_ << "[0][0])/sizeof(*" << a.name_ << "[0][0] });" << std::endl;
+      << "\", std::vector<std::vector<std::vector<int>>>{\n" << values
+      << "    },\n    reinterpret_cast<int*>(" << a.name_ << "),\n    sizeof(" << a.name_ << ")/sizeof(*" << a.name_ << "),"
+      << "\n    sizeof(" << a.name_ << "[0])/sizeof(*" << a.name_ << "[0]),"
+      << "\n    sizeof(" << a.name_ << "[0][0])/sizeof(*" << a.name_ << "[0][0]) });" << std::endl;
   }
 }
 
 void EvalCoefficients::random(std::set<std::string> const& exclude,
                               std::vector<details::Which> const& which,
-                              double percent)
+                              double percent,
+                              int min_val)
 {
   auto normalize_if = [&percent, &which](std::string const& name, double& r) -> bool
   {
@@ -532,14 +557,18 @@ void EvalCoefficients::random(std::set<std::string> const& exclude,
     return true;
   };
   std::uniform_real_distribution<> dis(-percent, percent);
-  for(auto const& v : vars_)
+  for(auto const& var : vars_)
   {
-    if(exclude.count(v.name_) > 0)
+    if(exclude.count(var.name_) > 0)
       continue;
     auto r = dis(*gen);
-    if(!normalize_if(v.name_, r))
+    if(!normalize_if(var.name_, r))
       continue;
-    *v.pvar_ = v.initial_ * (1.0 + r);
+    double v = var.initial_;
+    if(std::abs(v) < min_val)
+      v = min_val * (v < 0 ? -1 : 1);
+    v *= (1.0 + r);
+    *var.pvar_ = v;
   }
   for(auto const& a : arrs_)
   {
@@ -551,7 +580,11 @@ void EvalCoefficients::random(std::set<std::string> const& exclude,
     for(size_t i = 0; i < a.initial_.size() && i < a.size_; ++i)
     {
       auto r = dis(*gen) * f;
-      a.parr_[i] = a.initial_[i] * (1.0 + r);
+      double v = a.initial_[i];
+      if(std::abs(v) < min_val)
+        v = min_val * (v < 0 ? -1 : 1);
+      v *= (1.0 + r);
+      a.parr_[i] = v;
     }
   }
   for(auto const& a : arrs2_)
@@ -566,7 +599,11 @@ void EvalCoefficients::random(std::set<std::string> const& exclude,
       for(size_t j = 0; j < a.initial_[i].size() && j < a.size2_; ++j)
       {
         auto r = dis(*gen) * f;
-        a.parr_[i*a.size2_ + j] = a.initial_[i][j] * (1.0 + r);
+        double v = a.initial_[i][j];
+        if(std::abs(v) < min_val)
+          v = min_val * (v < 0 ? -1 : 1);
+        v *= (1.0 + r);
+        a.parr_[i*a.size2_ + j] = v;
       }
     }
   }
@@ -584,7 +621,11 @@ void EvalCoefficients::random(std::set<std::string> const& exclude,
         for(size_t k = 0; k < a.initial_[i][j].size() && k < a.size3_; ++k)
         {
           auto r = dis(*gen) * f;
-          a.parr_[i*a.size2_*a.size3_ + j*a.size3_ + k] = a.initial_[i][j][k] * (1.0 + r);
+          auto v = a.initial_[i][j][k];
+          if(std::abs(v) < min_val)
+            v = min_val * (v < 0 ? -1 : 1);
+          v *= (1.0 + r);
+          a.parr_[i*a.size2_*a.size3_ + j*a.size3_ + k] = v;
         }
       }
     }

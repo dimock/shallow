@@ -13,7 +13,7 @@ namespace NEngine
 
 namespace details
 {
-  extern EvalCoefficients const*      g_evalCoeffs_;
+  extern EvalCoefficients*            g_evalCoeffs_;
   extern DeltaPosCounter const*       g_deltaPosCounter_;
   extern BetweenMask const*           g_betweenMasks_;
   extern DistanceCounter const*       g_distanceCounter_;
@@ -62,6 +62,11 @@ inline SpecialCasesDetector const& specialCases()
 }
 
 inline EvalCoefficients const& evalCoeffs()
+{
+  return *details::g_evalCoeffs_;
+}
+
+inline EvalCoefficients& evalCoeffs0()
 {
   return *details::g_evalCoeffs_;
 }

@@ -41,7 +41,7 @@ struct xEPD
     fen_   = std::move(other.fen_);
   }
 
-  SBoard<BOARD, UNDO, 256> board_;
+  SBoard<BOARD, UNDO, 32> board_;
   std::vector<MOVE> moves_;
   int score_{};
   std::string fen_;
@@ -73,7 +73,7 @@ class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 public:
   FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
   {
-    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnrqkPNBRQKOx+=!\\s\\-]+)?");
+    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnrqkPNBRQKOx+=!\\s\\-]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
     ::std::ifstream ifs(ffname);
     for(; ifs;)
     {
@@ -147,6 +147,7 @@ void testFen(std::string const& ffname,
 
 void testSee(std::string const& ffname);
 void optimizeFen(std::string const& ffname);
+void optimizeFenEval(std::string const& ffname);
 void evaluateFen(std::string const& ffname);
 void see_perf_test(std::string const& fname);
 void kpkTable(std::string const& fname);

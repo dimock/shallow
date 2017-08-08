@@ -219,6 +219,7 @@ private:
 
   int evaluateKingPressure(Figure::Color color) const;
 
+
   // sum of weights of all figures
   const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
                                 + 2*Figure::figureWeight_[Figure::TypeRook]

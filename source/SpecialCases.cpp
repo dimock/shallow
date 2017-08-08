@@ -82,6 +82,7 @@ SpecialCasesDetector::SpecialCasesDetector()
   initMatCases();
 }
 
+
 void SpecialCasesDetector::initMatCases()
 {
   auto eval_kings = [](Board const& board, Figure::Color winnerColor)
