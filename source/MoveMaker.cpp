@@ -299,7 +299,6 @@ void Board::makeNullMove()
   setColor(ocolor);
 
   data_.repsCounter_ = countReps(2, fmgr_.hashCode());
-  data_.fiftyMovesCount_++;
 }
 
 void Board::unmakeNullMove()
