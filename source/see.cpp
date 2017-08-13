@@ -34,7 +34,11 @@ struct SeeCalc
     X_ASSERT((all_mask_ & set_mask_bit(move_.from())) == 0ULL, "no figure on field move.from");
     X_ASSERT(discovered_check(move_.from(), Figure::otherColor(color_), board_.kingPos(color_)), "SEE move is illegal");
     if(en_passant)
+    {
       discovered_check_ = enpassant_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
+      X_ASSERT(!discovered_check_ && discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_))),
+               "discovered check was not detected");
+    }
     else
       discovered_check_ = discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
     if(discovered_check_)

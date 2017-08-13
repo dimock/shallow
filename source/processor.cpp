@@ -303,6 +303,7 @@ boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
   {
     return boost::none;
   }
+  //hash2file("D:\\Projects\\gitproj\\hash\\hash");
 
   board.makeMove(move);
   board.verifyState();
@@ -326,8 +327,8 @@ bool Processor::makeMove(std::string const& moveStr)
   if(!board.validateMoveBruteforce(move))
     return false;
 
-  //if(moveStr == "f6f8")
-  //  hash2file("D:\\Projects\\gitproj\\hash\\hash_f6f8");
+  //if(moveStr == "d6c5")
+  //hash2file("D:\\Projects\\gitproj\\hash\\hash");
 
   board.makeMove(move);
   board.verifyState();
@@ -433,7 +434,7 @@ boost::optional<bool> Processor::fromFEN(xCmd const& cmd)
 bool Processor::fromFEN(std::string const& fen)
 {
   bool r = engine_.fromFEN(fen);
-  //file2hash("D:\\Projects\\gitproj\\hash\\hash_f6f8");
+  //file2hash("D:\\Projects\\gitproj\\hash\\hash_h6g5");
   return r;
 }
 
