@@ -106,22 +106,24 @@ void EvalCoefficients::init()
                   sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
   arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 40}, figuresAgainstRookBonus_,
                   sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
+  arrs_.push_back(details::Arr{ "rookAgainstPawnBonus_", std::vector<int>{ 15, 40}, rookAgainstPawnBonus_,
+                  sizeof(rookAgainstPawnBonus_)/sizeof(*rookAgainstPawnBonus_) });
 
   arrs_.push_back(details::Arr{ "kingMovesMultiplier_", std::vector<int>{ 64, 48, 32, 32, 32, 32, 32, 32 }, kingMovesMultiplier_,
                   sizeof(kingMovesMultiplier_)/sizeof(*kingMovesMultiplier_) });
 
   // arrays
-  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 13, 27, 36, 47, 62, 85, 0 }, passerPawn_,
+  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 18, 28, 36, 48, 85, 0 }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
-  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 4, 8, 12, 16, 20, 24, 0 }, semipasserPawn_,
+  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 3, 6, 9, 12, 16, 0, 0 }, semipasserPawn_,
                   sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });
   arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 7, 9, 11, 13, 15, 22, 0 }, protectedPasser_,
                   sizeof(protectedPasser_)/sizeof(*protectedPasser_) });
-  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 12, 16, 24, 32, 40, 0 }, farKingPawn_,
+  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 6, 10, 14, 18, 26, 34, 0 }, farKingPawn_,
                   sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
-  arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 10, 12, 15, 20, 25, 40, 0 }, cangoPawn_,
+  arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 6, 7, 8, 10, 12, 16, 0 }, cangoPawn_,
                   sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
-  arrs_.push_back(details::Arr{ "canpromotePawn_", std::vector<int>{ 0, 7, 9, 13, 17, 21, 27, 0 }, canpromotePawn_,
+  arrs_.push_back(details::Arr{ "canpromotePawn_", std::vector<int>{ 0, 3, 6, 8, 10, 12, 15, 0 }, canpromotePawn_,
                   sizeof(canpromotePawn_)/sizeof(*canpromotePawn_) });
   arrs_.push_back(details::Arr{ "closeToPromotion_", std::vector<int>{ 0, 2, 4, 5, 6, 7, 8, 9 }, closeToPromotion_,
                   sizeof(closeToPromotion_)/sizeof(*closeToPromotion_) });

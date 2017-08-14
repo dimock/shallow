@@ -131,9 +131,9 @@ int8 FiguresCounter::s_whiteColors_[] =
   1, 0, 1, 0, 1, 0, 1, 0
 };
 
-uint64 FiguresCounter::s_whiteMask_ = 0x55aa55aa55aa55aaULL;
-
-uint64 FiguresManager::s_zobristColor_ = 0x929d03167393eb95;
+uint64 FiguresCounter::s_whiteMask_       = 0x55aa55aa55aa55aaULL;
+uint64 FiguresManager::s_zobristColor_    = 0x929d03167393eb95ULL;
+uint64 FiguresManager::s_zobristNullmove_ = 0x423fb7585a2239caULL;
 
 uint64 FiguresManager::s_zobristCastle_[2][2] = { {0x3cd26f386a9a70f8, 0xaf9e7fa97746b4a9}, {0xa4d594719b454679, 0xf791bf94729ed437} };
 

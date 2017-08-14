@@ -791,36 +791,70 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     },
   };
 
-  static const BitMask opponent_pawn_mask_far[2][2][3] =
+  static const BitMask opponent_pawn_mask_middle[2][2][3] =
   {
     // black
     {
       // short
       {
-        set_mask_bit(H4)|set_mask_bit(H5),
-        set_mask_bit(G4)|set_mask_bit(G5),
-        set_mask_bit(F4)|set_mask_bit(F5)
+        set_mask_bit(H5),
+        set_mask_bit(G5),
+        set_mask_bit(F5)
       },
       // long
       {
-        set_mask_bit(A4)|set_mask_bit(A5),
-        set_mask_bit(B4)|set_mask_bit(B5),
-        set_mask_bit(C4)|set_mask_bit(C5),
+        set_mask_bit(A5),
+        set_mask_bit(B5),
+        set_mask_bit(C5),
       }
     },
     // white
     {
       // short
       {
-        set_mask_bit(H4)|set_mask_bit(H5),
-        set_mask_bit(G4)|set_mask_bit(G5),
-        set_mask_bit(F4)|set_mask_bit(F5)
+        set_mask_bit(H4),
+        set_mask_bit(G4),
+        set_mask_bit(F4)
       },
       // long
       {
-        set_mask_bit(A4)|set_mask_bit(A5),
-        set_mask_bit(B4)|set_mask_bit(B5),
-        set_mask_bit(C4)|set_mask_bit(C5),
+        set_mask_bit(A4),
+        set_mask_bit(B4),
+        set_mask_bit(C4),
+      }
+    },
+  };
+
+  static const BitMask opponent_pawn_mask_far[2][2][3] =
+  {
+    // black
+    {
+      // short
+      {
+        set_mask_bit(H4),
+        set_mask_bit(G4),
+        set_mask_bit(F4)
+      },
+      // long
+      {
+        set_mask_bit(A4),
+        set_mask_bit(B4),
+        set_mask_bit(C4),
+      }
+    },
+    // white
+    {
+      // short
+      {
+        set_mask_bit(H5),
+        set_mask_bit(G5),
+        set_mask_bit(F5)
+      },
+      // long
+      {
+        set_mask_bit(A5),
+        set_mask_bit(B5),
+        set_mask_bit(C5),
       }
     },
   };
@@ -865,6 +899,11 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
         ((opponent_pawn_mask_near[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearA_
       + ((opponent_pawn_mask_near[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearB_
       + ((opponent_pawn_mask_near[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearC_;
+
+    opponent_penalty +=
+        ((opponent_pawn_mask_middle[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnMiddleA_
+      + ((opponent_pawn_mask_middle[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnMiddleB_
+      + ((opponent_pawn_mask_middle[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnMiddleC_;
 
     opponent_penalty +=
         ((opponent_pawn_mask_far[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnFarA_
@@ -1001,23 +1040,28 @@ ScoreType Evaluator::evaluateMaterialDiff() const
   int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
   int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
 
-  if(figuresDiff*pawnsDiff < 0 && !rooksDiff && !queensDiff)
+  if(figuresDiff*pawnsDiff < 0)
   {
     Figure::Color strongColor = (Figure::Color)(figuresDiff > 0);
     int pawnsN = fmgr.pawns(strongColor) != 0;
     score += figuresDiff * evalCoeffs().figureAgainstPawnBonus_[pawnsN];
   }
-
+  // Rook vs. Pawns
+  else if(rooksDiff*pawnsDiff < 0)
+  {
+    Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
+    int pawnsN = fmgr.pawns(strongColor) != 0;
+    score += rooksDiff * evalCoeffs().rookAgainstPawnBonus_[pawnsN];
+  }
   // Knight|Bishop+2Pawns vs. Rook
-  else if(!queensDiff && (rooksDiff*figuresDiff == -1))
+  else if((rooksDiff*figuresDiff == -1))
   {
     Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
     int pawnsN = fmgr.pawns(strongColor) != 0;
     score += rooksDiff * evalCoeffs().rookAgainstFigureBonus_[pawnsN];
   }
-
   // 2 figures vs. Rook
-  else if(!queensDiff && rooksDiff*figuresDiff == -2 && std::abs(rooksDiff) == 1)
+  else if(rooksDiff*figuresDiff == -2 && std::abs(rooksDiff) == 1)
   {
     Figure::Color rookColor  = (Figure::Color)(rooksDiff > 0);
     Figure::Color ocolor = Figure::otherColor(rookColor);

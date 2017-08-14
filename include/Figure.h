@@ -140,6 +140,7 @@ class FiguresManager
 {
   static BitMask s_zobristCodes_[64*2*8];
   static BitMask s_zobristColor_;
+  static BitMask s_zobristNullmove_;
   static BitMask s_zobristCastle_[2][2];
 
 public:
@@ -230,6 +231,11 @@ public:
     kpwnCode_ ^= colorCode();
   }
 
+  inline void hashNullmove()
+  {
+    hashCode_ ^= nullmoveCode();
+  }
+
   void restoreHash(const BitMask & hcode) { hashCode_ = hcode; }
   void restoreKpwnCode(const BitMask & pcode) { kpwnCode_ = pcode; }
 
@@ -277,6 +283,11 @@ public:
   inline const BitMask & colorCode() const
   {
     return s_zobristColor_;
+  }
+
+  inline const BitMask & nullmoveCode() const
+  {
+    return s_zobristNullmove_;
   }
 
 private:

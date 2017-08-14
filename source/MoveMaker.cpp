@@ -292,13 +292,14 @@ void Board::makeNullMove()
   if(data_.en_passant_ >= 0)
     fmgr_.hashEnPassant(enpassant(), ocolor);
 
+  //fmgr_.hashNullmove();
 
   data_.en_passant_ = -1;
 
   fmgr_.hashColor();
   setColor(ocolor);
 
-  data_.repsCounter_ = countReps(2, fmgr_.hashCode());
+  //data_.repsCounter_ = countReps(2, fmgr_.hashCode());
 }
 
 void Board::unmakeNullMove()
