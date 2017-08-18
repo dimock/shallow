@@ -231,17 +231,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
 
-  ///// use lazy evaluation level 2
-  //{
-  //  auto score2 = considerColor(lipolScore(score, phaseInfo));
-  //  if(score2 < alpha2_ || score2 > betta2_)
-  //    return score2;
-  //}
-
-  //auto scoreKPr = evaluateKingPressure(Figure::ColorWhite);
-  //scoreKPr -= evaluateKingPressure(Figure::ColorBlack);
-  //score.common_ += scoreKPr;
-
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;
 }
@@ -517,11 +506,6 @@ Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi) const
   else if(infoB.most_y > infoW.most_y)
     infoB.score.endGame_ += evalCoeffs().closeToPromotion_[infoB.most_y - infoW.most_y];
 
-  //if(infoW.no_ofigures_ && infoW.most_unstoppable_y_ > infoB.most_unstoppable_y_)
-  //  infoW.score.endGame_ += evalCoeffs().forwardPasser_[infoW.most_unstoppable_y_ - infoB.most_unstoppable_y_];
-  //else if(infoB.no_ofigures_ && infoB.most_unstoppable_y_ > infoW.most_unstoppable_y_)
-  //  infoB.score.endGame_ += evalCoeffs().forwardPasser_[infoB.most_unstoppable_y_ - infoW.most_unstoppable_y_];
-
   infoW.score -= infoB.score;
   return infoW.score;
 }
@@ -547,7 +531,6 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
   BitMask blockers_mask = (~finfo_[color].attack_mask_ & finfo_[ocolor].attack_mask_) | fmgr.mask(color) | fmgr.mask(ocolor);
-  //info.no_ofigures_ = fmgr.knights(ocolor) + fmgr.bishops(ocolor) + fmgr.rooks(ocolor) + fmgr.queens(ocolor) == 0;
 
   BitMask pawn_mask = pmask;
   if(pi.searched_passers_[color])
@@ -612,32 +595,15 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     bool can_promote = (fwd_mask & blockers_mask) == 0ULL;
     info.score.common_ += can_promote * evalCoeffs().canpromotePawn_[cy];
 
-    //bool unstoppablePasser = false;
-    //if(info.no_ofigures_)
-    //{
-    //  Index pp(x, py);
-    //  int pawn_dist_promo = std::abs(py - idx.y());
-    //  int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
-    //  if(pawn_dist_promo < o_dist_promo)
-    //    unstoppablePasser = true;
-    //}
     // opponent king could not go to my pawns promotion field
     int promo_pos = x | (py<<3);
     int pawn_dist_promo = std::abs(py - y);
     if(!findRootToPawn(color, promo_pos, pawn_dist_promo+1))
     {
       info.score.endGame_ += evalCoeffs().farKingPawn_[cy];
-      //unstoppablePasser = true;
     }
-    //if(unstoppablePasser)
-    //{
-    //  info.score.endGame_ += evalCoeffs().unstoppablePasser_;
-    //  if(cy > info.most_unstoppable_y_)
-    //    info.most_unstoppable_y_ = cy;
-    //}
   }
   info.most_y += (color == board_->color());
-  //info.most_unstoppable_y_ += (color == board_->color());
   return info;
 }
 
@@ -771,7 +737,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
       {
         set_mask_bit(A6)|set_mask_bit(A7),
         set_mask_bit(B6)|set_mask_bit(B7),
-        set_mask_bit(C6)|set_mask_bit(C7),
+        set_mask_bit(C6)|set_mask_bit(C7)
       }
     },
     // white
@@ -786,7 +752,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
       {
         set_mask_bit(A2)|set_mask_bit(A3),
         set_mask_bit(B2)|set_mask_bit(B3),
-        set_mask_bit(C2)|set_mask_bit(C3),
+        set_mask_bit(C2)|set_mask_bit(C3)
       }
     },
   };
@@ -1001,29 +967,6 @@ int Evaluator::evaluateCastle(Figure::Color color) const
   return evalCoeffs().castleBonus_;
 }
 
-//int Evaluator::evaluateBlockedRooks()
-//{
-//  auto evaluate_blocked = [this](Figure::Color color)
-//  {
-//    auto ocolor = Figure::otherColor(color);
-//    auto blockers = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | board_->fmgr().knight_mask(ocolor);
-//    BitMask romask = board_->fmgr().rook_mask(color);
-//    int dy = (color<<1) - 1;
-//    int score = 0;
-//    for(; romask;)
-//    {
-//      Index n(clear_lsb(romask));
-//      BitMask block_mask = movesTable().blocked_rook(n);
-//      bool is_blocked = ((blockers & block_mask) == block_mask);
-//      score -= is_blocked * evalCoeffs().rookBlocked_;
-//    }
-//    return score;
-//  };
-//  auto score_w = evaluate_blocked(Figure::ColorWhite);
-//  auto score_b = evaluate_blocked(Figure::ColorBlack);
-//  return score_w - score_b;
-//}
-
 ScoreType Evaluator::evaluateMaterialDiff() const
 {
   ScoreType score = 0;
@@ -1090,135 +1033,6 @@ ScoreType Evaluator::evaluateForks(Figure::Color color) const
   if(knightsN > 1 || (pawnsN+knightsN > 0 && color == board_->color()))
     return evalCoeffs().forkBonus_;
   return 0;
-}
-
-int Evaluator::evaluateKingPressure(Figure::Color color) const
-{
-  int score{};
-  auto const ocolor = Figure::otherColor(color);
-  auto const& fmgr = board_->fmgr();
-  auto ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
-  auto ctype = getCastleType(ocolor);
-  if(ctype >= 0)
-  {
-    ki_fields |= king_attack_mask_[ocolor][ctype];
-  }
-  ki_fields &= ~finfo_[ocolor].pawnAttacks_;
-
-  int num_pawns   = 0;
-  int num_knights = 0;
-  int num_bishops = 0;
-  int num_rooks   = 0;
-  int num_queens  = 0;
-  bool has_king = (finfo_[color].kingAttacks_ & ki_fields) != 0ULL;
-
-  if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
-  {
-    int pw_num = pop_count(pw_att);
-    score += pw_num * evalCoeffs().pawnKingAttack_;
-    num_pawns++;
-  }
-
-  if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields))
-  {
-    int kn_num = pop_count(kn_att);
-    score += kn_num * evalCoeffs().knightKingAttack_;
-    num_knights++;
-  }
-
-  // x-ray attack
-  auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
-  auto all_bq = mask_all_ ^ bq_mask;
-  X_ASSERT(all_bq != (mask_all_ & ~bq_mask), "invalid all but BQ mask");
-  {
-    auto b_mask = fmgr.bishop_mask(color);
-    for(; b_mask;)
-    {
-      auto n = clear_lsb(b_mask);
-      if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
-        continue;
-      auto const& moves = magic_ns::bishop_moves(n, all_bq);
-      if(auto bi_att = (moves & ki_fields))
-      {
-        int bi_num = pop_count(bi_att);
-        score += bi_num * evalCoeffs().bishopKingAttack_;
-        num_bishops++;
-      }
-    }
-  }
-  auto rq_mask = fmgr.queen_mask(color) | fmgr.rook_mask(color);
-  auto all_rq = mask_all_ ^ rq_mask;
-  X_ASSERT(all_rq != (mask_all_ & ~rq_mask), "invalid all but RQ mask");
-  {
-    auto r_mask = fmgr.rook_mask(color);
-    for(; r_mask;)
-    {
-      auto n = clear_lsb(r_mask);
-      if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
-        continue;
-      auto const& moves = magic_ns::rook_moves(n, all_rq);
-      if(auto r_att = (moves & ki_fields))
-      {
-        int r_num = pop_count(r_att);
-        score += r_num * evalCoeffs().rookKingAttack_;
-        num_rooks++;
-      }
-    }
-  }
-  auto brq_mask = bq_mask | rq_mask;
-  auto all_brq = mask_all_ ^ brq_mask;
-  {
-    auto q_mask = fmgr.queen_mask(color);
-    for(; q_mask;)
-    {
-      auto n = clear_lsb(q_mask);
-      if(!(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
-        continue;
-      auto const& moves = magic_ns::queen_moves(n, all_brq);
-      if(auto q_att = (moves & ki_fields))
-      {
-        int q_num = pop_count(q_att);
-        score += q_num * evalCoeffs().queenKingAttack_;
-        num_queens++;
-      }
-    }
-  }
-
-  // basic attacks
-  static const int number_of_attackers[8] = {0, 0, 32, 48, 64, 64, 64, 64};
-  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
-  score = (score * number_of_attackers[num_total]) >> 5;
-
-  // could check
-  BitMask cango_mask = ~finfo_[ocolor].pawnAttacks_ & inv_mask_all_
-    & (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_)
-    & ~finfo_[ocolor].multiattack_mask_;
-  BitMask include_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
-
-  auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
-  kn_check &= finfo_[color].knightAttacks_ & (cango_mask | include_mask);
-
-  auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
-  auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
-  auto q_check = bi_check | r_check;
-  
-  bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
-  
-  cango_mask &= ~(finfo_[ocolor].bishopAttacks_ | finfo_[ocolor].knightAttacks_);
-  include_mask ^= fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor);
-  r_check &= finfo_[color].rookAttacks_ & (cango_mask | include_mask);
-
-  cango_mask &= ~finfo_[ocolor].rookAttacks_;
-  include_mask ^= fmgr.rook_mask(ocolor);
-  q_check &= finfo_[color].queenAttacks_ & (cango_mask | include_mask);
-
-  int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
-    + pop_count(bi_check) * evalCoeffs().bishopChecking_
-    + pop_count(r_check) * evalCoeffs().rookChecking_
-    + pop_count(q_check) * evalCoeffs().queenChecking_;
-
-  score += check_score;
-  return score;
 }
 
 } //NEngine

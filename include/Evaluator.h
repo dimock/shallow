@@ -78,8 +78,6 @@ class Evaluator
     BitMask   passers_[2] = {};
     bool      searched_passers_[2] = {};
     int       most_y{ 0 };
-    //int       most_unstoppable_y_{ 0 };
-    //bool      no_ofigures_{false};
   };
 
   struct FieldsInfo
@@ -104,9 +102,10 @@ class Evaluator
 
 public:
 
-  const int lazyThreshold0_ = 500;// Figure::figureWeight_[Figure::TypePawn] * 4;
-  const int lazyThreshold1_ = 400;// Figure::figureWeight_[Figure::TypePawn] * 3;
-  const int lazyThreshold2_ = 300;// Figure::figureWeight_[Figure::TypePawn] * 3;
+  const int lazyThreshold0_ = 500;
+  const int lazyThreshold1_ = 400;
+  const int lazyThreshold2_ = 300;
+
   void initialize(Board const* board, EHashTable* ehash, GHashTable* ghash);
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
@@ -207,18 +206,8 @@ private:
     return score;
   }
 
-  //int evaluateBlockedRooks();
-
-  //// + fill attacked fileds masks
-  //FullScore evaluateKnights(Figure::Color color);
-  //FullScore evaluateFigures(Figure::Color color);
-
-  //FullScore evaluateMobility(Figure::Color color);
   FullScore evaluatePawnsPressure(Figure::Color color);
   FullScore evaluateGeneralPressure(Figure::Color color);
-
-  int evaluateKingPressure(Figure::Color color) const;
-
 
   // sum of weights of all figures
   const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]

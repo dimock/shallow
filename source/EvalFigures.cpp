@@ -306,13 +306,16 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 
   // basic king pressure
   auto ki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
-  //int kimoves_num = std::min(pop_count(ki_fields & ~finfo_[color].attack_mask_ & inv_mask_all_), 7);
   auto ctype = getCastleType(ocolor);
   if(ctype >= 0)
   {
     ki_fields |= king_attack_mask_[ocolor][ctype];
   }
-  ki_fields &= ~finfo_[ocolor].pawnAttacks_;
+  // attacked by opponents pawns
+  auto ki_fields_pw = ki_fields;
+
+  ki_fields &= ~finfo_[ocolor].pawnAttacks_ | finfo_[color].pawnAttacks_;
+  ki_fields_pw ^= ki_fields;
 
   // number of king attackers
   int num_pawns = 0;
@@ -331,12 +334,20 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   }
 
   // knights pressure
+  bool has_kn = false;
   if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields))
   {
     int kn_num = pop_count(kn_att);
     score_king += kn_num * evalCoeffs().knightKingAttack_;
-    num_knights++;
+    has_kn = true;
   }
+  if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields_pw))
+  {
+    int kn_num = pop_count(kn_att);
+    score_king += (kn_num * evalCoeffs().knightKingAttack_) >> 1;
+    has_kn = true;
+  }
+  num_knights += has_kn;
 
   BitMask cango_mask = ~finfo_[ocolor].pawnAttacks_ & ~fmgr.mask(color)
     & (finfo_[color].multiattack_mask_ | ~finfo_[ocolor].attack_mask_)
@@ -380,12 +391,20 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::bishop_moves(n, all_bq);
+    bool has_bi = false;
     if(auto bi_att = (xray_moves & ki_fields))
     {
       int bi_num = pop_count(bi_att);
       score_king += bi_num * evalCoeffs().bishopKingAttack_;
-      num_bishops++;
+      has_bi = true;
     }
+    if(auto bi_att = (xray_moves & ki_fields_pw))
+    {
+      int bi_num = pop_count(bi_att);
+      score_king += (bi_num * evalCoeffs().bishopKingAttack_) >> 1;
+      has_bi = true;
+    }
+    num_bishops += has_bi;
   }
 
   // x-ray rook attackes
@@ -411,12 +430,20 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::rook_moves(n, all_rq);
+    bool has_r = false;
     if(auto r_att = (xray_moves & ki_fields))
     {
       int r_num = pop_count(r_att);
       score_king += r_num * evalCoeffs().rookKingAttack_;
-      num_rooks++;
+      has_r = true;
     }
+    if(auto r_att = (xray_moves & ki_fields_pw))
+    {
+      int r_num = pop_count(r_att);
+      score_king += (r_num * evalCoeffs().rookKingAttack_) >> 1;
+      has_r = true;
+    }
+    num_rooks += has_r;;
   }
 
   // x-ray queen attacks
@@ -443,12 +470,20 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(!(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::queen_moves(n, all_brq);
+    bool has_q = false;
     if(auto q_att = (xray_moves & ki_fields))
     {
       int q_num = pop_count(q_att);
       score_king += q_num * evalCoeffs().queenKingAttack_;
-      num_queens++;
+      has_q = true;
     }
+    if(auto q_att = (xray_moves & ki_fields_pw))
+    {
+      int q_num = pop_count(q_att);
+      score_king += (q_num * evalCoeffs().queenKingAttack_) >> 1;
+      has_q = true;
+    }
+    num_queens += has_q;
   }
 
   // basic attacks
@@ -457,12 +492,12 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   int coeff = number_of_attackers[num_total];
   if(coeff > 0)
   {
-    if(num_bishops > 1)
-      coeff += 16;
-    if(num_rooks > 0)
-      coeff += 10;
     if(num_queens > 0)
       coeff += 24;
+    else if(num_bishops > 1)
+      coeff += 16;
+    else if(num_rooks > 0)
+      coeff += 10;
   }
   score_king = (score_king * coeff) >> 5;
 
@@ -470,8 +505,6 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     + pop_count(bi_check) * evalCoeffs().bishopChecking_
     + pop_count(r_check) * evalCoeffs().rookChecking_
     + pop_count(q_check) * evalCoeffs().queenChecking_;
-
-  //check_score = (check_score * evalCoeffs().kingMovesMultiplier_[kimoves_num]) >> 5;
 
   auto score = score_mob + score_king + check_score;
   return score;

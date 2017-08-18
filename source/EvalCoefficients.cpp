@@ -57,8 +57,6 @@ void EvalCoefficients::init()
   // blocked figure
   vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
   vars_.push_back(details::Var{ "knightBlocked_", knightBlocked_, &knightBlocked_ });
-  vars_.push_back(details::Var{ "rookBlocked_", rookBlocked_, &rookBlocked_ });
-  vars_.push_back(details::Var{ "queenBlocked_", queenBlocked_, &queenBlocked_ });
 
   // king attacks
   vars_.push_back(details::Var{ "pawnKingAttack_", pawnKingAttack_, &pawnKingAttack_ });
@@ -72,13 +70,6 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "bishopChecking_", bishopChecking_, &bishopChecking_ });
   vars_.push_back(details::Var{ "rookChecking_", rookChecking_, &rookChecking_ });
   vars_.push_back(details::Var{ "queenChecking_", queenChecking_, &queenChecking_ });
-
-  // fields near king attacks
-  vars_.push_back(details::Var{ "pawnAttackBonus_", pawnAttackBonus_, &pawnAttackBonus_ });
-  vars_.push_back(details::Var{ "knightAttackBonus_", knightAttackBonus_, &knightAttackBonus_ });
-  vars_.push_back(details::Var{ "bishopAttackBonus_", bishopAttackBonus_, &bishopAttackBonus_ });
-  vars_.push_back(details::Var{ "rookAttackBonus_", rookAttackBonus_, &rookAttackBonus_ });
-  vars_.push_back(details::Var{ "queenAttackBonus_", queenAttackBonus_, &queenAttackBonus_ });
 
   // special cases
   vars_.push_back(details::Var{ "kingToPawnDistanceMulti_", kingToPawnDistanceMulti_, &kingToPawnDistanceMulti_ });
@@ -109,9 +100,6 @@ void EvalCoefficients::init()
   arrs_.push_back(details::Arr{ "rookAgainstPawnBonus_", std::vector<int>{ 15, 40}, rookAgainstPawnBonus_,
                   sizeof(rookAgainstPawnBonus_)/sizeof(*rookAgainstPawnBonus_) });
 
-  arrs_.push_back(details::Arr{ "kingMovesMultiplier_", std::vector<int>{ 64, 48, 32, 32, 32, 32, 32, 32 }, kingMovesMultiplier_,
-                  sizeof(kingMovesMultiplier_)/sizeof(*kingMovesMultiplier_) });
-
   // arrays
   arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 18, 28, 36, 48, 85, 0 }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
@@ -129,15 +117,13 @@ void EvalCoefficients::init()
                   sizeof(closeToPromotion_)/sizeof(*closeToPromotion_) });
   arrs_.push_back(details::Arr{ "kingToPawnBonus_", std::vector<int>{ 0, 6, 5, 4, 3, 2, 1, 0 }, kingToPawnBonus_,
                   sizeof(kingToPawnBonus_)/sizeof(*kingToPawnBonus_) });
-  //arrs_.push_back(details::Arr{ "forwardPasser_", std::vector<int>{ 0, 50, 100, 125, 150, 175, 200, 0 }, forwardPasser_,
-  //                sizeof(forwardPasser_)/sizeof(*forwardPasser_) });
 
   // mobility
-    arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-25, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
+  arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-25, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
                   sizeof(knightMobility_)/sizeof(*knightMobility_) });
-    arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-25, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+  arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-25, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                   bishopMobility_, sizeof(bishopMobility_)/sizeof(*bishopMobility_) });
-    arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-35, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+  arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-35, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                   rookMobility_, sizeof(rookMobility_)/sizeof(*rookMobility_) });
   arrs_.push_back(details::Arr{ "queenMobility_",
                     std::vector<int>{-45, -35, -7,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,

@@ -95,8 +95,6 @@ struct EvalCoefficients
   // blocked figure
   int knightBlocked_{ 80 };
   int bishopBlocked_{ 80 };
-  int rookBlocked_{ 70 };
-  int queenBlocked_{ 80 };
 
   // king attacks
   int pawnKingAttack_{ 2 };
@@ -104,13 +102,6 @@ struct EvalCoefficients
   int bishopKingAttack_{ 3 };
   int rookKingAttack_{ 6 };
   int queenKingAttack_{ 12 };
-
-  // fields near king attacks
-  int pawnAttackBonus_{ 2 };
-  int knightAttackBonus_{ 5 };
-  int bishopAttackBonus_{ 5 };
-  int rookAttackBonus_{ 6 };
-  int queenAttackBonus_{ 8 };
 
   // for special cases
   int kingToPawnDistanceMulti_{ 3 };
@@ -139,9 +130,6 @@ struct EvalCoefficients
   int pawnShieldB_[2] = {};
   int pawnShieldC_[2] = {};
 
-  // number of possible king moves
-  int kingMovesMultiplier_[8] = {};
-
   // arrays
   int passerPawn_[8]  = {};
   int semipasserPawn_[8] = {};
@@ -152,7 +140,6 @@ struct EvalCoefficients
   // distance between forwards
   int closeToPromotion_[8] = {};
   int kingToPawnBonus_[8] = {};
-  //int forwardPasser_[8] = {};
 
   // mobility
   int knightMobility_[16] = {};
