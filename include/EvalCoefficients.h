@@ -100,8 +100,8 @@ struct EvalCoefficients
   int pawnKingAttack_{ 2 };
   int knightKingAttack_{ 3 };
   int bishopKingAttack_{ 3 };
-  int rookKingAttack_{ 6 };
-  int queenKingAttack_{ 12 };
+  int rookKingAttack_{ 8 };
+  int queenKingAttack_{ 14 };
 
   // for special cases
   int kingToPawnDistanceMulti_{ 3 };
