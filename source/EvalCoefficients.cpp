@@ -65,11 +65,13 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "rookKingAttack_", rookKingAttack_, &rookKingAttack_ });
   vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
+
   // king threat through check
   vars_.push_back(details::Var{ "knightChecking_", knightChecking_, &knightChecking_ });
   vars_.push_back(details::Var{ "bishopChecking_", bishopChecking_, &bishopChecking_ });
   vars_.push_back(details::Var{ "rookChecking_", rookChecking_, &rookChecking_ });
   vars_.push_back(details::Var{ "queenChecking_", queenChecking_, &queenChecking_ });
+
 
   // special cases
   vars_.push_back(details::Var{ "kingToPawnDistanceMulti_", kingToPawnDistanceMulti_, &kingToPawnDistanceMulti_ });

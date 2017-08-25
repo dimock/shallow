@@ -301,7 +301,6 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 {
   int score_mob = 0;
   int score_king = 0;
-  int score_king_pw = 0;
   auto const& fmgr = board_->fmgr();
   auto ocolor = Figure::otherColor(color);
 
@@ -312,37 +311,22 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   {
     ki_fields |= king_attack_mask_[ocolor][ctype];
   }
-  // attacked by opponents pawns
-  auto ki_fields_pw = ki_fields;
-
-  auto exclude_mask = ~finfo_[ocolor].pawnAttacks_;
-  ki_fields &= exclude_mask;
-  exclude_mask &= ~(ki_fields_pw | fmgr.mask(color));
-  ki_fields_pw ^= ki_fields;
-
+  ki_fields &= ~finfo_[ocolor].pawnAttacks_;
 
   // number of king attackers
-  int num_bi = 0;
-  int num_r = 0;
-  int num_q = 0;
-
-  int num_attackers = (finfo_[color].kingAttacks_ & ki_fields) != 0ULL;
-
-  // number of attackers to fileds controller by opponent pawns
-  int num_attackers_pw = 0;
+  int num_pawns = 0;
+  int num_knights = 0;
+  int num_bishops = 0;
+  int num_rooks = 0;
+  int num_queens = 0;
+  bool has_king = (finfo_[color].kingAttacks_ & ki_fields) != 0ULL;
 
   // pawns pressure
   if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
   {
     int pw_num = pop_count(pw_att);
     score_king += pw_num * evalCoeffs().pawnKingAttack_;
-    num_attackers++;
-  }
-  if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields_pw))
-  {
-    int pw_num = pop_count(pw_att);
-    score_king_pw += pw_num * evalCoeffs().pawnKingAttack_;
-    num_attackers_pw++;
+    num_pawns++;
   }
 
   // knights pressure
@@ -350,13 +334,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   {
     int kn_num = pop_count(kn_att);
     score_king += kn_num * evalCoeffs().knightKingAttack_;
-    num_attackers++;
-  }
-  if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields_pw))
-  {
-    int kn_num = pop_count(kn_att);
-    score_king_pw += (kn_num * evalCoeffs().knightKingAttack_) >> 1;
-    num_attackers_pw++;
+    num_knights++;
   }
 
   BitMask cango_mask = ~finfo_[ocolor].pawnAttacks_ & ~fmgr.mask(color)
@@ -375,20 +353,14 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   // knight check
   auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
 
-  int num_kn_checks = pop_count(kn_check & finfo_[color].knightAttacks_ & (cango_mask | include_mask));
-  auto kn_check_mask_pot = kn_check & finfo_[color].knightAttacks_ & (exclude_mask & ~(cango_mask | include_mask));
-  int num_kn_checks_pot = pop_count(kn_check_mask_pot);
-  //kn_check &= finfo_[color].knightAttacks_ & exclude_mask;// (cango_mask | include_mask);
+  kn_check &= finfo_[color].knightAttacks_ & (cango_mask | include_mask);
 
   auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
   auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
   auto q_check = bi_check | r_check;
 
   // bishop check
-  int num_bi_checks = pop_count(bi_check & finfo_[color].bishopAttacks_ & (cango_mask | include_mask));
-  auto bi_check_mask_pot = bi_check & finfo_[color].bishopAttacks_ & (exclude_mask & ~(cango_mask | include_mask));
-  int num_bi_checks_pot = pop_count(bi_check_mask_pot);
-  //bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
+  bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
 
   // x-ray bishop attack
   auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
@@ -412,14 +384,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     {
       int bi_num = pop_count(bi_att);
       score_king += bi_num * evalCoeffs().bishopKingAttack_;
-      num_attackers++;
-      num_bi++;
-    }
-    if(auto bi_att = (xray_moves & ki_fields_pw))
-    {
-      int bi_num = pop_count(bi_att);
-      score_king_pw += (bi_num * evalCoeffs().bishopKingAttack_) >> 1;
-      num_attackers_pw++;
+      num_bishops++;
     }
   }
 
@@ -432,10 +397,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   cango_mask &= ~(finfo_[ocolor].knightAttacks_ | finfo_[ocolor].bishopAttacks_);
   include_mask ^= fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor);
   // rook check
-  int num_r_checks = pop_count(r_check & finfo_[color].rookAttacks_ & (cango_mask | include_mask));
-  auto r_check_mask_pot = r_check & finfo_[color].rookAttacks_ & (exclude_mask &  ~(cango_mask | include_mask));
-  int num_r_checks_pot = pop_count(r_check_mask_pot);
-  //r_check &= finfo_[color].rookAttacks_ & exclude_mask;// (cango_mask | include_mask);
+  r_check &= finfo_[color].rookAttacks_ & (cango_mask | include_mask);
 
   for(; rooks;)
   {
@@ -453,14 +415,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     {
       int r_num = pop_count(r_att);
       score_king += r_num * evalCoeffs().rookKingAttack_;
-      num_attackers++;
-      num_r++;
-    }
-    if(auto r_att = (xray_moves & ki_fields_pw))
-    {
-      int r_num = pop_count(r_att);
-      score_king_pw += (r_num * evalCoeffs().rookKingAttack_) >> 1;
-      num_attackers_pw++;
+      num_rooks++;
     }
   }
 
@@ -474,10 +429,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   include_mask ^= fmgr.rook_mask(ocolor);
 
   // queen check
-  int num_q_checks = pop_count(q_check & finfo_[color].queenAttacks_ & (cango_mask | include_mask));
-  auto q_check_mask_pot = q_check & finfo_[color].queenAttacks_ & (exclude_mask & ~(cango_mask | include_mask));
-  int num_q_checks_pot = pop_count(q_check_mask_pot);
-  //q_check &= finfo_[color].queenAttacks_ & exclude_mask;// (cango_mask | include_mask);
+  q_check &= finfo_[color].queenAttacks_ & (cango_mask | include_mask);
 
   for(; queens;)
   {
@@ -495,49 +447,29 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     {
       int q_num = pop_count(q_att);
       score_king += q_num * evalCoeffs().queenKingAttack_;
-      num_attackers++;
-      num_q++;
-    }
-    if(auto q_att = (xray_moves & ki_fields_pw))
-    {
-      int q_num = pop_count(q_att);
-      score_king_pw += (q_num * evalCoeffs().queenKingAttack_) >> 1;
-      num_attackers_pw++;
+      num_queens++;
     }
   }
 
   // basic attacks
   static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
-  int num_total = std::min(num_attackers + (num_attackers_pw>>1), 7);
+  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   int coeff = number_of_attackers[num_total];
-  if(num_total > 1)
+  if(coeff > 0)
   {
-    if(num_q > 0)
-      coeff += 24;
-    else if(num_bi > 1)
+    if(num_bishops > 1)
       coeff += 16;
-    else if(num_r > 0)
+    if(num_rooks > 0)
       coeff += 10;
+    if(num_queens > 0)
+      coeff += 24;
   }
-  score_king = ((score_king + (score_king_pw>>1)) * coeff) >> 5;
+  score_king = (score_king * coeff) >> 5;
 
-  //int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
-  //  + pop_count(bi_check) * evalCoeffs().bishopChecking_
-  //  + pop_count(r_check) * evalCoeffs().rookChecking_
-  //  + pop_count(q_check) * evalCoeffs().queenChecking_;
-
-  int check_score = num_kn_checks * evalCoeffs().knightChecking_
-    + num_bi_checks * evalCoeffs().bishopChecking_
-    + num_r_checks * evalCoeffs().rookChecking_
-    + num_q_checks * evalCoeffs().queenChecking_;
-
-  check_score += (num_kn_checks_pot * evalCoeffs().knightChecking_
-    + num_bi_checks_pot * evalCoeffs().bishopChecking_
-    + num_r_checks_pot * evalCoeffs().rookChecking_
-    + num_q_checks_pot * evalCoeffs().queenChecking_) >> 1;
-
-  //if(num_total > 1)
-  //  check_score *= 2;
+  int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
+    + pop_count(bi_check) * evalCoeffs().bishopChecking_
+    + pop_count(r_check) * evalCoeffs().rookChecking_
+    + pop_count(q_check) * evalCoeffs().queenChecking_;
 
   auto score = score_mob + score_king + check_score;
   return score;

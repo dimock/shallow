@@ -100,10 +100,10 @@ struct EvalCoefficients
   int pawnKingAttack_{ 2 };
   int knightKingAttack_{ 3 };
   int bishopKingAttack_{ 3 };
-  int rookKingAttack_{ 8 };
-  int queenKingAttack_{ 14 };
+  int rookKingAttack_{ 6 };
+  int queenKingAttack_{ 12 };
 
-  // for special cases
+    // for special cases
   int kingToPawnDistanceMulti_{ 3 };
   int knightToPawnDistanceMulti_{ 1 };
   int kingToKingDistanceMulti_{ 2 };
@@ -114,6 +114,7 @@ struct EvalCoefficients
   int bishopChecking_{ 3 };
   int rookChecking_{ 6 };
   int queenChecking_{ 12 };
+
 
   // arrays
   // rook on open column
