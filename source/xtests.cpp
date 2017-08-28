@@ -114,13 +114,11 @@ void optimizeFen(std::string const& ffname)
   NShallow::Processor proc;
   NEngine::EvalCoefficients evals{ evalCoeffs() };
   int summ_min{ -1 };
-  int iters_num{};
+  int summ0 = -1;
   int steps_num{};
-  int depth = 8;
-  int Niters = 5;
-  int Nsteps = 1;
-  double r  = 0.1;
-  double dr = 0.5;
+  int Nsteps = 100;
+  double r = 0.2;
+  int depth = 4;
   optimizeFen(ffname, [&proc, depth](size_t i, xEPD<Board, Move, UndoInfo>& epd)
   {
     std::cout << i << ": ";
@@ -134,34 +132,32 @@ void optimizeFen(std::string const& ffname)
       return 1;
     }
     auto best = r->best_;
-    auto iter = std::find_if(epd.moves_.begin(), epd.moves_.end(), [&best](Move const& move) { return move == best; });
-    if(iter == epd.moves_.end())
+    int score = r->score_;
+    if(score < Figure::MatScore-MaxPly)
     {
-      std::cout << "-" << std::endl;
-      return 1;
+      auto iter = std::find_if(epd.moves_.begin(), epd.moves_.end(), [&best](Move const& move) { return move == best; });
+      if(iter == epd.moves_.end())
+      {
+        std::cout << "-" << std::endl;
+        return 1;
+      }
     }
-    std::cout << printSAN(epd.board_, r->best_) << std::endl;
+    std::cout << printSAN(epd.board_, r->best_) << ", score = " << score << std::endl;
     return 0;
   },
   [&](int summ) -> bool
   {
     if(summ_min < 0 || summ_min > summ)
     {
+      if(summ0 >= 0)
+        evalCoeffs().save("eval.txt");
       summ_min = summ;
-      //proc.saveEval("eval.txt");
-      //evals = proc.getEvals();
-      evals.currentToIninital();
+      if(summ0 < 0)
+        summ0 = summ;
     }
-    if(++iters_num >= Niters)
-    {
-      iters_num = 0;
-      steps_num++;
-      //proc.setEvals(evals);
-      r *= dr;
-    }
-    //proc.adjustEval({}, {}, r);
-    std::cout << iters_num << " iteration. " << steps_num << " step. current fails = " << summ << ". minimum fails = " << summ_min << std::endl;
-    return steps_num < Nsteps;
+    evalCoeffs0().random({ "bishopKnightMat_" }, {}, r, 0);
+    std::cout << steps_num << " step. current result = " << summ << ". best result = " << summ_min << ", initial result = " << summ0 <<  std::endl;
+    return ++steps_num < Nsteps;
   },
     [](std::string const& err)
   {

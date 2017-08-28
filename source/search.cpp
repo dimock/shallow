@@ -401,7 +401,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       && !scontexts_[ictx].board_.underCheck()
       && alpha > -Figure::MatScore+MaxPly
       && alpha < Figure::MatScore-MaxPly
-      && depth <= 3*ONE_PLY && ply > 1
+      && depth <= ONE_PLY && ply > 1
       && !scontexts_[ictx].board_.isWinnerLoser())
   {
     ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);

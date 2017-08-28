@@ -983,28 +983,28 @@ ScoreType Evaluator::evaluateMaterialDiff() const
   int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
   int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
 
-  if(figuresDiff*pawnsDiff < 0)
+  if(figuresDiff*pawnsDiff < 0 && !rooksDiff && !queensDiff)
   {
     Figure::Color strongColor = (Figure::Color)(figuresDiff > 0);
     int pawnsN = fmgr.pawns(strongColor) != 0;
     score += figuresDiff * evalCoeffs().figureAgainstPawnBonus_[pawnsN];
   }
   // Rook vs. Pawns
-  else if(rooksDiff*pawnsDiff < 0)
+  else if(!queensDiff && !figuresDiff && rooksDiff*pawnsDiff < 0)
   {
     Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
     int pawnsN = fmgr.pawns(strongColor) != 0;
     score += rooksDiff * evalCoeffs().rookAgainstPawnBonus_[pawnsN];
   }
   // Knight|Bishop+2Pawns vs. Rook
-  else if((rooksDiff*figuresDiff == -1))
+  else if(!queensDiff && (rooksDiff*figuresDiff == -1))
   {
     Figure::Color strongColor = (Figure::Color)(rooksDiff > 0);
     int pawnsN = fmgr.pawns(strongColor) != 0;
     score += rooksDiff * evalCoeffs().rookAgainstFigureBonus_[pawnsN];
   }
   // 2 figures vs. Rook
-  else if(rooksDiff*figuresDiff == -2 && std::abs(rooksDiff) == 1)
+  else if(!queensDiff && rooksDiff*figuresDiff == -2 && std::abs(rooksDiff) == 1)
   {
     Figure::Color rookColor  = (Figure::Color)(rooksDiff > 0);
     Figure::Color ocolor = Figure::otherColor(rookColor);
