@@ -493,7 +493,14 @@ bool Board::validateMoveBruteforce(const Move & move) const
   }
   X_ASSERT(underCheck() && doubleCheck(), "only king movements allowed");
   auto pw_mask = fmgr_.pawn_mask(ocolor) & ~set_mask_bit(move.to());
+  // exclude pawn, captured by en-passant
+  if(enpassant() > 0 && move.to() == enpassant() && Figure::TypePawn == ffrom.type())
+  {
+    auto ep_pos = enpassantPos();
+    pw_mask &= ~set_mask_bit(ep_pos);
+  }
   auto pw_caps = movesTable().pawnCaps(color(), king_pos);
+  // king is still under pawn's check?
   if(pw_mask & pw_caps)
     return false;
   auto kn_mask = fmgr_.knight_mask(ocolor) & ~set_mask_bit(move.to());
