@@ -47,9 +47,15 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "noPawnPenaltyA_", noPawnPenaltyA_, &noPawnPenaltyA_ });
   vars_.push_back(details::Var{ "noPawnPenaltyB_", noPawnPenaltyB_, &noPawnPenaltyB_ });
   vars_.push_back(details::Var{ "noPawnPenaltyC_", noPawnPenaltyC_, &noPawnPenaltyC_ });
+
   vars_.push_back(details::Var{ "opponentPawnNearA_", opponentPawnNearA_, &opponentPawnNearA_ });
   vars_.push_back(details::Var{ "opponentPawnNearB_", opponentPawnNearB_, &opponentPawnNearB_ });
   vars_.push_back(details::Var{ "opponentPawnNearC_", opponentPawnNearC_, &opponentPawnNearC_ });
+
+  vars_.push_back(details::Var{ "opponentPawnMiddleA_", opponentPawnMiddleA_, &opponentPawnMiddleA_ });
+  vars_.push_back(details::Var{ "opponentPawnMiddleB_", opponentPawnMiddleB_, &opponentPawnMiddleB_ });
+  vars_.push_back(details::Var{ "opponentPawnMiddleC_", opponentPawnMiddleC_, &opponentPawnMiddleC_ });
+
   vars_.push_back(details::Var{ "opponentPawnFarA_", opponentPawnFarA_, &opponentPawnFarA_ });
   vars_.push_back(details::Var{ "opponentPawnFarB_", opponentPawnFarB_, &opponentPawnFarB_ });
   vars_.push_back(details::Var{ "opponentPawnFarC_", opponentPawnFarC_, &opponentPawnFarC_ });
@@ -103,13 +109,13 @@ void EvalCoefficients::init()
                   sizeof(rookAgainstPawnBonus_)/sizeof(*rookAgainstPawnBonus_) });
 
   // arrays
-  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 18, 28, 36, 48, 85, 0 }, passerPawn_,
+  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 18, 28, 38, 50, 87, 0 }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
-  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 3, 6, 9, 12, 16, 0, 0 }, semipasserPawn_,
+  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 4, 6, 9, 13, 20, 0, 0 }, semipasserPawn_,
                   sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });
-  arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 7, 9, 11, 13, 15, 22, 0 }, protectedPasser_,
+  arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 8, 10, 13, 17, 20, 27, 0 }, protectedPasser_,
                   sizeof(protectedPasser_)/sizeof(*protectedPasser_) });
-  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 6, 10, 14, 18, 26, 34, 0 }, farKingPawn_,
+  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 11, 16, 20, 28, 37, 0 }, farKingPawn_,
                   sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
   arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 6, 7, 8, 10, 12, 16, 0 }, cangoPawn_,
                   sizeof(cangoPawn_)/sizeof(*cangoPawn_) });

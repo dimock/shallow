@@ -60,10 +60,10 @@ struct EvalCoefficients
   int unsupportedPawn_{ -12 };
   int unprotectedPawn_{ -9 };
   int rookBehindBonus_{ 5 };
-  int protectedPawnPressure_{ 3 };
-  int unprotectedPawnPressure_{ 7 };
-  int protectedPawnBishopTreat_{ 2 };
-  int unprotectedPawnBishopTreat_{ 5 };
+  int protectedPawnPressure_{ 4 };
+  int unprotectedPawnPressure_{ 8 };
+  int protectedPawnBishopTreat_{ 3 };
+  int unprotectedPawnBishopTreat_{ 6 };
   int kingPressure_{ 3 };
   int generalPressure_{ 1 };
   //int unstoppablePasser_{ 50 };
@@ -82,15 +82,15 @@ struct EvalCoefficients
   int noPawnPenaltyA_{ -8 };
   int noPawnPenaltyB_{ -8 };
   int noPawnPenaltyC_{ -1 };
-  int opponentPawnNearA_{ -18 };
-  int opponentPawnNearB_{ -18 };
-  int opponentPawnNearC_{ -18 };
-  int opponentPawnMiddleA_{ -10 };
-  int opponentPawnMiddleB_{ -10 };
-  int opponentPawnMiddleC_{ -10 };
+  int opponentPawnNearA_{ -19 };
+  int opponentPawnNearB_{ -19 };
+  int opponentPawnNearC_{ -15 };
+  int opponentPawnMiddleA_{ -11 };
+  int opponentPawnMiddleB_{ -11 };
+  int opponentPawnMiddleC_{ -8 };
   int opponentPawnFarA_{ -8 };
   int opponentPawnFarB_{ -8 };
-  int opponentPawnFarC_{ -8 };
+  int opponentPawnFarC_{ -5 };
 
   // blocked figure
   int knightBlocked_{ 80 };
