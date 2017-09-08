@@ -105,6 +105,7 @@ namespace nst
 #define VERIFY_LMR
 #define SINGULAR_EXT
 #undef USE_PROBCUT
+#define EVAL_PIN
 
 static const SortValueType CaptureRecentlyBonus = 10;
 
@@ -116,4 +117,4 @@ static const int NullMove_DepthMin = 2 * ONE_PLY;
 static const int NullMove_PlyReduce = 4 * ONE_PLY;
 static const int Probcut_Depth = 7 * ONE_PLY;
 static const int Probcut_PlyReduce = 4 * ONE_PLY;
-static const int Position_Gain = 120;
+static const int Position_Gain = 130;

@@ -301,6 +301,11 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 {
   int score_mob = 0;
   int score_king = 0;
+
+#ifdef EVAL_PIN
+  int pinned_score = 0;
+#endif
+
   auto const& fmgr = board_->fmgr();
   auto ocolor = Figure::otherColor(color);
 
@@ -356,7 +361,191 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   kn_check &= finfo_[color].knightAttacks_ & (cango_mask | include_mask);
 
   auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
+  
+  // pinned figures
+#ifdef EVAL_PIN
+  if(auto opawns = (fmgr.pawn_mask(ocolor) & bi_check & ~finfo_[ocolor].pawnAttacks_))
+  {
+    while(opawns)
+    {
+      int ppos = clear_lsb(opawns);
+      if(auto from_pawn = (betweenMasks().from(board_->kingPos(ocolor), ppos)
+        & (fmgr.bishop_mask(color)|fmgr.queen_mask(color)))
+        & ~finfo_[color].pawnAttacks_)
+      {
+        while(from_pawn)
+        {
+          int apos = clear_lsb(from_pawn);
+          if(board_->is_nothing_between(ppos, apos, inv_mask_all_))
+          {
+            pinned_score += evalCoeffs().pinnedPawn_;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if(auto oknights = (fmgr.knight_mask(ocolor) & bi_check))
+  {
+    while(oknights)
+    {
+      int npos = clear_lsb(oknights);
+      if(auto from_knight = (betweenMasks().from(board_->kingPos(ocolor), npos)
+        & (fmgr.bishop_mask(color)|fmgr.queen_mask(color))))
+      {
+        while(from_knight)
+        {
+          int apos = clear_lsb(from_knight);
+          if(board_->is_nothing_between(npos, apos, inv_mask_all_))
+          {
+            if(set_mask_bit(npos) & finfo_[ocolor].attack_mask_)
+              pinned_score += evalCoeffs().pinnedKnight_ >> 1;
+            else
+              pinned_score += evalCoeffs().pinnedKnight_;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if(auto orooks = (fmgr.rook_mask(ocolor) & bi_check))
+  {
+    while(orooks)
+    {
+      int rpos = clear_lsb(orooks);
+      if(auto from_rook = (betweenMasks().from(board_->kingPos(ocolor), rpos)
+        & (fmgr.bishop_mask(color)|fmgr.queen_mask(color))))
+      {
+        while(from_rook)
+        {
+          int apos = clear_lsb(from_rook);
+          if(board_->is_nothing_between(rpos, apos, inv_mask_all_))
+          {
+            if(board_->getField(apos).type() == Figure::TypeBishop
+               || ((set_mask_bit(rpos) & finfo_[ocolor].attack_mask_) == 0ULL))
+              pinned_score += evalCoeffs().pinnedRook_;
+            else
+              pinned_score += evalCoeffs().pinnedRook_ >> 1;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if(auto oqueens = (fmgr.queen_mask(ocolor) & bi_check))
+  {
+    while(oqueens)
+    {
+      int qpos = clear_lsb(oqueens);
+      if(auto from_queen = (betweenMasks().from(board_->kingPos(ocolor), qpos)
+        & (fmgr.bishop_mask(color)) & finfo_[color].attack_mask_))
+      {
+        while(from_queen)
+        {
+          int apos = clear_lsb(from_queen);
+          if(board_->is_nothing_between(qpos, apos, inv_mask_all_))
+          {
+            pinned_score += evalCoeffs().pinnedQueen_;
+            break;
+          }
+        }
+      }
+    }
+  }
+#endif
+
   auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
+  
+  // pinned figures
+#ifdef EVAL_PIN
+  if(auto opawns = (fmgr.pawn_mask(ocolor) & r_check & ~finfo_[ocolor].pawnAttacks_))
+  {
+    while(opawns)
+    {
+      int ppos = clear_lsb(opawns);
+      if(auto from_pawn = (betweenMasks().from(board_->kingPos(ocolor), ppos)
+        & (fmgr.rook_mask(color)|fmgr.queen_mask(color))))
+      {
+        while(from_pawn)
+        {
+          int apos = clear_lsb(from_pawn);
+          if(board_->is_nothing_between(ppos, apos, inv_mask_all_))
+          {
+            pinned_score += evalCoeffs().pinnedPawn_;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if(auto oknights = (fmgr.knight_mask(ocolor) & r_check))
+  {
+    while(oknights)
+    {
+      int npos = clear_lsb(oknights);
+      if(auto from_knight = (betweenMasks().from(board_->kingPos(ocolor), npos)
+        & (fmgr.rook_mask(color)|fmgr.queen_mask(color))))
+      {
+        while(from_knight)
+        {
+          int apos = clear_lsb(from_knight);
+          if(board_->is_nothing_between(npos, apos, inv_mask_all_))
+          {
+            if(set_mask_bit(npos) & finfo_[ocolor].attack_mask_)
+              pinned_score += evalCoeffs().pinnedKnight_ >> 1;
+            else
+              pinned_score += evalCoeffs().pinnedKnight_;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if(auto obishops = (fmgr.bishop_mask(ocolor) & r_check))
+  {
+    while(obishops)
+    {
+      int bpos = clear_lsb(obishops);
+      if(auto from_bishop = (betweenMasks().from(board_->kingPos(ocolor), bpos)
+        & (fmgr.rook_mask(color)|fmgr.queen_mask(color))))
+      {
+        while(from_bishop)
+        {
+          int apos = clear_lsb(from_bishop);
+          if(board_->is_nothing_between(bpos, apos, inv_mask_all_))
+          {
+            if(set_mask_bit(bpos) & finfo_[ocolor].attack_mask_)
+              pinned_score += evalCoeffs().pinnedBishop_ >> 1;
+            else
+              pinned_score += evalCoeffs().pinnedBishop_;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if(auto oqueen = (fmgr.queen_mask(ocolor) & r_check))
+  {
+    while(oqueen)
+    {
+      int qpos = clear_lsb(oqueen);
+      if(auto from_queen = (betweenMasks().from(board_->kingPos(ocolor), qpos)
+        & (fmgr.rook_mask(color)) & finfo_[color].attack_mask_))
+      {
+        while(from_queen)
+        {
+          int apos = clear_lsb(from_queen);
+          if(board_->is_nothing_between(qpos, apos, inv_mask_all_))
+          {
+            pinned_score += evalCoeffs().pinnedQueen_;
+            break;
+          }
+        }
+      }
+    }
+  }
+#endif
+
   auto q_check = bi_check | r_check;
 
   // bishop check
@@ -472,6 +661,11 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     + pop_count(q_check) * evalCoeffs().queenChecking_;
 
   auto score = score_mob + score_king + check_score;
+
+#ifdef EVAL_PIN
+  score += pinned_score;
+#endif
+
   return score;
 }
 

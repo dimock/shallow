@@ -146,26 +146,22 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   {
     alpha0_ = (int)alpha - lazyThreshold0_;
     alpha1_ = (int)alpha - lazyThreshold1_;
-    alpha2_ = (int)alpha - lazyThreshold2_;
   }
   else
   {
     alpha0_ = -ScoreMax;
     alpha1_ = -ScoreMax;
-    alpha2_ = -ScoreMax;
   }
 
   if(betta < +Figure::MatScore)
   {
     betta0_ = (int)betta + lazyThreshold0_;
     betta1_ = (int)betta + lazyThreshold1_;
-    betta2_ = (int)betta + lazyThreshold2_;
   }
   else
   {
     betta0_ = +ScoreMax;
     betta1_ = +ScoreMax;
-    betta2_ = +ScoreMax;
   }
 
   const FiguresManager& fmgr = board_->fmgr();

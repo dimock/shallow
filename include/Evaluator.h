@@ -102,9 +102,8 @@ class Evaluator
 
 public:
 
-  const int lazyThreshold0_ = 500;
-  const int lazyThreshold1_ = 400;
-  const int lazyThreshold2_ = 300;
+  const int lazyThreshold0_ = 600;
+  const int lazyThreshold1_ = 500;
 
   void initialize(Board const* board, EHashTable* ehash, GHashTable* ghash);
 
@@ -235,8 +234,6 @@ private:
   int betta0_{};
   int alpha1_{};
   int betta1_{};
-  int alpha2_{};
-  int betta2_{};
 };
 
 } // NEngine

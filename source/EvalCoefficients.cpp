@@ -85,6 +85,12 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "kingToKingDistanceMulti_", kingToKingDistanceMulti_, &kingToKingDistanceMulti_ });
   vars_.push_back(details::Var{ "figureToKingDistanceMulti_", figureToKingDistanceMulti_, &figureToKingDistanceMulti_ });
 
+  // pinned figures
+  vars_.push_back(details::Var{ "pinnedPawn_", pinnedPawn_, &pinnedPawn_ });
+  vars_.push_back(details::Var{ "pinnedKnight_", pinnedKnight_, &pinnedKnight_ });
+  vars_.push_back(details::Var{ "pinnedBishop_", pinnedBishop_, &pinnedBishop_ });
+  vars_.push_back(details::Var{ "pinnedRook_", pinnedRook_, &pinnedRook_ });
+  vars_.push_back(details::Var{ "pinnedQueen_", pinnedQueen_, &pinnedQueen_ });
 
   // Arrays
   arrs_.push_back(details::Arr{ "pawnShieldA_", std::vector<int>{14, 10}, pawnShieldA_, sizeof(pawnShieldA_)/sizeof(*pawnShieldA_) });

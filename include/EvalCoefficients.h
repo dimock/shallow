@@ -115,6 +115,12 @@ struct EvalCoefficients
   int rookChecking_{ 6 };
   int queenChecking_{ 12 };
 
+  // pinned figures
+  int pinnedPawn_{ 4 };
+  int pinnedKnight_{ 7 };
+  int pinnedBishop_{ 7 };
+  int pinnedRook_{ 10 };
+  int pinnedQueen_{ 12 };
 
   // arrays
   // rook on open column
