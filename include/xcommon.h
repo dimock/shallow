@@ -105,7 +105,7 @@ namespace nst
 #define VERIFY_LMR
 #define SINGULAR_EXT
 #undef USE_PROBCUT
-#define EVAL_PIN
+#undef EVAL_PIN
 
 static const SortValueType CaptureRecentlyBonus = 10;
 

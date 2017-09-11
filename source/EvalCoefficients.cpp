@@ -71,6 +71,10 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "rookKingAttack_", rookKingAttack_, &rookKingAttack_ });
   vars_.push_back(details::Var{ "queenKingAttack_", queenKingAttack_, &queenKingAttack_ });
 
+  // x-ray attacks
+  vars_.push_back(details::Var{ "rookKingAttackXray_", rookKingAttackXray_, &rookKingAttackXray_ });
+  vars_.push_back(details::Var{ "queenKingAttackXray_", queenKingAttackXray_, &queenKingAttackXray_ });
+
 
   // king threat through check
   vars_.push_back(details::Var{ "knightChecking_", knightChecking_, &knightChecking_ });
@@ -109,19 +113,19 @@ void EvalCoefficients::init()
                   sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
   arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{25, 60}, rookAgainstFigureBonus_,
                   sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
-  arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 40}, figuresAgainstRookBonus_,
+  arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 30}, figuresAgainstRookBonus_,
                   sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
   arrs_.push_back(details::Arr{ "rookAgainstPawnBonus_", std::vector<int>{ 15, 40}, rookAgainstPawnBonus_,
                   sizeof(rookAgainstPawnBonus_)/sizeof(*rookAgainstPawnBonus_) });
 
   // arrays
-  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 18, 28, 38, 50, 87, 0 }, passerPawn_,
+  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 13, 27, 36, 47, 62, 85, 0 }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
-  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 4, 6, 9, 13, 20, 0, 0 }, semipasserPawn_,
+  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 4, 8, 12, 16, 20, 24, 0 }, semipasserPawn_,
                   sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });
-  arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 8, 10, 13, 17, 20, 27, 0 }, protectedPasser_,
+  arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 7, 9, 11, 13, 15, 22, 0 }, protectedPasser_,
                   sizeof(protectedPasser_)/sizeof(*protectedPasser_) });
-  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 11, 16, 20, 28, 37, 0 }, farKingPawn_,
+    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 12, 16, 24, 32, 40, 0 }, farKingPawn_,
                   sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
   arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 6, 7, 8, 10, 12, 16, 0 }, cangoPawn_,
                   sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
@@ -143,6 +147,26 @@ void EvalCoefficients::init()
                     std::vector<int>{-45, -35, -7,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
                   13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28},
                   queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
+  
+  // idea from http://chessprogramming.wikispaces.com/King+Safety
+  arrs_.push_back(details::Arr{ "kingAttackTable_", std::vector<int>{
+      0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 6, 7, 8,
+      9, 11, 12, 13, 14, 16, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34,
+      36, 38, 40, 43, 45, 47, 50, 52, 55, 58, 61, 64, 66, 69, 72, 76,
+      79, 82, 85, 89, 92, 96, 99, 103, 107, 110, 114, 118, 122, 126, 130, 134,
+      139, 143, 147, 151, 155, 159, 164, 168, 172, 176, 180, 185, 189, 193, 197, 201,
+      205, 210, 214, 218, 222, 226, 231, 235, 239, 243, 247, 252, 256, 260, 264, 268,
+      272, 277, 281, 285, 289, 293, 298, 302, 306, 310, 314, 318, 323, 327, 331, 335,
+      339, 344, 348, 352, 356, 360, 364, 369, 373, 377, 381, 385, 390, 394, 398, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400 },
+    kingAttackTable_, sizeof(kingAttackTable_)/sizeof(*kingAttackTable_) });
 
   // king position eval for BN-mat
   arrs_.push_back(details::Arr{ "bishopKnightMat_", std::vector<int>

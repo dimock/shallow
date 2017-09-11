@@ -592,18 +592,26 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   {
     auto n = clear_lsb(rooks);
     // mobility
-    auto rook_moves = magic_ns::rook_moves(n, mask_all_) & (cango_mask | include_mask);
+    int r_num = 0;
+    auto rook_moves = magic_ns::rook_moves(n, mask_all_);
+    if(auto r_att = (rook_moves & ki_fields))
+    {
+      r_num = pop_count(r_att);
+      score_king += r_num * evalCoeffs().rookKingAttack_;
+      num_rooks++;
+    }
+    rook_moves &= cango_mask | include_mask;
     int num_moves = pop_count(cango_mask & rook_moves);
     score_mob += evalCoeffs().rookMobility_[num_moves & 15];
 
     // king pressure
-    if(!(movesTable().caps(Figure::TypeRook, n) & ki_fields))
+    if(r_num || !(movesTable().caps(Figure::TypeRook, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::rook_moves(n, all_rq);
     if(auto r_att = (xray_moves & ki_fields))
     {
-      int r_num = pop_count(r_att);
-      score_king += r_num * evalCoeffs().rookKingAttack_;
+      r_num = pop_count(r_att);
+      score_king += r_num * evalCoeffs().rookKingAttackXray_;
       num_rooks++;
     }
   }
@@ -624,43 +632,44 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   {
     auto n = clear_lsb(queens);
     // mobility
-    auto queen_moves = magic_ns::queen_moves(n, mask_all_) & (cango_mask | include_mask);
+    int q_num = 0;
+    auto queen_moves = magic_ns::queen_moves(n, mask_all_);
+    if(auto q_att = (queen_moves & ki_fields))
+    {
+      q_num = pop_count(q_att);
+      score_king += q_num * evalCoeffs().queenKingAttack_;
+      num_queens++;
+    }
+    queen_moves &= cango_mask | include_mask;
     int num_moves = pop_count(queen_moves);
     score_mob += evalCoeffs().queenMobility_[num_moves & 31];
 
     // king pressure
-    if(!(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
+    if(q_num || !(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::queen_moves(n, all_brq);
     if(auto q_att = (xray_moves & ki_fields))
     {
-      int q_num = pop_count(q_att);
-      score_king += q_num * evalCoeffs().queenKingAttack_;
+      q_num = pop_count(q_att);
+      score_king += q_num * evalCoeffs().queenKingAttackXray_;
       num_queens++;
     }
   }
-
-  // basic attacks
-  static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
-  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
-  int coeff = number_of_attackers[num_total];
-  if(coeff > 0)
-  {
-    if(num_bishops > 1)
-      coeff += 16;
-    if(num_rooks > 0)
-      coeff += 10;
-    if(num_queens > 0)
-      coeff += 24;
-  }
-  score_king = (score_king * coeff) >> 5;
 
   int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
     + pop_count(bi_check) * evalCoeffs().bishopChecking_
     + pop_count(r_check) * evalCoeffs().rookChecking_
     + pop_count(q_check) * evalCoeffs().queenChecking_;
 
-  auto score = score_mob + score_king + check_score;
+  score_king += check_score;
+  score_king = std::min(score_king, 255);
+  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
+  if(num_total < 2 || ((num_rooks + num_queens) == 0 && (num_bishops == 0) && (num_knights == 0 || num_bishops == 0)))
+    score_king = 0;
+
+  score_king = evalCoeffs().kingAttackTable_[score_king];
+
+  auto score = score_mob + score_king;
 
 #ifdef EVAL_PIN
   score += pinned_score;

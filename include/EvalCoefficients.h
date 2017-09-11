@@ -55,15 +55,15 @@ struct EvalCoefficients
   // pawns
   int pawnEndgameBonus_{ 15 };
   int doubledPawn_{ -12 };
-  int isolatedPawn_{ -14 };
-  int backwardPawn_{ -14 };
+  int isolatedPawn_{ -12 };
+  int backwardPawn_{ -12 };
   int unsupportedPawn_{ -12 };
-  int unprotectedPawn_{ -9 };
+  int unprotectedPawn_{ -8 };
   int rookBehindBonus_{ 5 };
-  int protectedPawnPressure_{ 4 };
-  int unprotectedPawnPressure_{ 8 };
-  int protectedPawnBishopTreat_{ 3 };
-  int unprotectedPawnBishopTreat_{ 6 };
+  int protectedPawnPressure_{ 3 };
+  int unprotectedPawnPressure_{ 7 };
+  int protectedPawnBishopTreat_{ 2 };
+  int unprotectedPawnBishopTreat_{ 5 };
   int kingPressure_{ 3 };
   int generalPressure_{ 1 };
   //int unstoppablePasser_{ 50 };
@@ -82,11 +82,11 @@ struct EvalCoefficients
   int noPawnPenaltyA_{ -8 };
   int noPawnPenaltyB_{ -8 };
   int noPawnPenaltyC_{ -1 };
-  int opponentPawnNearA_{ -19 };
-  int opponentPawnNearB_{ -19 };
-  int opponentPawnNearC_{ -15 };
+  int opponentPawnNearA_{ -15 };
+  int opponentPawnNearB_{ -12 };
+  int opponentPawnNearC_{ -10 };
   int opponentPawnMiddleA_{ -11 };
-  int opponentPawnMiddleB_{ -11 };
+  int opponentPawnMiddleB_{ -10 };
   int opponentPawnMiddleC_{ -8 };
   int opponentPawnFarA_{ -8 };
   int opponentPawnFarB_{ -8 };
@@ -97,11 +97,15 @@ struct EvalCoefficients
   int bishopBlocked_{ 80 };
 
   // king attacks
-  int pawnKingAttack_{ 2 };
-  int knightKingAttack_{ 3 };
-  int bishopKingAttack_{ 3 };
-  int rookKingAttack_{ 6 };
-  int queenKingAttack_{ 12 };
+  int pawnKingAttack_{ 1 };
+  int knightKingAttack_{ 2 };
+  int bishopKingAttack_{ 2 };
+  int rookKingAttack_{ 5 };
+  int queenKingAttack_{ 10 };
+
+  // x-ray attacks
+  int rookKingAttackXray_{ 4 };
+  int queenKingAttackXray_{ 8 };
 
     // for special cases
   int kingToPawnDistanceMulti_{ 3 };
@@ -110,10 +114,10 @@ struct EvalCoefficients
   int figureToKingDistanceMulti_{ 2 };
 
   // king threat
-  int knightChecking_{ 3 };
-  int bishopChecking_{ 3 };
-  int rookChecking_{ 6 };
-  int queenChecking_{ 12 };
+  int knightChecking_{ 2 };
+  int bishopChecking_{ 2 };
+  int rookChecking_{ 5 };
+  int queenChecking_{ 10 };
 
   // pinned figures
   int pinnedPawn_{ 4 };
@@ -158,6 +162,9 @@ struct EvalCoefficients
 
   // basic king pressure
   int kingDistanceBonus_[8][8] = {};
+
+  // king attacks
+  int kingAttackTable_[256] = {};
 
   // position evaluation. 0 - opening, 1 - endgame; color,type,pos
   int positionEvaluations_[2][8][64] = {};

@@ -101,9 +101,8 @@ class Evaluator
   } finfo_[2];
 
 public:
-
-  const int lazyThreshold0_ = 600;
-  const int lazyThreshold1_ = 500;
+  const int lazyThreshold0_ = 800;
+  const int lazyThreshold1_ = 600;
 
   void initialize(Board const* board, EHashTable* ehash, GHashTable* ghash);
 
