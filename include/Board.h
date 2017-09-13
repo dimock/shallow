@@ -482,6 +482,8 @@ struct Board
   /// even if it is attacked by figure that occupies field 'from'
   bool ptAttackedFrom(Figure::Color acolor, int8 pt, int8 from) const;
 
+  bool isDangerPawn(Move & move) const;
+
 private:
   // for initialization only
   bool isCastlePossible(Figure::Color c, int t) const;

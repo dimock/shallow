@@ -664,7 +664,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   score_king += check_score;
   score_king = std::min(score_king, 255);
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
-  if(num_total < 2 || ((num_rooks + num_queens) == 0 && (num_bishops == 0) && (num_knights == 0 || num_bishops == 0)))
+  if(num_total < 2 || ((num_rooks + num_queens) == 0 && (num_bishops < 2) && (num_knights == 0 || num_bishops == 0)))
     score_king = 0;
 
   score_king = evalCoeffs().kingAttackTable_[score_king];

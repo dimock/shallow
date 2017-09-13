@@ -83,7 +83,7 @@ bool Engine::search(SearchResult& sres)
     if(sdata_.best_)
     {
       if(stop_ && sdata_.depth_ > 2 &&
-        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/2 || (sdata_.best_ != sres.best_ /*&& abs(score-sres->score_) >= 5*/)) &&
+        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/3 || (sdata_.best_ != sres.best_ /*&& abs(score-sres->score_) >= 5*/)) &&
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
@@ -462,6 +462,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
+    bool danger_pawn = board.isDangerPawn(move);
+
     ScoreType score = -ScoreMax;
     board.makeMove(move);
     sdata_.inc_nc();
@@ -481,6 +483,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       int R = 0;
 #ifdef USE_LMR
       if(!check_escape &&
+         !danger_pawn &&
           sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
           alpha > -Figure::MatScore-MaxPly &&

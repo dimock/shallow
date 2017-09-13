@@ -875,4 +875,39 @@ bool Board::ptAttackedFrom(Figure::Color acolor, int8 pt, int8 from) const
   return findDiscovered(from, acolor, mask_all, brq_mask, pt);
 }
 
+
+bool Board::isDangerPawn(Move & move) const
+{
+  const Field & ffrom = getField(move.from());
+  if(ffrom.type() != Figure::TypePawn)
+    return false;
+
+  if(is_capture(move) || move.new_type() > 0)
+    return true;
+
+  Figure::Color ocolor = Figure::otherColor(color());
+
+  // attacking
+  const uint64 & p_caps = movesTable().pawnCaps(ffrom.color(), move.to());
+  const uint64 & o_mask = fmgr_.mask(ocolor);
+  if(p_caps & o_mask)
+    return true;
+
+  //// becomes passed
+  const uint64 & pmsk = fmgr_.pawn_mask(color());
+  const uint64 & opmsk = fmgr_.pawn_mask(ocolor);
+  const uint64 & passmsk = pawnMasks().mask_passed(color(), move.to());
+  const uint64 & blckmsk = pawnMasks().mask_line_blocked(color(), move.to());
+
+  if(!(opmsk & passmsk) && !(pmsk & blckmsk))
+    return true;
+
+  ////return false;
+  //if(see(move, 0))
+  //  move.set_ok();
+
+  //return move.see_ok();
+  return false;
+}
+
 } // NEngine
