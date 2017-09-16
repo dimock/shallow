@@ -661,12 +661,28 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     + pop_count(r_check) * evalCoeffs().rookChecking_
     + pop_count(q_check) * evalCoeffs().queenChecking_;
 
+  if(!num_knights && kn_check)
+    num_knights = 1;
+  if(!num_bishops && bi_check)
+    num_bishops = 1;
+  if(!num_rooks && r_check)
+    num_rooks = 1;
+  if(!num_queens && q_check)
+    num_queens = 1;
+
   score_king += check_score;
   score_king = std::min(score_king, 255);
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   if(num_total < 2 || ((num_rooks + num_queens) == 0 && (num_bishops < 2) && (num_knights == 0 || num_bishops == 0)))
     score_king = 0;
-
+#if 0
+  else
+  {
+    static int score_king_max = 0;
+    if(score_king_max < score_king)
+      score_king_max = score_king;
+  }
+#endif
   score_king = evalCoeffs().kingAttackTable_[score_king];
 
   auto score = score_mob + score_king;

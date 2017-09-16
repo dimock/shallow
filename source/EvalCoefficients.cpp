@@ -113,19 +113,19 @@ void EvalCoefficients::init()
                   sizeof(figureAgainstPawnBonus_)/sizeof(*figureAgainstPawnBonus_) });
   arrs_.push_back(details::Arr{ "rookAgainstFigureBonus_", std::vector<int>{25, 60}, rookAgainstFigureBonus_,
                   sizeof(rookAgainstFigureBonus_)/sizeof(*rookAgainstFigureBonus_) });
-  arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 30}, figuresAgainstRookBonus_,
+  arrs_.push_back(details::Arr{ "figuresAgainstRookBonus_", std::vector<int>{10, 40}, figuresAgainstRookBonus_,
                   sizeof(figuresAgainstRookBonus_)/sizeof(*figuresAgainstRookBonus_) });
   arrs_.push_back(details::Arr{ "rookAgainstPawnBonus_", std::vector<int>{ 15, 40}, rookAgainstPawnBonus_,
                   sizeof(rookAgainstPawnBonus_)/sizeof(*rookAgainstPawnBonus_) });
 
   // arrays
-  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 13, 27, 36, 47, 62, 85, 0 }, passerPawn_,
+  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 18, 28, 36, 48, 85, 0 }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
-  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 4, 8, 12, 16, 20, 24, 0 }, semipasserPawn_,
+  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 3, 6, 9, 12, 16, 0, 0 }, semipasserPawn_,
                   sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });
   arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 7, 9, 11, 13, 15, 22, 0 }, protectedPasser_,
                   sizeof(protectedPasser_)/sizeof(*protectedPasser_) });
-    arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 8, 12, 16, 24, 32, 40, 0 }, farKingPawn_,
+  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 6, 10, 14, 18, 26, 34, 0 }, farKingPawn_,
                   sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
   arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 6, 7, 8, 10, 12, 16, 0 }, cangoPawn_,
                   sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
@@ -150,15 +150,15 @@ void EvalCoefficients::init()
   
   // idea from http://chessprogramming.wikispaces.com/King+Safety
   arrs_.push_back(details::Arr{ "kingAttackTable_", std::vector<int>{
-      0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 6, 7, 8,
-      9, 11, 12, 13, 14, 16, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34,
-      36, 38, 40, 43, 45, 47, 50, 52, 55, 58, 61, 64, 66, 69, 72, 76,
-      79, 82, 85, 89, 92, 96, 99, 103, 107, 110, 114, 118, 122, 126, 130, 134,
-      139, 143, 147, 151, 155, 159, 164, 168, 172, 176, 180, 185, 189, 193, 197, 201,
-      205, 210, 214, 218, 222, 226, 231, 235, 239, 243, 247, 252, 256, 260, 264, 268,
-      272, 277, 281, 285, 289, 293, 298, 302, 306, 310, 314, 318, 323, 327, 331, 335,
-      339, 344, 348, 352, 356, 360, 364, 369, 373, 377, 381, 385, 390, 394, 398, 400,
-      400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
+      0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7,
+      8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27,
+      29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 50, 52, 54, 57, 59, 62,
+      64, 67, 70, 72, 75, 78, 81, 84, 87, 90, 93, 96, 100, 103, 106, 110,
+      113, 117, 120, 124, 128, 131, 135, 139, 143, 147, 150, 154, 158, 162, 166, 169,
+      173, 177, 181, 185, 189, 192, 196, 200, 204, 208, 212, 215, 219, 223, 227, 231,
+      235, 238, 242, 246, 250, 254, 257, 261, 265, 269, 273, 277, 280, 284, 288, 292,
+      296, 300, 303, 307, 311, 315, 319, 323, 326, 330, 334, 338, 342, 345, 349, 353,
+      357, 361, 365, 368, 372, 376, 380, 384, 388, 391, 395, 399, 400, 400, 400, 400,
       400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
       400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
       400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
