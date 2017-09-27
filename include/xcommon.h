@@ -105,6 +105,22 @@ namespace nst
 #define VERIFY_LMR
 #define SINGULAR_EXT
 #undef USE_PROBCUT
+
+#define EVAL_SPECC
+#define EVAL_MATD
+#define EVAL_PAWNS
+#define EVAL_KINGSF
+#define EVAL_CASTLE
+#define EVAL_KP_BASIC
+#define EVAL_MOB
+#define EVAL_KING_PR
+#define EVAL_BLOCK_KN
+#define EVAL_BLOCK_BI
+#define EVAL_FORKS
+#define EVAL_OPEN_R
+#define EVAL_PAWN_PR
+#define EVAL_GP
+#define EVAL_PASSERS
 #undef EVAL_PIN
 
 static const SortValueType CaptureRecentlyBonus = 10;

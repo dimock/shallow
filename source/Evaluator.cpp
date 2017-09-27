@@ -134,12 +134,14 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
+#ifdef EVAL_SPECC
   if(auto spec = specialCases().eval(*board_))
   {
     ScoreType score = *spec;
     score = considerColor(score);
     return score;
   }
+#endif
 
   // prepare lazy evaluation
   if(alpha > -Figure::MatScore)
@@ -168,7 +170,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   FullScore score;
 
   // evaluate figures weight
-  score.common_ = fmgr.weight() + evaluateMaterialDiff();
+  score.common_ = fmgr.weight()
+#ifdef EVAL_MATD
+    + evaluateMaterialDiff()
+#endif
+    ;
 
   /// use lazy evaluation level 0
   {
@@ -194,16 +200,20 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
 
   // penalty for lost or fake castle
+#ifdef EVAL_CASTLE
   score.opening_ += evaluateCastle();
+#endif
 
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);
 
   score += evaluateKnights();
 
+#ifdef EVAL_FORKS
   auto scoreForks = evaluateForks(Figure::ColorWhite);
   scoreForks -= evaluateForks(Figure::ColorBlack);
   score.common_ += scoreForks;
+#endif
   
   score += evaluateBishops();
 
@@ -213,19 +223,27 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.common_ += evaluateQueens(Figure::ColorWhite);
   score.common_ -= evaluateQueens(Figure::ColorBlack);
 
+#if (defined EVAL_MOB || defined EVAL_KING_PR)
   score.common_ += evaluateMobilityAndKingPressure(Figure::ColorWhite);
   score.common_ -= evaluateMobilityAndKingPressure(Figure::ColorBlack);
+#endif
 
+#ifdef EVAL_PAWN_PR
   auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   score += scorePP;
+#endif
 
+#ifdef EVAL_GP
   auto scoreGP = evaluateGeneralPressure(Figure::ColorWhite);
   scoreGP -= evaluateGeneralPressure(Figure::ColorBlack);
   score += scoreGP;
+#endif
 
+#ifdef EVAL_PASSERS
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
+#endif
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;
@@ -316,11 +334,17 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
     }
   }
 
-  auto info = evaluatePawns();
+  PasserInfo info;
+
+#ifdef EVAL_PAWNS
+  info = evaluatePawns();
+#endif
 
   // basic king safety - pawn shield
+#ifdef EVAL_KINGSF
   auto kingScore = evaluateKingSafety();
   info.score += kingScore;
+#endif
 
   if(heval)
   {

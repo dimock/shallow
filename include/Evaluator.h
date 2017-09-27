@@ -155,9 +155,6 @@ private:
     return info_w;
   }
 
-  FullScore evaluateKpressureBasic() const;
-  FullScore evaluatePsqBruteforce() const;
-
   // attacked field
   // blocked knighs/bishops
   // rooks on open column
