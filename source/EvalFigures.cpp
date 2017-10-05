@@ -705,6 +705,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #endif
   }
 
+
+
+  // basic attacks
 #ifdef EVAL_KING_PR
   int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
     + pop_count(bi_check) * evalCoeffs().bishopChecking_
@@ -720,20 +723,41 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   if(!num_queens && q_check)
     num_queens = 1;
 
-  score_king += check_score;
-  score_king = std::min(score_king, 255);
+  //score_king += check_score;
+  //score_king = std::min(score_king, 255);
+  //int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
+//  if(num_total < 2 || ((num_rooks + num_queens) == 0 && (num_bishops < 2) && (num_knights == 0 || num_bishops == 0)))
+//    score_king = 0;
+//#if 0
+//  else
+//  {
+//    static int score_king_max = 0;
+//    if(score_king_max < score_king)
+//      score_king_max = score_king;
+//  }
+//#endif
+
+  //score_king = evalCoeffs().kingAttackTable_[score_king];
+  static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
-  if(num_total < 2 || ((num_rooks + num_queens) == 0 && (num_bishops < 2) && (num_knights == 0 || num_bishops == 0)))
-    score_king = 0;
-#if 0
-  else
+  int coeff = number_of_attackers[num_total];
+  if(coeff > 0)
+  {
+    if(num_bishops > 1)
+      coeff += 16;
+    if(num_rooks > 0)
+      coeff += 10;
+    if(num_queens > 0)
+      coeff += 24;
+  }
+  score_king = (score_king * coeff) >> 5;
+  score_king += check_score;
   {
     static int score_king_max = 0;
     if(score_king_max < score_king)
       score_king_max = score_king;
   }
-#endif
-  score_king = evalCoeffs().kingAttackTable_[score_king];
+
 #endif // EVAL_KING_PR
 
   int score = 0
