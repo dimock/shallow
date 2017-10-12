@@ -743,112 +743,10 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     }
   };
 
-  static const BitMask opponent_pawn_mask_near[2][2][3] =
-  {
-    // black
-    {
-      // short
-      {
-        set_mask_bit(H6)|set_mask_bit(H7),
-        set_mask_bit(G6)|set_mask_bit(G7),
-        set_mask_bit(F6)|set_mask_bit(F7)
-      },
-      // long
-      {
-        set_mask_bit(A6)|set_mask_bit(A7),
-        set_mask_bit(B6)|set_mask_bit(B7),
-        set_mask_bit(C6)|set_mask_bit(C7)
-      }
-    },
-    // white
-    {
-      // short
-      {
-        set_mask_bit(H2)|set_mask_bit(H3),
-        set_mask_bit(G2)|set_mask_bit(G3),
-        set_mask_bit(F2)|set_mask_bit(F3)
-      },
-      // long
-      {
-        set_mask_bit(A2)|set_mask_bit(A3),
-        set_mask_bit(B2)|set_mask_bit(B3),
-        set_mask_bit(C2)|set_mask_bit(C3)
-      }
-    },
-  };
-
-  static const BitMask opponent_pawn_mask_middle[2][2][3] =
-  {
-    // black
-    {
-      // short
-      {
-        set_mask_bit(H5),
-        set_mask_bit(G5),
-        set_mask_bit(F5)
-      },
-      // long
-      {
-        set_mask_bit(A5),
-        set_mask_bit(B5),
-        set_mask_bit(C5),
-      }
-    },
-    // white
-    {
-      // short
-      {
-        set_mask_bit(H4),
-        set_mask_bit(G4),
-        set_mask_bit(F4)
-      },
-      // long
-      {
-        set_mask_bit(A4),
-        set_mask_bit(B4),
-        set_mask_bit(C4),
-      }
-    },
-  };
-
-  static const BitMask opponent_pawn_mask_far[2][2][3] =
-  {
-    // black
-    {
-      // short
-      {
-        set_mask_bit(H4),
-        set_mask_bit(G4),
-        set_mask_bit(F4)
-      },
-      // long
-      {
-        set_mask_bit(A4),
-        set_mask_bit(B4),
-        set_mask_bit(C4),
-      }
-    },
-    // white
-    {
-      // short
-      {
-        set_mask_bit(H5),
-        set_mask_bit(G5),
-        set_mask_bit(F5)
-      },
-      // long
-      {
-        set_mask_bit(A5),
-        set_mask_bit(B5),
-        set_mask_bit(C5),
-      }
-    },
-  };
-
+  int score = 0;
   auto ctype = getCastleType(color);
   if(ctype >= 0)
   {
-    int score = 0;
     int shield_bonus = 0;
     if(pawns_shield_mask[color][ctype][0][0] & pmask)
       shield_bonus += evalCoeffs().pawnShieldA_[0];
@@ -881,31 +779,13 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
       + ((no_pawns_penalty_mask[ctype][1] & pmask) == 0ULL) * evalCoeffs().noPawnPenaltyB_
       + ((no_pawns_penalty_mask[ctype][2] & pmask) == 0ULL) * evalCoeffs().noPawnPenaltyC_;
 
-    int opponent_penalty =
-        ((opponent_pawn_mask_near[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearA_
-      + ((opponent_pawn_mask_near[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearB_
-      + ((opponent_pawn_mask_near[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnNearC_;
-
-    opponent_penalty +=
-        ((opponent_pawn_mask_middle[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnMiddleA_
-      + ((opponent_pawn_mask_middle[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnMiddleB_
-      + ((opponent_pawn_mask_middle[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnMiddleC_;
-
-    opponent_penalty +=
-        ((opponent_pawn_mask_far[color][ctype][0] & opmask) != 0ULL) * evalCoeffs().opponentPawnFarA_
-      + ((opponent_pawn_mask_far[color][ctype][1] & opmask) != 0ULL) * evalCoeffs().opponentPawnFarB_
-      + ((opponent_pawn_mask_far[color][ctype][2] & opmask) != 0ULL) * evalCoeffs().opponentPawnFarC_;
-
     score += shield_bonus;
     score += shield_penalty;
-    score += opponent_penalty;
-
-    return score;
   }
   else
   {
     static const int delta_y[2] = { -8, 8 };
-    int score = evalCoeffs().castleImpossible_;
+    score = evalCoeffs().castleImpossible_;
 
     int above1 = (board_->kingPos(color) + delta_y[color]) & 63;
     int above2 = (above1 + delta_y[color]) & 63;
@@ -951,8 +831,75 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
       else if(mright2 & pmask)
         score += evalCoeffs().pawnShieldC_[1] >> 1;
     }
-    return score;
   }
+
+  // opponents pawns pressure
+  {
+    Index index(board_->kingPos(color));
+    int x = index.x();
+    int opponent_penalty = 0;
+    if(color)
+    {
+      if(x > 0)
+      {
+        auto m = opmask & pawnMasks().mask_column(x-1);
+        if(m)
+        {
+          int y = Index(_lsb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
+        }
+      }
+      {
+        auto m = opmask & pawnMasks().mask_column(x);
+        if(m)
+        {
+          int y = Index(_lsb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
+        }
+      }
+      if(x < 7)
+      {
+        auto m = opmask & pawnMasks().mask_column(x+1);
+        if(m)
+        {
+          int y = Index(_lsb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
+        }
+      }
+    }
+    else
+    {
+      if(x > 0)
+      {
+        auto m = opmask & pawnMasks().mask_column(x-1);
+        if(m)
+        {
+          int y = Index(_msb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
+        }
+      }
+      {
+        auto m = opmask & pawnMasks().mask_column(x);
+        if(m)
+        {
+          int y = Index(_msb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
+        }
+      }
+      if(x < 7)
+      {
+        auto m = opmask & pawnMasks().mask_column(x+1);
+        if(m)
+        {
+          int y = Index(_msb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
+        }
+      }
+    }
+    score -= opponent_penalty;
+  }
+
+  return score;
 }
 
 int Evaluator::evaluateCastle(Figure::Color color) const

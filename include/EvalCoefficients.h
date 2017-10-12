@@ -81,15 +81,6 @@ struct EvalCoefficients
   int noPawnPenaltyA_{ -8 };
   int noPawnPenaltyB_{ -8 };
   int noPawnPenaltyC_{ -1 };
-  int opponentPawnNearA_{ -18 };
-  int opponentPawnNearB_{ -18 };
-  int opponentPawnNearC_{ -18 };
-  int opponentPawnMiddleA_{ -10 };
-  int opponentPawnMiddleB_{ -10 };
-  int opponentPawnMiddleC_{ -10 };
-  int opponentPawnFarA_{ -8 };
-  int opponentPawnFarB_{ -8 };
-  int opponentPawnFarC_{ -8 };
 
   // blocked figure
   int knightBlocked_{ 80 };
@@ -126,6 +117,8 @@ struct EvalCoefficients
   int pinnedQueen_{ 12 };
 
   // arrays
+  int opponentPawnPressure_[8] = {};
+
   // rook on open column
   int openRook_[4] = {};
 

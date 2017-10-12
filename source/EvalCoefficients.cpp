@@ -48,18 +48,6 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "noPawnPenaltyB_", noPawnPenaltyB_, &noPawnPenaltyB_ });
   vars_.push_back(details::Var{ "noPawnPenaltyC_", noPawnPenaltyC_, &noPawnPenaltyC_ });
 
-  vars_.push_back(details::Var{ "opponentPawnNearA_", opponentPawnNearA_, &opponentPawnNearA_ });
-  vars_.push_back(details::Var{ "opponentPawnNearB_", opponentPawnNearB_, &opponentPawnNearB_ });
-  vars_.push_back(details::Var{ "opponentPawnNearC_", opponentPawnNearC_, &opponentPawnNearC_ });
-
-  vars_.push_back(details::Var{ "opponentPawnMiddleA_", opponentPawnMiddleA_, &opponentPawnMiddleA_ });
-  vars_.push_back(details::Var{ "opponentPawnMiddleB_", opponentPawnMiddleB_, &opponentPawnMiddleB_ });
-  vars_.push_back(details::Var{ "opponentPawnMiddleC_", opponentPawnMiddleC_, &opponentPawnMiddleC_ });
-
-  vars_.push_back(details::Var{ "opponentPawnFarA_", opponentPawnFarA_, &opponentPawnFarA_ });
-  vars_.push_back(details::Var{ "opponentPawnFarB_", opponentPawnFarB_, &opponentPawnFarB_ });
-  vars_.push_back(details::Var{ "opponentPawnFarC_", opponentPawnFarC_, &opponentPawnFarC_ });
-
   // blocked figure
   vars_.push_back(details::Var{ "bishopBlocked_", bishopBlocked_, &bishopBlocked_ });
   vars_.push_back(details::Var{ "knightBlocked_", knightBlocked_, &knightBlocked_ });
@@ -96,7 +84,10 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "pinnedRook_", pinnedRook_, &pinnedRook_ });
   vars_.push_back(details::Var{ "pinnedQueen_", pinnedQueen_, &pinnedQueen_ });
 
-  // Arrays
+  // Arrays  
+  arrs_.push_back(details::Arr{ "opponentPawnPressure_", std::vector<int>{20, 25, 20, 12, 5, 2, 1, 0, 0}, opponentPawnPressure_,
+                  sizeof(opponentPawnPressure_)/sizeof(*opponentPawnPressure_) });
+
   arrs_.push_back(details::Arr{ "pawnShieldA_", std::vector<int>{14, 10}, pawnShieldA_, sizeof(pawnShieldA_)/sizeof(*pawnShieldA_) });
   arrs_.push_back(details::Arr{ "pawnShieldB_", std::vector<int>{14, 10}, pawnShieldB_, sizeof(pawnShieldB_)/sizeof(*pawnShieldB_) });
   arrs_.push_back(details::Arr{ "pawnShieldC_", std::vector<int>{ 6, 4}, pawnShieldC_, sizeof(pawnShieldC_)/sizeof(*pawnShieldC_) });
