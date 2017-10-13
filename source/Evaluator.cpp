@@ -866,6 +866,24 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
           opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
         }
       }
+      if(x == 0)
+      {
+        auto m = opmask & pawnMasks().mask_column(2);
+        if(m)
+        {
+          int y = Index(_lsb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
+        }
+      }
+      else if(x == 7)
+      {
+        auto m = opmask & pawnMasks().mask_column(5);
+        if(m)
+        {
+          int y = Index(_lsb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
+        }
+      }
     }
     else
     {
@@ -889,6 +907,24 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
       if(x < 7)
       {
         auto m = opmask & pawnMasks().mask_column(x+1);
+        if(m)
+        {
+          int y = Index(_msb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
+        }
+      }
+      if(x == 0)
+      {
+        auto m = opmask & pawnMasks().mask_column(2);
+        if(m)
+        {
+          int y = Index(_msb64(m)).y();
+          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
+        }
+      }
+      else if(x == 7)
+      {
+        auto m = opmask & pawnMasks().mask_column(5);
         if(m)
         {
           int y = Index(_msb64(m)).y();

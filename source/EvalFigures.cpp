@@ -752,11 +752,11 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   }
   score_king = (score_king * coeff) >> 5;
   score_king += check_score;
-  {
-    static int score_king_max = 0;
-    if(score_king_max < score_king)
-      score_king_max = score_king;
-  }
+  //  {
+  //    static int score_king_max = 0;
+  //    if(score_king_max < score_king)
+  //      score_king_max = score_king;
+  //  }
 
 #endif // EVAL_KING_PR
 
