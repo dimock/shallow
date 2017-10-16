@@ -836,49 +836,41 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   // opponents pawns pressure
   {
     Index index(board_->kingPos(color));
-    int x = index.x();
+    int xk = index.x();
     int opponent_penalty = 0;
+    int x_arr[3] = {-1,-1,-1};
+    if(ctype >= 0)
+    {
+      // short
+      if(ctype == 0)
+      {
+        x_arr[0] = 5;
+        x_arr[1] = 6;
+        x_arr[2] = 7;
+      }
+      else // long
+      {
+        x_arr[0] = 0;
+        x_arr[1] = 1;
+        x_arr[2] = 2;
+      }
+    }
+    else
+    {
+      int j = 0;
+      if(xk > 0)
+        x_arr[j++] = xk-1;
+      x_arr[j++] = xk;
+      if(xk < 7)
+        x_arr[j++] = xk+1;
+    }
     if(color)
     {
-      if(x > 0)
+      for(auto x : x_arr)
       {
-        auto m = opmask & pawnMasks().mask_column(x-1);
-        if(m)
-        {
-          int y = Index(_lsb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
-        }
-      }
-      {
-        auto m = opmask & pawnMasks().mask_column(x);
-        if(m)
-        {
-          int y = Index(_lsb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
-        }
-      }
-      if(x < 7)
-      {
-        auto m = opmask & pawnMasks().mask_column(x+1);
-        if(m)
-        {
-          int y = Index(_lsb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
-        }
-      }
-      if(x == 0)
-      {
-        auto m = opmask & pawnMasks().mask_column(2);
-        if(m)
-        {
-          int y = Index(_lsb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
-        }
-      }
-      else if(x == 7)
-      {
-        auto m = opmask & pawnMasks().mask_column(5);
-        if(m)
+        if(x < 0)
+          break;
+        if(auto m = (opmask & pawnMasks().mask_column(x)))
         {
           int y = Index(_lsb64(m)).y();
           opponent_penalty += evalCoeffs().opponentPawnPressure_[y];
@@ -887,45 +879,11 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     }
     else
     {
-      if(x > 0)
+      for(auto x : x_arr)
       {
-        auto m = opmask & pawnMasks().mask_column(x-1);
-        if(m)
-        {
-          int y = Index(_msb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
-        }
-      }
-      {
-        auto m = opmask & pawnMasks().mask_column(x);
-        if(m)
-        {
-          int y = Index(_msb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
-        }
-      }
-      if(x < 7)
-      {
-        auto m = opmask & pawnMasks().mask_column(x+1);
-        if(m)
-        {
-          int y = Index(_msb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
-        }
-      }
-      if(x == 0)
-      {
-        auto m = opmask & pawnMasks().mask_column(2);
-        if(m)
-        {
-          int y = Index(_msb64(m)).y();
-          opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
-        }
-      }
-      else if(x == 7)
-      {
-        auto m = opmask & pawnMasks().mask_column(5);
-        if(m)
+        if(x < 0)
+          break;
+        if(auto m = (opmask & pawnMasks().mask_column(x)))
         {
           int y = Index(_msb64(m)).y();
           opponent_penalty += evalCoeffs().opponentPawnPressure_[7-y];
