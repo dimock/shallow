@@ -85,7 +85,7 @@ void EvalCoefficients::init()
   vars_.push_back(details::Var{ "pinnedQueen_", pinnedQueen_, &pinnedQueen_ });
 
   // Arrays  
-  arrs_.push_back(details::Arr{ "opponentPawnPressure_", std::vector<int>{20, 25, 20, 12, 5, 2, 1, 0, 0}, opponentPawnPressure_,
+  arrs_.push_back(details::Arr{ "opponentPawnPressure_", std::vector<int>{20, 20, 15, 8, 5, 2, 1, 0, 0}, opponentPawnPressure_,
                   sizeof(opponentPawnPressure_)/sizeof(*opponentPawnPressure_) });
 
   arrs_.push_back(details::Arr{ "pawnShieldA_", std::vector<int>{14, 10}, pawnShieldA_, sizeof(pawnShieldA_)/sizeof(*pawnShieldA_) });
@@ -110,13 +110,13 @@ void EvalCoefficients::init()
                   sizeof(rookAgainstPawnBonus_)/sizeof(*rookAgainstPawnBonus_) });
 
   // arrays
-  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 18, 28, 36, 48, 85, 0 }, passerPawn_,
+  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 60, 90, 0 }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
-  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 3, 6, 9, 12, 16, 0, 0 }, semipasserPawn_,
+  arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 3, 6, 10, 14, 18, 0, 0 }, semipasserPawn_,
                   sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });
-  arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 7, 9, 11, 13, 15, 22, 0 }, protectedPasser_,
+  arrs_.push_back(details::Arr{ "protectedPasser_", std::vector<int>{ 0, 9, 12, 15, 17, 20, 26, 0 }, protectedPasser_,
                   sizeof(protectedPasser_)/sizeof(*protectedPasser_) });
-  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 6, 10, 14, 18, 26, 34, 0 }, farKingPawn_,
+  arrs_.push_back(details::Arr{ "farKingPawn_", std::vector<int>{ 0, 10, 12, 16, 20, 30, 40, 0 }, farKingPawn_,
                   sizeof(farKingPawn_)/sizeof(*farKingPawn_) });
   arrs_.push_back(details::Arr{ "cangoPawn_", std::vector<int>{ 0, 6, 7, 8, 10, 12, 16, 0 }, cangoPawn_,
                   sizeof(cangoPawn_)/sizeof(*cangoPawn_) });
@@ -128,9 +128,9 @@ void EvalCoefficients::init()
                   sizeof(kingToPawnBonus_)/sizeof(*kingToPawnBonus_) });
 
   // mobility
-  arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-25, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
+  arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-40, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
                   sizeof(knightMobility_)/sizeof(*knightMobility_) });
-  arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-25, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+  arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-40, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                   bishopMobility_, sizeof(bishopMobility_)/sizeof(*bishopMobility_) });
   arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-35, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                   rookMobility_, sizeof(rookMobility_)/sizeof(*rookMobility_) });
