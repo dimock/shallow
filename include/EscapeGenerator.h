@@ -13,7 +13,7 @@ struct EscapeGenerator
 {
   using MovesList = xlist<MOVE, NumOfFields>;
 
-  enum Order { oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak } order_{ oHash };
+  enum Order { oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak, oWeakUsual } order_{ oHash };
 
   EscapeGenerator(BOARD const& board, MOVE const& hmove, MOVE const& killer = MOVE{ true }) :
     board_(board),
@@ -442,7 +442,14 @@ struct EscapeGenerator
         if(*move == hmove_ || *move == killer_)
           continue;
         if(board_.validateMove(*move))
-          return move;
+        {
+          if(board_.see(*move, 0))
+          {
+            move->set_ok();
+            return move;
+          }
+          weakUsual_.push_back(*move);
+        }
       }
       order_ = oWeak;
       iter_ = weak_.begin();
@@ -450,6 +457,19 @@ struct EscapeGenerator
     if(order_ == oWeak)
     {
       while(iter_ != weak_.end())
+      {
+        auto* move = &*iter_;
+        X_ASSERT(*move == hmove_, "do move from hash second time");
+        ++iter_;
+        X_ASSERT(!board_.validateMove(*move), "invalid weak move");
+        return move;
+      }
+      order_ = oWeakUsual;
+      iter_ = weakUsual_.begin();
+    }
+    if(order_ == oWeakUsual)
+    {
+      while(iter_ != weakUsual_.end())
       {
         auto* move = &*iter_;
         X_ASSERT(*move == hmove_, "do move from hash second time");
@@ -465,6 +485,7 @@ struct EscapeGenerator
   MovesList caps_;
   MovesList usual_;
   MovesList weak_;
+  MovesList weakUsual_;
   typename MovesList::iterator iter_;
   BitMask protect_king_msk_;
   BitMask mask_all;

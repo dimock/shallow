@@ -172,9 +172,10 @@ xlist<MOVE, NUM> generate(BOARD const& board)
 template <class BOARD, class MOVE>
 struct FastGenerator
 {
-  using MovesList = xlist<MOVE, NumOfFields>;
+  using MovesList  = xlist<MOVE, NumOfFields>;
+  using MovesListU = xlist<MOVE, 128>;
 
-  enum Order { oEscape, oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak } order_{ oEscape };
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak, oWeakUsual } order_{ oEscape };
 
   FastGenerator(BOARD const& board, MOVE const& hmove, MOVE const& killer) :
     board_(board),
@@ -247,7 +248,12 @@ struct FastGenerator
       {
         if(*move == hmove_ || *move == killer_)
           continue;
-        return move;
+        if(board_.see(*move, 0))
+        {
+          move->set_ok();
+          return move;
+        }
+        weakUsual_.push_back(*move);
       }
       order_ = oWeak;
       iter_ = weak_.begin();
@@ -262,6 +268,19 @@ struct FastGenerator
         X_ASSERT(!board_.validateMove(*move), "invalid weak move");
         return move;
       }
+      order_ = oWeakUsual;
+      iteru_ = weakUsual_.begin();
+    }
+    if(order_ == oWeakUsual)
+    {
+      while(iteru_ != weakUsual_.end())
+      {
+        auto* move = &*iteru_;
+        X_ASSERT(*move == hmove_, "do move from hash second time");
+        ++iteru_;
+        X_ASSERT(!board_.validateMove(*move), "invalid weak move");
+        return move;
+      }
     }
     return nullptr;
   }
@@ -269,8 +288,10 @@ struct FastGenerator
   CapsGenerator<BOARD, MOVE> cg_;
   UsualGenerator<BOARD, MOVE> ug_;
   EscapeGenerator<BOARD, MOVE> eg_;
-  MovesList weak_;
+  MovesList  weak_;
+  MovesListU weakUsual_;
   typename MovesList::iterator iter_;
+  typename MovesListU::iterator iteru_;
   BOARD const& board_;
   MOVE hmove_;
   MOVE killer_;

@@ -401,7 +401,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       && !scontexts_[ictx].board_.underCheck()
       && alpha > -Figure::MatScore+MaxPly
       && alpha < Figure::MatScore-MaxPly
-      && depth <= 3*ONE_PLY && ply > 1
+      && depth <= ONE_PLY && ply > 1
       && !scontexts_[ictx].board_.isWinnerLoser())
   {
     ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);
@@ -471,17 +471,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-    if(counter > 0 &&
-       !check_escape &&
-       !danger_pawn &&
-       sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-       depth >= LMR_DepthLimit &&
-       alpha > -Figure::MatScore-MaxPly &&
-       scontexts_[ictx].board_.canBeReduced(move))
-    {
-      if(!move.see_ok() && board.see(move, 50))
-        move.set_ok();
-    }
 
     if(!counter)
     {
@@ -494,7 +483,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
       int R = 0;
 #ifdef USE_LMR
-      if(!check_escape &&
+      if(!check_escape &&         
          !danger_pawn &&
           sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
@@ -502,28 +491,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           scontexts_[ictx].board_.canBeReduced(move))
       {
         R = ONE_PLY;
-        auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-        if((!move.see_ok() || (hist.good()*20) < hist.bad()) && depth + depthInc - R - ONE_PLY > 1 && counter > 3)
-        {
-          R += ONE_PLY;
-          if(counter > 10 && depth + depthInc - R - ONE_PLY > 2)
-            R += ONE_PLY;
-        }
-        curr.mflags_ |= UndoInfo::Reduced;
-      }
-      else if(!check_escape &&
-              sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-              depth >= LMR_DepthLimit &&
-              alpha > -Figure::MatScore-MaxPly &&
-              !move.see_ok() &&
-              counter > 10 &&
-              !board.underCheck() &&
-              !board.lastUndo().castle())
-      {
-        R = ONE_PLY;
         curr.mflags_ |= UndoInfo::Reduced;
       }
 #endif
+
 
       score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply+1, -alpha-1, -alpha, false, allow_nm);
       curr.mflags_ &= ~UndoInfo::Reduced;
