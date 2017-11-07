@@ -45,7 +45,7 @@ namespace
     int dist_w = distanceCounter().getDistance(kw, pp);
     int dist_l = distanceCounter().getDistance(kl, pp);
     int y = pawn_colored_y_[pawnColor][p.y()];
-    ScoreType score = (7-dist_w + dist_l) * evalCoeffs().kingToPawnDistanceMulti_ + evalCoeffs().passerPawn_[y];
+    ScoreType score = (7-dist_w + dist_l) * evalCoeffs().kingToPawnDistanceMulti_ + evalCoeffs().passerPawnSc_[y];
     auto kn_mask = board.fmgr().knight_mask(ocolor);
     for(; kn_mask;)
     {
@@ -488,28 +488,28 @@ void SpecialCasesDetector::initUsual()
     { Figure::TypePawn, Figure::ColorBlack, 1 },
     { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
   {
-    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+    return 50 + evalKings1Pawn(board, Figure::ColorBlack);
   }; 
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 },
     { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
   {
-    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+    return -50 + evalKings1Pawn(board, Figure::ColorWhite);
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
     { Figure::TypePawn, Figure::ColorBlack, 1 },
     { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
   {
-    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+    return 50 + evalKings1Pawn(board, Figure::ColorBlack);
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 },
     { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
   {
-    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+    return -50 + evalKings1Pawn(board, Figure::ColorWhite);
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
