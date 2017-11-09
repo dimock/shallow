@@ -421,6 +421,7 @@ struct EscapeGenerator
       if(!capture && board_.possibleMove(killer_) && board_.escapeMove(killer_) && board_.validateMove(killer_))
       {
         X_ASSERT(!board_.moveExists(killer_), "non-existing killer");
+        killer_.set_ok();
         return &killer_;
       }
       X_ASSERT(!capture && board_.moveExists(killer_), "killer was not detected as valid move");
