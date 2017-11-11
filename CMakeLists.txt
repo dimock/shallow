@@ -13,6 +13,9 @@ if(UNIX)
   
 elseif(MSVC)
   message(status " Setting MSVC flags")
+
+  set(OUTPUT_EXEC_NAME ${PROJECT_NAME})
+
   # configurations
   set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
    
