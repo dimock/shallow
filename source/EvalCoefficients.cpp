@@ -110,7 +110,7 @@ void EvalCoefficients::init()
                   sizeof(rookAgainstPawnBonus_)/sizeof(*rookAgainstPawnBonus_) });
 
   // arrays
-  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 10, 20, 30, 40, 60, 90, 0 }, passerPawn_,
+  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 60, 90, 0  }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
   arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 3, 6, 9, 12, 15, 18, 0 }, passerPawnSc_,
                   sizeof(passerPawnSc_)/sizeof(*passerPawnSc_) });
@@ -142,6 +142,7 @@ void EvalCoefficients::init()
                   queenMobility_, sizeof(queenMobility_)/sizeof(*queenMobility_) });
   
   // idea from http://chessprogramming.wikispaces.com/King+Safety
+#ifdef EVAL_KPR_CPW
   arrs_.push_back(details::Arr{ "kingAttackTable_", std::vector<int>{
       0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7,
       8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27,
@@ -160,6 +161,7 @@ void EvalCoefficients::init()
       400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400,
       400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400 },
     kingAttackTable_, sizeof(kingAttackTable_)/sizeof(*kingAttackTable_) });
+#endif
 
   // king position eval for BN-mat
   arrs_.push_back(details::Arr{ "bishopKnightMat_", std::vector<int>

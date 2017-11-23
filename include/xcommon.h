@@ -104,7 +104,7 @@ namespace nst
 #undef USE_LMR0
 #define VERIFY_LMR
 #define SINGULAR_EXT
-#undef LMR_REDUCE_MORE
+#define LMR_REDUCE_MORE
 #undef USE_PROBCUT
 
 #define EVAL_SPECC
@@ -123,6 +123,9 @@ namespace nst
 #define EVAL_GP
 #define EVAL_PASSERS
 #undef EVAL_PIN
+
+// king pressure idea from http://chessprogramming.wikispaces.com/King+Safety
+#undef EVAL_KPR_CPW
 
 static const SortValueType CaptureRecentlyBonus = 10;
 

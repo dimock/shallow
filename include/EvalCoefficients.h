@@ -157,7 +157,10 @@ struct EvalCoefficients
   int kingDistanceBonus_[8][8] = {};
 
   // king attacks
+  // idea from http://chessprogramming.wikispaces.com/King+Safety
+#ifdef EVAL_KPR_CPW
   int kingAttackTable_[256] = {};
+#endif
 
   // position evaluation. 0 - opening, 1 - endgame; color,type,pos
   int positionEvaluations_[2][8][64] = {};
