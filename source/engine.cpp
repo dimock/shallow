@@ -32,9 +32,9 @@ Engine::Engine() :
   for(auto& scontext : scontexts_)
   {
 #ifdef USE_HASH
-    scontext.eval_.initialize(&scontext.board_, &ehash_);
+    scontext.eval_.initialize(&scontext.board_, &ehash_, &hash_);
 #else
-    scontext.eval_.initialize(&scontext.board_, nullptr);
+    scontext.eval_.initialize(&scontext.board_, nullptr, nullptr);
 #endif
   }
 }
@@ -75,7 +75,7 @@ bool Engine::fromFEN(std::string const& fen)
 {
   stop_ = false;
 
-  SBoard<16> tboard(scontexts_[0].board_);
+  SBoard<Board, UndoInfo, Board::GameLength> tboard(scontexts_[0].board_);
 
   // verify FEN first
   if(!NEngine::fromFEN(fen, tboard))
@@ -184,12 +184,11 @@ void Engine::testInput()
 
 void Engine::assemblePV(int ictx, const Move & move, bool checking, int ply)
 {
-  if( /*ply > sdata_.depth_ || */ply >= MaxPly-1)
+  if(ply >= MaxPly-1)
     return;
 
   scontexts_[ictx].plystack_[ply].pv_[ply] = move;
-  scontexts_[ictx].plystack_[ply].pv_[ply].checkFlag_ = checking;
-  scontexts_[ictx].plystack_[ply].pv_[ply+1].clear();
+  scontexts_[ictx].plystack_[ply].pv_[ply+1] = Move{true};
 
   for(int i = ply+1; i < MaxPly-1; ++i)
   {

@@ -133,7 +133,7 @@ namespace
         {
           if(x == index.x())
             continue;
-          if((1ULL << i) & bits_x)
+          if((1 << i) & bits_x)
             mask_x |= 1ULL << x;
           ++i;
         }
@@ -144,7 +144,7 @@ namespace
           {
             if(y == index.y())
               continue;
-            if((1ULL << i) & bits_y)
+            if((1 << i) & bits_y)
               mask_y |= 1ULL << y*8;
             ++i;
           }

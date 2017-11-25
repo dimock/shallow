@@ -3,7 +3,7 @@
  *************************************************************/
 
 #include <FigureDirs.h>
-
+#include <xindex.h>
 
 namespace NEngine
 {
@@ -35,6 +35,9 @@ void FigureDir::calcDDir(int i)
 
   nst::dirs d = nst::no_dir;
   dir_ref(from, to) = d;
+
+  nst::bishop_rook_dirs brd = nst::none;
+  *(s_br_dirs_ + ((to << 6) | from)) = brd;
   
   int x = abs(dp.x());
   int y = abs(dp.y());
@@ -60,6 +63,11 @@ void FigureDir::calcDDir(int i)
     d = nst::we;
 
   dir_ref(from, to) = d;
+
+  if(x != 0 && y != 0)
+    *(s_br_dirs_ + ((to << 6) | from)) = nst::bishop;
+  else if(x != 0 && y == 0 || x == 0 && y != 0)
+    *(s_br_dirs_ + ((to << 6) | from)) = nst::rook;
 }
 
 void FigureDir::calcPawnDir(int idp)

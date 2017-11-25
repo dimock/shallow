@@ -8,16 +8,14 @@
 namespace NEngine
 {
 
-class Board;
-
 #pragma pack (push, 1)
 
 ALIGN_MSC(1) class ALIGN_GCC(1) Field
 {
 public:
-  Field() : color_(0), type_(0)
-  {
-  }
+  //Field() : val_(0)
+  //{
+  //}
 
   inline operator bool () const { return type_ != 0; }
   inline Figure::Type  type() const { return (Figure::Type)type_; }

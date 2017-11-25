@@ -51,10 +51,14 @@ using uint32  = std::uint32_t;
 using int64   = std::int64_t;
 using uint64  = std::uint64_t;
 
-using ScoreType = int16;
-using BitMask   = uint64;
+using ScoreType     = int16;
+using BitMask       = uint64;
+using SortValueType = int32;
 
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
+
+static const int NumOfFields = 64;
+
 
 template <class T, size_t ALIGN_BYTES = 16>
 inline T* make_aligned_array(std::vector<uint8>& arr, size_t size_)
@@ -66,6 +70,13 @@ inline T* make_aligned_array(std::vector<uint8>& arr, size_t size_)
 
 namespace nst
 {
+  enum bishop_rook_dirs
+  {
+    none,
+    rook,
+    bishop
+  };
+
   enum dirs
   {
     no_dir,
@@ -90,16 +101,33 @@ namespace nst
 #define USE_HASH
 #define USE_NULL_MOVE
 #define USE_LMR
+#undef USE_LMR0
 #define VERIFY_LMR
 #define SINGULAR_EXT
+#undef LMR_REDUCE_MORE
 #undef USE_PROBCUT
 
-  //#define VERIFY_ESCAPE_GENERATOR
-  //#define VERIFY_CHECKS_GENERATOR
-  //#define VERIFY_CAPS_GENERATOR
-  //#define VERIFY_FAST_GENERATOR
-  //#define VERIFY_TACTICAL_GENERATOR
-  //#define VALIDATE_VALIDATOR
+#define EVAL_SPECC
+#define EVAL_MATD
+#define EVAL_PAWNS
+#define EVAL_KINGSF
+#define EVAL_CASTLE
+#define EVAL_KP_BASIC
+#define EVAL_MOB
+#define EVAL_KING_PR
+#define EVAL_BLOCK_KN
+#define EVAL_BLOCK_BI
+#define EVAL_FORKS
+#define EVAL_OPEN_R
+#define EVAL_PAWN_PR
+#define EVAL_GP
+#define EVAL_PASSERS
+#undef EVAL_PIN
+
+// king pressure idea from http://chessprogramming.wikispaces.com/King+Safety
+#undef EVAL_KPR_CPW
+
+static const SortValueType CaptureRecentlyBonus = 10;
 
 static const int ONE_PLY = 20;
 static const int MaxPly = 64;
@@ -109,4 +137,4 @@ static const int NullMove_DepthMin = 2 * ONE_PLY;
 static const int NullMove_PlyReduce = 4 * ONE_PLY;
 static const int Probcut_Depth = 7 * ONE_PLY;
 static const int Probcut_PlyReduce = 4 * ONE_PLY;
-static const int Position_Gain = 120;
+static const int Position_Gain = 130;

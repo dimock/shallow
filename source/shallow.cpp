@@ -6,7 +6,9 @@
 #include <xprotocol.h>
 #include <magicbb.h>
 #include <xtests.h>
-
+#include <xlist.h>
+#include <xalgorithm.h>
+#include <iomanip>
 
 int main(int argn, char *argv[])
 {
@@ -15,17 +17,14 @@ int main(int argn, char *argv[])
 
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
- 
-  if(argn > 1)
-  {
-    NEngine::evaluateFen(argv[1]);
-    return 0;
-  }
+
+  //if(argn > 1)
+  //{
+  //  NEngine::evaluateFen(argv[1]);
+  //  return 0;
+  //}
 
   for(; xpr.doCmd(););
-
-  //std::cout << "xcounter = " << NEngine::Engine::xcounter_ << std::endl;
-  //std::cout << "moves made = " << NEngine::XCounter::count_ << std::endl;
 
 	return 0;
 }

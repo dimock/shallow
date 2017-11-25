@@ -20,14 +20,16 @@ class MovesTable
   BitMask s_pawnsMoves_[2][64];
   BitMask s_pawnsFrom_[2][64];
   BitMask s_otherCaps_[8][64];
-  BitMask s_pawnPromotions_t_[2];
-  BitMask s_pawnPromotions_o_[2];
+  BitMask s_pawnPromotions_[2];
 
   // blocked rook
   BitMask s_blockedRook_[64];
 
   // king pressure mask: +1 square around king
   BitMask s_kingPressure_[64];
+
+  // bits between king and rook (color, type - kqkQ)
+  BitMask s_castleMasks_[2][2];
 
   void resetAllTables(int);
 
@@ -37,10 +39,17 @@ class MovesTable
   void initBishops(int);
   void initRooks(int);
   void initQueens(int);
+  void initCastle();
 
 public:
 
   MovesTable();
+
+  inline BitMask castleMasks(int color, int type) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)type > 1, "invalid castle color or type");
+    return s_castleMasks_[color][type];
+  }
 
   inline const int8 * pawn(int color, int pos) const
   {
@@ -87,17 +96,10 @@ public:
     return s_pawnsFrom_[color][pos];
   }
 
-  // transposed promotion mask
-  inline const BitMask & promote_t(int color) const
+  inline const BitMask & promote(int color) const
   {
     X_ASSERT( (unsigned)color > 1, "invalid color of promotion mask" );
-    return s_pawnPromotions_t_[color];
-  }
-
-  inline const BitMask & promote_o(int color) const
-  {
-    X_ASSERT( (unsigned)color > 1, "invalid color of promotion mask" );
-    return s_pawnPromotions_o_[color];
+    return s_pawnPromotions_[color];
   }
 
   inline const BitMask & caps(int type, int pos) const

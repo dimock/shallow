@@ -27,7 +27,7 @@ namespace magic_details_ns
       return i;
     }
 
-    inline uint64 move(uint64 const& board) const
+    inline uint64 const& move(uint64 const& board) const
     {
      return moves[index(board)];
     }
@@ -47,14 +47,14 @@ namespace magic_ns
 {
   void initialize();
 
-  inline uint64 rook_moves(int pos, uint64 board)
+  inline uint64 const& rook_moves(int pos, uint64 board)
   {
     X_ASSERT(pos < 0 || pos > 63, "invalid rook position for magic bb");
     auto const& ms = magic_details_ns::rook_magics_p[pos];
     return ms.move(board);
   }
 
-  inline uint64 bishop_moves(int pos, uint64 board)
+  inline uint64 const& bishop_moves(int pos, uint64 board)
   {
     X_ASSERT(pos < 0 || pos > 63, "invalid bishop position for magic bb");
     auto const& ms = magic_details_ns::bishop_magics_p[pos];

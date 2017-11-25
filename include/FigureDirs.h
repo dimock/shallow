@@ -13,6 +13,7 @@ class FigureDir
 {
 	int s_dirs_[8*2*4096];
   nst::dirs s_ddirs_[4096];
+  nst::bishop_rook_dirs s_br_dirs_[4096];
 
 public:
 
@@ -29,6 +30,13 @@ public:
   {
     X_ASSERT( from < 0 || from > 63 || to < 0 || to > 63, "invaid from or to point to get direction" );
     return *(s_ddirs_ + ((to << 6) | from));
+  }
+
+  // used for discovered check detection
+  inline nst::bishop_rook_dirs br_dir(int from, int to) const
+  {
+    X_ASSERT(from < 0 || from > 63 || to < 0 || to > 63, "invaid from or to point to get direction");
+    return *(s_br_dirs_ + ((to << 6) | from));
   }
 
 	FigureDir();

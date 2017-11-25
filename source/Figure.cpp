@@ -4,6 +4,7 @@
 
 #include <Figure.h>
 #include <Evaluator.h>
+#include <globals.h>
 
 namespace NEngine
 {
@@ -20,22 +21,13 @@ extern const uint8 Figure::mirrorIndex_[64] =
    0,  1,  2,  3,  4,  5,  6,  7
 };
 
-extern const uint64 Figure::pawnCutoffMasks_[2] = { 0xfefefefefefefefe /* left */, 0x7f7f7f7f7f7f7f7f /* right */ };
+extern const BitMask Figure::pawnCutoffMasks_[2] = { 0xfefefefefefefefe /* left */, 0x7f7f7f7f7f7f7f7f /* right */ };
 
 // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
 extern const ScoreType Figure::figureWeight_[7] = { 0, 90, 325, 325, 510, 995, 0 };
 
-//ScoreType Figure::positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos)
-//{
-//  X_ASSERT( stage > 1 || color > 1 || type > 7 || pos < 0 || pos > 63, "invalid figure params" );
-//
-//  uint8 cmask = ((int8)(color << 7)) >> 7;
-//  uint8 icmask = ~cmask;
-//  uint8 i = (mirrorIndex_[pos] & cmask) | (pos & icmask);
-//
-//  ScoreType e = Evaluator::positionEvaluations_[stage][type][i];
-//  return e;
-//}
+extern const BitMask Figure::quaterBoard_[2][2] = { { 0xf0f0f0f000000000, 0x0f0f0f0f00000000 },
+                                                    { 0x00000000f0f0f0f0, 0x000000000f0f0f0f } };
 
 Figure::Type Figure::toFtype(char c)
 {
@@ -52,6 +44,15 @@ Figure::Type Figure::toFtype(char c)
   else if ( 'K' == c )
     return Figure::TypeKing;
   return Figure::TypeNone;
+}
+
+ScoreType Figure::positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos)
+{
+  X_ASSERT(stage > 1 || color > 1 || type > 7 || pos < 0 || pos > 63, "invalid figure params");
+  if(color)
+    return +evalCoeffs().positionEvaluations_[stage][type][mirrorIndex_[pos]];
+  else
+    return -evalCoeffs().positionEvaluations_[stage][type][pos];
 }
 
 char Figure::fromFtype(Figure::Type t)
@@ -130,9 +131,9 @@ int8 FiguresCounter::s_whiteColors_[] =
   1, 0, 1, 0, 1, 0, 1, 0
 };
 
-uint64 FiguresCounter::s_whiteMask_ = 0x55aa55aa55aa55aaULL;
-
-uint64 FiguresManager::s_zobristColor_ = 0x929d03167393eb95;
+uint64 FiguresCounter::s_whiteMask_       = 0x55aa55aa55aa55aaULL;
+uint64 FiguresManager::s_zobristColor_    = 0x929d03167393eb95ULL;
+uint64 FiguresManager::s_zobristNullmove_ = 0x423fb7585a2239caULL;
 
 uint64 FiguresManager::s_zobristCastle_[2][2] = { {0x3cd26f386a9a70f8, 0xaf9e7fa97746b4a9}, {0xa4d594719b454679, 0xf791bf94729ed437} };
 

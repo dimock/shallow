@@ -11,6 +11,8 @@ namespace NEngine
 //////////////////////////////////////////////////////////////////////////
 MovesTable::MovesTable()
 {
+  initCastle();
+
   for (int i = 0; i < 64; ++i)
   {
     resetAllTables(i);
@@ -26,8 +28,7 @@ MovesTable::MovesTable()
   // pawn promotions
   for (int color = 0; color < 2; ++color)
   {
-    s_pawnPromotions_t_[color] = 0;
-    s_pawnPromotions_o_[color] = 0;
+    s_pawnPromotions_[color] = 0;
 
     int y = color ? 6 : 1;
     for (int x = 0; x < 8; ++x)
@@ -35,12 +36,18 @@ MovesTable::MovesTable()
       int pp = x | (y << 3);
 
       // fill ordinary promotion mask
-      s_pawnPromotions_o_[color] |= set_mask_bit(pp);
-
-      // fill transposed promotion mask
-      s_pawnPromotions_t_[color] |= set_mask_bit(FiguresCounter::s_transposeIndex_[pp]);
+      s_pawnPromotions_[color] |= set_mask_bit(pp);
     }
   }
+}
+
+void MovesTable::initCastle()
+{
+  s_castleMasks_[0][0] = set_mask_bit(61) | set_mask_bit(62);
+  s_castleMasks_[0][1] = set_mask_bit(57) | set_mask_bit(58) | set_mask_bit(59);
+
+  s_castleMasks_[1][0] = set_mask_bit(5) | set_mask_bit(6);
+  s_castleMasks_[1][1] = set_mask_bit(1) | set_mask_bit(2) | set_mask_bit(3);
 }
 
 void MovesTable::resetAllTables(int pos)

@@ -229,7 +229,6 @@ public:
     count++;
   }
 
-
   template <class ...A>
   void emplace_front(A&& ...a)
   {
@@ -238,6 +237,23 @@ public:
     items[heap].next = first;
     first = heap;
     if(last < 0)
+      last = heap;
+    heap++;
+    count++;
+  }
+
+  // inserts before iterator
+  void insert(iterator iter, T const& t)
+  {
+    X_ASSERT(heap >= N, "invalid xlist heap index");
+    items[heap] = { t, iter.index };
+    if(iter.prev >= 0)
+      items[iter.prev].next = heap;
+    // iter == begin()
+    else
+      first = heap;
+    // empty() or push_back()
+    if(last < 0 || iter.index < 0)
       last = heap;
     heap++;
     count++;

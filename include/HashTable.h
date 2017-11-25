@@ -3,7 +3,7 @@
  *************************************************************/
 #pragma once
 
-#include <Board.h>
+#include <Move.h>
 #include <fstream>
 
 namespace NEngine
@@ -20,50 +20,18 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HItem
 
   struct
   {
-  uint16     depth_  : 6,
-             flag_   : 2,
-             threat_ : 1;
+  uint16     depth_   : 6,
+             flag_    : 2,
+             threat_  : 1,
+             singular_: 1;
   };
-
   uint16     mask_{};
   };
 
-  uint8      movesCount_{};
-
-  PackedMove move_;
+  uint16     movesCount_{};
+  Move       move_;
 };
 
-ALIGN_MSC(16) struct ALIGN_GCC(16) HBucket
-{
-  static const int BucketSize = 4;
-
-  const HItem * find(const uint64 & hkey) const
-  {
-    for (int i = 0; i < BucketSize; ++i)
-    {
-      if ( items_[i].hkey_ == hkey )
-        return items_ + i;
-    }
-    return 0;
-  }
-
-  HItem * get(const uint64 & hkey)
-  {
-    HItem * hfar = 0;
-    for (int i = 0; i < BucketSize; ++i)
-    {
-      if ( !items_[i].hkey_ || items_[i].hkey_ == hkey )
-        return items_ + i;
-      
-      if ( !hfar || items_[i].movesCount_ < hfar->movesCount_ )
-        hfar = items_ + i;
-    }
-
-    return hfar;
-  }
-
-  HItem items_[BucketSize];
-};
 
 template <class ITEM>
 class HashTable
@@ -148,7 +116,40 @@ protected:
 
   std::vector<ITEM> buffer_;
   size_t szMask_{0};
-  uint8 movesCount_{0};
+  uint16 movesCount_{0};
+};
+
+#if 1
+ALIGN_MSC(16) struct ALIGN_GCC(16) HBucket
+{
+  static const int BucketSize = 4;
+
+  const HItem * find(const uint64 & hkey) const
+  {
+    for (int i = 0; i < BucketSize; ++i)
+    {
+      if ( items_[i].hkey_ == hkey )
+        return items_ + i;
+    }
+    return 0;
+  }
+
+  HItem * get(const uint64 & hkey)
+  {
+    HItem * hfar = 0;
+    for (int i = 0; i < BucketSize; ++i)
+    {
+      if ( !items_[i].hkey_ || items_[i].hkey_ == hkey )
+        return items_ + i;
+      
+      if ( !hfar || items_[i].movesCount_ < hfar->movesCount_ )
+        hfar = items_ + i;
+    }
+
+    return hfar;
+  }
+
+  HItem items_[BucketSize];
 };
 
 class GHashTable : public HashTable<HBucket>
@@ -160,7 +161,7 @@ public:
   GHashTable(int size) : HashTable<HBucket>(size)
   {}
 
-  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const PackedMove & move, bool threat)
+  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat, bool singular)
   {
     HBucket & hb = (*this)[hkey];
     HItem * hitem = hb.get(hkey);
@@ -181,9 +182,10 @@ public:
     hitem->score_  = score;
     hitem->depth_  = depth;
     hitem->flag_   = flag;
-    hitem->threat_ = threat;
     hitem->movesCount_ = movesCount_;
-    hitem->move_ = move;
+    hitem->move_   = move;
+    hitem->threat_ = threat;
+    hitem->singular_ = singular;
   }
 
   const HItem * find(const uint64 & hkey) const
@@ -193,6 +195,45 @@ public:
     return hitem;
   }
 };
+
+#else
+
+class GHashTable : public HashTable<HItem>
+{
+public:
+
+  enum Flag { NoFlag, Alpha, AlphaBetta, Betta };
+
+  GHashTable(int size) : HashTable<HItem>(size)
+  {}
+
+  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move)
+  {
+    auto& hitem = (*this)[hkey];
+    if((hitem.hkey_ == hkey) &&
+       ((hitem.depth_ > depth) ||
+       (depth == hitem.depth_ && Alpha == flag && hitem.flag_ > Alpha) ||
+       (depth == hitem.depth_ && Alpha == flag && hitem.flag_ == Alpha && score >= hitem.score_)))
+    {
+      return;
+    }
+
+    X_ASSERT(score > 32760, "wrong value to hash");
+
+    hitem.hkey_   = hkey;
+    hitem.score_  = score;
+    hitem.depth_  = depth;
+    hitem.flag_   = flag;
+    hitem.move_   = move;
+  }
+
+  HItem const* find(const uint64 & hkey) const
+  {
+    auto const& hitem = operator [] (hkey);
+    return hitem.hkey_ == hkey ? &hitem : nullptr;
+  }
+};
+#endif
 
 ALIGN_MSC(8) struct ALIGN_GCC(8) HEval
 {
@@ -210,7 +251,7 @@ ALIGN_MSC(8) struct ALIGN_GCC(8) HEval
            initizalized_ : 1;
   };
 
-  uint32    mask_;
+  uint32   mask_;
   };
 };
 
@@ -221,10 +262,9 @@ public:
   EHashTable(int size) : HashTable<HEval>(size)
   {}
 
-  HEval * get(const uint64 & code)
+  HEval* get(const uint64 & code)
   {
-    HEval & heval = operator [] (code);
-    return &heval;
+    return &(operator [] (code));
   }
 };
 
