@@ -97,6 +97,7 @@ private:
 
   // search routine
   ScoreType alphaBetta0();
+  ScoreType processMove0(SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm);
   ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
   int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;

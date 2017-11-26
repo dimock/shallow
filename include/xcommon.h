@@ -138,3 +138,4 @@ static const int NullMove_PlyReduce = 4 * ONE_PLY;
 static const int Probcut_Depth = 7 * ONE_PLY;
 static const int Probcut_PlyReduce = 4 * ONE_PLY;
 static const int Position_Gain = 130;
+static const int AlphaThreshold = 200;
