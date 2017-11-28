@@ -218,9 +218,9 @@ ScoreType Engine::alphaBetta0()
       hist.inc_good();
       sdata_.best_ = move;
       alpha = score;
-      bring_to_front(scontexts_[0].moves_.data(),
-                     scontexts_[0].moves_.data()+sdata_.numOfMoves_,
-                     sdata_.best_);
+      //bring_to_front(scontexts_[0].moves_.data(),
+      //               scontexts_[0].moves_.data()+sdata_.numOfMoves_,
+      //               sdata_.best_);
       assemblePV(0, sdata_.best_, board.underCheck(), 0);
     }
     else
@@ -244,24 +244,33 @@ ScoreType Engine::alphaBetta0()
   if(sdata_.numOfMoves_ == 1)
     return alpha;
 
-  compact_moves(scontexts_[0].moves_.data(),
-                scontexts_[0].moves_.data() + sdata_.numOfMoves_);
+  //compact_moves(scontexts_[0].moves_.data(),
+  //              scontexts_[0].moves_.data() + sdata_.numOfMoves_);
 
   if(sdata_.best_)
   {
     auto& hist = history(board.color(), sdata_.best_.from(), sdata_.best_.to());
     hist.inc_score(sdata_.depth_ / ONE_PLY);
+    bring_to_front(scontexts_[0].moves_.data(),
+                   scontexts_[0].moves_.data()+sdata_.numOfMoves_,
+                   sdata_.best_);
   }
   
   if(sdata_.numOfMoves_ > 2)
   {
     auto* b = scontexts_[0].moves_.data();
+    auto* b0 = b;
     auto* e = b + sdata_.numOfMoves_;
     b++;
-    for(; b != e; ++b)
+    //for(; b != e; ++b)
+    //{
+    //  if(!b->see_ok())
+    //    break;
+    //}
+    for(auto* m = b; m != e; ++m)
     {
-      if(!b->see_ok())
-        break;
+      auto& hist = history(board.color(), m->from(), m->to());
+      m->sort_value += hist.score();
     }
     std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
   }
