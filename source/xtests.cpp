@@ -174,7 +174,7 @@ void evaluateFen(std::string const& ffname)
   {
     NShallow::Processor proc;
     NEngine::Evaluator eval;
-    eval.initialize(&e.board_, nullptr, nullptr);
+    eval.initialize(&e.board_);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     std::cout << score << std::endl;
   },
@@ -195,7 +195,7 @@ void optimizeFenEval(std::string const& ffname)
   double r = 0.25;
   optimizeFen(ffname, [&eval](size_t i, xEPD<Board, Move, UndoInfo>& epd)
   {
-    eval.initialize(&epd.board_, nullptr, nullptr);
+    eval.initialize(&epd.board_);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     return std::abs(score - epd.score_);
   },
@@ -424,7 +424,7 @@ void processBoardPGN(std::string const& pgn_file)
 
       SBoard<Board, UndoInfo, Board::GameLength> sboard(board, true);
       NEngine::Evaluator eval;
-      eval.initialize(&sboard, nullptr, nullptr);
+      eval.initialize(&sboard);
       auto score0 = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
 
       NShallow::Processor proc;
