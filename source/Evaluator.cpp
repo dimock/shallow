@@ -366,17 +366,17 @@ int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Co
   {
     y_closest = 7;
     if(left)
-      y_closest = (_lsb64(left) >> 3) + 1;
+      y_closest = (_lsb64(left) >> 3);
     if(right)
-      y_closest = std::min(y_closest, ((_lsb64(right) >> 3) + 1));
+      y_closest = std::min(y_closest, ((_lsb64(right) >> 3)));
   }
   else
   {
     y_closest = 0;
     if(left)
-      y_closest = (_msb64(left) >> 3)- 1;
+      y_closest = (_msb64(left) >> 3);
     if(right)
-      y_closest = std::max(y_closest, ((_msb64(right) >> 3) - 1));
+      y_closest = std::max(y_closest, ((_msb64(right) >> 3)));
   }
   return y_closest;
 }
