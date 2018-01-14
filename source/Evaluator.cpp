@@ -57,11 +57,9 @@ const BitMask Evaluator::king_attack_mask_[2][2] = {
   }
 };
 
-void Evaluator::initialize(Board const* board, EHashTable* ehash, GHashTable* ghash)
+void Evaluator::initialize(Board const* board)
 {
   board_ = board;
-  ehash_ = ehash;
-  ghash_ = ghash;
 }
 
 void Evaluator::prepare()
@@ -113,8 +111,8 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 
 #else
 
-  if(ehash_)
-    ehash_->prefetch(board_->fmgr().kpwnCode());
+  if(!ehash_.empty())
+    ehash_.prefetch(board_->fmgr().kpwnCode());
 
   if(board_->matState())
     return -Figure::MatScore;
@@ -319,9 +317,9 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   const uint64 & code = board_->fmgr().kpwnCode();
   uint32 hkey = (uint32)(code >> 32);
 
-  if(ehash_)
+  if(!ehash_.empty())
   {
-    heval = ehash_->get(code);
+    heval = ehash_.get(code);
 
     if(heval->hkey_ == hkey && heval->initizalized_)
     {
@@ -368,17 +366,17 @@ int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Co
   {
     y_closest = 7;
     if(left)
-      y_closest = (_lsb64(left) >> 3) + 1;
+      y_closest = (_lsb64(left) >> 3);
     if(right)
-      y_closest = std::min(y_closest, ((_lsb64(right) >> 3) + 1));
+      y_closest = std::min(y_closest, ((_lsb64(right) >> 3)));
   }
   else
   {
     y_closest = 0;
     if(left)
-      y_closest = (_msb64(left) >> 3)- 1;
+      y_closest = (_msb64(left) >> 3);
     if(right)
-      y_closest = std::max(y_closest, ((_msb64(right) >> 3) - 1));
+      y_closest = std::max(y_closest, ((_msb64(right) >> 3)));
   }
   return y_closest;
 }

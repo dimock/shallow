@@ -104,7 +104,7 @@ public:
   const int lazyThreshold0_ = 800;
   const int lazyThreshold1_ = 600;
 
-  void initialize(Board const* board, EHashTable* ehash, GHashTable* ghash);
+  void initialize(Board const* board);
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
 
@@ -217,8 +217,12 @@ private:
   const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 
   Board const* board_{ nullptr };
-  EHashTable*  ehash_{ nullptr };
-  GHashTable*  ghash_{ nullptr };
+
+#ifdef USE_HASH
+  EHashTable ehash_{16};
+#else
+  EHashTable ehash_{0};
+#endif
 
   static const int colored_y_[2][8];
   static const BitMask castle_mask_[2][2];

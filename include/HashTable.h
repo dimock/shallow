@@ -46,6 +46,8 @@ public:
 
   void resize(size_t sz)
   {
+    if(sz == 0)
+      return;
     X_ASSERT(sz > 24, "hash table size is too large");
     buffer_.resize(1 << sz);
     szMask_ = size() - 1;
@@ -61,6 +63,11 @@ public:
   size_t size() const
   {
     return buffer_.size();
+  }
+
+  bool empty() const
+  {
+    return buffer_.empty();
   }
 
   void inc()

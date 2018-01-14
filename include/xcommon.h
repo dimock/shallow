@@ -104,7 +104,7 @@ namespace nst
 #undef USE_LMR0
 #define VERIFY_LMR
 #define SINGULAR_EXT
-#undef LMR_REDUCE_MORE
+#define LMR_REDUCE_MORE
 #undef USE_PROBCUT
 
 #define EVAL_SPECC
@@ -138,3 +138,4 @@ static const int NullMove_PlyReduce = 4 * ONE_PLY;
 static const int Probcut_Depth = 7 * ONE_PLY;
 static const int Probcut_PlyReduce = 4 * ONE_PLY;
 static const int Position_Gain = 130;
+static const int AlphaThreshold = 200;

@@ -22,7 +22,6 @@ Engine::Engine() :
   stop_(false)
 #ifdef USE_HASH
   , hash_(0)
-  , ehash_(0)
 #endif
 {
   setMemory(options_.hash_size_);
@@ -31,11 +30,7 @@ Engine::Engine() :
 
   for(auto& scontext : scontexts_)
   {
-#ifdef USE_HASH
-    scontext.eval_.initialize(&scontext.board_, &ehash_, &hash_);
-#else
-    scontext.eval_.initialize(&scontext.board_, nullptr, nullptr);
-#endif
+    scontext.eval_.initialize(&scontext.board_);
   }
 }
 
@@ -57,16 +52,11 @@ void Engine::setMemory(int mb)
   if(mb < 1)
     return;
 
-  int bytesN = mb*1024*1024;
-
 #ifdef USE_HASH
-  int hitemSize = sizeof(HItem);
-  int hsize2 = log2((uint64)(bytesN)/hitemSize) - 3;
-  if(hsize2 >= 10)
-  {
-    hash_.resize(hsize2);
-    ehash_.resize(hsize2+1);
-  }
+  int bytesN = mb*1024*1024;
+  int hbucketSize = sizeof(HBucket);
+  int hsize = log2((uint64)(bytesN)/hbucketSize);
+  hash_.resize(hsize);
 #endif
 }
 
@@ -102,7 +92,6 @@ void Engine::clearHash()
 {
 #ifdef USE_HASH
   hash_.clear();
-  ehash_.clear();
 #endif
 }
 

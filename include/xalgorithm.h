@@ -43,6 +43,44 @@ namespace NEngine
     X_ASSERT(i == e, "no given move found in bring_to_front");
     if(i == b)
       return;
-    std::swap(*i, *b);
+    auto* j = i;
+    j--;
+    for(;; j--, i--)
+    {
+      *i = *j;
+      if(j == b)
+        break;
+    }
+    *b = move;
+  }
+
+  template <class MOVE>
+  int compact_moves(MOVE* b, MOVE* e)
+  {
+    X_ASSERT(b >= e, "invalid moves array");
+    auto* i = b;
+    int count = 0;
+    for(; i != e; ++i)
+    {
+      if(!i->see_ok())
+      {
+        auto* j = i;
+        j++;
+        for(; j != e; ++j)
+        {
+          if(j->see_ok())
+          {
+            count++;
+            std::swap(*i, *j);
+            break;
+          }
+        }
+        if(j == e)
+          break;
+      }
+      else
+        count++;
+    }
+    return count;
   }
 }
