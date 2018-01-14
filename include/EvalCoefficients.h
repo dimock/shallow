@@ -72,8 +72,8 @@ struct EvalCoefficients
   int doublePawnAttack_{ 50 };
 
   // king
-  int castleImpossible_{ -28 };
-  int fakeCastle_{ -30 };
+  int castleImpossible_{ -20 };
+  int fakeCastle_{ -20 };
   int castleBonus_{ 10 };
   int pawnPenaltyA_{ -14 };
   int pawnPenaltyB_{ -14 };

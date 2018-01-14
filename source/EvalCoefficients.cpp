@@ -93,7 +93,7 @@ void EvalCoefficients::init()
   arrs_.push_back(details::Arr{ "pawnShieldC_", std::vector<int>{ 6, 4}, pawnShieldC_, sizeof(pawnShieldC_)/sizeof(*pawnShieldC_) });
 
   // rook on open column
-  arrs_.push_back(details::Arr{ "openRook_", std::vector<int>{ 0, 10, 30, 30}, openRook_,
+  arrs_.push_back(details::Arr{ "openRook_", std::vector<int>{ 0, 8, 20, 20}, openRook_,
                   sizeof(openRook_)/sizeof(*openRook_) });
 
   // material diff
@@ -130,11 +130,11 @@ void EvalCoefficients::init()
                   sizeof(kingToPawnBonus_)/sizeof(*kingToPawnBonus_) });
 
   // mobility
-  arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-40, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
+  arrs_.push_back(details::Arr{ "knightMobility_", std::vector<int>{-30, -10, 0, 3, 5, 7, 9, 11}, knightMobility_,
                   sizeof(knightMobility_)/sizeof(*knightMobility_) });
-  arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-40, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+  arrs_.push_back(details::Arr{ "bishopMobility_", std::vector<int>{-30, -10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                   bishopMobility_, sizeof(bishopMobility_)/sizeof(*bishopMobility_) });
-  arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-35, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+  arrs_.push_back(details::Arr{ "rookMobility_", std::vector<int>{-25, -8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
                   rookMobility_, sizeof(rookMobility_)/sizeof(*rookMobility_) });
   arrs_.push_back(details::Arr{ "queenMobility_",
                     std::vector<int>{-45, -35, -7,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
@@ -183,10 +183,10 @@ void EvalCoefficients::init()
   {
     {},
     {},
-    { 10, 8, 8, 7, 4, 1, 0, 0 },
-    { 10, 8, 8, 7, 4, 2, 1, 0 },
-    { 10, 10, 9, 6, 4, 2, 1, 0 },
-    { 15, 15, 15, 8, 6, 3, 1, 0 },
+    { 0, 5, 5, 5, 4, 1, 0, 0 },
+    { 0, 5, 5, 5, 4, 2, 1, 0 },
+    { 0, 8, 7, 6, 4, 2, 1, 0 },
+    { 0, 10, 9, 8, 6, 3, 1, 0 },
     {},
     {}
   },
