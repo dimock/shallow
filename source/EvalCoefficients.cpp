@@ -112,7 +112,9 @@ void EvalCoefficients::init()
   // arrays
   arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 5, 10, 20, 40, 60, 90, 0  }, passerPawn_,
                   sizeof(passerPawn_)/sizeof(*passerPawn_) });
-  arrs_.push_back(details::Arr{ "passerPawn_", std::vector<int>{ 0, 3, 6, 9, 12, 15, 18, 0 }, passerPawnSc_,
+  arrs_.push_back(details::Arr{ "multipasserPawn_", std::vector<int>{ 0, 5, 10, 20, 30, 40, 50, 0  }, multipasserPawn_,
+                  sizeof(multipasserPawn_)/sizeof(*multipasserPawn_) });
+  arrs_.push_back(details::Arr{ "passerPawnSc_", std::vector<int>{ 0, 3, 6, 9, 12, 15, 18, 0 }, passerPawnSc_,
                   sizeof(passerPawnSc_)/sizeof(*passerPawnSc_) });
   arrs_.push_back(details::Arr{ "semipasserPawn_", std::vector<int>{ 0, 3, 6, 10, 14, 18, 0, 0 }, semipasserPawn_,
                   sizeof(semipasserPawn_)/sizeof(*semipasserPawn_) });

@@ -139,6 +139,7 @@ PawnMasks::PawnMasks()
       }
     }
     pmask_multi_passer_[mask] = best_multi_mask;
+    pcount_multi_passer_[mask] = nmax;
   }
 
   for(int color = 0; color < 2; ++color)

@@ -423,6 +423,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
   bool no_opawns = opmsk == 0ULL;
 
   uint8 x_visited{ 0 };
+  uint8 x_passers{ 0 };
 
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
@@ -486,6 +487,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       if((opmsk & pawnMasks().mask_passed(color, n)) == 0ULL)
       {
         info.passers_[color] |= 1ULL << n;
+        x_passers |= 1 << x;
         info.score.common_ += evalCoeffs().passerPawn_[cy];
         // supported
         if(pawnMasks().mask_supported(color, n) & pmask)
@@ -509,6 +511,26 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         info.score.common_ += scoreSemipasser;
       }
     }
+  }
+
+  // 2 more passers on neighbour lines
+  int num_passers = pawnMasks().count_multi_passer(x_passers);
+  if(num_passers > 1)
+  {
+    auto mpassers = pmask & pawnMasks().mask_multi_passer(x_passers);
+    int y_avg = 0;
+    int count = 0;
+    while(mpassers)
+    {
+      int n = clear_lsb(mpassers);
+      int cy = colored_y_[color][Index(n).y()];
+      y_avg += cy;
+      count++;
+    }
+    X_ASSERT(count != num_passers, "incorrect number of multipassers");
+    y_avg /= count;
+    auto s = evalCoeffs().multipasserPawn_[y_avg] * (count-1);
+    info.score.common_ += s;
   }
 
   return info;

@@ -135,6 +135,7 @@ struct EvalCoefficients
 
   // arrays
   int passerPawn_[8]  = {};
+  int multipasserPawn_[8] = {};
   int passerPawnSc_[8] = {}; // special cases only
   int semipasserPawn_[8] = {};
   int protectedPasser_[8] = {};
