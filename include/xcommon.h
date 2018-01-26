@@ -104,7 +104,7 @@ namespace nst
 #undef USE_LMR0
 #define VERIFY_LMR
 #define SINGULAR_EXT
-#define LMR_REDUCE_MORE
+#undef LMR_REDUCE_MORE
 #undef USE_PROBCUT
 
 #define EVAL_SPECC
