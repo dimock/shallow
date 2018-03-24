@@ -127,6 +127,8 @@ namespace nst
 // king pressure idea from http://chessprogramming.wikispaces.com/King+Safety
 #undef EVAL_KPR_CPW
 
+#define EVAL_KING_CHECK
+
 static const SortValueType CaptureRecentlyBonus = 10;
 
 static const int ONE_PLY = 20;

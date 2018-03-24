@@ -104,10 +104,12 @@ struct EvalCoefficients
   int figureToKingDistanceMulti_{ 2 };
 
   // king threat
+#ifdef EVAL_KING_CHECK
   int knightChecking_{ 3 };
   int bishopChecking_{ 3 };
   int rookChecking_{ 5 };
   int queenChecking_{ 12 };
+#endif
 
   // pinned figures
   int pinnedPawn_{ 4 };

@@ -390,12 +390,12 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   }
 #endif
   // knight check
+#ifdef EVAL_KING_CHECK
   auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
-
   kn_check &= finfo_[color].knightAttacks_ & (cango_mask | include_mask);
-
   auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
-  
+#endif
+
   // pinned figures
 #ifdef EVAL_PIN
   if(auto opawns = (fmgr.pawn_mask(ocolor) & bi_check & ~finfo_[ocolor].pawnAttacks_))
@@ -580,10 +580,11 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   }
 #endif
 
+#ifdef EVAL_KING_CHECK
   auto q_check = bi_check | r_check;
-
   // bishop check
   bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
+#endif
 
   // x-ray bishop attack
   auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
@@ -622,8 +623,11 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   BitMask rooks = fmgr.rook_mask(color);
   cango_mask &= ~(finfo_[ocolor].knightAttacks_ | finfo_[ocolor].bishopAttacks_);
   include_mask ^= fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor);
+
   // rook check
+#ifdef EVAL_KING_CHECK
   r_check &= finfo_[color].rookAttacks_ & (cango_mask | include_mask);
+#endif
 
   for(; rooks;)
   {
@@ -669,7 +673,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   include_mask ^= fmgr.rook_mask(ocolor);
 
   // queen check
+#ifdef EVAL_KING_CHECK
   q_check &= finfo_[color].queenAttacks_ & (cango_mask | include_mask);
+#endif
 
   for(; queens;)
   {
@@ -709,6 +715,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 
   // basic attacks
 #ifdef EVAL_KING_PR
+
+#ifdef EVAL_KING_CHECK
   int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
     + pop_count(bi_check) * evalCoeffs().bishopChecking_
     + pop_count(r_check) * evalCoeffs().rookChecking_
@@ -722,9 +730,13 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     num_rooks = 1;
   if(!num_queens && q_check)
     num_queens = 1;
+#endif
 
 #ifdef EVAL_KPR_CPW
+
+#ifdef EVAL_KING_CHECK
   score_king += check_score;
+#endif
   score_king = std::min(score_king, 255);
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   if(num_total < 2)// || ((num_rooks + num_queens) == 0 && (num_bishops < 2) && (num_knights == 0 || num_bishops == 0)))
@@ -743,17 +755,19 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   int coeff = number_of_attackers[num_total];
-  //if(coeff > 0)
-  //{
-  //  if(num_bishops > 1)
-  //    coeff += 16;
-  //  if(num_rooks > 0)
-  //    coeff += 10;
-  //  if(num_queens > 0)
-  //    coeff += 24;
-  //}
+  if(coeff > 0)
+  {
+    if(num_bishops > 1)
+      coeff += 16;
+    if(num_rooks > 0)
+      coeff += 10;
+    if(num_queens > 0)
+      coeff += 24;
+  }
   score_king = (score_king * coeff) >> 5;
+#ifdef EVAL_KING_CHECK
   score_king += check_score;
+#endif
   //  {
   //    static int score_king_max = 0;
   //    if(score_king_max < score_king)

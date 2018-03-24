@@ -36,17 +36,34 @@ bool Engine::search(SearchResult& sres)
       move.clear_ok();
       if(!board.validateMoveBruteforce(move))
         continue;
+      auto move_ok = board.see(move, 0);
+      if(move.new_type() || board.is_capture(move))
+      {
+        if(move_ok)
+          move.sort_value = 10000000 + board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type());
+        else
+          move.sort_value = board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type()) - 10000;
+      }
+      else
+      {
+        board.makeMove(move);
+        move.sort_value = scontexts_[0].eval_(-ScoreMax, +ScoreMax);
+        if(!move_ok)
+          move.sort_value -= 10000;
+        board.unmakeMove(move);
+      }
       scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
     }
     scontexts_[0].moves_[sdata_.numOfMoves_] = SMove{ true };
+    auto* b = scontexts_[0].moves_.data();
+    auto* e = b + sdata_.numOfMoves_;
+    std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
     auto const* hitem = hash_.find(board.fmgr().hashCode());
     if(hitem && hitem->move_)
     {
       SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
       X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
       X_ASSERT(!board.validateMove(best), "move from hash is invalid");
-      auto* b = scontexts_[0].moves_.data();
-      auto* e = b + sdata_.numOfMoves_;
       bring_to_front(b, e, best);
     }
   }
@@ -218,17 +235,10 @@ ScoreType Engine::alphaBetta0()
       hist.inc_good();
       sdata_.best_ = move;
       alpha = score;
-      //bring_to_front(scontexts_[0].moves_.data(),
-      //               scontexts_[0].moves_.data()+sdata_.numOfMoves_,
-      //               sdata_.best_);
       assemblePV(0, sdata_.best_, board.underCheck(), 0);
     }
     else
-    {
-      if(score < alpha - AlphaThreshold)
-        move.clear_ok();
       hist.inc_bad();
-    }
 
     if(callbacks_.sendStats_ && sparams_.analyze_mode_)
       (callbacks_.sendStats_)(sdata_);
@@ -244,9 +254,6 @@ ScoreType Engine::alphaBetta0()
   if(sdata_.numOfMoves_ == 1)
     return alpha;
 
-  //compact_moves(scontexts_[0].moves_.data(),
-  //              scontexts_[0].moves_.data() + sdata_.numOfMoves_);
-
   if(sdata_.best_)
   {
     auto& hist = history(board.color(), sdata_.best_.from(), sdata_.best_.to());
@@ -259,14 +266,8 @@ ScoreType Engine::alphaBetta0()
   if(sdata_.numOfMoves_ > 2)
   {
     auto* b = scontexts_[0].moves_.data();
-    auto* b0 = b;
     auto* e = b + sdata_.numOfMoves_;
     b++;
-    //for(; b != e; ++b)
-    //{
-    //  if(!b->see_ok())
-    //    break;
-    //}
     for(auto* m = b; m != e; ++m)
     {
       auto& hist = history(board.color(), m->from(), m->to());
