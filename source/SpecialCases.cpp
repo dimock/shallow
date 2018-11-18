@@ -841,7 +841,7 @@ void SpecialCasesDetector::initWinnerLoser()
   for(int i = 1; i < 8; ++i)
   {
     winnerLoser_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorBlack, i } })] = [figure_vs_pawns, bishop_vs_pawn, i](Board const& board)
+    { Figure::TypePawn, Figure::ColorBlack, static_cast<char>(i) } })] = [figure_vs_pawns, bishop_vs_pawn, i](Board const& board)
     {
       if(i == 1)
         return bishop_vs_pawn(board, Figure::ColorBlack);
@@ -849,7 +849,7 @@ void SpecialCasesDetector::initWinnerLoser()
         return figure_vs_pawns(board, Figure::ColorBlack);
     };
     winnerLoser_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, i } })] = [figure_vs_pawns, bishop_vs_pawn, i](Board const& board)
+    { Figure::TypePawn, Figure::ColorWhite, static_cast<char>(i) } })] = [figure_vs_pawns, bishop_vs_pawn, i](Board const& board)
     {
       if(i == 1)
         return bishop_vs_pawn(board, Figure::ColorWhite);
@@ -857,7 +857,7 @@ void SpecialCasesDetector::initWinnerLoser()
         return figure_vs_pawns(board, Figure::ColorWhite);
     };
     winnerLoser_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorBlack, i } })] = [figure_vs_pawns, knight_vs_pawn, i](Board const& board)
+    { Figure::TypePawn, Figure::ColorBlack, static_cast<char>(i) } })] = [figure_vs_pawns, knight_vs_pawn, i](Board const& board)
     {
       if(i == 1)
         return knight_vs_pawn(board, Figure::ColorBlack);
@@ -865,7 +865,7 @@ void SpecialCasesDetector::initWinnerLoser()
         return figure_vs_pawns(board, Figure::ColorBlack);
     };
     winnerLoser_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, i } })] = [figure_vs_pawns, knight_vs_pawn, i](Board const& board)
+    { Figure::TypePawn, Figure::ColorWhite, static_cast<char>(i) } })] = [figure_vs_pawns, knight_vs_pawn, i](Board const& board)
     {
       if(i == 1)
         return knight_vs_pawn(board, Figure::ColorWhite);
