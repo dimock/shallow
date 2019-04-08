@@ -738,18 +738,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   score_king += check_score;
 #endif
   score_king = std::min(score_king, 255);
-  int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
-  if(num_total < 2)// || ((num_rooks + num_queens) == 0 && (num_bishops < 2) && (num_knights == 0 || num_bishops == 0)))
+  if(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king < 2)
     score_king = 0;
-//#if 0
-//  else
-//  {
-//    static int score_king_max = 0;
-//    if(score_king_max < score_king)
-//      score_king_max = score_king;
-//  }
-//#endif
-
   score_king = evalCoeffs().kingAttackTable_[score_king];
 #else
   static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
@@ -765,14 +755,11 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       coeff += 24;
   }
   score_king = (score_king * coeff) >> 5;
+
 #ifdef EVAL_KING_CHECK
   score_king += check_score;
 #endif
-  //  {
-  //    static int score_king_max = 0;
-  //    if(score_king_max < score_king)
-  //      score_king_max = score_king;
-  //  }
+
 #endif
 
 #endif // EVAL_KING_PR

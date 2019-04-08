@@ -690,7 +690,7 @@ void Board::detectCheck(Move const& move)
     {
       d >>= 1;
       int rook_to = move.from() + d;
-      if((rook_to&7) == (king_pos&7) && is_nothing_between(rook_to, king_pos, ~mask_all))
+      if(((rook_to&7) == (king_pos&7) || (rook_to>>3) == (king_pos>>3)) && is_nothing_between(rook_to, king_pos, ~mask_all))
       {
         data_.checking_ = rook_to;
         data_.state_ |= UnderCheck;

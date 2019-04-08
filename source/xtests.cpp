@@ -3,6 +3,7 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
 #include <xtests.h>
+#include <MovesGenerator.h>
 #include <xoptimize.h>
 #include <xprotocol.h>
 #include <kpk.h>
@@ -177,6 +178,40 @@ void evaluateFen(std::string const& ffname)
     eval.initialize(&e.board_);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     std::cout << score << std::endl;
+  },
+    [](std::string const& err_str)
+  {
+    std::cout << "Error: " << err_str << std::endl;
+  });
+}
+
+void generateMoves(std::string const& ffname, std::string const& ofname)
+{
+  using GBoard = SBoard<Board, UndoInfo, 16>;
+  std::ofstream ofs{ofname};
+  testFen<Board, Move, UndoInfo>(
+    ffname,
+    [&ofs](size_t, xEPD<Board, Move, UndoInfo>& e)
+  {
+    auto fen = toFEN(e.board_);
+    ofs << fen << ";";
+    auto moves = generate<Board, Move>(e.board_);
+    for (auto move : moves)
+    {
+      move.clear_ok();
+      if (!e.board_.validateMoveBruteforce(move))
+        continue;
+
+      auto smove = moveToStr(move, false);
+
+      GBoard board{e.board_, true};
+      board.makeMove(move);
+      if (board.underCheck())
+        smove += "!";
+
+      ofs << " " << smove;
+    }
+    ofs << "\n";
   },
     [](std::string const& err_str)
   {

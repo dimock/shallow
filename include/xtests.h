@@ -155,5 +155,6 @@ void speedTest();
 std::vector<std::string> board2Test(std::string const& epdfile);
 void epdFolder(std::string const& folder);
 void pgnFolder(std::string const& folder);
+void generateMoves(std::string const& ffname, std::string const& ofname);
 
 } // NEngine

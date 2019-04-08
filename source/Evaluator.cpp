@@ -518,18 +518,16 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
   if(num_passers > 1)
   {
     auto mpassers = pmask & pawnMasks().mask_multi_passer(x_passers);
-    int y_avg = 0;
-    int count = 0;
+    int ymax = 0;
     while(mpassers)
     {
       int n = clear_lsb(mpassers);
       int cy = colored_y_[color][Index(n).y()];
-      y_avg += cy;
-      count++;
+      if(ymax < cy)
+        ymax = cy;
     }
-    X_ASSERT(count != num_passers, "incorrect number of multipassers");
-    y_avg /= count;
-    auto s = evalCoeffs().multipasserPawn_[y_avg] * (count-1);
+    X_ASSERT(ymax > 6, "invalid multi-pass y");
+    auto s = evalCoeffs().multipasserPawn_[ymax] * (num_passers -1);
     info.score.common_ += s;
   }
 

@@ -18,11 +18,12 @@ int main(int argn, char *argv[])
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
 
-  //if(argn > 1)
-  //{
-  //  NEngine::evaluateFen(argv[1]);
-  //  return 0;
-  //}
+//  if(argn > 1)
+//  {
+//    NEngine::evaluateFen(argv[1]);
+////    NEngine::generateMoves(argv[1], argv[2]);
+//    return 0;
+//  }
 
   for(; xpr.doCmd(););
 
