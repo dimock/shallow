@@ -732,16 +732,6 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     num_queens = 1;
 #endif
 
-#ifdef EVAL_KPR_CPW
-
-#ifdef EVAL_KING_CHECK
-  score_king += check_score;
-#endif
-  score_king = std::min(score_king, 255);
-  if(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king < 2)
-    score_king = 0;
-  score_king = evalCoeffs().kingAttackTable_[score_king];
-#else
   static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   int coeff = number_of_attackers[num_total];
@@ -760,9 +750,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   score_king += check_score;
 #endif
 
-#endif
-
-#endif // EVAL_KING_PR
+#endif //EVAL_KING_PR
 
   int score = 0
 #ifdef EVAL_MOB
