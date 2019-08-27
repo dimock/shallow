@@ -14,7 +14,6 @@ xtests.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <iostream>
 #include <vector>
 #include <string>
-#include <boost/algorithm/string.hpp>
 
 namespace NEngine
 {
@@ -100,8 +99,7 @@ public:
         continue;
       }
       epd.fen_ = sline;
-      std::vector<std::string> str_moves;
-      boost::algorithm::split(str_moves, mstr, boost::is_any_of(" \t"), boost::token_compress_on);
+      auto str_moves = NEngine::split(mstr, [](char c) { return NEngine::is_any_of(" \t", c); });
       for(auto const& smove : str_moves)
       {
         if(smove.empty())
@@ -146,8 +144,6 @@ void testFen(std::string const& ffname,
 }
 
 void testSee(std::string const& ffname);
-void optimizeFen(std::string const& ffname);
-void optimizeFenEval(std::string const& ffname);
 void evaluateFen(std::string const& ffname);
 void see_perf_test(std::string const& fname);
 void kpkTable(std::string const& fname);

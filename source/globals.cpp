@@ -10,7 +10,6 @@ namespace NEngine
 
 namespace details
 {
-  EvalCoefficients*           g_evalCoeffs_;
   DeltaPosCounter const*      g_deltaPosCounter_{};
   BetweenMask const*          g_betweenMasks_{};
   DistanceCounter const*      g_distanceCounter_{};
@@ -25,7 +24,6 @@ namespace
 
 class Globals
 {
-  std::unique_ptr<EvalCoefficients>       evalCoeffs_;
   std::unique_ptr<DeltaPosCounter>        deltaPosCounter_;
   std::unique_ptr<BetweenMask>            betweenMasks_;
   std::unique_ptr<DistanceCounter>        distanceCounter_;
@@ -37,7 +35,6 @@ class Globals
 public:
   Globals()
   {
-    evalCoeffs_      = std::unique_ptr<EvalCoefficients>(new EvalCoefficients);
     deltaPosCounter_ = std::unique_ptr<DeltaPosCounter>(new DeltaPosCounter);
     betweenMasks_    = std::unique_ptr<BetweenMask>(new BetweenMask(*deltaPosCounter_));
     distanceCounter_ = std::unique_ptr<DistanceCounter>(new DistanceCounter);
@@ -46,7 +43,6 @@ public:
     pawnMasks_       = std::unique_ptr<PawnMasks>(new PawnMasks);
     specialCases_    = std::unique_ptr<SpecialCasesDetector>(new SpecialCasesDetector);
 
-    details::g_evalCoeffs_ = evalCoeffs_.get();
     details::g_deltaPosCounter_ = deltaPosCounter_.get();
     details::g_betweenMasks_ = betweenMasks_.get();
     details::g_distanceCounter_ = distanceCounter_.get();

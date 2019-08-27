@@ -50,9 +50,9 @@ ScoreType Figure::positionEvaluation(int stage, Figure::Color color, Figure::Typ
 {
   X_ASSERT(stage > 1 || color > 1 || type > 7 || pos < 0 || pos > 63, "invalid figure params");
   if(color)
-    return +evalCoeffs().positionEvaluations_[stage][type][mirrorIndex_[pos]];
+    return +EvalCoefficients::positionEvaluations_[stage][type][mirrorIndex_[pos]];
   else
-    return -evalCoeffs().positionEvaluations_[stage][type][pos];
+    return -EvalCoefficients::positionEvaluations_[stage][type][pos];
 }
 
 char Figure::fromFtype(Figure::Type t)

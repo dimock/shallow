@@ -18,7 +18,7 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorBlack));
-    score_w.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeKnight][ki_dist];
+    score_w.common_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
 #endif
 
 #ifdef EVAL_BLOCK_KN
@@ -27,35 +27,35 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     case A8:
       if(board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= evalCoeffs().knightBlocked_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case A7:
       if(board_->isFigure(A6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= evalCoeffs().knightBlocked_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= evalCoeffs().knightBlocked_;
+        score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= evalCoeffs().knightBlocked_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(H6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= evalCoeffs().knightBlocked_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= evalCoeffs().knightBlocked_;
+        score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
     }
 #endif
@@ -73,7 +73,7 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorWhite));
-    score_b.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeKnight][ki_dist];
+    score_b.common_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
 #endif
 
 #ifdef EVAL_BLOCK_KN
@@ -82,35 +82,35 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     case A1:
       if(board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= evalCoeffs().knightBlocked_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case A2:
       if(board_->isFigure(A3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= evalCoeffs().knightBlocked_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= evalCoeffs().knightBlocked_;
+        score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= evalCoeffs().knightBlocked_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(H3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= evalCoeffs().knightBlocked_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case G1:
       if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= evalCoeffs().knightBlocked_;
+        score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
     }
 #endif
@@ -136,7 +136,7 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorBlack));
-    score_w.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeBishop][ki_dist];
+    score_w.common_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][ki_dist];
 #endif
 
 #ifdef EVAL_BLOCK_BI
@@ -144,48 +144,48 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     {
     case A7:
       if(board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= evalCoeffs().bishopBlocked_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A6:
       if(board_->isFigure(B5, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(C6, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= evalCoeffs().bishopBlocked_;
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= evalCoeffs().bishopBlocked_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w.opening_ -= evalCoeffs().bishopBlocked_;
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= evalCoeffs().bishopBlocked_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= evalCoeffs().bishopBlocked_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w.opening_ -= evalCoeffs().bishopBlocked_;
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H6:
       if(board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= evalCoeffs().bishopBlocked_;
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
     }
 #endif
@@ -205,7 +205,7 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(Figure::ColorWhite));
-    score_b.common_ += evalCoeffs().kingDistanceBonus_[Figure::TypeBishop][ki_dist];
+    score_b.common_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][ki_dist];
 #endif
 
 #ifdef EVAL_BLOCK_BI
@@ -213,48 +213,48 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     {
     case A2:
       if(board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= evalCoeffs().bishopBlocked_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A3:
       if(board_->isFigure(B4, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(C3, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= evalCoeffs().bishopBlocked_;
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= evalCoeffs().bishopBlocked_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b.opening_ -= evalCoeffs().bishopBlocked_;
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= evalCoeffs().bishopBlocked_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= evalCoeffs().bishopBlocked_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case G1:
       if(board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b.opening_ -= evalCoeffs().bishopBlocked_;
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H3:
       if(board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= evalCoeffs().bishopBlocked_;
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
     }
 #endif
@@ -283,13 +283,13 @@ int Evaluator::evaluateRook(Figure::Color color)
     auto const& mask_col = pawnMasks().mask_column(n & 7);
     bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
     bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
-    score += evalCoeffs().openRook_[(no_pw_color+no_pw_ocolor) & 3];
+    score += EvalCoefficients::openRook_[(no_pw_color+no_pw_ocolor) & 3];
 #endif
     
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score += evalCoeffs().kingDistanceBonus_[Figure::TypeRook][ki_dist];
+    score += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
 #endif
   }
   return score;
@@ -313,7 +313,7 @@ int Evaluator::evaluateQueens(Figure::Color color)
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score += evalCoeffs().kingDistanceBonus_[Figure::TypeQueen][ki_dist];
+    score += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
 #endif
   }
   return score;
@@ -358,7 +358,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   if(auto pw_att = (finfo_[color].pawnAttacks_ & ki_fields))
   {
     int pw_num = pop_count(pw_att);
-    score_king += pw_num * evalCoeffs().pawnKingAttack_;
+    score_king += pw_num * EvalCoefficients::pawnKingAttack_;
     num_pawns++;
   }
 #endif
@@ -368,7 +368,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   if(auto kn_att = (finfo_[color].knightAttacks_ & ki_fields))
   {
     int kn_num = pop_count(kn_att);
-    score_king += kn_num * evalCoeffs().knightKingAttack_;
+    score_king += kn_num * EvalCoefficients::knightKingAttack_;
     num_knights++;
   }
 #endif
@@ -386,7 +386,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     int n = clear_lsb(knights);
     auto knight_moves = movesTable().caps(Figure::TypeKnight, n) & (cango_mask | include_mask);
     int num_moves = pop_count(knight_moves);
-    score_mob += evalCoeffs().knightMobility_[num_moves & 15];
+    score_mob += EvalCoefficients::knightMobility_[num_moves & 15];
   }
 #endif
   // knight check
@@ -412,7 +412,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           int apos = clear_lsb(from_pawn);
           if(board_->is_nothing_between(ppos, apos, inv_mask_all_))
           {
-            pinned_score += evalCoeffs().pinnedPawn_;
+            pinned_score += EvalCoefficients::pinnedPawn_;
             break;
           }
         }
@@ -433,9 +433,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           if(board_->is_nothing_between(npos, apos, inv_mask_all_))
           {
             if(set_mask_bit(npos) & finfo_[ocolor].attack_mask_)
-              pinned_score += evalCoeffs().pinnedKnight_ >> 1;
+              pinned_score += EvalCoefficients::pinnedKnight_ >> 1;
             else
-              pinned_score += evalCoeffs().pinnedKnight_;
+              pinned_score += EvalCoefficients::pinnedKnight_;
             break;
           }
         }
@@ -457,9 +457,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           {
             if(board_->getField(apos).type() == Figure::TypeBishop
                || ((set_mask_bit(rpos) & finfo_[ocolor].attack_mask_) == 0ULL))
-              pinned_score += evalCoeffs().pinnedRook_;
+              pinned_score += EvalCoefficients::pinnedRook_;
             else
-              pinned_score += evalCoeffs().pinnedRook_ >> 1;
+              pinned_score += EvalCoefficients::pinnedRook_ >> 1;
             break;
           }
         }
@@ -479,7 +479,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           int apos = clear_lsb(from_queen);
           if(board_->is_nothing_between(qpos, apos, inv_mask_all_))
           {
-            pinned_score += evalCoeffs().pinnedQueen_;
+            pinned_score += EvalCoefficients::pinnedQueen_;
             break;
           }
         }
@@ -505,7 +505,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           int apos = clear_lsb(from_pawn);
           if(board_->is_nothing_between(ppos, apos, inv_mask_all_))
           {
-            pinned_score += evalCoeffs().pinnedPawn_;
+            pinned_score += EvalCoefficients::pinnedPawn_;
             break;
           }
         }
@@ -526,9 +526,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           if(board_->is_nothing_between(npos, apos, inv_mask_all_))
           {
             if(set_mask_bit(npos) & finfo_[ocolor].attack_mask_)
-              pinned_score += evalCoeffs().pinnedKnight_ >> 1;
+              pinned_score += EvalCoefficients::pinnedKnight_ >> 1;
             else
-              pinned_score += evalCoeffs().pinnedKnight_;
+              pinned_score += EvalCoefficients::pinnedKnight_;
             break;
           }
         }
@@ -549,9 +549,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           if(board_->is_nothing_between(bpos, apos, inv_mask_all_))
           {
             if(set_mask_bit(bpos) & finfo_[ocolor].attack_mask_)
-              pinned_score += evalCoeffs().pinnedBishop_ >> 1;
+              pinned_score += EvalCoefficients::pinnedBishop_ >> 1;
             else
-              pinned_score += evalCoeffs().pinnedBishop_;
+              pinned_score += EvalCoefficients::pinnedBishop_;
             break;
           }
         }
@@ -571,7 +571,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
           int apos = clear_lsb(from_queen);
           if(board_->is_nothing_between(qpos, apos, inv_mask_all_))
           {
-            pinned_score += evalCoeffs().pinnedQueen_;
+            pinned_score += EvalCoefficients::pinnedQueen_;
             break;
           }
         }
@@ -599,7 +599,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #ifdef EVAL_MOB
     auto bishop_moves = magic_ns::bishop_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(bishop_moves);
-    score_mob += evalCoeffs().bishopMobility_[num_moves & 15];
+    score_mob += EvalCoefficients::bishopMobility_[num_moves & 15];
 #endif
     // king pressure
 #ifdef EVAL_KING_PR
@@ -609,7 +609,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(auto bi_att = (xray_moves & ki_fields))
     {
       int bi_num = pop_count(bi_att);
-      score_king += bi_num * evalCoeffs().bishopKingAttack_;
+      score_king += bi_num * EvalCoefficients::bishopKingAttack_;
       num_bishops++;
     }
 #endif
@@ -638,7 +638,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(auto r_att = (rook_moves & ki_fields))
     {
       r_num = pop_count(r_att);
-      score_king += r_num * evalCoeffs().rookKingAttack_;
+      score_king += r_num * EvalCoefficients::rookKingAttack_;
       num_rooks++;
     }
 #endif
@@ -646,7 +646,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     // mobility
 #ifdef EVAL_MOB
     int num_moves = pop_count(cango_mask & rook_moves);
-    score_mob += evalCoeffs().rookMobility_[num_moves & 15];
+    score_mob += EvalCoefficients::rookMobility_[num_moves & 15];
 #endif
 
     // king pressure
@@ -657,7 +657,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(auto r_att = (xray_moves & ki_fields))
     {
       r_num = pop_count(r_att);
-      score_king += r_num * evalCoeffs().rookKingAttackXray_;
+      score_king += r_num * EvalCoefficients::rookKingAttackXray_;
       num_rooks++;
     }
 #endif
@@ -687,14 +687,14 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(auto q_att = (queen_moves & ki_fields))
     {
       q_num = pop_count(q_att);
-      score_king += q_num * evalCoeffs().queenKingAttack_;
+      score_king += q_num * EvalCoefficients::queenKingAttack_;
       num_queens++;
     }
 #endif
     queen_moves &= cango_mask | include_mask;
 #ifdef EVAL_MOB
     int num_moves = pop_count(queen_moves);
-    score_mob += evalCoeffs().queenMobility_[num_moves & 31];
+    score_mob += EvalCoefficients::queenMobility_[num_moves & 31];
 #endif
 
     // king pressure
@@ -705,7 +705,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(auto q_att = (xray_moves & ki_fields))
     {
       q_num = pop_count(q_att);
-      score_king += q_num * evalCoeffs().queenKingAttackXray_;
+      score_king += q_num * EvalCoefficients::queenKingAttackXray_;
       num_queens++;
     }
 #endif
@@ -717,10 +717,10 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #ifdef EVAL_KING_PR
 
 #ifdef EVAL_KING_CHECK
-  int check_score = pop_count(kn_check) * evalCoeffs().knightChecking_
-    + pop_count(bi_check) * evalCoeffs().bishopChecking_
-    + pop_count(r_check) * evalCoeffs().rookChecking_
-    + pop_count(q_check) * evalCoeffs().queenChecking_;
+  int check_score = pop_count(kn_check) * EvalCoefficients::knightChecking_
+    + pop_count(bi_check) * EvalCoefficients::bishopChecking_
+    + pop_count(r_check) * EvalCoefficients::rookChecking_
+    + pop_count(q_check) * EvalCoefficients::queenChecking_;
 
   if(!num_knights && kn_check)
     num_knights = 1;

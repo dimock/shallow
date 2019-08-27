@@ -13,9 +13,7 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <iomanip>
 #include <sstream>
 #include <unordered_set>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 
 namespace NEngine
 {
@@ -109,63 +107,6 @@ void see_perf_test(std::string const& fname)
   });
 }
 
-void optimizeFen(std::string const& ffname)
-{
-  NShallow::Processor proc;
-  NEngine::EvalCoefficients evals{ evalCoeffs() };
-  int summ_min{ -1 };
-  int summ0 = -1;
-  int steps_num{};
-  int Nsteps = 100;
-  double r = 0.2;
-  int depth = 4;
-  optimizeFen(ffname, [&proc, depth](size_t i, xEPD<Board, Move, UndoInfo>& epd)
-  {
-    std::cout << i << ": ";
-    proc.setDepth(depth);
-    proc.setBoard(epd.board_);
-    proc.clear();
-    auto r = proc.reply(false);
-    if(!r)
-    {
-      std::cout << "-" << std::endl;
-      return 1;
-    }
-    auto best = r.best_;
-    int score = r.score_;
-    if(score < Figure::MatScore-MaxPly)
-    {
-      auto iter = std::find_if(epd.moves_.begin(), epd.moves_.end(), [&best](Move const& move) { return move == best; });
-      if(iter == epd.moves_.end())
-      {
-        std::cout << "-" << std::endl;
-        return 1;
-      }
-    }
-    std::cout << printSAN(epd.board_, r.best_) << ", score = " << score << std::endl;
-    return 0;
-  },
-  [&](int summ) -> bool
-  {
-    if(summ_min < 0 || summ_min > summ)
-    {
-      if(summ0 >= 0)
-        evalCoeffs().save("eval.txt");
-      summ_min = summ;
-      if(summ0 < 0)
-        summ0 = summ;
-    }
-    evalCoeffs0().random({ "bishopKnightMat_" }, {}, r, 0);
-    std::cout << steps_num << " step. current result = " << summ << ". best result = " << summ_min << ", initial result = " << summ0 <<  std::endl;
-    return ++steps_num < Nsteps;
-  },
-    [](std::string const& err)
-  {
-    std::cout << "error: " << err << std::endl;
-  });
-  std::cout << summ_min << std::endl;
-}
-
 void evaluateFen(std::string const& ffname)
 {
   testFen<Board, Move, UndoInfo>(
@@ -216,41 +157,6 @@ void generateMoves(std::string const& ffname, std::string const& ofname)
   {
     std::cout << "Error: " << err_str << std::endl;
   });
-}
-
-void optimizeFenEval(std::string const& ffname)
-{
-  NEngine::EvalCoefficients evals{ evalCoeffs() };
-  NEngine::Evaluator eval;
-  int summ_min{ -1 };
-  int summ0 = -1;
-  int steps_num{};
-  int Nsteps = 10000;
-  double r = 0.25;
-  optimizeFen(ffname, [&eval](size_t i, xEPD<Board, Move, UndoInfo>& epd)
-  {
-    eval.initialize(&epd.board_);
-    auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
-    return std::abs(score - epd.score_);
-  },
-  [&](int summ) -> bool
-  {
-    if(summ_min < 0 || summ_min > summ)
-    {
-      summ_min = summ;
-      if(summ0 < 0)
-        summ0 = summ;
-      evalCoeffs().save("eval.txt");
-    }
-    evalCoeffs0().random({"bishopKnightMat_"}, {}, r, 0);
-    std::cout << steps_num << " step. current result = " << summ << ". best result = " << summ_min << ", initial result = " << summ0 <<  std::endl;
-    return ++steps_num < Nsteps;
-  },
-  [](std::string const& err)
-  {
-    std::cout << "error: " << err << std::endl;
-  });
-  std::cout << summ_min << std::endl;
 }
 
 void kpkTable(std::string const& fname)
@@ -389,7 +295,7 @@ void epdFolder(std::string const& folder)
     {
       boost::filesystem::path pp{ *i };
       std::string e = pp.extension().string();
-      boost::algorithm::to_lower(e);
+      NEngine::to_lower(e);
       if(e != ".epd")
         continue;
       auto errs = board2Test(pp.string());
@@ -497,7 +403,7 @@ void pgnFolder(std::string const& folder)
   if(boost::filesystem::is_regular_file(boost::filesystem::status(p)))
   {
     std::string e = p.extension().string();
-    boost::algorithm::to_lower(e);
+    NEngine::to_lower(e);
     if(e != ".pgn")
       return;
     processBoardPGN(folder);
