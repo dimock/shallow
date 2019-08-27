@@ -2,7 +2,6 @@
 #include <MovesGenerator.h>
 #include <xindex.h>
 #include <Helpers.h>
-#include <boost/algorithm/string/trim.hpp>
 #include <algorithm>
 
 namespace NEngine

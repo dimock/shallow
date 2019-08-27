@@ -6,7 +6,6 @@ EvalCoefficients.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <fstream>
 #include <set>
 #include <algorithm>
-#include <boost/algorithm/string/join.hpp>
 
 namespace NEngine
 {

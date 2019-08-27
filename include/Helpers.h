@@ -33,6 +33,13 @@ std::string printSAN(Board & board, const Move & move);
 bool load(Board &, std::istream &);
 bool save(const Board &, std::ostream &, bool = true);
 
+std::string join(std::vector<std::string> const& vec, std::string const& delim);
+std::string join(std::vector<std::string>::const_iterator from, std::vector<std::string>::const_iterator to, std::string const& delim);
+void trim(std::string& str);
+void to_lower(std::string& str);
+bool is_any_of(std::string const& of, char c);
+std::vector<std::string> split(std::string const& str, std::function<bool(char)> const& pred);
+
 /// initialize from FEN
 bool fromFEN(std::string const& i_fen, Board& board);
 

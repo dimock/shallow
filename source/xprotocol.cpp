@@ -10,7 +10,6 @@
 #include <Helpers.h>
 #include <xoptions.h>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
 
 namespace NShallow
 {
@@ -193,9 +192,9 @@ bool xProtocolMgr::uciGo(const xCmd & cmd)
   if(auto r = proc_.reply(false))
   {
     std::string outstr("bestmove ");
-    if(!r->moveStr_.empty())
+    if(!r.moveStr_.empty())
     {
-      outstr += r->moveStr_;
+      outstr += r.moveStr_;
       os_ << outstr << std::endl;
       return true;
     }
@@ -405,11 +404,11 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     {
       fenOk_ = false;
       auto ok = proc_.fromFEN(cmd);
-      if(!ok)
+      if(!ok.first)
       {
         os_ << "tellusererror Illegal position" << std::endl;
       }
-      else if(*ok)
+      else if(ok.second)
         fenOk_ = true;
     }
     break;
@@ -486,10 +485,10 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
       force_ = false;
       if(auto rs = proc_.reply(true))
       {
-        if(!rs->moveStr_.empty())
+        if(!rs.moveStr_.empty())
         {
-          os_ << rs->moveStr_ << std::endl;
-          outState(rs->state_, rs->white_);
+          os_ << rs.moveStr_ << std::endl;
+          outState(rs.state_, rs.white_);
         }
       }
     }
@@ -504,16 +503,16 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     {
       if(auto rs = proc_.move(cmd))
       {
-        if(NEngine::Board::isDraw(rs->state_) || NEngine::ChessMat & rs->state_)
+        if(NEngine::Board::isDraw(rs.state_) || NEngine::ChessMat & rs.state_)
         {
-          outState(rs->state_, rs->white_);
+          outState(rs.state_, rs.white_);
         }
         else if(!force_)
         {
-          if(auto rs = proc_.reply(true))
+          if(auto r = proc_.reply(true))
           {
-            os_ << rs->moveStr_ << std::endl;
-            outState(rs->state_, rs->white_);
+            os_ << r.moveStr_ << std::endl;
+            outState(r.state_, r.white_);
           }
         }
       }
@@ -544,7 +543,7 @@ void xProtocolMgr::uciOutputOptions()
       std::vector<std::string> temp;
       std::transform(oinfo.vars.begin(), oinfo.vars.end(), std::back_inserter(temp),
         [](std::string const& s) { return "var " + s; });
-      auto str = boost::algorithm::join(temp, " ");
+      auto str = NEngine::join(temp, " ");
       oss << str;
     }
     os_ << oss.str() << std::endl;

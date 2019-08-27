@@ -3,7 +3,6 @@
 #include <xcommon.h>
 #include <Figure.h>
 #include <unordered_map>
-#include <boost/optional.hpp>
 
 namespace NEngine
 {
@@ -17,8 +16,7 @@ public:
 
   SpecialCasesDetector();
 
-
-  boost::optional<ScoreType> eval(Board const& board) const;
+  std::pair<bool, ScoreType> eval(Board const& board) const;
 
 private:
   void initUsual();

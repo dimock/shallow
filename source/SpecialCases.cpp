@@ -890,7 +890,7 @@ inline SpecialCasesDetector::Scase toScpecialCase(FiguresManager const& fmgr)
   return sc;
 }
 
-boost::optional<ScoreType> SpecialCasesDetector::eval(Board const& board) const
+std::pair<bool, ScoreType> SpecialCasesDetector::eval(Board const& board) const
 {
   auto const& fmgr = board.fmgr();
   if(fmgr.weight(Figure::ColorWhite) == 0 || fmgr.weight(Figure::ColorBlack) == 0)
@@ -898,27 +898,27 @@ boost::optional<ScoreType> SpecialCasesDetector::eval(Board const& board) const
     auto sc = toScpecialCase(fmgr);
     auto iter = matCases_.find(sc);
     if(iter != matCases_.end())
-      return (iter->second)(board);
+      return { true, (iter->second)(board) };
     X_ASSERT(scases_.find(sc) != scases_.end() || winnerLoser_.find(sc) != winnerLoser_.end(), "special case was not detected");
-    return boost::none;
+    return {false, 0};
   }
   if(fmgr.queens(Figure::ColorBlack) + fmgr.rooks(Figure::ColorBlack)+fmgr.bishops(Figure::ColorBlack)+fmgr.knights(Figure::ColorBlack) > 2 ||
      fmgr.queens(Figure::ColorWhite) + fmgr.rooks(Figure::ColorWhite)+fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite) > 2)
   {
-    return boost::none;
+    return {false, 0};
   }
   auto sc = toScpecialCase(fmgr);
   {
     auto iter = scases_.find(sc);
     if(iter != scases_.end())
-      return (iter->second)(board);
+      return { true, (iter->second)(board) };
   }
   {
     auto iter = winnerLoser_.find(sc);
     if(iter != winnerLoser_.end())
-      return (iter->second)(board);
+      return { true, (iter->second)(board) };
   }
-  return boost::none;
+  return {false, 0};
 }
 
 }

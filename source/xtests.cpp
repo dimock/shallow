@@ -13,7 +13,6 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <iomanip>
 #include <sstream>
 #include <unordered_set>
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -132,8 +131,8 @@ void optimizeFen(std::string const& ffname)
       std::cout << "-" << std::endl;
       return 1;
     }
-    auto best = r->best_;
-    int score = r->score_;
+    auto best = r.best_;
+    int score = r.score_;
     if(score < Figure::MatScore-MaxPly)
     {
       auto iter = std::find_if(epd.moves_.begin(), epd.moves_.end(), [&best](Move const& move) { return move == best; });
@@ -143,7 +142,7 @@ void optimizeFen(std::string const& ffname)
         return 1;
       }
     }
-    std::cout << printSAN(epd.board_, r->best_) << ", score = " << score << std::endl;
+    std::cout << printSAN(epd.board_, r.best_) << ", score = " << score << std::endl;
     return 0;
   },
   [&](int summ) -> bool
@@ -293,15 +292,14 @@ void kpkTable(std::string const& fname)
             std::cout << "Error" << std::endl;
             return;
           }
-          auto rr = *r;
-          if(std::abs(rr.score_) > 500)
+          if(std::abs(r.score_) > 500)
           {
             kpk[kw][kl][color] |= 1ULL << p;
-            std::cout << " winner: " << r->score_ << std::endl;
+            std::cout << " winner: " << r.score_ << std::endl;
           }
           else
           {
-            std::cout << " draw: " << r->score_ << std::endl;
+            std::cout << " draw: " << r.score_ << std::endl;
           }
         }
       }
@@ -474,21 +472,20 @@ void processBoardPGN(std::string const& pgn_file)
         std::cout << "Error" << std::endl;
         return;
       }
-      auto rr = *r;
-      if(sboard.is_capture(rr.best_))
+      if(sboard.is_capture(r.best_))
       {
         std::cout << "capture, skipping\n";
         continue;
       }
-      if(std::abs(rr.score_ - score0) > 20 || std::abs(rr.score_) > 300)
+      if(std::abs(r.score_ - score0) > 20 || std::abs(r.score_) > 300)
       {
-        std::cout << "big score " << std::abs(rr.score_)  << " or diff " << std::abs(rr.score_ - score0) << ", skipping\n";
+        std::cout << "big score " << std::abs(r.score_)  << " or diff " << std::abs(r.score_ - score0) << ", skipping\n";
         continue;
       }
-      auto bm = printSAN(sboard, rr.best_);
+      auto bm = printSAN(sboard, r.best_);
       auto sfen = toFEN(sboard);
 //      std::cout << sfen << " bm " << bm << " score " << rr.score_ << std::endl;
-      appendEPD(sfen, bm, rr.score_);
+      appendEPD(sfen, bm, r.score_);
     }
   }
 }

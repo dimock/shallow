@@ -133,11 +133,14 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 #endif
 
 #ifdef EVAL_SPECC
-  if(auto spec = specialCases().eval(*board_))
   {
-    ScoreType score = *spec;
-    score = considerColor(score);
-    return score;
+    auto spec = specialCases().eval(*board_);
+    if (spec.first)
+    {
+      ScoreType score = spec.second;
+      score = considerColor(score);
+      return score;
+    }
   }
 #endif
 

@@ -6,7 +6,6 @@
 #include <engine.h>
 #include <xcommand.h>
 #include <xtime.h>
-#include <boost/optional.hpp>
 
 #undef  WRITE_LOG_FILE_
 #undef WRITE_ERROR_PGN
@@ -16,11 +15,20 @@ namespace NShallow
 
 struct ReplyStruct
 {
+  ReplyStruct(bool ok = false) : ok_{ ok }
+  {}
+
   NEngine::StateType state_{};
   NEngine::Move best_;
   std::string moveStr_;
   bool white_{ false };
   ScoreType score_{};
+
+  operator bool ()
+  {
+    return ok_;
+  }
+  bool ok_ = false;
 };
 
 class Processor
@@ -52,12 +60,12 @@ public:
 
   void setBoard(NEngine::Board&);
   bool fromFEN(std::string const& fen);
-  boost::optional<bool> fromFEN(xCmd const& cmd);
+  std::pair<bool, bool> fromFEN(xCmd const& cmd);
   void editCmd(xCmd const& cmd);
 
-  boost::optional<ReplyStruct> move(xCmd const& moveCmd);
+  ReplyStruct move(xCmd const& moveCmd);
   bool makeMove(std::string const& moveStr);
-  boost::optional<ReplyStruct> reply(bool winboardFormat);
+  ReplyStruct reply(bool winboardFormat);
   bool analyze();
   void stop();
 

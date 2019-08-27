@@ -5,7 +5,7 @@ xcommand.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <xcommand.h>
 #include <algorithm>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
+#include <Helpers.h>
 
 namespace NShallow
 {
@@ -101,12 +101,12 @@ std::string xCmd::params_to_str() const
     {
       temp.push_back(kv.first + ": " + std::to_string(kv.second));
     }
-    str += boost::algorithm::join(temp, ", ");
+    str += NEngine::join(temp, ", ");
     str += ";";
   }
   if(moves_.size() > 0)
   {
-    str += " moves: " + boost::algorithm::join(moves_, ", ");
+    str += " moves: " + NEngine::join(moves_, ", ");
     str += ";";
   }
   if(!str_.empty())

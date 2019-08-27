@@ -12,7 +12,7 @@
 #include <Helpers.h>
 #include <xindex.h>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
+#include <Helpers.h>
 
 namespace NShallow
 {
@@ -233,14 +233,14 @@ void Processor::stop()
   engine_.pleaseStop();
 }
 
-boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
+ReplyStruct Processor::reply(bool winboardFormat)
 {
   if(is_thinking())
-    return boost::none;
+    return ReplyStruct{};
 
   updateTiming();
 
-  ReplyStruct rep;
+  ReplyStruct rep{true};
 
   auto & board = engine_.getBoard();
   rep.white_ = NEngine::Figure::ColorWhite == board.color();
@@ -272,19 +272,19 @@ boost::optional<ReplyStruct> Processor::reply(bool winboardFormat)
   return rep;
 }
 
-boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
+ReplyStruct Processor::move(xCmd const& moveCmd)
 {
   if(is_thinking())
   {
-    return boost::none;
+    return ReplyStruct{};
   }
 
   if(moveCmd.type() != xType::xMove)
   {
-    return boost::none;
+    return ReplyStruct{};
   }
 
-  ReplyStruct rep;
+  ReplyStruct rep{true};
   auto& board = engine_.getBoard();
   auto color = board.color();
   rep.state_ = board.state();
@@ -296,12 +296,12 @@ boost::optional<ReplyStruct> Processor::move(xCmd const& moveCmd)
   auto move = strToMove(moveCmd.str(), board);
   if(!move)
   {
-    return boost::none;
+    return ReplyStruct{};
   }
 
   if(!board.validateMoveBruteforce(move))
   {
-    return boost::none;
+    return ReplyStruct{};
   }
   //hash2file("D:\\Projects\\gitproj\\hash\\hash");
 
@@ -419,16 +419,16 @@ void Processor::clear()
   engine_.clearHash();
 }
 
-boost::optional<bool> Processor::fromFEN(xCmd const& cmd)
+std::pair<bool, bool> Processor::fromFEN(xCmd const& cmd)
 {
   if(is_thinking())
   {
     engine_.pleaseStop();
-    return false;
+    return { true, false };
   }
   if(fromFEN(cmd.fen()))
-    return true;
-  return boost::none;
+    return { true, true };
+  return {false, false};
 }
 
 bool Processor::fromFEN(std::string const& fen)
@@ -500,7 +500,7 @@ void Processor::setFigure(xCmd const& cmd)
     return;
 
   std::string str = cmd.str();
-  boost::algorithm::to_lower(str);
+  NEngine::to_lower(str);
 
   int x = str[1] - 'a';
   if(x < 0 || x > 7)

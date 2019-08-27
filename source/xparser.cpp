@@ -9,8 +9,7 @@
 #include <string>
 #include <sstream>
 #include <map>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
+#include <locale>
 
 namespace NShallow
 {
@@ -22,7 +21,7 @@ namespace
     if(params.size() <= i)
       return 0;
     auto str = params[i];
-    boost::algorithm::to_lower(str);
+    NEngine::to_lower(str);
     std::istringstream iss(str);
     int value{};
     if(iss >> value)
@@ -71,7 +70,7 @@ namespace
         return{};
 
       auto iter = std::find_if(start, params.end(), [](std::string const& str) { return str == "moves";  });
-      fen = boost::algorithm::join(boost::make_iterator_range(start, iter), " ");
+      fen = NEngine::join(start, iter, " ");
       start = iter;
     }
 
@@ -91,7 +90,7 @@ namespace
     if(params.size() < 2)
       return{};
 
-    return xCmd(xType::xSetboardFEN, boost::algorithm::join(params, " "));
+    return xCmd(xType::xSetboardFEN, NEngine::join(params, " "));
   }
 
   xCmd parseUCIGo(std::vector<std::string> const& params)
@@ -185,8 +184,7 @@ xCmd parse(std::string const& line, bool const uci)
     { "stop",       xType::xExit }
   };
 
-  std::vector<std::string> params;
-  boost::algorithm::split(params, line, boost::algorithm::is_any_of(" \t\n\r"), boost::algorithm::token_compress_on);
+  auto params = NEngine::split(line, [](char c) { return NEngine::is_any_of(" \t\n\r", c); });
   if(params.empty())
   {
     return {};

@@ -79,7 +79,7 @@ public:
     {
       ::std::string sline;
       ::std::getline(ifs, sline);
-      boost::algorithm::trim(sline);
+      trim(sline);
       if(sline.empty())
         continue;
       if(sline[0] == '#')

@@ -5,7 +5,7 @@ Helpers.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include <Helpers.h>
 #include <xindex.h>
 #include <MovesGenerator.h>
-#include <boost/algorithm/string/trim.hpp>
+#include <locale>
 
 #ifdef _USE_LOG
 #include <fstream>
@@ -151,7 +151,7 @@ Move parseSAN(const Board & board, std::string const& str)
     s += 2;
     n = std::string(s).length();
 
-    if('=' == s[0] || boost::is_any_of("NBRQ")(s[0]))
+    if('=' == s[0] || is_any_of("NBRQ", s[0]))
     {
       if('=' == s[0])
       {
@@ -419,7 +419,7 @@ Move strToMove(std::string const& str, const Board & board)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TODO: rewrite with std::string/std::regex/boost::trim/...
+// TODO: rewrite with std::string/std::regex
 /* rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 */
 bool fromFEN(std::string const& i_fen, Board& board)
 {
@@ -427,7 +427,7 @@ bool fromFEN(std::string const& i_fen, Board& board)
   board.clear();
 
   std::string fen = i_fen.empty() ? stdFEN_ : i_fen;
-  boost::algorithm::trim(fen);
+  trim(fen);
 
   const char* s = fen.c_str();
   int x = 0, y = 7;
@@ -930,6 +930,58 @@ bool save(const Board & board, std::ostream & os, bool write_prefix)
   return true;
 }
 
+std::string join(std::vector<std::string> const& vec, std::string const& delim)
+{
+  return join(vec.begin(), vec.end(), delim);
+}
+
+std::string join(std::vector<std::string>::const_iterator from, std::vector<std::string>::const_iterator to, std::string const& delim)
+{
+  std::string result;
+  for (auto i = from; i != to; ++i)
+  {
+    result += *i;
+    if (i != to - 1)
+    {
+      result += delim;
+    }
+  }
+  return result;
+}
+
+void trim(std::string& str)
+{
+  auto i = std::find_if(str.begin(), str.end(), [](char c) { return !std::isspace(c, std::locale{}); });
+  str.erase(str.begin(), i);
+  auto j = std::find_if(str.rbegin(), str.rend(), [](char c) { return !std::isspace(c, std::locale{}); });
+  str.erase(j.base(), str.end());
+}
+
+void to_lower(std::string& str)
+{
+  std::transform(str.begin(), str.end(), str.begin(), [](char c) { return std::tolower(c, std::locale{}); });
+}
+
+bool is_any_of(std::string const& of, char c)
+{
+  return std::find_if(of.begin(), of.end(), [c](char x) { return c == x; }) != of.end();
+}
+
+std::vector<std::string> split(std::string const& str, std::function<bool(char)> const& pred)
+{
+  std::vector<std::string> result;
+  auto to = str.begin();
+  while (to != str.end())
+  {
+    auto from = std::find_if_not(to, str.end(), pred);
+    if (from == str.end())
+      break;
+    to = std::find_if(from, str.end(), pred);
+    std::string s{ from, to };
+    result.push_back(std::move(s));
+  }
+  return result;
+}
 
 int XCounter::count_ = 0;
 
