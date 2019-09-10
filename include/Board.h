@@ -429,7 +429,7 @@ struct Board
   {
     Figure::Color ocolor = Figure::otherColor(color());
     ScoreType score = fmgr().weight(color()) - fmgr().weight(ocolor);
-    if(score > betta + 2*Figure::figureWeight_[Figure::TypePawn]*2 && depth > 7*ONE_PLY)
+    if(score > betta + 4*Figure::figureWeight_[Figure::TypePawn] && depth > 7*ONE_PLY)
     {
       return std::max(1, depth - NullMove_PlyReduce - ONE_PLY);
     }
@@ -483,6 +483,12 @@ struct Board
   bool ptAttackedFrom(Figure::Color acolor, int8 pt, int8 from) const;
 
   bool isDangerPawn(Move & move) const;
+
+  bool isPawnMove(const Move& move) const
+  {
+    const Field & ffrom = getField(move.from());
+    return ffrom.type() == Figure::TypePawn;
+  }
 
 private:
   // for initialization only

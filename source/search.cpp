@@ -419,7 +419,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       && !scontexts_[ictx].board_.isWinnerLoser())
   {
     ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);
-    int threshold = (int)alpha - (int)score0 - Position_Gain;
+    int threshold = (int)alpha - (int)score0 -Position_Gain;
     static const int thresholds_[4] = {0,
       0,
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn],
@@ -462,10 +462,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   
   bool check_escape = board.underCheck();
   FastGenerator<Board, SMove> fg(board, hmove, scontexts_[ictx].plystack_[ply].killer_);
-  for(; alpha < betta && !checkForStop();)
+  for (; alpha < betta && !checkForStop();)
   {
     auto* pmove = fg.next();
-    if(!pmove)
+    if (!pmove)
     {
 #ifdef SINGULAR_EXT
       allMovesIterated = true;
@@ -485,63 +485,82 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-    if(!counter)
-    {
-      depthInc = depthIncrement(ictx, move, pv, singular);
-      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, allow_nm);
-    }
-    else
-    {
-      depthInc = depthIncrement(ictx, move, false, false);
 
-      int R = 0;
+#ifdef USE_PROBCUT
+    ScoreType betta_pc = betta < ScoreMax - 1000 ? betta + 300 : betta;
+    if (!pv
+      && curr.capture()
+      && !danger_pawn
+      && move.see_ok()
+      && !check_escape
+      && !scontexts_[ictx].board_.isWinnerLoser()
+      && depth >= Probcut_Depth
+      && std::abs(betta) < Figure::MatScore - MaxPly
+      && std::abs(alpha) < Figure::MatScore - MaxPly)
+    {
+      score = -alphaBetta(ictx, depth - Probcut_PlyReduce, ply + 1, -betta_pc, -(betta_pc - 1), pv, allow_nm);
+    }
+
+    if (score < alpha + 300)
+#endif
+
+    {
+
+      if (!counter)
+      {
+        depthInc = depthIncrement(ictx, move, pv, singular);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm);
+      }
+      else
+      {
+        depthInc = depthIncrement(ictx, move, false, false);
+
+        int R = 0;
 #ifdef USE_LMR
-      if(!check_escape &&         
-         !danger_pawn &&
+        if (!check_escape &&
+          !danger_pawn &&
           sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
-          alpha > -Figure::MatScore-MaxPly &&
+          alpha > -Figure::MatScore - MaxPly &&
           scontexts_[ictx].board_.canBeReduced(move))
-      {
-        R = ONE_PLY;
-#ifdef LMR_REDUCE_MORE
-        auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-        if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
         {
-          R += ONE_PLY;
-          if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
+          R = ONE_PLY;
+
+#ifdef LMR_REDUCE_MORE
+          auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
+          if (depth > LMR_DepthLimit && (!move.see_ok() || hist.good() * 20 < hist.bad()))
+          {
             R += ONE_PLY;
-        }
-        curr.mflags_ |= UndoInfo::Reduced;
-      }
-      else if(!check_escape &&
-              counter > 10 &&
-              sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-              depth > LMR_DepthLimit &&
-              alpha > -Figure::MatScore-MaxPly &&
-              !move.see_ok() &&
-              !curr.castle() &&
-              !board.underCheck())
-      {
-        R = ONE_PLY;
+            if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
+              R += ONE_PLY;
+          }
 #endif // LMR_REDUCE_MORE
-        curr.mflags_ |= UndoInfo::Reduced;
-      }
+
+          curr.mflags_ |= UndoInfo::Reduced;
+        }
 #endif
 
 
-      score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply+1, -alpha-1, -alpha, false, allow_nm);
-      curr.mflags_ &= ~UndoInfo::Reduced;
+        score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
+        curr.mflags_ &= ~UndoInfo::Reduced;
 
-      if(!stopped() && score > alpha && R > 0)
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -alpha-1, -alpha, false, allow_nm);
+        if (!stopped() && score > alpha && R > 0)
+          score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
 
-      if(!stopped() && score > alpha && score < betta && pv)
-      {
-        depthInc = depthIncrement(0, move, pv, singular);
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, allow_nm);
+        if (!stopped() && score > alpha && score < betta && pv)
+        {
+          depthInc = depthIncrement(0, move, pv, singular);
+          score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm);
+        }
       }
+
+    } // end of (score < betta_pc)
+#ifdef USE_PROBCUT
+    else if(betta < Figure::MatScore - MaxPly)
+    {
+      score = betta;
     }
+#endif
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
