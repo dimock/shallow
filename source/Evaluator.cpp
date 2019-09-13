@@ -457,7 +457,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     // isolated pawn
     bool unsupported{ false };
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
-    info.score.common_ += isolated * EvalCoefficients::isolatedPawn_;
+    info.score.opening_ += isolated * EvalCoefficients::isolatedPawnsOpening_[x];
+    info.score.endGame_ += isolated * EvalCoefficients::isolatedPawnsEndgame_[x];
 
     if(!isolated)
     {

@@ -13,15 +13,14 @@ namespace NEngine
   // pawns
   int EvalCoefficients::pawnEndgameBonus_{ 15 };
   int EvalCoefficients::doubledPawn_{ -12 };
-  int EvalCoefficients::isolatedPawn_{ -14 };
   int EvalCoefficients::backwardPawn_{ -14 };
   int EvalCoefficients::unsupportedPawn_{ -12 };
   int EvalCoefficients::unprotectedPawn_{ -9 };
   int EvalCoefficients::rookBehindBonus_{ 5 };
   int EvalCoefficients::protectedPawnPressure_{ 3 };
   int EvalCoefficients::unprotectedPawnPressure_{ 7 };
-  int EvalCoefficients::protectedPawnBishopTreat_{ 2 };
-  int EvalCoefficients::unprotectedPawnBishopTreat_{ 5 };
+  int EvalCoefficients::protectedPawnBishopTreat_{ 8 };
+  int EvalCoefficients::unprotectedPawnBishopTreat_{ 15 };
   int EvalCoefficients::kingPressure_{ 3 };
   int EvalCoefficients::generalPressure_{ 1 };
 
@@ -76,6 +75,8 @@ namespace NEngine
 
   // arrays
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 8, 5, 2, 1, 0 };
+  int EvalCoefficients::isolatedPawnsOpening_[8] = { -20, -17, -15, -12, -12, -15, -17, -20 };
+  int EvalCoefficients::isolatedPawnsEndgame_[8] = { -12, -10, -8, -7, -7, -8, -10, -12 };
 
   int EvalCoefficients::pawnShieldA_[2] = {14, 10};
   int EvalCoefficients::pawnShieldB_[2] = {14, 10};

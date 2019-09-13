@@ -15,7 +15,6 @@ struct EvalCoefficients
   // pawns
   static int pawnEndgameBonus_;
   static int doubledPawn_;
-  static int isolatedPawn_;
   static int backwardPawn_;
   static int unsupportedPawn_;
   static int unprotectedPawn_;
@@ -78,6 +77,9 @@ struct EvalCoefficients
 
   // arrays
   static int opponentPawnPressure_[8];
+
+  static int isolatedPawnsOpening_[8];
+  static int isolatedPawnsEndgame_[8];
 
   // rook on open column
   static int openRook_[4];
