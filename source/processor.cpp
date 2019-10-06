@@ -274,36 +274,35 @@ ReplyStruct Processor::reply(bool winboardFormat)
 
 ReplyStruct Processor::move(xCmd const& moveCmd)
 {
-  if(is_thinking())
+  if (is_thinking())
   {
     return ReplyStruct{};
   }
 
-  if(moveCmd.type() != xType::xMove)
+  if (moveCmd.type() != xType::xMove)
   {
     return ReplyStruct{};
   }
 
-  ReplyStruct rep{true};
+  ReplyStruct rep{ true };
   auto& board = engine_.getBoard();
   auto color = board.color();
   rep.state_ = board.state();
   rep.white_ = NEngine::Figure::ColorWhite == color;
 
-  if(board.drawState() || board.matState())
+  if (board.drawState() || board.matState())
     return rep;
 
   auto move = strToMove(moveCmd.str(), board);
-  if(!move)
+  if (!move)
   {
     return ReplyStruct{};
   }
 
-  if(!board.validateMoveBruteforce(move))
+  if (!board.validateMoveBruteforce(move))
   {
     return ReplyStruct{};
   }
-  //hash2file("D:\\Projects\\gitproj\\hash\\hash");
 
   board.makeMove(move);
   board.verifyState();
@@ -434,7 +433,7 @@ std::pair<bool, bool> Processor::fromFEN(xCmd const& cmd)
 bool Processor::fromFEN(std::string const& fen)
 {
   bool r = engine_.fromFEN(fen);
-  //file2hash("D:\\Projects\\gitproj\\hash\\hash_h6g5");
+  //file2hash("D:\\Projects\\gitproj\\hash\\hash6");
   return r;
 }
 

@@ -829,7 +829,7 @@ void SpecialCasesDetector::initWinnerLoser()
       Index p(clear_lsb(pmask));
       Index pp(p.x(), winnerColor*7);
       int y = pawn_colored_y_[winnerColor][p.y()];
-      score += EvalCoefficients::passerPawn_[y];
+      score += EvalCoefficients::passerPawnEnd_[y];
       score += (7 - distanceCounter().getDistance(kw, pp) + distanceCounter().getDistance(kl, pp)) * EvalCoefficients::kingToPawnDistanceMulti_;
     }
     if(winnerColor == Figure::ColorBlack)

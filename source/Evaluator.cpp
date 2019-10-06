@@ -457,8 +457,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     // isolated pawn
     bool unsupported{ false };
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
-    info.score.opening_ += isolated * EvalCoefficients::isolatedPawnsOpening_[x];
-    info.score.endGame_ += isolated * EvalCoefficients::isolatedPawnsEndgame_[x];
+    info.score.common_ += isolated * EvalCoefficients::isolatedPawn_;
 
     if(!isolated)
     {
@@ -492,10 +491,14 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       {
         info.passers_[color] |= 1ULL << n;
         x_passers |= 1 << x;
-        info.score.common_ += EvalCoefficients::passerPawn_[cy];
+        info.score.opening_ += EvalCoefficients::passerPawnMid_[cy];
+        info.score.endGame_ += EvalCoefficients::passerPawnEnd_[cy];
         // supported
-        if(pawnMasks().mask_supported(color, n) & pmask)
-          info.score.common_ += EvalCoefficients::protectedPasser_[cy];
+        if (pawnMasks().mask_supported(color, n) & pmask)
+        {
+          info.score.opening_ += EvalCoefficients::protectedPasserMid_[cy];
+          info.score.endGame_ += EvalCoefficients::protectedPasserEnd_[cy];
+        }
         Index pp(x, py);
         int pawn_dist_promo = std::abs(py - idx.y());
         int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
@@ -508,11 +511,17 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
         bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
         X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
-        auto const& semipasserCoeff = EvalCoefficients::semipasserPawn_[cy];
-        auto scoreSemipasser = ((semipasserCoeff >> 1) + (left || right) * (semipasserCoeff >> 1));
-        if(pawnMasks().mask_supported(color, n) & pmask)
-          scoreSemipasser += EvalCoefficients::protectedPasser_[cy] >> 2;
-        info.score.common_ += scoreSemipasser;
+        auto const& semipasserCoeffMid = EvalCoefficients::semipasserPawnMid_[cy];
+        auto const& semipasserCoeffEnd = EvalCoefficients::semipasserPawnEnd_[cy];
+        auto scoreSemipasserMid = ((semipasserCoeffMid >> 1) + (left || right) * (semipasserCoeffMid >> 1));
+        auto scoreSemipasserEnd = ((semipasserCoeffEnd >> 1) + (left || right) * (semipasserCoeffEnd >> 1));
+        if (pawnMasks().mask_supported(color, n) & pmask)
+        {
+          scoreSemipasserMid += EvalCoefficients::protectedPasserMid_[cy] >> 2;
+          scoreSemipasserEnd += EvalCoefficients::protectedPasserEnd_[cy] >> 2;
+        }
+        info.score.opening_ += scoreSemipasserMid;
+        info.score.endGame_ += scoreSemipasserEnd;
       }
     }
   }
@@ -531,8 +540,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         ymax = cy;
     }
     X_ASSERT(ymax > 6, "invalid multi-pass y");
-    auto s = EvalCoefficients::multipasserPawn_[ymax] * (num_passers -1);
-    info.score.common_ += s;
+    info.score.opening_ += EvalCoefficients::multipasserPawnMid_[ymax] * (num_passers - 1);
+    info.score.endGame_ += EvalCoefficients::multipasserPawnEnd_[ymax] * (num_passers - 1);
   }
 
   return info;

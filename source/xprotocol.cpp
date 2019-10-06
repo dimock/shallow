@@ -161,6 +161,12 @@ void xProtocolMgr::uciPosition(const xCmd & cmd)
   {
     proc_.makeMove(mvstr);
   }
+
+  //if(cmd.moves().size() == 29 && cmd.moves().back() == "d2b3")
+  //{
+  //  proc_.hash2file("D:\\Projects\\gitproj\\hash\\hash");
+  //}
+
 }
 
 bool xProtocolMgr::uciGo(const xCmd & cmd)
@@ -338,6 +344,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
   {
   case xType::UCI:
     cmds_.setUci(true);
+    proc_.clear();
     os_ << "id name Shallow" << std::endl;
     os_ << "id author Dmitry Sultanov" << std::endl;
     uciOutputOptions();
@@ -346,6 +353,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
 
   case xType::xBoard:
     cmds_.setUci(false);
+    proc_.clear();
     break;
 
   case xType::xOption:

@@ -738,11 +738,11 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   if(coeff > 0)
   {
     if(num_bishops > 1)
-      coeff += 8;
+      coeff += 16;
     if(num_rooks > 0)
       coeff += 10;
     if(num_queens > 0)
-      coeff += 15;
+      coeff += 24;
   }
   score_king = (score_king * coeff) >> 5;
 

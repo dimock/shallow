@@ -431,7 +431,7 @@ bool fromFEN(std::string const& i_fen, Board& board)
 
   const char* s = fen.c_str();
   int x = 0, y = 7;
-  for(; s && y >= 0; ++s)
+  for(; *s && y >= 0; ++s)
   {
     char c = *s;
     if('/' == c)

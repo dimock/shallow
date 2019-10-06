@@ -13,14 +13,15 @@ namespace NEngine
   // pawns
   int EvalCoefficients::pawnEndgameBonus_{ 15 };
   int EvalCoefficients::doubledPawn_{ -12 };
+  int EvalCoefficients::isolatedPawn_{ -14 };
   int EvalCoefficients::backwardPawn_{ -14 };
   int EvalCoefficients::unsupportedPawn_{ -12 };
   int EvalCoefficients::unprotectedPawn_{ -9 };
   int EvalCoefficients::rookBehindBonus_{ 5 };
   int EvalCoefficients::protectedPawnPressure_{ 3 };
   int EvalCoefficients::unprotectedPawnPressure_{ 7 };
-  int EvalCoefficients::protectedPawnBishopTreat_{ 8 };
-  int EvalCoefficients::unprotectedPawnBishopTreat_{ 15 };
+  int EvalCoefficients::protectedPawnBishopTreat_{ 2 };
+  int EvalCoefficients::unprotectedPawnBishopTreat_{ 5 };
   int EvalCoefficients::kingPressure_{ 3 };
   int EvalCoefficients::generalPressure_{ 1 };
 
@@ -75,8 +76,6 @@ namespace NEngine
 
   // arrays
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 8, 5, 2, 1, 0 };
-  int EvalCoefficients::isolatedPawnsOpening_[8] = { -20, -17, -15, -12, -12, -15, -17, -20 };
-  int EvalCoefficients::isolatedPawnsEndgame_[8] = { -12, -10, -8, -7, -7, -8, -10, -12 };
 
   int EvalCoefficients::pawnShieldA_[2] = {14, 10};
   int EvalCoefficients::pawnShieldB_[2] = {14, 10};
@@ -89,16 +88,20 @@ namespace NEngine
   int EvalCoefficients::bishopBonus_[4] = { 0, 10, 50, 50 };
 
   int EvalCoefficients::figureAgainstPawnBonus_[2] = { 25, 60 };
-  int EvalCoefficients::rookAgainstFigureBonus_[2] = { 25, 60 };
+  int EvalCoefficients::rookAgainstFigureBonus_[2] = { 25, 65 };
   int EvalCoefficients::figuresAgainstRookBonus_[2] = { 10, 40 };
   int EvalCoefficients::rookAgainstPawnBonus_[2] = { 15, 40 };
 
   // arrays
-  int EvalCoefficients::passerPawn_[8] = { 0, 10, 20, 30, 40, 60, 90, 0 };
-  int EvalCoefficients::multipasserPawn_[8] = { 0, 5, 10, 20, 30, 40, 50, 0 };
+  int EvalCoefficients::passerPawnMid_[8] = { 0, 9, 18, 27, 32, 54, 81, 0 };
+  int EvalCoefficients::passerPawnEnd_[8] = { 0, 10, 20, 30, 40, 60, 90, 0 };
+  int EvalCoefficients::multipasserPawnMid_[8] = { 0, 4, 8, 16, 24, 32, 40, 0 };
+  int EvalCoefficients::multipasserPawnEnd_[8] = { 0, 5, 10, 20, 30, 40, 50, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
-  int EvalCoefficients::semipasserPawn_[8] = { 0, 3, 6, 10, 14, 18, 0, 0 };
-  int EvalCoefficients::protectedPasser_[8] = { 0, 9, 12, 15, 17, 20, 26, 0 };
+  int EvalCoefficients::semipasserPawnMid_[8] = { 0, 2, 5, 8, 12, 15, 0, 0 };
+  int EvalCoefficients::semipasserPawnEnd_[8] = { 0, 3, 6, 10, 14, 18, 0, 0 };
+  int EvalCoefficients::protectedPasserMid_[8] = { 0, 7, 9, 12, 13, 15, 20, 0 };
+  int EvalCoefficients::protectedPasserEnd_[8] = { 0, 9, 12, 15, 17, 20, 26, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 10, 12, 16, 20, 30, 40, 0 };
   int EvalCoefficients::cangoPawn_[8] = { 0, 6, 7, 8, 10, 12, 16, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 3, 6, 8, 10, 12, 15, 0 };
