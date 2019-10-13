@@ -88,20 +88,16 @@ namespace NEngine
   int EvalCoefficients::bishopBonus_[4] = { 0, 10, 50, 50 };
 
   int EvalCoefficients::figureAgainstPawnBonus_[2] = { 25, 60 };
-  int EvalCoefficients::rookAgainstFigureBonus_[2] = { 25, 65 };
+  int EvalCoefficients::rookAgainstFigureBonus_[2] = { 25, 60 };
   int EvalCoefficients::figuresAgainstRookBonus_[2] = { 10, 40 };
   int EvalCoefficients::rookAgainstPawnBonus_[2] = { 15, 40 };
 
   // arrays
-  int EvalCoefficients::passerPawnMid_[8] = { 0, 9, 18, 27, 32, 54, 81, 0 };
-  int EvalCoefficients::passerPawnEnd_[8] = { 0, 10, 20, 30, 40, 60, 90, 0 };
-  int EvalCoefficients::multipasserPawnMid_[8] = { 0, 4, 8, 16, 24, 32, 40, 0 };
-  int EvalCoefficients::multipasserPawnEnd_[8] = { 0, 5, 10, 20, 30, 40, 50, 0 };
+  int EvalCoefficients::passerPawn_[8] = { 0, 10, 20, 30, 40, 60, 90, 0 };
+  int EvalCoefficients::multipasserPawn_[8] = { 0, 5, 10, 20, 30, 40, 50, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
-  int EvalCoefficients::semipasserPawnMid_[8] = { 0, 2, 5, 8, 12, 15, 0, 0 };
-  int EvalCoefficients::semipasserPawnEnd_[8] = { 0, 3, 6, 10, 14, 18, 0, 0 };
-  int EvalCoefficients::protectedPasserMid_[8] = { 0, 7, 9, 12, 13, 15, 20, 0 };
-  int EvalCoefficients::protectedPasserEnd_[8] = { 0, 9, 12, 15, 17, 20, 26, 0 };
+  int EvalCoefficients::semipasserPawn_[8] = { 0, 3, 6, 10, 14, 18, 0, 0 };
+  int EvalCoefficients::protectedPasser_[8] = { 0, 9, 12, 15, 17, 20, 26, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 10, 12, 16, 20, 30, 40, 0 };
   int EvalCoefficients::cangoPawn_[8] = { 0, 6, 7, 8, 10, 12, 16, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 3, 6, 8, 10, 12, 15, 0 };

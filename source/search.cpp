@@ -207,10 +207,6 @@ ScoreType Engine::alphaBetta0()
   ScoreType alpha = -ScoreMax;
   ScoreType betta = +ScoreMax;
 
-#ifdef USE_LMR0
-  bool check_escape = board.underCheck();
-#endif
-
 #ifndef NDEBUG
   Board board0{ board };
 #endif
@@ -286,6 +282,10 @@ ScoreType Engine::processMove0(SMove const& move, ScoreType const alpha, ScoreTy
   const int depth = sdata_.depth_ * ONE_PLY;
 
   auto& board = scontexts_[0].board_;
+
+#ifdef USE_LMR0
+  bool check_escape = board.underCheck();
+#endif
 
   board.makeMove(move);
   sdata_.inc_nc();
@@ -528,11 +528,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
 #ifdef LMR_REDUCE_MORE
           auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-          if (depth > LMR_DepthLimit && counter > 5 && (!move.see_ok() || hist.good() * 20 < hist.bad()))
+          if (depth > LMR_DepthLimit + ONE_PLY && counter > 15 && (!move.see_ok() || hist.good() * 20 < hist.bad()))
           {
             R += ONE_PLY;
-            //if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
-            //  R += ONE_PLY;
           }
 #endif // LMR_REDUCE_MORE
 
