@@ -735,15 +735,15 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   int coeff = number_of_attackers[num_total];
-  if(coeff > 0)
-  {
-    if(num_bishops > 1)
-      coeff += 16;
-    if(num_rooks > 0)
-      coeff += 10;
-    if(num_queens > 0)
-      coeff += 24;
-  }
+  //if(coeff > 0)
+  //{
+  //  if(num_bishops > 1)
+  //    coeff += 16;
+  //  if(num_rooks > 0)
+  //    coeff += 10;
+  //  if(num_queens > 0)
+  //    coeff += 24;
+  //}
   score_king = (score_king * coeff) >> 5;
 
 #ifdef EVAL_KING_CHECK

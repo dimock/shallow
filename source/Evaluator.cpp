@@ -516,23 +516,23 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     }
   }
 
-  // 2 more passers on neighbour lines
-  int num_passers = pawnMasks().count_multi_passer(x_passers);
-  if(num_passers > 1)
-  {
-    auto mpassers = pmask & pawnMasks().mask_multi_passer(x_passers);
-    int ymax = 0;
-    while(mpassers)
-    {
-      int n = clear_lsb(mpassers);
-      int cy = colored_y_[color][Index(n).y()];
-      if(ymax < cy)
-        ymax = cy;
-    }
-    X_ASSERT(ymax > 6, "invalid multi-pass y");
-    auto s = EvalCoefficients::multipasserPawn_[ymax] * (num_passers -1);
-    info.score.common_ += s;
-  }
+  //// 2 more passers on neighbour lines
+  //int num_passers = pawnMasks().count_multi_passer(x_passers);
+  //if(num_passers > 1)
+  //{
+  //  auto mpassers = pmask & pawnMasks().mask_multi_passer(x_passers);
+  //  int ymax = 0;
+  //  while(mpassers)
+  //  {
+  //    int n = clear_lsb(mpassers);
+  //    int cy = colored_y_[color][Index(n).y()];
+  //    if(ymax < cy)
+  //      ymax = cy;
+  //  }
+  //  X_ASSERT(ymax > 6, "invalid multi-pass y");
+  //  auto s = EvalCoefficients::multipasserPawn_[ymax] * (num_passers -1);
+  //  info.score.common_ += s;
+  //}
 
   return info;
 }

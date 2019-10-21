@@ -33,13 +33,13 @@ bool Engine::search(SearchResult& sres)
     for(auto move : moves)
     {
       move.sort_value = 0;
-      move.clear_ok();
       if(!board.validateMoveBruteforce(move))
         continue;
-      auto move_ok = board.see(move, 0);
+      if(board.see(move, 0))
+        move.set_ok();
       if(move.new_type() || board.is_capture(move))
       {
-        if(move_ok)
+        if(move.see_ok())
           move.sort_value = 10000000 + board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type());
         else
           move.sort_value = board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type()) - 10000;
@@ -48,7 +48,7 @@ bool Engine::search(SearchResult& sres)
       {
         board.makeMove(move);
         move.sort_value = scontexts_[0].eval_(-ScoreMax, +ScoreMax);
-        if(!move_ok)
+        if(!move.see_ok())
           move.sort_value -= 10000;
         board.unmakeMove(move);
       }
@@ -224,10 +224,8 @@ ScoreType Engine::alphaBetta0()
       break;
 
     auto& hist = history(board.color(), move.from(), move.to());
-    move.sort_value = score;
     if(score > alpha)
     {
-      move.set_ok();
       hist.inc_good();
       sdata_.best_ = move;
       alpha = score;
@@ -266,8 +264,10 @@ ScoreType Engine::alphaBetta0()
     b++;
     for(auto* m = b; m != e; ++m)
     {
+	  if(m->new_type() || board.is_capture(*m))
+        continue;
       auto& hist = history(board.color(), m->from(), m->to());
-      m->sort_value += hist.score();
+      m->sort_value = hist.score();
     }
     std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
   }
@@ -528,10 +528,24 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
 #ifdef LMR_REDUCE_MORE
           auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-          if (depth > LMR_DepthLimit + ONE_PLY && counter > 15 && (!move.see_ok() || hist.good() * 20 < hist.bad()))
+          if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
           {
             R += ONE_PLY;
+            if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
+              R += ONE_PLY;
           }
+          curr.mflags_ |= UndoInfo::Reduced;
+        }
+        else if(!check_escape &&
+              counter > 10 &&
+              sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+              depth > LMR_DepthLimit &&
+              alpha > -Figure::MatScore-MaxPly &&
+              !move.see_ok() &&
+              !curr.castle() &&
+              !board.underCheck())
+        {
+          R = ONE_PLY;
 #endif // LMR_REDUCE_MORE
 
           curr.mflags_ |= UndoInfo::Reduced;

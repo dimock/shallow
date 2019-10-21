@@ -30,8 +30,8 @@ namespace NEngine
   int EvalCoefficients::doublePawnAttack_{ 50 };
 
   // king
-  int EvalCoefficients::castleImpossible_{ -20 };
-  int EvalCoefficients::fakeCastle_{ -20 };
+  int EvalCoefficients::castleImpossible_{ -28 };
+  int EvalCoefficients::fakeCastle_{ -30 };
   int EvalCoefficients::castleBonus_{ 10 };
   int EvalCoefficients::pawnPenaltyA_{ -14 };
   int EvalCoefficients::pawnPenaltyB_{ -14 };
@@ -94,7 +94,7 @@ namespace NEngine
 
   // arrays
   int EvalCoefficients::passerPawn_[8] = { 0, 10, 20, 30, 40, 60, 90, 0 };
-  int EvalCoefficients::multipasserPawn_[8] = { 0, 5, 10, 20, 30, 40, 50, 0 };
+  int EvalCoefficients::multipasserPawn_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::semipasserPawn_[8] = { 0, 3, 6, 10, 14, 18, 0, 0 };
   int EvalCoefficients::protectedPasser_[8] = { 0, 9, 12, 15, 17, 20, 26, 0 };

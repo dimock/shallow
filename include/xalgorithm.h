@@ -43,15 +43,7 @@ namespace NEngine
     X_ASSERT(i == e, "no given move found in bring_to_front");
     if(i == b)
       return;
-    auto* j = i;
-    j--;
-    for(;; j--, i--)
-    {
-      *i = *j;
-      if(j == b)
-        break;
-    }
-    *b = move;
+     std::swap(*i, *b);
   }
 
   template <class MOVE>
