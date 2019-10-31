@@ -427,6 +427,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
   uint8 x_visited{ 0 };
   uint8 x_passers{ 0 };
+  int dy = delta_y[color];
 
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
@@ -437,6 +438,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     int x  = idx.x();
     int cy = colored_y_[color][idx.y()];
     int py = promo_y[color];
+    auto n1 = n + (dy << 3);
+    auto fwd_field = set_mask_bit(n1);
 
     int dist_to_oking = distanceCounter().getDistance(board_->kingPos(ocolor), n);
     int dist_to_myking = distanceCounter().getDistance(board_->kingPos(color), n);
@@ -462,14 +465,13 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     if(!isolated)
     {
       // backward
-      if(((pawnMasks().mask_backward(color, n) & pmask) == 0ULL))
+      auto backward_mask = pawnMasks().mask_backward(color, n);
+      if((backward_mask & pmask) == 0ULL && (fwd_field & opmsk) == 0ULL)
       {
-        // TODO: optimization required
-        int closest_y = closestToBackward(idx.x(), idx.y(), pmask, color);
-        X_ASSERT(closest_y < 0 || closest_y > 7, "backward mask calculation error - invalid next y position");
-        BitMask pmask_after = betweenMasks().between(n, Index(idx.x(), closest_y));
-        bool blocked  = ((finfo_[ocolor].pawnAttacks_ | opmsk) & pmask_after) != 0ULL;
-        info.score.common_ += blocked * EvalCoefficients::backwardPawn_;
+        auto attackers = movesTable().pawnCaps(color, n1) & opmsk;
+        auto guards = movesTable().pawnCaps(ocolor, n1) & pmask;
+        bool is_backward = pop_count(attackers) > pop_count(guards);
+        info.score.common_ += is_backward * EvalCoefficients::backwardPawn_;
       }
       // forward but not supported
       else if(!couldBeSupported(idx, color, ocolor, pmask, opmsk))
@@ -501,18 +503,18 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         if(pawn_dist_promo < o_dist_promo)
           info.score.endGame_ += EvalCoefficients::farKingPawn_[cy] >> 1;
       }
-      // quadpasser
-      else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
-      {
-        bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
-        bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
-        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
-        auto const& semipasserCoeff = EvalCoefficients::semipasserPawn_[cy];
-        auto scoreSemipasser = ((semipasserCoeff >> 1) + (left || right) * (semipasserCoeff >> 1));
-        if(pawnMasks().mask_supported(color, n) & pmask)
-          scoreSemipasser += EvalCoefficients::protectedPasser_[cy] >> 2;
-        info.score.common_ += scoreSemipasser;
-      }
+      //// quadpasser
+      //else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
+      //{
+      //  bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
+      //  bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
+      //  X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
+      //  auto const& semipasserCoeff = EvalCoefficients::semipasserPawn_[cy];
+      //  auto scoreSemipasser = ((semipasserCoeff >> 1) + (left || right) * (semipasserCoeff >> 1));
+      //  if(pawnMasks().mask_supported(color, n) & pmask)
+      //    scoreSemipasser += EvalCoefficients::protectedPasser_[cy] >> 2;
+      //  info.score.common_ += scoreSemipasser;
+      //}
     }
   }
 

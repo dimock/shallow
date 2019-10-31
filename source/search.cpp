@@ -83,7 +83,8 @@ bool Engine::search(SearchResult& sres)
     if(sdata_.best_)
     {
       if(stop_ && sdata_.depth_ > 2 &&
-        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/3 || (sdata_.best_ != sres.best_ /*&& abs(score-sres->score_) >= 5*/)) &&
+        ((score < sres.score_-Figure::figureWeight_[Figure::TypePawn]/3) ||
+         (sdata_.best_ != sres.best_)) &&
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
@@ -239,11 +240,8 @@ ScoreType Engine::alphaBetta0()
   } // end of for loop
 
   // don't need to continue
-  if(!stopped() && sdata_.counter_ == 1 && !sparams_.analyze_mode_)
+  if(!stopped() && sdata_.numOfMoves_ == 1 && !sparams_.analyze_mode_)
     pleaseStop();
-
-  if(stopped())
-    return alpha;
 
   if(sdata_.numOfMoves_ == 1)
     return alpha;
@@ -255,21 +253,21 @@ ScoreType Engine::alphaBetta0()
     bring_to_front(scontexts_[0].moves_.data(),
                    scontexts_[0].moves_.data()+sdata_.numOfMoves_,
                    sdata_.best_);
-  }
   
-  if(sdata_.numOfMoves_ > 2)
-  {
-    auto* b = scontexts_[0].moves_.data();
-    auto* e = b + sdata_.numOfMoves_;
-    b++;
-    for(auto* m = b; m != e; ++m)
+    if(sdata_.numOfMoves_ > 2)
     {
-	  if(m->new_type() || board.is_capture(*m))
-        continue;
-      auto& hist = history(board.color(), m->from(), m->to());
-      m->sort_value = hist.score();
+      auto* b = scontexts_[0].moves_.data();
+      auto* e = b + sdata_.numOfMoves_;
+      b++;
+      for(auto* m = b; m != e; ++m)
+      {
+	    if(m->new_type() || board.is_capture(*m))
+          continue;
+        auto& hist = history(board.color(), m->from(), m->to());
+        m->sort_value = hist.score();
+      }
+      std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
     }
-    std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
   }
 
   X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
