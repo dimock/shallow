@@ -98,6 +98,7 @@ struct EvalCoefficients
   static int multipasserPawn_[8];
   static int passerPawnSc_[8]; // special cases only
   static int semipasserPawn_[8];
+  static int passerCandidatePawn_[8];
   static int protectedPasser_[8];
   static int farKingPawn_[8];
   static int cangoPawn_[8];

@@ -503,18 +503,18 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         if(pawn_dist_promo < o_dist_promo)
           info.score.endGame_ += EvalCoefficients::farKingPawn_[cy] >> 1;
       }
-      //// quadpasser
-      //else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
-      //{
-      //  bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
-      //  bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
-      //  X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
-      //  auto const& semipasserCoeff = EvalCoefficients::semipasserPawn_[cy];
-      //  auto scoreSemipasser = ((semipasserCoeff >> 1) + (left || right) * (semipasserCoeff >> 1));
-      //  if(pawnMasks().mask_supported(color, n) & pmask)
-      //    scoreSemipasser += EvalCoefficients::protectedPasser_[cy] >> 2;
-      //  info.score.common_ += scoreSemipasser;
-      //}
+      // quadpasser
+      else if((pawnMasks().mask_line_blocked(color, n) & opmsk) == 0ULL)
+      {
+        bool left = (x != 0) && ((pawnMasks().mask_line_blocked(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
+        bool right = (x != 7) && ((pawnMasks().mask_line_blocked(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
+        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "passed pawn was not detected");
+        auto const& semipasserCoeff = EvalCoefficients::semipasserPawn_[cy];
+        auto scoreSemipasser = ((semipasserCoeff >> 1) + (left || right) * (semipasserCoeff >> 1));
+        if(pawnMasks().mask_supported(color, n) & pmask)
+          scoreSemipasser += EvalCoefficients::protectedPasser_[cy] >> 2;
+        info.score.common_ += scoreSemipasser;
+      }
     }
   }
 

@@ -268,9 +268,9 @@ ScoreType Engine::alphaBetta0()
       }
       std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
     }
-  }
 
-  X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
+    X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
+  }
   return alpha;
 }
 
@@ -532,18 +532,18 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
             if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
               R += ONE_PLY;
           }
-          curr.mflags_ |= UndoInfo::Reduced;
-        }
-        else if(!check_escape &&
-              counter > 10 &&
-              sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-              depth > LMR_DepthLimit &&
-              alpha > -Figure::MatScore-MaxPly &&
-              !move.see_ok() &&
-              !curr.castle() &&
-              !board.underCheck())
-        {
-          R = ONE_PLY;
+        //  curr.mflags_ |= UndoInfo::Reduced;
+        //}
+        //else if(!check_escape &&
+        //      counter > 10 &&
+        //      sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+        //      depth > LMR_DepthLimit &&
+        //      alpha > -Figure::MatScore-MaxPly &&
+        //      !move.see_ok() &&
+        //      !curr.castle() &&
+        //      !board.underCheck())
+        //{
+        //  R = ONE_PLY;
 #endif // LMR_REDUCE_MORE
 
           curr.mflags_ |= UndoInfo::Reduced;
