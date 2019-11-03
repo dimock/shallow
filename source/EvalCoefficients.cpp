@@ -11,10 +11,10 @@ namespace NEngine
 {
   // single vars
   // pawns
-  int EvalCoefficients::pawnEndgameBonus_{ 10 };
+  int EvalCoefficients::pawnEndgameBonus_{ 15 };
   int EvalCoefficients::doubledPawn_{ -12 };
-  int EvalCoefficients::isolatedPawn_{ -12 };
-  int EvalCoefficients::backwardPawn_{ -12 };
+  int EvalCoefficients::isolatedPawn_{ -14 };
+  int EvalCoefficients::backwardPawn_{ -14 };
   int EvalCoefficients::unsupportedPawn_{ -12 };
   int EvalCoefficients::unprotectedPawn_{ -9 };
   int EvalCoefficients::rookBehindBonus_{ 5 };
@@ -30,26 +30,26 @@ namespace NEngine
   int EvalCoefficients::doublePawnAttack_{ 50 };
 
   // king
-  int EvalCoefficients::castleImpossible_{ -30 };
+  int EvalCoefficients::castleImpossible_{ -28 };
   int EvalCoefficients::fakeCastle_{ -30 };
-  int EvalCoefficients::castleBonus_{ 12 };
-  int EvalCoefficients::pawnPenaltyA_{ -15 };
-  int EvalCoefficients::pawnPenaltyB_{ -15 };
+  int EvalCoefficients::castleBonus_{ 10 };
+  int EvalCoefficients::pawnPenaltyA_{ -14 };
+  int EvalCoefficients::pawnPenaltyB_{ -14 };
   int EvalCoefficients::pawnPenaltyC_{ -4 };
-  int EvalCoefficients::noPawnPenaltyA_{ -10 };
-  int EvalCoefficients::noPawnPenaltyB_{ 10 };
+  int EvalCoefficients::noPawnPenaltyA_{ -8 };
+  int EvalCoefficients::noPawnPenaltyB_{ -8 };
   int EvalCoefficients::noPawnPenaltyC_{ -1 };
 
   // blocked figure
-  int EvalCoefficients::knightBlocked_{ 70 };
-  int EvalCoefficients::bishopBlocked_{ 70 };
+  int EvalCoefficients::knightBlocked_{ 80 };
+  int EvalCoefficients::bishopBlocked_{ 80 };
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 1 };
-  int EvalCoefficients::knightKingAttack_{ 4 };
-  int EvalCoefficients::bishopKingAttack_{ 4 };
-  int EvalCoefficients::rookKingAttack_{ 10 };
-  int EvalCoefficients::queenKingAttack_{ 20 };
+  int EvalCoefficients::knightKingAttack_{ 2 };
+  int EvalCoefficients::bishopKingAttack_{ 2 };
+  int EvalCoefficients::rookKingAttack_{ 5 };
+  int EvalCoefficients::queenKingAttack_{ 12 };
 
   // x-ray attacks
   int EvalCoefficients::rookKingAttackXray_{ 4 };
@@ -75,14 +75,14 @@ namespace NEngine
   int EvalCoefficients::pinnedQueen_{ 12 };
 
   // arrays
-  int EvalCoefficients::opponentPawnPressure_[8] = { 0, 30, 20, 12, 5, 2, 1, 0 };
+  int EvalCoefficients::opponentPawnPressure_[8] = { 0, 25, 20, 10, 5, 2, 1, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {15, 12};
-  int EvalCoefficients::pawnShieldB_[2] = {15, 12};
-  int EvalCoefficients::pawnShieldC_[2] = { 7, 4};
+  int EvalCoefficients::pawnShieldA_[2] = {14, 10};
+  int EvalCoefficients::pawnShieldB_[2] = {14, 10};
+  int EvalCoefficients::pawnShieldC_[2] = { 6, 4};
 
   // rook on open column
-  int EvalCoefficients::openRook_[4] = { 0, 10, 30, 30};
+  int EvalCoefficients::openRook_[4] = { 0, 10, 25, 25};
 
   // material diff
   int EvalCoefficients::bishopBonus_[4] = { 0, 10, 50, 50 };
@@ -99,7 +99,7 @@ namespace NEngine
   int EvalCoefficients::semipasserPawn_[8] = { 0, 3, 6, 10, 14, 18, 0, 0 };
   int EvalCoefficients::passerCandidatePawn_[8] = { 0, 2, 5, 10, 14, 18, 0, 0 };
   int EvalCoefficients::protectedPasser_[8] = { 0, 9, 12, 15, 17, 20, 26, 0 };
-  int EvalCoefficients::farKingPawn_[8] = { 0, 10, 12, 16, 20, 30, 40, 0 };
+  int EvalCoefficients::farKingPawn_[8] = { 0, 15, 17, 20, 25, 35, 50, 0 };
   int EvalCoefficients::cangoPawn_[8] = { 0, 6, 7, 8, 10, 12, 16, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 3, 6, 8, 10, 12, 15, 0 };
   int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 5, 6, 7, 8, 9 };
@@ -130,9 +130,9 @@ namespace NEngine
   {
     {},
     {},
-    { 10, 8, 8, 7, 4, 1, 0, 0 },
-    { 10, 8, 8, 7, 4, 2, 1, 0 },
-    { 10, 10, 9, 6, 4, 2, 1, 0 },
+    { 10, 8, 7, 5, 3, 1, 0, 0 },
+    { 10, 8, 7, 5, 3, 1, 0, 0 },
+    { 10, 10, 8, 6, 4, 2, 1, 0 },
     { 15, 15, 15, 8, 6, 3, 1, 0 },
     {},
     {}

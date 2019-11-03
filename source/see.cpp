@@ -271,7 +271,7 @@ bool Board::see(const Move & move, int threshold) const
     return true;
 
   // could be checkmate
-  if(threshold > 50 && see_calc.is_usual_check())
+  if(/*threshold > 50 && */see_calc.is_usual_check())
   {
     threshold = 0;
   }
@@ -280,10 +280,14 @@ bool Board::see(const Move & move, int threshold) const
     return Figure::figureWeight_[Figure::TypePawn] >= threshold;
 
   int score_gain = (tfield) ? Figure::figureWeight_[tfield.type()] : 0;
+  int fscore = -Figure::figureWeight_[ffield.type()];
+  if (see_calc.promotion_)
+  {
+    score_gain = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypePawn];
+    fscore = -Figure::figureWeight_[Figure::TypeQueen];
+  }
   if(score_gain < threshold)
     return false;
-
-  int fscore = -Figure::figureWeight_[ffield.type()];
 
   auto color = Figure::otherColor(ffield.color());
 

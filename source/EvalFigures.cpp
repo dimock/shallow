@@ -263,9 +263,9 @@ Evaluator::FullScore Evaluator::evaluateBishops()
   return score_w;
 }
 
-int Evaluator::evaluateRook(Figure::Color color)
+Evaluator::FullScore Evaluator::evaluateRook(Figure::Color color)
 {
-  int score{ 0 };
+  FullScore score;
   auto const& fmgr = board_->fmgr();
   auto mask = fmgr.rook_mask(color);
   auto ocolor = Figure::otherColor(color);
@@ -283,21 +283,24 @@ int Evaluator::evaluateRook(Figure::Color color)
     auto const& mask_col = pawnMasks().mask_column(n & 7);
     bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
     bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
-    score += EvalCoefficients::openRook_[(no_pw_color+no_pw_ocolor) & 3];
+    auto open_score = EvalCoefficients::openRook_[(no_pw_color + no_pw_ocolor) & 3];
+    score.opening_ += open_score;
+    score.endGame_ += open_score >> 1;
 #endif
     
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
+    score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
+    score.endGame_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist] >> 1;
 #endif
   }
   return score;
 }
 
-int Evaluator::evaluateQueens(Figure::Color color)
+Evaluator::FullScore Evaluator::evaluateQueens(Figure::Color color)
 {
-  int score{ 0 };
+  FullScore score;
   auto const& fmgr = board_->fmgr();
   auto mask = fmgr.queen_mask(color);
   auto ocolor = Figure::otherColor(color);
@@ -313,13 +316,14 @@ int Evaluator::evaluateQueens(Figure::Color color)
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
+    score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
+    score.endGame_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist] >> 1;
 #endif
   }
   return score;
 }
 
-int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
+Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 {
 #ifdef EVAL_MOB
   int score_mob = 0;
@@ -752,17 +756,18 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 
 #endif //EVAL_KING_PR
 
-  int score = 0
+  FullScore score;
 #ifdef EVAL_MOB
-    + score_mob
+  score.common_ += score_mob;
 #endif
 #ifdef EVAL_KING_PR
-    + score_king
+  score.endGame_ += score_king >> 1;
+  score.opening_ += score_king;
 #endif
     ;
 
 #ifdef EVAL_PIN
-  score += pinned_score;
+  score.common_ += pinned_score;
 #endif
 
   return score;

@@ -75,6 +75,11 @@ public:
     movesCount_++;
   }
 
+  int moveCount() const
+  {
+    return movesCount_;
+  }
+
   bool load(std::string const& fname)
   {
     movesCount_ = 0;

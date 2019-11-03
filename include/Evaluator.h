@@ -142,6 +142,7 @@ private:
   PasserInfo hashedEvaluation();
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
+  bool isPasserCandidate(Index const& idx, int cy, int n, Figure::Color color, BitMask const& pmask, BitMask const& opmsk) const;
 
   PasserInfo evaluatePawns(Figure::Color color) const;
   PasserInfo evaluatePawns() const
@@ -162,9 +163,9 @@ private:
   // basic king pressure == distance to king
   FullScore evaluateKnights();
   FullScore evaluateBishops();
-  int evaluateRook(Figure::Color color);
-  int evaluateQueens(Figure::Color color);
-  int evaluateMobilityAndKingPressure(Figure::Color color);
+  FullScore evaluateRook(Figure::Color color);
+  FullScore evaluateQueens(Figure::Color color);
+  FullScore evaluateMobilityAndKingPressure(Figure::Color color);
 
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&) const;
   FullScore passerEvaluation(PasserInfo const&) const;

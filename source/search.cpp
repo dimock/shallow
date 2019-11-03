@@ -810,7 +810,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   singular = hitem->singular_;
   hmove = hitem->move_;
-  if(pv)
+  if(pv)// || (int)(hitem->movesCount_) < hash_.moveCount() - 3)
     return GHashTable::AlphaBetta;
 
   depth = (depth + ONE_PLY - 1) / ONE_PLY;
