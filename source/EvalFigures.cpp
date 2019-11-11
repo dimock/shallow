@@ -27,35 +27,35 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     case A8:
       if(board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= EvalCoefficients::knightBlocked_;
+         score_w.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case A7:
       if(board_->isFigure(A6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= EvalCoefficients::knightBlocked_;
+         score_w.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= EvalCoefficients::knightBlocked_;
+        score_w.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= EvalCoefficients::knightBlocked_;
+         score_w.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(H6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= EvalCoefficients::knightBlocked_;
+         score_w.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= EvalCoefficients::knightBlocked_;
+        score_w.common_ -= EvalCoefficients::knightBlocked_;
       break;
     }
 #endif
@@ -82,30 +82,30 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     case A1:
       if(board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= EvalCoefficients::knightBlocked_;
+         score_b.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case A2:
       if(board_->isFigure(A3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= EvalCoefficients::knightBlocked_;
+         score_b.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= EvalCoefficients::knightBlocked_;
+        score_b.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= EvalCoefficients::knightBlocked_;
+         score_b.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(H3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= EvalCoefficients::knightBlocked_;
+         score_b.common_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case G1:
@@ -144,48 +144,48 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     {
     case A7:
       if(board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_w.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A6:
       if(board_->isFigure(B5, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(C6, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+         score_w.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_w.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+         score_w.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_w.common_ -= EvalCoefficients::bishopBlocked_;
+      break;
+
+    case H6:
+      if (board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
+        board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn))
+        score_w.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_w.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
-      break;
-
-    case H6:
-      if(board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
-         board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn))
-         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+         score_w.common_ -= EvalCoefficients::bishopBlocked_;
       break;
     }
 #endif
@@ -213,48 +213,48 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     {
     case A2:
       if(board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_b.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A3:
       if(board_->isFigure(B4, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(C3, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+         score_b.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_b.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+         score_b.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_b.common_ -= EvalCoefficients::bishopBlocked_;
+      break;
+
+    case H3:
+      if (board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
+        board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn))
+        score_b.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+        score_b.common_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case G1:
       if(board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
-      break;
-
-    case H3:
-      if(board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
-         board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn))
-         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+         score_b.common_ -= EvalCoefficients::bishopBlocked_;
       break;
     }
 #endif
@@ -263,9 +263,9 @@ Evaluator::FullScore Evaluator::evaluateBishops()
   return score_w;
 }
 
-Evaluator::FullScore Evaluator::evaluateRook(Figure::Color color)
+int Evaluator::evaluateRook(Figure::Color color)
 {
-  FullScore score;
+  int score{ 0 };
   auto const& fmgr = board_->fmgr();
   auto mask = fmgr.rook_mask(color);
   auto ocolor = Figure::otherColor(color);
@@ -283,24 +283,21 @@ Evaluator::FullScore Evaluator::evaluateRook(Figure::Color color)
     auto const& mask_col = pawnMasks().mask_column(n & 7);
     bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
     bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
-    auto open_score = EvalCoefficients::openRook_[(no_pw_color + no_pw_ocolor) & 3];
-    score.opening_ += open_score;
-    score.endGame_ += open_score >> 1;
+    score += EvalCoefficients::openRook_[(no_pw_color+no_pw_ocolor) & 3];
 #endif
     
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
-    score.endGame_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist] >> 1;
+    score += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
 #endif
   }
   return score;
 }
 
-Evaluator::FullScore Evaluator::evaluateQueens(Figure::Color color)
+int Evaluator::evaluateQueens(Figure::Color color)
 {
-  FullScore score;
+  int score{ 0 };
   auto const& fmgr = board_->fmgr();
   auto mask = fmgr.queen_mask(color);
   auto ocolor = Figure::otherColor(color);
@@ -316,14 +313,13 @@ Evaluator::FullScore Evaluator::evaluateQueens(Figure::Color color)
     // king pressure
 #ifdef EVAL_KP_BASIC
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
-    score.endGame_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist] >> 1;
+    score += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
 #endif
   }
   return score;
 }
 
-Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
+int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 {
 #ifdef EVAL_MOB
   int score_mob = 0;
@@ -756,18 +752,17 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 
 #endif //EVAL_KING_PR
 
-  FullScore score;
+  int score = 0
 #ifdef EVAL_MOB
-  score.common_ += score_mob;
+    + score_mob
 #endif
 #ifdef EVAL_KING_PR
-  score.endGame_ += score_king >> 1;
-  score.opening_ += score_king;
+    + score_king
 #endif
     ;
 
 #ifdef EVAL_PIN
-  score.common_ += pinned_score;
+  score += pinned_score;
 #endif
 
   return score;
