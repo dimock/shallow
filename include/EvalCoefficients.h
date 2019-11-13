@@ -69,6 +69,9 @@ struct EvalCoefficients
   static int rookChecking_;
   static int queenChecking_;
 
+  // could be captured with check
+  static int couldCaptureWithCheck_;
+
   // pinned figures
   static int pinnedPawn_;
   static int pinnedKnight_;

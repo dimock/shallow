@@ -326,7 +326,7 @@ bool Processor::makeMove(std::string const& moveStr)
   if(!board.validateMoveBruteforce(move))
     return false;
 
-  //if(moveStr == "b3b5")
+  //if(moveStr == "a6c5")
   //  hash2file("D:\\Projects\\gitproj\\hash\\hash");
 
   board.makeMove(move);

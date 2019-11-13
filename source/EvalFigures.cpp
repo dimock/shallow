@@ -586,6 +586,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
 #endif
 
+  BitMask all_xray_attacks{0ULL};
+
   // x-ray bishop attack
   auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
   auto all_bq = mask_all_ ^ bq_mask;
@@ -606,6 +608,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::bishop_moves(n, all_bq);
+    all_xray_attacks |= xray_moves;
     if(auto bi_att = (xray_moves & ki_fields))
     {
       int bi_num = pop_count(bi_att);
@@ -654,6 +657,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(r_num || !(movesTable().caps(Figure::TypeRook, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::rook_moves(n, all_rq);
+    all_xray_attacks |= xray_moves;
     if(auto r_att = (xray_moves & ki_fields))
     {
       r_num = pop_count(r_att);
@@ -702,6 +706,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(q_num || !(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::queen_moves(n, all_brq);
+    all_xray_attacks |= xray_moves;
     if(auto q_att = (xray_moves & ki_fields))
     {
       q_num = pop_count(q_att);
@@ -711,7 +716,19 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #endif
   }
 
+  // checks with x-ray support
+  auto unprotected_attack_mask = (finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_) | (~finfo_[ocolor].attack_mask_);
+  unprotected_attack_mask &= ~board_->fmgr().mask(color);
+  auto bi_checks_xray = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
+  auto r_checks_xray = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
+  auto q_checks_xray = bi_check | r_check;
+  bi_checks_xray &= finfo_[color].bishopAttacks_;
+  r_checks_xray &= finfo_[color].rookAttacks_;
+  q_checks_xray &= finfo_[color].queenAttacks_;
 
+  bi_check |= bi_checks_xray;
+  r_check |= r_checks_xray;
+  q_check |= q_checks_xray;
 
   // basic attacks
 #ifdef EVAL_KING_PR
@@ -731,6 +748,12 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   if(!num_queens && q_check)
     num_queens = 1;
 #endif
+
+  auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
+  if (((bi_check | r_check | q_check) & ofgmask) != 0ULL)
+  {
+    score_king += EvalCoefficients::couldCaptureWithCheck_;
+  }
 
   static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);

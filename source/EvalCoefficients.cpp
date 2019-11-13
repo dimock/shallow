@@ -48,12 +48,12 @@ namespace NEngine
   int EvalCoefficients::pawnKingAttack_{ 1 };
   int EvalCoefficients::knightKingAttack_{ 2 };
   int EvalCoefficients::bishopKingAttack_{ 2 };
-  int EvalCoefficients::rookKingAttack_{ 5 };
-  int EvalCoefficients::queenKingAttack_{ 12 };
+  int EvalCoefficients::rookKingAttack_{ 8 };
+  int EvalCoefficients::queenKingAttack_{ 15 };
 
   // x-ray attacks
-  int EvalCoefficients::rookKingAttackXray_{ 4 };
-  int EvalCoefficients::queenKingAttackXray_{ 8 };
+  int EvalCoefficients::rookKingAttackXray_{ 6 };
+  int EvalCoefficients::queenKingAttackXray_{ 10 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -64,8 +64,11 @@ namespace NEngine
   // king threat
   int EvalCoefficients::knightChecking_{ 3 };
   int EvalCoefficients::bishopChecking_{ 3 };
-  int EvalCoefficients::rookChecking_{ 5 };
-  int EvalCoefficients::queenChecking_{ 12 };
+  int EvalCoefficients::rookChecking_{ 8 };
+  int EvalCoefficients::queenChecking_{ 15 };
+
+  // could be captured with check
+  int EvalCoefficients::couldCaptureWithCheck_{ 15 };
 
   // pinned figures
   int EvalCoefficients::pinnedPawn_{ 4 };
