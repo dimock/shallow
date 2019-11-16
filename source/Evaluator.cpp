@@ -98,6 +98,8 @@ void Evaluator::prepare()
 //////////////////////////////////////////////////////////////////////////
 ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 {
+  dangerous_ = false;
+
   X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
 #if 0
@@ -245,6 +247,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
 #endif
+
+  detectDangerous();
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;
@@ -540,7 +544,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
   return info;
 }
 
-Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi) const
+Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi)
 {
   auto infoW = passerEvaluation(Figure::ColorWhite, pi);
   auto infoB = passerEvaluation(Figure::ColorBlack, pi);
@@ -554,7 +558,7 @@ Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi) const
   return infoW.score;
 }
 
-Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInfo const& pi) const
+Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInfo const& pi)
 {
   const FiguresManager & fmgr = board_->fmgr();
   const BitMask & pmask = fmgr.pawn_mask(color);
@@ -624,8 +628,13 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     {
       BitMask next_mask = set_mask_bit(next_pos);
       // additional bonus if pawn can go forward
-      if((next_mask & finfo_[ocolor].attack_mask_) == 0)
+      if ((next_mask & finfo_[ocolor].attack_mask_) == 0ULL)
         info.score.common_ += EvalCoefficients::cangoPawn_[cy];
+
+      if ((cy == 6) && (((next_mask & finfo_[ocolor].attack_mask_) == 0ULL) || ((next_mask & finfo_[color].attack_mask_) != 0ULL)))
+      {
+        finfo_[color].pawnPromotion_ = true;
+      }
     }
     // field is occupied by my figure
     else if(next_field.color() == color)
@@ -1018,6 +1027,16 @@ ScoreType Evaluator::evaluateForks(Figure::Color color) const
   if(knightsN > 1 || (pawnsN+knightsN > 0 && color == board_->color()))
     return EvalCoefficients::forkBonus_;
   return 0;
+}
+
+void Evaluator::detectDangerous()
+{
+  auto color = board_->color();
+  auto ocolor = Figure::otherColor(board_->color());
+  dangerous_ = (finfo_[color].pawnsUnderAttack_ + finfo_[color].knightsUnderAttack_ + finfo_[color].bishopsUnderAttack_
+    + finfo_[color].rooksUnderAttack_ + finfo_[color].queensUnderAttack_ > 1) ||
+    finfo_[ocolor].pawnPromotion_ ||
+    finfo_[color].matThreat_;
 }
 
 } //NEngine

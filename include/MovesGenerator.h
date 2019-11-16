@@ -12,6 +12,7 @@
 #include <ChecksGenerator.h>
 #include <EscapeGenerator.h>
 #include <UsualGenerator.h>
+#include <engine.h>
 
 namespace NEngine
 {
@@ -303,16 +304,21 @@ struct TacticalGenerator
 {
   using MovesList = xlist<MOVE, BOARD::MovesMax>;
 
-  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks } order_{ oEscape };
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks, oGenMates, oMates} order_{ oEscape };
 
   TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
     board_(board),
-    cg_(board), ckg_(board), eg_(board, hmove),
+    cg_(board), ckg_(board), mg_(board), eg_(board, hmove),
     hmove_(hmove),
     depth_(depth)
   {
     if(!board.underCheck())
       order_ = oHash;
+  }
+
+  void setMoveFound()
+  {
+    moveFound_ = true;
   }
 
   MOVE* next()
@@ -343,9 +349,10 @@ struct TacticalGenerator
           continue;
         return move;
       }
-      if(depth_ < 0)
-        return nullptr;
-      order_ = oGenChecks;
+      if (depth_ < 0)
+        order_ = oGenMates;
+      else
+        order_ = oGenChecks;
     }
     if(order_ == oGenChecks)
     {
@@ -356,20 +363,38 @@ struct TacticalGenerator
     {
       while(auto* move = ckg_.next())
       {
-        if(*move == hmove_)
+        if(*move == hmove_ || mg_.find(*move))
           continue;
         return move;
       }
+    }
+    if (order_ == oGenMates)
+    {
+      mg_.generateMates(moveFound_);
+      NEngine::Engine::xcounter_ += mg_.size();
+      order_ = oMates;
+    }
+    if (order_ == oMates)
+    {
+      while (auto* move = mg_.next())
+      {
+        if (*move == hmove_)
+          continue;
+        return move;
+      }
+      order_ = oGenCaps;
     }
     return nullptr;
   }
 
   CapsGenerator<BOARD, MOVE> cg_;
   ChecksGenerator<BOARD, MOVE> ckg_;
+  ChecksGenerator<BOARD, MOVE> mg_;
   EscapeGenerator<BOARD, MOVE> eg_;
   BOARD const& board_;
   MOVE hmove_;
   int depth_{};
+  bool moveFound_{ false };
 };
 
 } // NEngine

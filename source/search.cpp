@@ -362,8 +362,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash"); 
 #endif
 
-  if(depth <= 0)
-    return captures(ictx, depth, ply, alpha, betta, pv);
+  bool dangerous = false;
+  if (depth <= 0)
+  {
+    auto score = captures(ictx, depth, ply, alpha, betta, pv, dangerous);
+    if (!dangerous || depth < 0 || score <= alpha)
+      return score;
+  }
 
   bool mat_threat{false};
   bool nm_threat{false};
@@ -390,8 +395,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     if(nullScore >= betta)
     {
       depth = null_depth;
+      bool dng = false;
       if(depth <= 0)
-        return captures(ictx, depth, ply, alpha, betta, pv);
+        return captures(ictx, depth, ply, alpha, betta, pv, dng);
     }
     else // may be we are in danger?
     {
@@ -413,18 +419,22 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       && !scontexts_[ictx].board_.underCheck()
       && alpha > -Figure::MatScore+MaxPly
       && alpha < Figure::MatScore-MaxPly
-      && depth <= ONE_PLY && ply > 1
+      && depth > 0 && depth <= ONE_PLY && ply > 1
       && !scontexts_[ictx].board_.isWinnerLoser())
   {
-    ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);
-    int threshold = (int)alpha - (int)score0 -Position_Gain;
-    static const int thresholds_[4] = {0,
+    static const int thresholds_[4] = { 0,
       0,
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn],
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook] };
-    if(threshold > thresholds_[(depth/ONE_PLY) & 3])
+
+    ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);
+    bool dang = scontexts_[ictx].eval_.dangerous();
+    int threshold = (int)alpha - (int)score0 - Position_Gain;
+    if (threshold > thresholds_[(depth / ONE_PLY) & 3])
     {
-      return captures(ictx, depth, ply, alpha, betta, pv, score0);
+      auto score = captures(ictx, depth, ply, alpha, betta, pv, dang, score0);
+      if (!dang || score <= alpha)
+        return score;
     }
   }
 #endif // futility pruning
@@ -483,6 +493,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
+    //if (sdata_.depth_ == 11 && findSequence(ictx, move, ply, true))
+    //{
+    //  depthInc = depthInc;
+    //}
 
 #ifdef USE_PROBCUT
     ScoreType betta_pc = betta < ScoreMax - 1000 ? betta + 300 : betta;
@@ -549,7 +563,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           curr.mflags_ |= UndoInfo::Reduced;
         }
 #endif
-
 
         score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
         curr.mflags_ &= ~UndoInfo::Reduced;
@@ -677,7 +690,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0)
+ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0)
 {
   if(alpha >= Figure::MatScore-ply)
     return alpha;
@@ -712,8 +725,11 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   if(!board.underCheck())
   {
     // not initialized yet
-    if(score0 == -ScoreMax)
+    if (score0 == -ScoreMax)
+    {
       score0 = scontexts_[ictx].eval_(alpha, betta);
+      dangerous = scontexts_[ictx].eval_.dangerous();
+    }
 
     if(score0 >= betta)
       return score0;
@@ -746,13 +762,16 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if((!board.underCheck() || counter > 0) && !move.see_ok() && !board.see(move, threshold))
       continue;
 
+    tg.setMoveFound();
+    dangerous = false;
     ScoreType score = -ScoreMax;
 
     board.makeMove(move);
     sdata_.inc_nc();
 
     int depthInc = board.underCheck() ? ONE_PLY : 0;
-    score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax);
+    bool dng = false;
+    score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, dng, -ScoreMax);
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");

@@ -98,6 +98,13 @@ class Evaluator
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
     BitMask multiattack_mask_{};
+    int pawnsUnderAttack_{};
+    int knightsUnderAttack_{};
+    int bishopsUnderAttack_{};
+    int rooksUnderAttack_{};
+    int queensUnderAttack_{};
+    bool matThreat_{};
+    bool pawnPromotion_{};
   } finfo_[2];
 
 public:
@@ -108,9 +115,15 @@ public:
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
 
+  bool dangerous() const
+  {
+    return dangerous_;
+  }
+
 private:
 
   void prepare();
+  void detectDangerous();
 
   // linear interpolation between opening & endgame
   ScoreType lipolScore(FullScore const& score, PhaseInfo const& phase) const
@@ -166,8 +179,8 @@ private:
   int evaluateQueens(Figure::Color color);
   int evaluateMobilityAndKingPressure(Figure::Color color);
 
-  PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&) const;
-  FullScore passerEvaluation(PasserInfo const&) const;
+  PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&);
+  FullScore passerEvaluation(PasserInfo const&);
 
   // search path from opponent king to pawn's promotion of given color
   // idea from CCRL
@@ -234,6 +247,8 @@ private:
   int betta0_{};
   int alpha1_{};
   int betta1_{};
+
+  bool dangerous_{ false };
 };
 
 } // NEngine

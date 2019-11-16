@@ -25,6 +25,7 @@ eMoveNotation detectNotation(std::string const& str);
 /// e2e4 - Smith notation
 std::string moveToStr(Move const& move, bool wbf);
 Move strToMove(std::string const& str, Board const& board);
+Move strToMove(std::string const& str);
 
 /// Rxf5+ - Standard algebraic notation
 Move parseSAN(Board const& board, std::string const& str);

@@ -44,7 +44,9 @@ struct EvalCoefficients
 
   // blocked figure
   static int knightBlocked_;
+  static int knightBlockedA8_;
   static int bishopBlocked_;
+  static int bishopBlockedA7_;
 
   // king attacks
   static int pawnKingAttack_;

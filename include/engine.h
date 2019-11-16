@@ -99,7 +99,7 @@ private:
   ScoreType alphaBetta0();
   ScoreType processMove0(SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm);
-  ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
+  ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0 = -ScoreMax);
   int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;
   void assemblePV(int ictx, Move const & move, bool checking, int ply);
 
@@ -144,7 +144,7 @@ private:
 #endif
 
 
-  void findSequence(int ictx, const Move & move, int ply, int depth, int counter, ScoreType alpha, ScoreType betta) const;
+  bool findSequence(int ictx, const Move & move, int ply, bool exactMatch) const;
   void verifyGenerators(int ictx, const Move & hmove);
 
 public:

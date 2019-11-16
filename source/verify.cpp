@@ -121,26 +121,25 @@ void Engine::logMovies()
   (*callbacks_.slog_) << oss.str() << std::endl;
 }
 
-void Engine::findSequence(int ictx, const Move & move, int ply, int depth,
-  int counter, ScoreType alpha, ScoreType betta) const
-{
-  struct MOVE { int from_, to_; };
-  bool identical = false;
-  static MOVE sequence[] = {
-    {52, 45},
-    {9, 8},
-     };
+static std::vector<std::string> sequence({ "b5b4", "g1f2", "b4b3", "a2b3", "a4b3", "f5f6", "f8e8",
+  "f2g3", "c6c5", "g3f4", "b3b2", "d6d7", "e8d7" });
 
-  if ( ply < sizeof(sequence)/sizeof(MOVE) && move.from() == sequence[ply].from_ && move.to() == sequence[ply].to_ )
+bool Engine::findSequence(int ictx, const Move & move, int ply, bool exactMatch) const
+{
+  bool identical = false;
+
+  if((ply < sequence.size() && !exactMatch) || (ply == sequence.size()-1 && exactMatch))
   {
-    for (int i = ply; i >= 0; --i)
+    for(int i = ply; i >= 0; --i)
     {
       identical = true;
       int j = ply-i;
-      if ( j >= scontexts_[ictx].board_.halfmovesCount() )
+      if(j >= scontexts_[ictx].board_.halfmovesCount())
         break;
       const UndoInfo & undo = scontexts_[ictx].board_.reverseUndo(j);
-      if ( undo.move_.from() != sequence[i].from_ || undo.move_.to() != sequence[i].to_ )
+      auto smove = sequence[i];
+      auto move = strToMove(smove);
+      if(undo.move_.from() != move.from() || undo.move_.to() != move.to())
       {
         identical = false;
         break;
@@ -148,22 +147,20 @@ void Engine::findSequence(int ictx, const Move & move, int ply, int depth,
     }
   }
 
-  if ( identical )
-  {
-    //if ( sdata_.depth_ == 5*ONE_PLY && ply == 1 )
-    //{
-    //  int ttt = 0;
-    //}
-    std::ostringstream oss;
-    NEngine::save(scontexts_[ictx].board_, oss, false);
-    oss << "PLY: " << ply << std::endl;
-    oss << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = "
-      << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;
-    oss << "===================================================================" << std::endl << std::endl;
+  //if(identical)
+  //{
+  //  std::ostringstream oss;
+  //  NEngine::save(scontexts_[ictx].board_, oss, false);
+  //  oss << "PLY: " << ply << std::endl;
+  //  oss << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = "
+  //    << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;
+  //  oss << "===================================================================" << std::endl << std::endl;
 
-    std::ofstream ofs("sequence.txt", std::ios_base::app);
-    ofs << oss.str();
-  }
+  //  std::ofstream ofs("sequence.txt", std::ios_base::app);
+  //  ofs << oss.str();
+  //}
+
+  return identical;
 }
 
 } // NEngine

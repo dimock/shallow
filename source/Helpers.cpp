@@ -367,6 +367,38 @@ std::string moveToStr(const Move & move, bool wbf)
   return str;
 }
 
+Move strToMove(std::string const& str)
+{
+  if (str.size() < 4)
+    return Move{ true };
+
+  if (!iscolumn(str[0]) || !isdigit(str[1]) && !iscolumn(str[2]) && !isdigit(str[3]))
+    return Move{ true };
+
+  int xfrom = str[0] - 'a';
+  int yfrom = str[1] - '1';
+  int xto = str[2] - 'a';
+  int yto = str[3] - '1';
+
+  Figure::Type new_type{};
+  int from{}, to{};
+  if (str.size() > 4 && isalpha(str[4]))
+  {
+    if ('b' == str[4])
+      new_type = Figure::Type::TypeBishop;
+    else if ('n' == str[4])
+      new_type = Figure::Type::TypeKnight;
+    else if ('r' == str[4])
+      new_type = Figure::Type::TypeRook;
+    else if ('q' == str[4])
+      new_type = Figure::Type::TypeQueen;
+  }
+
+  from = Index(xfrom, yfrom);
+  to = Index(xto, yto);
+  return Move{ from, to, new_type };
+}
+
 Move strToMove(std::string const& str, const Board & board)
 {
   if(str.empty())
@@ -382,38 +414,15 @@ Move strToMove(std::string const& str, const Board & board)
     return Move{true};
 
   Figure::Color color = board.color();
-  Figure::Color ocolor = Figure::otherColor(color);
 
-  if(!iscolumn(str[0]) || !isdigit(str[1]) && !iscolumn(str[2]) && !isdigit(str[3]))
-    return Move{true};
+  auto move = strToMove(str);
+  if (!move)
+    return move;
 
-  int xfrom = str[0] - 'a';
-  int yfrom = str[1] - '1';
-  int xto = str[2] - 'a';
-  int yto = str[3] - '1';
-
-  Figure::Type new_type{};
-  int from{}, to{};
-  if(str.size() > 4 && isalpha(str[4]))
-  {
-    if('b' == str[4])
-      new_type = Figure::Type::TypeBishop;
-    else if('n' == str[4])
-      new_type = Figure::Type::TypeKnight;
-    else if('r' == str[4])
-      new_type = Figure::Type::TypeRook;
-    else if('q' == str[4])
-      new_type = Figure::Type::TypeQueen;
-  }
-
-  from = Index(xfrom, yfrom);
-  to   = Index(xto, yto);
-
-  const Field & ffrom = board.getField(from);
+  const Field & ffrom = board.getField(move.from());
   if(!ffrom || ffrom.color() != color)
     return Move{true};
 
-  SMove move{ from, to, new_type };
   return board.possibleMove(move) ? move : Move{true};
 }
 
