@@ -42,20 +42,18 @@ namespace NEngine
 
   // blocked figure
   int EvalCoefficients::knightBlocked_{ 80 };
-  int EvalCoefficients::knightBlockedA8_{ 110 };
   int EvalCoefficients::bishopBlocked_{ 80 };
-  int EvalCoefficients::bishopBlockedA7_{ 110 };
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 1 };
   int EvalCoefficients::knightKingAttack_{ 2 };
   int EvalCoefficients::bishopKingAttack_{ 2 };
-  int EvalCoefficients::rookKingAttack_{ 8 };
-  int EvalCoefficients::queenKingAttack_{ 15 };
+  int EvalCoefficients::rookKingAttack_{ 5 };
+  int EvalCoefficients::queenKingAttack_{ 12 };
 
   // x-ray attacks
-  int EvalCoefficients::rookKingAttackXray_{ 6 };
-  int EvalCoefficients::queenKingAttackXray_{ 10 };
+  int EvalCoefficients::rookKingAttackXray_{ 4 };
+  int EvalCoefficients::queenKingAttackXray_{ 8 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -66,11 +64,8 @@ namespace NEngine
   // king threat
   int EvalCoefficients::knightChecking_{ 3 };
   int EvalCoefficients::bishopChecking_{ 3 };
-  int EvalCoefficients::rookChecking_{ 8 };
-  int EvalCoefficients::queenChecking_{ 15 };
-
-  // could be captured with check
-  int EvalCoefficients::couldCaptureWithCheck_{ 15 };
+  int EvalCoefficients::rookChecking_{ 5 };
+  int EvalCoefficients::queenChecking_{ 12 };
 
   // pinned figures
   int EvalCoefficients::pinnedPawn_{ 4 };
@@ -102,7 +97,6 @@ namespace NEngine
   int EvalCoefficients::multipasserPawn_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::semipasserPawn_[8] = { 0, 3, 6, 10, 14, 18, 0, 0 };
-  int EvalCoefficients::passerCandidatePawn_[8] = { 0, 2, 5, 10, 14, 18, 0, 0 };
   int EvalCoefficients::protectedPasser_[8] = { 0, 9, 12, 15, 17, 20, 26, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 10, 12, 16, 20, 30, 40, 0 };
   int EvalCoefficients::cangoPawn_[8] = { 0, 6, 7, 8, 10, 12, 16, 0 };
@@ -200,11 +194,11 @@ namespace NEngine
 
       // queen
       {
-        -1, 0, 0, 0, 0, 0, 0, -1,
-        -1, 0, 0, 0, 0, 0, 0, -1,
-        -3, 0, 2, 2, 2, 2, 0, -3,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        -2, 0, 2, 2, 2, 2, 0, -2,
         -3, 0, 2, 3, 3, 2, 0, -3,
-        -3, 0, 2, 3, 3, 2, 0, -3,
+        -2, 0, 2, 3, 3, 2, 0, -2,
         -3, 0, 2, 2, 2, 2, 0, -3,
         -4, 0, 0, 1, 1, 0, 0, -4,
         -5, -5, -5, -5, -5, -5, -5, -5

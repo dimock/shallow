@@ -13,7 +13,7 @@ void xcaptures(Board& board, int depth)
 {
   if(board.drawState() || board.hasReps() || depth < -10)
     return;
-  TacticalGenerator<Board, SMove> tg(board, SMove{true}, depth);
+  TacticalGenerator<Board, SMove> tg(board, SMove{true}, depth, false);
   //try
   //{
     for(;;)

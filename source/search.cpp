@@ -83,8 +83,7 @@ bool Engine::search(SearchResult& sres)
     if(sdata_.best_)
     {
       if(stop_ && sdata_.depth_ > 2 &&
-        ((score < sres.score_-Figure::figureWeight_[Figure::TypePawn]/3) ||
-         (sdata_.best_ != sres.best_)) &&
+        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/3 || (sdata_.best_ != sres.best_ /*&& abs(score-sres->score_) >= 5*/)) &&
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
@@ -366,7 +365,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if (depth <= 0)
   {
     auto score = captures(ictx, depth, ply, alpha, betta, pv, dangerous);
-    if (!dangerous || depth < 0 || score <= alpha)
+    if (!dangerous || depth < 0 || score <= alpha)// || !pv)
       return score;
   }
 
@@ -749,7 +748,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   Board board0{ board };
 #endif
 
-  TacticalGenerator<Board, SMove> tg(board, hmove, depth);
+  TacticalGenerator<Board, SMove> tg(board, hmove, depth, true);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.next();

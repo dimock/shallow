@@ -294,9 +294,9 @@ struct ChecksGenerator
     return moves_.size();
   }
 
-  void generateMates(bool moveFound)
+  void generateMates(bool moveFound, bool allChecks)
   {
-    //BitMask visited{};
+    BitMask visited{};
     const auto& color = board_.color();
     const auto ocolor = Figure::otherColor(color);
     auto const& fmgr = board_.fmgr();
@@ -407,7 +407,7 @@ struct ChecksGenerator
     // queen first
     {
       auto q_mask = fmgr.queen_mask(color);
-      for (; q_mask;)
+      for (; q_mask && moves_.empty();)
       {
         auto from = clear_lsb(q_mask);
         auto q_moves = magic_ns::queen_moves(from, mask_all) & mask_all_inv & (r_king | bi_king) &
@@ -422,7 +422,7 @@ struct ChecksGenerator
             break;
           }
           // attack through king
-          else if (moves_.empty() && !moveFound)
+          else if (moves_.empty())
           {
             auto atf_mask = o_kbrq_mask & ~o_attack_mask & magic_ns::queen_moves(oki_pos, mask_all | set_mask_bit(to)) &
               betweenMasks().from(to, oki_pos);
@@ -493,189 +493,191 @@ struct ChecksGenerator
       }
     }
 
-    //// king
-    //if(moves_.empty())
-    //{
-    //  auto const& ki_pos = board_.kingPos(color);
-    //  auto all_but_king_mask = mask_all_inv | set_mask_bit(ki_pos);
-    //  bool castle = false;
-    //  // short castle
-    //  if ((board_.castling(color, 0) && (movesTable().castleMasks(color, 0) & mask_all) == 0ULL) &&
-    //      ((oki_moves & ~pawnMasks().mask_column(5)) == 0ULL))
-    //  {
-    //    static int rook_positions[] = { 61, 5 };
-    //    auto const& r_pos = rook_positions[board_.color()];
-    //    X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
-    //    X_ASSERT(color && board_.getField(7).type() != Figure::TypeRook
-    //      || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
-    //    if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
-    //    {
-    //      add(ki_pos, ki_pos + 2);
-    //      castle = true;
-    //    }
-    //  }
+    // king
+    if(moves_.empty())
+    {
+      auto const& ki_pos = board_.kingPos(color);
+      auto all_but_king_mask = mask_all_inv | set_mask_bit(ki_pos);
+      bool castle = false;
+      // short castle
+      if ((board_.castling(color, 0) && (movesTable().castleMasks(color, 0) & mask_all) == 0ULL) &&
+          ((oki_moves & ~pawnMasks().mask_column(5)) == 0ULL))
+      {
+        static int rook_positions[] = { 61, 5 };
+        auto const& r_pos = rook_positions[board_.color()];
+        X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
+        X_ASSERT(color && board_.getField(7).type() != Figure::TypeRook
+          || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
+        if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
+        {
+          add(ki_pos, ki_pos + 2);
+          castle = true;
+        }
+      }
 
-    //  // long castle
-    //  if ((!castle && board_.castling(color, 1) && (movesTable().castleMasks(color, 1) & mask_all) == 0ULL) && 
-    //      ((oki_moves & ~pawnMasks().mask_column(3)) == 0ULL))
-    //  {
-    //    static int rook_positions[] = { 59, 3 };
-    //    auto const& r_pos = rook_positions[board_.color()];
-    //    X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
-    //    X_ASSERT(color && board_.getField(0).type() != Figure::TypeRook
-    //      || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
-    //    if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
-    //    {
-    //      add(ki_pos, ki_pos - 2);
-    //      castle = true;
-    //    }
-    //  }
+      // long castle
+      if ((!castle && board_.castling(color, 1) && (movesTable().castleMasks(color, 1) & mask_all) == 0ULL) && 
+          ((oki_moves & ~pawnMasks().mask_column(3)) == 0ULL))
+      {
+        static int rook_positions[] = { 59, 3 };
+        auto const& r_pos = rook_positions[board_.color()];
+        X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
+        X_ASSERT(color && board_.getField(0).type() != Figure::TypeRook
+          || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
+        if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
+        {
+          add(ki_pos, ki_pos - 2);
+          castle = true;
+        }
+      }
 
-    //  if ((!castle && board_.discoveredCheck(ki_pos, mask_all, color, oki_pos)) &&
-    //      ((oki_moves & ~betweenMasks().from(ki_pos, oki_pos)) == 0ULL))
-    //  {
-    //    auto exclude = ~(betweenMasks().from(oki_pos, ki_pos) | movesTable().caps(Figure::TypeKing, oki_pos));
-    //    auto ki_mask = movesTable().caps(Figure::TypeKing, ki_pos) & mask_all_inv & exclude;
-    //    for (; ki_mask;)
-    //    {
-    //      auto to = clear_lsb(ki_mask);
-    //      X_ASSERT(board_.getField(to), "king moves to occupied field");
-    //      add(ki_pos, to);
-    //      break;
-    //    }
-    //  }
-    //}
+      if ((!castle && board_.discoveredCheck(ki_pos, mask_all, color, oki_pos)) &&
+          ((oki_moves & ~betweenMasks().from(ki_pos, oki_pos)) == 0ULL))
+      {
+        auto exclude = ~(betweenMasks().from(oki_pos, ki_pos) | movesTable().caps(Figure::TypeKing, oki_pos));
+        auto ki_mask = movesTable().caps(Figure::TypeKing, ki_pos) & mask_all_inv & exclude;
+        for (; ki_mask;)
+        {
+          auto to = clear_lsb(ki_mask);
+          X_ASSERT(board_.getField(to), "king moves to occupied field");
+          add(ki_pos, to);
+          break;
+        }
+      }
+    }
 
-    //// discovers bishop|queen attack
-    //{
-    //  auto pw_mask = bi_king & pawns;
-    //  X_ASSERT(pw_mask & visited, "pawn gives check and discovers too");
-    //  auto r_mask = bi_king & fmgr.rook_mask(color);
-    //  if (pw_mask | r_mask)
-    //  {
-    //    visited |= pw_mask;
-    //    // all checking queens and bishops if exclude pawns and rooks
-    //    auto bq_from = magic_ns::bishop_moves(oki_pos, mask_all & ~(pw_mask | r_mask)) & (fmgr.bishop_mask(color) | fmgr.queen_mask(color));
-    //    for (; bq_from;)
-    //    {
-    //      auto p = clear_lsb(bq_from);
-    //      auto const& btw_mask = betweenMasks().between(p, oki_pos);
-    //      auto pwm = btw_mask & pw_mask;
-    //      if (pwm)
-    //      {
-    //        auto from = clear_lsb(pwm);
-    //        X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discoved check");
-    //        if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
-    //        {
-    //          const auto* to = movesTable().pawn(color, from) + 2; // skip captures
-    //          if (*to >= 0 && !board_.getField(*to))
-    //          {
-    //            add(from, *to);
-    //          }
-    //        }
-    //      }
-    //      auto rm = btw_mask & r_mask;
-    //      visited |= rm;
-    //      if (rm && !moveFound && moves_.empty())
-    //      {
-    //        auto from = clear_lsb(rm);
-    //        X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "rook should discover check");
-    //        if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
-    //        {
-    //          auto to_mask = magic_ns::rook_moves(from, mask_all) & ~mask_all &
-    //            (~movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor)) | multiattack_mask);
-    //          if (to_mask != 0ULL)
-    //          {
-    //            int to = -1;
-    //            if(to_mask & oqr_attack_mask)
-    //              to = _lsb64(to_mask & oqr_attack_mask);
-    //            else if(to_mask & or_attack_mask)
-    //              to = _lsb64(to_mask & or_attack_mask);
-    //            else
-    //              to = _lsb64(to_mask);
-    //            X_ASSERT(to < 0 || board_.getField(to), "field is occupied");
-    //            add(from, to);
-    //            break;
-    //          }
-    //        }
-    //      }
-    //    }
-    //  }
-    //}
+    // discovers bishop|queen attack
+    if (moves_.empty()) 
+    {
+      auto pw_mask = bi_king & pawns;
+      X_ASSERT(pw_mask & visited, "pawn gives check and discovers too");
+      auto r_mask = bi_king & fmgr.rook_mask(color);
+      if (pw_mask | r_mask)
+      {
+        visited |= pw_mask;
+        // all checking queens and bishops if exclude pawns and rooks
+        auto bq_from = magic_ns::bishop_moves(oki_pos, mask_all & ~(pw_mask | r_mask)) & (fmgr.bishop_mask(color) | fmgr.queen_mask(color));
+        for (; bq_from && moves_.empty();)
+        {
+          auto p = clear_lsb(bq_from);
+          auto const& btw_mask = betweenMasks().between(p, oki_pos);
+          auto pwm = btw_mask & pw_mask;
+          if (pwm)
+          {
+            auto from = clear_lsb(pwm);
+            X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discoved check");
+            if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
+            {
+              const auto* to = movesTable().pawn(color, from) + 2; // skip captures
+              if (*to >= 0 && !board_.getField(*to))
+              {
+                add(from, *to);
+              }
+            }
+          }
+          auto rm = btw_mask & r_mask;
+          visited |= rm;
+          if (rm && moves_.empty())
+          {
+            auto from = clear_lsb(rm);
+            X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "rook should discover check");
+            if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
+            {
+              auto to_mask = magic_ns::rook_moves(from, mask_all) & ~mask_all &
+                (~movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor)) | multiattack_mask);
+              if (to_mask != 0ULL)
+              {
+                int to = -1;
+                if(to_mask & oqr_attack_mask)
+                  to = _lsb64(to_mask & oqr_attack_mask);
+                else if(to_mask & or_attack_mask)
+                  to = _lsb64(to_mask & or_attack_mask);
+                else
+                  to = _lsb64(to_mask);
+                X_ASSERT(to < 0 || board_.getField(to), "field is occupied");
+                add(from, to);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
 
-    //// discovers rook|queen attack
-    //{
-    //  auto pw_mask = r_king & pawns & ~visited;
-    //  auto bi_mask = r_king & fmgr.bishop_mask(color);
-    //  if (pw_mask | bi_mask)
-    //  {
-    //    auto rq_from = magic_ns::rook_moves(oki_pos, mask_all & ~(pw_mask | bi_mask)) & (fmgr.rook_mask(color) | fmgr.queen_mask(color));
-    //    for (; rq_from;)
-    //    {
-    //      auto p = clear_lsb(rq_from);
-    //      auto const& btw_mask = betweenMasks().between(oki_pos, p);
-    //      auto pwm = btw_mask & pw_mask;
-    //      if (pwm)
-    //      {
-    //        auto from = clear_lsb(pwm);
-    //        // pawn on the same X as king
-    //        if ((from & 7) == (oki_pos & 7))
-    //          continue;
-    //        X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discover check");
-    //        const auto* to = movesTable().pawn(color, from) + 2; // skip captures
-    //        if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
-    //        {
-    //          if (*to >= 0 && !board_.getField(*to))
-    //          {
-    //            add(from, *to);
-    //          }
-    //        }
-    //      }
-    //      auto bm = btw_mask & bi_mask;
-    //      visited |= bm;
-    //      if (bm && !moveFound && moves_.empty())
-    //      {
-    //        auto from = clear_lsb(bm);
-    //        X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "bishop should discover check");
-    //        if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
-    //        {
-    //          auto to_mask = magic_ns::bishop_moves(from, mask_all) & ~mask_all &
-    //            (~movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor)) | multiattack_mask);
-    //          if (to_mask != 0ULL)
-    //          {
-    //            int to = -1;
-    //            if (to_mask & oqb_attack_mask)
-    //              to = _lsb64(to_mask & oqb_attack_mask);
-    //            else if(to_mask & orb_attack_mask)
-    //              to = _lsb64(to_mask & orb_attack_mask);
-    //            else if(to_mask & ob_attack_mask)
-    //              to = _lsb64(to_mask & ob_attack_mask);
-    //            else
-    //              to = _lsb64(to_mask);
-    //            X_ASSERT(to < 0 || board_.getField(to), "field is occupied");
-    //            add(from, to);
-    //            break;
-    //          }
-    //        }
-    //      }
-    //    }
-    //  }
-    //}
+    // discovers rook|queen attack
+    if (moves_.empty()) 
+    {
+      auto pw_mask = r_king & pawns & ~visited;
+      auto bi_mask = r_king & fmgr.bishop_mask(color);
+      if (pw_mask | bi_mask)
+      {
+        auto rq_from = magic_ns::rook_moves(oki_pos, mask_all & ~(pw_mask | bi_mask)) & (fmgr.rook_mask(color) | fmgr.queen_mask(color));
+        for (; rq_from && moves_.empty();)
+        {
+          auto p = clear_lsb(rq_from);
+          auto const& btw_mask = betweenMasks().between(oki_pos, p);
+          auto pwm = btw_mask & pw_mask;
+          if (pwm)
+          {
+            auto from = clear_lsb(pwm);
+            // pawn on the same X as king
+            if ((from & 7) == (oki_pos & 7))
+              continue;
+            X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discover check");
+            const auto* to = movesTable().pawn(color, from) + 2; // skip captures
+            if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
+            {
+              if (*to >= 0 && !board_.getField(*to))
+              {
+                add(from, *to);
+              }
+            }
+          }
+          auto bm = btw_mask & bi_mask;
+          visited |= bm;
+          if (bm && !moveFound && moves_.empty())
+          {
+            auto from = clear_lsb(bm);
+            X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "bishop should discover check");
+            if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
+            {
+              auto to_mask = magic_ns::bishop_moves(from, mask_all) & ~mask_all &
+                (~movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor)) | multiattack_mask);
+              if (to_mask != 0ULL)
+              {
+                int to = -1;
+                if (to_mask & oqb_attack_mask)
+                  to = _lsb64(to_mask & oqb_attack_mask);
+                else if(to_mask & orb_attack_mask)
+                  to = _lsb64(to_mask & orb_attack_mask);
+                else if(to_mask & ob_attack_mask)
+                  to = _lsb64(to_mask & ob_attack_mask);
+                else
+                  to = _lsb64(to_mask);
+                X_ASSERT(to < 0 || board_.getField(to), "field is occupied");
+                add(from, to);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
 
     // don't change visited any more
     //visited = ~visited;
 
     // remaining direct attacks
     // bishop
-    if(!moveFound && moves_.empty())
+    if(moves_.empty())
     {
       auto bi_mask = fmgr.bishop_mask(color);// &visited;
-      for (; bi_mask;)
+      for (; bi_mask && moves_.empty();)
       {
         auto from = clear_lsb(bi_mask);
         auto bi_moves = magic_ns::bishop_moves(from, mask_all) & mask_all_inv & bi_king &
           (~o_attack_mask | (~o_attack_but_king_mask & multiattack_mask));
-        for (; bi_moves;)
+        for (; bi_moves && moves_.empty();)
         {
           auto to = clear_lsb(bi_moves);
           if ((oki_moves & ~betweenMasks().from(to, oki_pos)) == 0ULL)
@@ -685,7 +687,7 @@ struct ChecksGenerator
             break;
           }
           // attack through king
-          else if (moves_.empty() && !moveFound)
+          else if (moves_.empty())
           {
             auto atf_mask = o_kbrq_mask & ~o_attack_mask & magic_ns::bishop_moves(oki_pos, mask_all | set_mask_bit(to)) &
               betweenMasks().from(to, oki_pos);
@@ -700,16 +702,16 @@ struct ChecksGenerator
     }
     
     // rook
-    if (!moveFound && moves_.empty()) 
+    if (moves_.empty()) 
     {
       auto r_mask = fmgr.rook_mask(color);// &visited;
-      for (; r_mask;)
+      for (; r_mask && moves_.empty();)
       {
         auto from = clear_lsb(r_mask);
         auto rr = magic_ns::rook_moves(from, mask_all);
         auto r_moves = rr & mask_all_inv & r_king &
           (~o_attack_mask | (~o_attack_but_king_mask & multiattack_mask));
-        for (; r_moves;)
+        for (; r_moves && moves_.empty();)
         {
           auto to = clear_lsb(r_moves);
           if ((oki_moves & ~betweenMasks().from(to, oki_pos)) == 0ULL)
@@ -719,7 +721,7 @@ struct ChecksGenerator
             break;
           }
           // attack through king
-          else if(moves_.empty() && !moveFound)
+          else if(moves_.empty())
           {
             auto atf_mask = o_kbrq_mask & ~o_attack_mask & magic_ns::rook_moves(oki_pos, mask_all | set_mask_bit(to)) &
               betweenMasks().from(to, oki_pos);

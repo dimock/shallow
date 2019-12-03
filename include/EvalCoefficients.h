@@ -44,9 +44,7 @@ struct EvalCoefficients
 
   // blocked figure
   static int knightBlocked_;
-  static int knightBlockedA8_;
   static int bishopBlocked_;
-  static int bishopBlockedA7_;
 
   // king attacks
   static int pawnKingAttack_;
@@ -70,9 +68,6 @@ struct EvalCoefficients
   static int bishopChecking_;
   static int rookChecking_;
   static int queenChecking_;
-
-  // could be captured with check
-  static int couldCaptureWithCheck_;
 
   // pinned figures
   static int pinnedPawn_;
@@ -103,7 +98,6 @@ struct EvalCoefficients
   static int multipasserPawn_[8];
   static int passerPawnSc_[8]; // special cases only
   static int semipasserPawn_[8];
-  static int passerCandidatePawn_[8];
   static int protectedPasser_[8];
   static int farKingPawn_[8];
   static int cangoPawn_[8];

@@ -27,35 +27,35 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     case A8:
       if(board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.common_ -= EvalCoefficients::knightBlockedA8_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case A7:
       if(board_->isFigure(A6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.common_ -= EvalCoefficients::knightBlocked_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.common_ -= EvalCoefficients::knightBlocked_;
+        score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.common_ -= EvalCoefficients::knightBlockedA8_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(H6, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-         score_w.common_ -= EvalCoefficients::knightBlocked_;
+         score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.common_ -= EvalCoefficients::knightBlocked_;
+        score_w.opening_ -= EvalCoefficients::knightBlocked_;
       break;
     }
 #endif
@@ -82,30 +82,30 @@ Evaluator::FullScore Evaluator::evaluateKnights()
     case A1:
       if(board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.common_ -= EvalCoefficients::knightBlockedA8_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case A2:
       if(board_->isFigure(A3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.common_ -= EvalCoefficients::knightBlocked_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.common_ -= EvalCoefficients::knightBlocked_;
+        score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.common_ -= EvalCoefficients::knightBlockedA8_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(H3, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-         score_b.common_ -= EvalCoefficients::knightBlocked_;
+         score_b.opening_ -= EvalCoefficients::knightBlocked_;
       break;
 
     case G1:
@@ -144,48 +144,48 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     {
     case A7:
       if(board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn))
-        score_w.common_ -= EvalCoefficients::bishopBlockedA7_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A6:
       if(board_->isFigure(B5, Figure::ColorBlack, Figure::TypePawn) &&
          board_->isFigure(C6, Figure::ColorBlack, Figure::TypePawn))
-         score_w.common_ -= EvalCoefficients::bishopBlocked_;
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A8:
       if(board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.common_ -= EvalCoefficients::bishopBlocked_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case B8:
       if(board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w.common_ -= EvalCoefficients::bishopBlocked_;
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H7:
       if(board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn))
-        score_w.common_ -= EvalCoefficients::bishopBlockedA7_;
-      break;
-
-    case H6:
-      if (board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
-        board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn))
-        score_w.common_ -= EvalCoefficients::bishopBlocked_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H8:
       if(board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn))
-        score_w.common_ -= EvalCoefficients::bishopBlocked_;
+        score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case G8:
       if(board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn) &&
          (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn) ||
          board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn)))
-         score_w.common_ -= EvalCoefficients::bishopBlocked_;
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
+      break;
+
+    case H6:
+      if(board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
+         board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn))
+         score_w.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
     }
 #endif
@@ -213,48 +213,48 @@ Evaluator::FullScore Evaluator::evaluateBishops()
     {
     case A2:
       if(board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn))
-        score_b.common_ -= EvalCoefficients::bishopBlockedA7_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A3:
       if(board_->isFigure(B4, Figure::ColorWhite, Figure::TypePawn) &&
          board_->isFigure(C3, Figure::ColorWhite, Figure::TypePawn))
-         score_b.common_ -= EvalCoefficients::bishopBlocked_;
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case A1:
       if(board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.common_ -= EvalCoefficients::bishopBlocked_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case B1:
       if(board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b.common_ -= EvalCoefficients::bishopBlocked_;
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H2:
       if(board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn))
-        score_b.common_ -= EvalCoefficients::bishopBlockedA7_;
-      break;
-
-    case H3:
-      if (board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
-        board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn))
-        score_b.common_ -= EvalCoefficients::bishopBlocked_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case H1:
       if(board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn))
-        score_b.common_ -= EvalCoefficients::bishopBlocked_;
+        score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
 
     case G1:
       if(board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn) &&
          (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn) ||
          board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn)))
-         score_b.common_ -= EvalCoefficients::bishopBlocked_;
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
+      break;
+
+    case H3:
+      if(board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
+         board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn))
+         score_b.opening_ -= EvalCoefficients::bishopBlocked_;
       break;
     }
 #endif
@@ -763,19 +763,19 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #endif
   }
 
-  // checks with x-ray support
-  auto unprotected_attack_mask = (finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_) | (~finfo_[ocolor].attack_mask_);
-  unprotected_attack_mask &= ~board_->fmgr().mask(color);
-  auto bi_checks_xray = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
-  auto r_checks_xray = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
-  auto q_checks_xray = bi_check | r_check;
-  bi_checks_xray &= finfo_[color].bishopAttacks_;
-  r_checks_xray &= finfo_[color].rookAttacks_;
-  q_checks_xray &= finfo_[color].queenAttacks_;
+  //// checks with x-ray support
+  //auto unprotected_attack_mask = (finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_) | (~finfo_[ocolor].attack_mask_);
+  //unprotected_attack_mask &= ~board_->fmgr().mask(color);
+  //auto bi_checks_xray = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
+  //auto r_checks_xray = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
+  //auto q_checks_xray = bi_check | r_check;
+  //bi_checks_xray &= finfo_[color].bishopAttacks_;
+  //r_checks_xray &= finfo_[color].rookAttacks_;
+  //q_checks_xray &= finfo_[color].queenAttacks_;
 
-  bi_check |= bi_checks_xray;
-  r_check |= r_checks_xray;
-  q_check |= q_checks_xray;
+  //bi_check |= bi_checks_xray;
+  //r_check |= r_checks_xray;
+  //q_check |= q_checks_xray;
 
   // basic attacks
 #ifdef EVAL_KING_PR
@@ -797,10 +797,10 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #endif
 
   auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-  if (((bi_check | r_check | q_check) & ofgmask) != 0ULL)
-  {
-    score_king += EvalCoefficients::couldCaptureWithCheck_;
-  }
+//  if (((bi_check | r_check | q_check) & ofgmask) != 0ULL)
+//  {
+//    score_king += EvalCoefficients::couldCaptureWithCheck_;
+//  }
   
   BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
   finfo_[ocolor].matThreat_ = (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL) &&

@@ -306,11 +306,12 @@ struct TacticalGenerator
 
   enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks, oGenMates, oMates} order_{ oEscape };
 
-  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
+  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth, bool pv) :
     board_(board),
     cg_(board), ckg_(board), mg_(board), eg_(board, hmove),
     hmove_(hmove),
-    depth_(depth)
+    depth_(depth),
+    pv_{pv}
   {
     if(!board.underCheck())
       order_ = oHash;
@@ -349,10 +350,13 @@ struct TacticalGenerator
           continue;
         return move;
       }
-      if (depth_ < 0)
+      if (depth_ >= 0)
+        order_ = oGenChecks;
+      else if (pv_)
         order_ = oGenMates;
       else
-        order_ = oGenChecks;
+        return nullptr;
+        
     }
     if(order_ == oGenChecks)
     {
@@ -370,7 +374,7 @@ struct TacticalGenerator
     }
     if (order_ == oGenMates)
     {
-      mg_.generateMates(moveFound_);
+      mg_.generateMates(moveFound_, depth_ >= 0);
       NEngine::Engine::xcounter_ += mg_.size();
       order_ = oMates;
     }
@@ -395,6 +399,8 @@ struct TacticalGenerator
   MOVE hmove_;
   int depth_{};
   bool moveFound_{ false };
+  bool pv_{ false };
+  bool allChecks_{ false };
 };
 
 } // NEngine
