@@ -304,22 +304,17 @@ struct TacticalGenerator
 {
   using MovesList = xlist<MOVE, BOARD::MovesMax>;
 
-  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks, oGenMates, oMates} order_{ oEscape };
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks } order_{ oEscape };
 
-  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth, bool pv) :
+  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth, bool fpr) :
     board_(board),
-    cg_(board), ckg_(board), mg_(board), eg_(board, hmove),
+    cg_(board), ckg_(board), eg_(board, hmove),
     hmove_(hmove),
     depth_(depth),
-    pv_{pv}
+    fpr_{ fpr }
   {
     if(!board.underCheck())
       order_ = oHash;
-  }
-
-  void setMoveFound()
-  {
-    moveFound_ = true;
   }
 
   MOVE* next()
@@ -350,57 +345,35 @@ struct TacticalGenerator
           continue;
         return move;
       }
-      if (depth_ >= 0)
-        order_ = oGenChecks;
-      else if (pv_)
-        order_ = oGenMates;
-      else
-        return nullptr;
-        
+      order_ = oGenChecks;
     }
     if(order_ == oGenChecks)
     {
-      ckg_.generate();
+      if (depth_ >= 0)
+        ckg_.generateStrongest();
+      else
+        ckg_.generateOne(false);
       order_ = oChecks;
     }
     if(order_ == oChecks)
     {
       while(auto* move = ckg_.next())
       {
-        if(*move == hmove_ || mg_.find(*move))
+        if(*move == hmove_)
           continue;
         return move;
       }
-    }
-    if (order_ == oGenMates)
-    {
-      mg_.generateMates(moveFound_, depth_ >= 0);
-      NEngine::Engine::xcounter_ += mg_.size();
-      order_ = oMates;
-    }
-    if (order_ == oMates)
-    {
-      while (auto* move = mg_.next())
-      {
-        if (*move == hmove_)
-          continue;
-        return move;
-      }
-      order_ = oGenCaps;
     }
     return nullptr;
   }
 
   CapsGenerator<BOARD, MOVE> cg_;
   ChecksGenerator<BOARD, MOVE> ckg_;
-  ChecksGenerator<BOARD, MOVE> mg_;
   EscapeGenerator<BOARD, MOVE> eg_;
   BOARD const& board_;
   MOVE hmove_;
   int depth_{};
-  bool moveFound_{ false };
-  bool pv_{ false };
-  bool allChecks_{ false };
+  bool fpr_{};
 };
 
 } // NEngine

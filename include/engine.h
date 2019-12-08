@@ -99,7 +99,7 @@ private:
   ScoreType alphaBetta0();
   ScoreType processMove0(SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm);
-  ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0 = -ScoreMax);
+  ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0 = -ScoreMax, bool fpr = false);
   int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;
   void assemblePV(int ictx, Move const & move, bool checking, int ply);
 

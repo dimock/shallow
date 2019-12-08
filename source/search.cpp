@@ -431,7 +431,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     int threshold = (int)alpha - (int)score0 - Position_Gain;
     if (threshold > thresholds_[(depth / ONE_PLY) & 3])
     {
-      auto score = captures(ictx, depth, ply, alpha, betta, pv, dang, score0);
+      auto score = captures(ictx, depth, ply, alpha, betta, pv, dang, score0, true);
       if (!dang || score <= alpha)
         return score;
     }
@@ -689,7 +689,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0)
+ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0, bool fpr)
 {
   if(alpha >= Figure::MatScore-ply)
     return alpha;
@@ -748,7 +748,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   Board board0{ board };
 #endif
 
-  TacticalGenerator<Board, SMove> tg(board, hmove, depth, true);
+  TacticalGenerator<Board, SMove> tg(board, hmove, depth, fpr);
   for(; alpha < betta && !checkForStop();)
   {
     auto* pmove = tg.next();
@@ -761,7 +761,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if((!board.underCheck() || counter > 0) && !move.see_ok() && !board.see(move, threshold))
       continue;
 
-    tg.setMoveFound();
     dangerous = false;
     ScoreType score = -ScoreMax;
 
