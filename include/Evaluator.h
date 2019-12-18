@@ -120,6 +120,8 @@ public:
     return dangerous_;
   }
 
+  static const int colored_y_[2][8];
+
 private:
 
   void prepare();
@@ -237,7 +239,6 @@ private:
   EHashTable ehash_{0};
 #endif
 
-  static const int colored_y_[2][8];
   static const BitMask castle_mask_[2][2];
   static const BitMask king_attack_mask_[2][2];
 
