@@ -539,11 +539,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
 #ifdef LMR_REDUCE_MORE
           auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-          if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
+          if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()) && counter > 5)
           {
             R += ONE_PLY;
-            if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
-              R += ONE_PLY;
+            //if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
+            //  R += ONE_PLY;
           }
         //  curr.mflags_ |= UndoInfo::Reduced;
         //}

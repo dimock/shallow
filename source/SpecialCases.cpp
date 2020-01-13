@@ -2,7 +2,6 @@
 #include <Board.h>
 #include <xindex.h>
 #include <kpk.h>
-#include <Evaluator.h>
 
 namespace NEngine
 {
@@ -99,35 +98,13 @@ namespace
 
   ScoreType pawnAndHeavy(Board const& board, Figure::Color pawnColor)
   {
-    static int promo_y[] = { 0, 7 };
-    int py = promo_y[pawnColor];
-    Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
-    auto opawnColor = Figure::otherColor(pawnColor);
-    int oToMove = board.color() == opawnColor;
-    int x = index.x();
-    int y = index.y();
-    int promo_pos = x | (py << 3);
-    int cy = Evaluator::colored_y_[pawnColor][y];
-    int kpos = board.kingPos(pawnColor);
-    int okpos = board.kingPos(opawnColor);
-    int ok_dist_promo = distanceCounter().getDistance(promo_pos, okpos) - oToMove;
-    int k_dist = distanceCounter().getDistance(index, kpos);
-    int ok_dist = distanceCounter().getDistance(index, okpos) -+oToMove;
-    int pawn_dist_promo = std::abs(py - y);
-    ScoreType score{ 20 };
-    if (pawn_dist_promo < ok_dist_promo || k_dist < ok_dist)
+    ScoreType score{ +20 };
+    if(kpkPassed(board, pawnColor))
     {
-      score = 2*Figure::figureWeight_[Figure::TypePawn] + EvalCoefficients::passerPawn_[cy];
+      Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
+      auto xpawnColor = (pawnColor == Figure::ColorWhite) ? pawnColor : Figure::otherColor(pawnColor);
+      score = 50 + pawn_colored_y_[xpawnColor][index.y()] * 8;
     }
-    else if (k_dist == ok_dist)
-    {
-      score += 50 + pawn_colored_y_[pawnColor][y];
-    }
-    else
-    {
-      score += pawn_colored_y_[pawnColor][y];
-    }
-
     if(pawnColor == Figure::ColorBlack)
       score = -score;
     return score;
