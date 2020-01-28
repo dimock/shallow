@@ -538,29 +538,28 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           R = ONE_PLY;
 
 #ifdef LMR_REDUCE_MORE
-          auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-          if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()) && counter > 5)
-          {
+        auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
+        if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
+        {
+          R += ONE_PLY;
+          if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
             R += ONE_PLY;
-            //if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
-            //  R += ONE_PLY;
-          }
-        //  curr.mflags_ |= UndoInfo::Reduced;
-        //}
-        //else if(!check_escape &&
-        //      counter > 10 &&
-        //      sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-        //      depth > LMR_DepthLimit &&
-        //      alpha > -Figure::MatScore-MaxPly &&
-        //      !move.see_ok() &&
-        //      !curr.castle() &&
-        //      !board.underCheck())
-        //{
-        //  R = ONE_PLY;
-#endif // LMR_REDUCE_MORE
-
-          curr.mflags_ |= UndoInfo::Reduced;
         }
+        curr.mflags_ |= UndoInfo::Reduced;
+      }
+      else if(!check_escape &&
+              counter > 10 &&
+              sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+              depth > LMR_DepthLimit &&
+              alpha > -Figure::MatScore-MaxPly &&
+              !move.see_ok() &&
+              !curr.castle() &&
+              !board.underCheck())
+      {
+        R = ONE_PLY;
+#endif // LMR_REDUCE_MORE
+        curr.mflags_ |= UndoInfo::Reduced;
+      }
 #endif
 
         score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);

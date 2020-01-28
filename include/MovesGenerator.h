@@ -350,7 +350,7 @@ struct TacticalGenerator
     if(order_ == oGenChecks)
     {
       if (depth_ >= 0)
-        ckg_.generateStrongest();
+        ckg_.generate();
       else
         ckg_.generateOne(false);
       order_ = oChecks;
