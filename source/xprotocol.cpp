@@ -564,4 +564,17 @@ void xProtocolMgr::printCmdDbg(xCmd const& cmd) const
   ofs << to_string(cmd) << std::endl;
 }
 
+void xProtocolMgr::writeError()
+{
+    time_t curtime;
+    time(&curtime);
+    tm * t = localtime(&curtime);
+    char fen_fname[MAX_PATH];
+    char hash_fname[MAX_PATH];
+    strftime(fen_fname, MAX_PATH, "fen_%d-%m-%Y_%H-%M-%S.fen", t);
+    strftime(hash_fname, MAX_PATH, "hash_%d-%m-%Y_%H-%M-%S", t);
+    proc_.fen2file(fen_fname, true);
+    proc_.hash2file(hash_fname, true);
+}
+
 } // NShallow

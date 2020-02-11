@@ -364,9 +364,9 @@ void Processor::load(std::string const& fname)
   }
 }
 
-void Processor::fen2file(std::string const& fname)
+void Processor::fen2file(std::string const& fname, bool force)
 {
-  if(is_thinking())
+  if(is_thinking() && !force)
     return;
 
   try
@@ -396,9 +396,9 @@ void Processor::pgn2file(std::string const& fname)
   }
 }
 
-void Processor::hash2file(std::string const& fname)
+void Processor::hash2file(std::string const& fname, bool force)
 {
-  if(is_thinking())
+  if(is_thinking() && !force)
     return;
 
   engine_.saveHash(fname);

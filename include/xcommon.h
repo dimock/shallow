@@ -96,6 +96,8 @@ namespace nst
 };
 
 //#define LOG_PV
+#undef USE_MINIDUMP
+
 #define USE_IID
 #define USE_FUTILITY_PRUNING
 #define USE_DELTA_PRUNING

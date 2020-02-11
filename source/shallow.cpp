@@ -10,6 +10,30 @@
 #include <xalgorithm.h>
 #include <iomanip>
 
+
+#if ((defined _MSC_VER) && (defined USE_MINIDUMP))
+
+#include <windows.h>
+#include "minidump.h"
+void main_loop(NShallow::xProtocolMgr & xpr)
+{
+  __try
+  {
+    for (; xpr.doCmd(); );
+
+  }
+  __except (TopLevelFilter(GetExceptionInformation()))
+  {
+    xpr.writeError();
+  }
+}
+#else
+void main_loop(NShallow::xProtocolMgr & xpr)
+{
+  for (; xpr.doCmd(); );
+}
+#endif
+
 int main(int argn, char *argv[])
 {
   NEngine::init_popcount_ptr();
@@ -23,7 +47,9 @@ int main(int argn, char *argv[])
   //  NEngine::evaluateFen(argv[1]);
   //  return 0;
   //}
-  for(; xpr.doCmd(););
+  //for(; xpr.doCmd(););
+
+  main_loop(xpr);
 
 	return 0;
 }

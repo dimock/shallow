@@ -50,9 +50,9 @@ public:
 
   void save(std::string const& fname);
   void load(std::string const& fname);
-  void fen2file(std::string const& fname);
+  void fen2file(std::string const& fname, bool force = false);
   void pgn2file(std::string const& fname);
-  void hash2file(std::string const& fname);
+  void hash2file(std::string const& fname, bool force = false);
   void file2hash(std::string const& fname);
   std::string toFEN();
 

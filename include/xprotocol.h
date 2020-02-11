@@ -26,6 +26,9 @@ public:
   void printInfo(NEngine::SearchResult const& sres);
   void printUciStat(NEngine::SearchData const& sdata);
 
+  // debug
+  void writeError();
+
 private:
 
   void processCmd(xCmd const& cmd);
