@@ -413,6 +413,52 @@ struct ChecksGenerator
     auto r_king = magic_ns::rook_moves(oki_pos, mask_all);
 
     int from0 = -1, to0 = -1;
+    
+    // queen
+    if (moves_.empty())
+    {
+      auto q_mask = fmgr.queen_mask(color);
+      for (; q_mask && moves_.empty();)
+      {
+        auto from = clear_lsb(q_mask);
+        auto q_moves_from = magic_ns::queen_moves(from, mask_all);
+        auto q_moves = q_moves_from & mask_all_inv & (r_king | bi_king) &
+          (~o_attack_mask | (~o_attack_but_king_mask & multiattack_mask));
+        auto qki_blocked_from = q_moves_from & oki_moves_all & ~multiattack_mask;
+        for (; q_moves;)
+        {
+          auto to = clear_lsb(q_moves);
+          auto from_mask = betweenMasks().from(to, oki_pos);
+          if ((oki_moves & ~from_mask) == 0ULL)
+          {
+            X_ASSERT(board_.getField(to), "queen goes to occupied field");
+
+            auto q_moves_to = magic_ns::queen_moves(to, mask_all) | from_mask;
+            auto qki_blocked_to = q_moves_to & oki_moves_all;
+            qki_blocked_to = qki_blocked_from & ~qki_blocked_to;
+            if (qki_blocked_to == 0ULL && add(from, to))
+              break;
+          }
+          // attack through king
+          else
+          {
+            auto atf_mask = o_kbrq_mask & ~o_attack_mask & magic_ns::queen_moves(oki_pos, mask_all | set_mask_bit(to)) &
+              betweenMasks().from(to, oki_pos);
+            if (atf_mask != 0ULL && distanceCounter().getDistance(oki_pos, _lsb64(atf_mask)) > 2)
+            {
+              if (add(from, to))
+                break;
+            }
+          }
+          if (from0 < 0 && board_.validateMove(MOVE{ from, to }))
+          {
+            from0 = from;
+            to0 = to;
+          }
+        }
+      }
+    }
+
     // pawns    
     if(moves_.empty())
     {
@@ -705,51 +751,6 @@ struct ChecksGenerator
             if (atf_mask != 0ULL && distanceCounter().getDistance(oki_pos, _lsb64(atf_mask)) > 2)
             {
               if(add(from, to))
-                break;
-            }
-          }
-          if (from0 < 0 && board_.validateMove(MOVE{ from, to }))
-          {
-            from0 = from;
-            to0 = to;
-          }
-        }
-      }
-    }
-
-    // queen
-    if(moves_.empty())
-    {
-      auto q_mask = fmgr.queen_mask(color);
-      for (; q_mask && moves_.empty();)
-      {
-        auto from = clear_lsb(q_mask);
-        auto q_moves_from = magic_ns::queen_moves(from, mask_all);
-        auto q_moves = q_moves_from & mask_all_inv & (r_king | bi_king) &
-          (~o_attack_mask | (~o_attack_but_king_mask & multiattack_mask));
-        auto qki_blocked_from = q_moves_from & oki_moves_all & ~multiattack_mask;
-        for (; q_moves;)
-        {
-          auto to = clear_lsb(q_moves);
-          auto from_mask = betweenMasks().from(to, oki_pos);
-          if ((oki_moves & ~from_mask) == 0ULL)
-          {
-            X_ASSERT(board_.getField(to), "queen goes to occupied field");
-
-            auto q_moves_to = magic_ns::queen_moves(to, mask_all) | from_mask;
-            auto qki_blocked_to = q_moves_to & oki_moves_all;
-            qki_blocked_to = qki_blocked_from & ~qki_blocked_to;
-            if (qki_blocked_to == 0ULL && add(from, to))
-              break;
-          }
-          // attack through king
-          else
-          {
-            auto atf_mask = o_kbrq_mask & ~o_attack_mask & magic_ns::queen_moves(oki_pos, mask_all | set_mask_bit(to)) &
-              betweenMasks().from(to, oki_pos);
-            if (atf_mask != 0ULL && distanceCounter().getDistance(oki_pos, _lsb64(atf_mask)) > 2)
-            {
-              if (add(from, to))
                 break;
             }
           }

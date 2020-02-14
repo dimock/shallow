@@ -304,20 +304,19 @@ struct TacticalGenerator
 {
   using MovesList = xlist<MOVE, BOARD::MovesMax>;
 
-  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks } order_{ oEscape };
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks, oGenUsual, oUsual, oStop } order_{ oEscape };
 
-  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth, bool fpr) :
+  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
     board_(board),
-    cg_(board), ckg_(board), eg_(board, hmove),
+    cg_(board), ckg_(board), eg_(board, hmove), ug_(board),
     hmove_(hmove),
-    depth_(depth),
-    fpr_{ fpr }
+    depth_(depth)
   {
     if(!board.underCheck())
       order_ = oHash;
   }
 
-  MOVE* next()
+  MOVE* next(bool dangerous)
   {
     if(order_ == oEscape)
     {
@@ -329,6 +328,7 @@ struct TacticalGenerator
       if(hmove_)
       {
         hmove_.set_ok();
+        needUsual_ = false;
         return &hmove_;
       }
     }
@@ -341,7 +341,7 @@ struct TacticalGenerator
     {
       while(auto* move = cg_.next())
       {
-        if(*move == hmove_)
+        if (*move == hmove_)
           continue;
         return move;
       }
@@ -361,8 +361,26 @@ struct TacticalGenerator
     {
       while(auto* move = ckg_.next())
       {
-        if(*move == hmove_)
+        if (*move == hmove_)
           continue;
+        return move;
+      }
+      if(needUsual_ && dangerous && depth_ < 0)
+        order_ = oGenUsual;
+    }
+    if (order_ == oGenUsual)
+    {
+      ug_.generate();
+      order_ = oUsual;
+    }
+    if (order_ == oUsual)
+    {
+      while (auto* move = ug_.next())
+      {
+        if (*move == hmove_ || ckg_.find(*move) || !board_.see(*move, 0))
+          continue;
+        move->set_ok();
+        order_ = oStop;
         return move;
       }
     }
@@ -372,10 +390,11 @@ struct TacticalGenerator
   CapsGenerator<BOARD, MOVE> cg_;
   ChecksGenerator<BOARD, MOVE> ckg_;
   EscapeGenerator<BOARD, MOVE> eg_;
+  UsualGenerator<BOARD, MOVE> ug_;
   BOARD const& board_;
   MOVE hmove_;
   int depth_{};
-  bool fpr_{};
+  bool needUsual_{true};
 };
 
 } // NEngine

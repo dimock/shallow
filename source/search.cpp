@@ -361,11 +361,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash"); 
 #endif
 
-  bool dangerous = false;
   if (depth <= 0)
   {
+    bool dangerous = false;
     auto score = captures(ictx, depth, ply, alpha, betta, pv, dangerous);
-    if (!dangerous || depth < 0 || score <= alpha)// || !pv)
+    if (!dangerous || depth < 0 || score <= alpha)
       return score;
   }
 
@@ -394,9 +394,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     if(nullScore >= betta)
     {
       depth = null_depth;
-      bool dng = false;
-      if(depth <= 0)
+      if (depth <= 0)
+      {
+        bool dng = false;
         return captures(ictx, depth, ply, alpha, betta, pv, dng);
+      }
     }
     else // may be we are in danger?
     {
@@ -427,13 +429,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook] };
 
     ScoreType score0 = scontexts_[ictx].eval_(alpha, betta);
-    bool dang = scontexts_[ictx].eval_.dangerous();
     int threshold = (int)alpha - (int)score0 - Position_Gain;
     if (threshold > thresholds_[(depth / ONE_PLY) & 3])
     {
-      auto score = captures(ictx, depth, ply, alpha, betta, pv, dang, score0, true);
-      if (!dang || score <= alpha)
-        return score;
+      bool dng = scontexts_[ictx].eval_.dangerous();
+      return captures(ictx, depth, ply, alpha, betta, pv, dng, score0);
     }
   }
 #endif // futility pruning
@@ -688,17 +688,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0, bool fpr)
+ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0)
 {
   if(alpha >= Figure::MatScore-ply)
     return alpha;
 
   auto& board = scontexts_[ictx].board_;
 
-  if(board.drawState() || board.hasReps())
-    return Figure::DrawScore;
-
-  if(stopped() || ply >= MaxPly)
+  if(board.drawState() || board.hasReps() || stopped() || ply >= MaxPly)
     return Figure::DrawScore;
 
   SMove hmove{true};
@@ -712,8 +709,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     return hscore;
   }
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
-  if(!board.underCheck() && depth < -12*ONE_PLY && hmove && !board.is_capture(hmove))
-    hmove = SMove{true};
 #endif
 
   int counter = 0;
@@ -735,11 +730,14 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     threshold = (int)alpha - (int)score0 - Position_Gain;
     if(threshold > Figure::figureWeight_[Figure::TypePawn] && board.isWinnerLoser())
       threshold = Figure::figureWeight_[Figure::TypePawn];
-    if(score0 > alpha)
+    if (score0 > alpha)
       alpha = score0;
 
     scoreBest = score0;
   }
+
+  //if (!board.underCheck() && depth < -12 * ONE_PLY && hmove && !board.is_capture(hmove) && !dangerous)
+  //  hmove = SMove{ true };
 
   Move best{true};
 
@@ -747,10 +745,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   Board board0{ board };
 #endif
 
-  TacticalGenerator<Board, SMove> tg(board, hmove, depth, fpr);
+  TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop();)
   {
-    auto* pmove = tg.next();
+    auto* pmove = tg.next(dangerous);
     if(!pmove)
       break;
 
