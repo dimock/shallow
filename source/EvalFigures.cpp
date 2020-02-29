@@ -763,20 +763,6 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #endif
   }
 
-  //// checks with x-ray support
-  //auto unprotected_attack_mask = (finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_) | (~finfo_[ocolor].attack_mask_);
-  //unprotected_attack_mask &= ~board_->fmgr().mask(color);
-  //auto bi_checks_xray = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
-  //auto r_checks_xray = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_) & all_xray_attacks & unprotected_attack_mask;
-  //auto q_checks_xray = bi_check | r_check;
-  //bi_checks_xray &= finfo_[color].bishopAttacks_;
-  //r_checks_xray &= finfo_[color].rookAttacks_;
-  //q_checks_xray &= finfo_[color].queenAttacks_;
-
-  //bi_check |= bi_checks_xray;
-  //r_check |= r_checks_xray;
-  //q_check |= q_checks_xray;
-
   // basic attacks
 #ifdef EVAL_KING_PR
 
@@ -797,10 +783,6 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #endif
 
   auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-//  if (((bi_check | r_check | q_check) & ofgmask) != 0ULL)
-//  {
-//    score_king += EvalCoefficients::couldCaptureWithCheck_;
-//  }
   
   BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
   finfo_[ocolor].matThreat_ = (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL) &&
@@ -809,16 +791,16 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   int coeff = number_of_attackers[num_total];
-  //if(coeff > 0)
-  //{
-  //  if(num_bishops > 1)
-  //    coeff += 16;
-  //  if(num_rooks > 0)
-  //    coeff += 10;
-  //  if(num_queens > 0)
-  //    coeff += 24;
-  //}
+
+#ifdef ADDITIONAL_KING_ATTACK_COEFF
+  if(coeff > 0)
+  {
+    coeff += (num_bishops > 1)*EvalCoefficients::additionalBishopsAttacksCoeff_
+      + (num_rooks > 0)*EvalCoefficients::additionalRooksAttacksCoeff_
+      + (num_queens > 0)*EvalCoefficients::additionalQueensAttacksCoeff_;
+  }
   score_king = (score_king * coeff) >> 5;
+#endif
 
 #ifdef EVAL_KING_CHECK
   score_king += check_score;

@@ -130,6 +130,7 @@ namespace nst
 #undef EVAL_PIN
 
 #define EVAL_KING_CHECK
+#undef ADDITIONAL_KING_ATTACK_COEFF
 
 static const SortValueType CaptureRecentlyBonus = 10;
 

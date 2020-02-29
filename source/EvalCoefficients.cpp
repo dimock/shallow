@@ -51,6 +51,12 @@ namespace NEngine
   int EvalCoefficients::rookKingAttack_{ 5 };
   int EvalCoefficients::queenKingAttack_{ 12 };
 
+  // additional bonuses for king attack
+  int EvalCoefficients::additionalBishopsAttacksCoeff_{16};
+  int EvalCoefficients::additionalRooksAttacksCoeff_{10};
+  int EvalCoefficients::additionalQueensAttacksCoeff_{24};
+
+
   // x-ray attacks
   int EvalCoefficients::rookKingAttackXray_{ 4 };
   int EvalCoefficients::queenKingAttackXray_{ 8 };

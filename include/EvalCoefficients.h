@@ -53,6 +53,11 @@ struct EvalCoefficients
   static int rookKingAttack_;
   static int queenKingAttack_;
 
+  // additional coefficients for king attack
+  static int additionalBishopsAttacksCoeff_;
+  static int additionalRooksAttacksCoeff_;
+  static int additionalQueensAttacksCoeff_;
+
   // x-ray attacks
   static int rookKingAttackXray_;
   static int queenKingAttackXray_;
