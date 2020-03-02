@@ -300,7 +300,7 @@ struct ChecksGenerator
     return moves_.size();
   }
 
-  void generateOne(bool atLeast)
+  void generateOne()
   {
     BitMask visited{};
     const auto& color = board_.color();
@@ -365,11 +365,11 @@ struct ChecksGenerator
     BitMask or_attack_mask{};
     BitMask ob_attack_mask{};
     {
-      const BitMask & pawn_msk = fmgr.pawn_mask(ocolor);
+      const BitMask & opawn_msk = fmgr.pawn_mask(ocolor);
       if (ocolor == Figure::ColorWhite)
-        o_attack_but_king_mask = ((pawn_msk << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk << 7) & Figure::pawnCutoffMasks_[1]);
+        o_attack_but_king_mask = ((opawn_msk << 9) & Figure::pawnCutoffMasks_[0]) | ((opawn_msk << 7) & Figure::pawnCutoffMasks_[1]);
       else
-        o_attack_but_king_mask = ((pawn_msk >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk >> 9) & Figure::pawnCutoffMasks_[1]);
+        o_attack_but_king_mask = ((opawn_msk >> 7) & Figure::pawnCutoffMasks_[0]) | ((opawn_msk >> 9) & Figure::pawnCutoffMasks_[1]);
       BitMask knights = fmgr.knight_mask(ocolor);
       for (; knights;)
       {
@@ -412,8 +412,6 @@ struct ChecksGenerator
     auto bi_king = magic_ns::bishop_moves(oki_pos, mask_all);
     auto r_king = magic_ns::rook_moves(oki_pos, mask_all);
 
-    int from0 = -1, to0 = -1;
-    
     // queen
     if (moves_.empty())
     {
@@ -450,17 +448,12 @@ struct ChecksGenerator
                 break;
             }
           }
-          if (from0 < 0 && board_.validateMove(MOVE{ from, to }))
-          {
-            from0 = from;
-            to0 = to;
-          }
         }
       }
     }
 
     // pawns    
-    if(moves_.empty())
+    if (moves_.empty())
     {
       auto pw_check_mask = movesTable().pawnCaps(ocolor, oki_pos) & attack_mask;
       for (; pw_check_mask && moves_.empty();)
@@ -483,7 +476,7 @@ struct ChecksGenerator
             auto pki_blocked_from = movesTable().pawnCaps(color, to) & oki_moves_all & ~multiattack_mask;
             auto pki_blocked_to = movesTable().pawnCaps(color, to) & oki_moves_all;
             pki_blocked_to = pki_blocked_from & ~pki_blocked_to;
-            if(pki_blocked_to == 0ULL && add(from, to))
+            if (pki_blocked_to == 0ULL && add(from, to))
               break;
           }
         }
@@ -519,70 +512,7 @@ struct ChecksGenerator
             if(nki_blocked_to == 0ULL && add(from, to))
               break;
           }
-          if (from0 < 0 && board_.validateMove(MOVE{ from, to }))
-          {
-            from0 = from;
-            to0 = to;
-          }
         }        
-      }
-    }
-
-    // king
-    if(moves_.empty() && from0 < 0)
-    {
-      auto const& ki_pos = board_.kingPos(color);
-      auto all_but_king_mask = mask_all_inv | set_mask_bit(ki_pos);
-      bool castle = false;
-      // short castle
-      if ((board_.castling(color, 0) && (movesTable().castleMasks(color, 0) & mask_all) == 0ULL) &&
-          ((oki_moves & ~pawnMasks().mask_column(5)) == 0ULL))
-      {
-        static int rook_positions[] = { 61, 5 };
-        auto const& r_pos = rook_positions[board_.color()];
-        X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
-        X_ASSERT(color && board_.getField(7).type() != Figure::TypeRook
-          || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
-        if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
-        {
-          from0 = ki_pos;
-          to0 = ki_pos + 2;
-          castle = true;
-        }
-      }
-
-      // long castle
-      if ((!castle && board_.castling(color, 1) && (movesTable().castleMasks(color, 1) & mask_all) == 0ULL) && 
-          ((oki_moves & ~pawnMasks().mask_column(3)) == 0ULL) &&
-        from0 < 0)
-      {
-        static int rook_positions[] = { 59, 3 };
-        auto const& r_pos = rook_positions[board_.color()];
-        X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
-        X_ASSERT(color && board_.getField(0).type() != Figure::TypeRook
-          || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
-        if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
-        {
-          from0 = ki_pos;
-          to0 = ki_pos - 2;
-          castle = true;
-        }
-      }
-
-      if ((!castle && board_.discoveredCheck(ki_pos, mask_all, color, oki_pos)) &&
-          ((oki_moves & ~betweenMasks().from(ki_pos, oki_pos)) == 0ULL) &&
-        from0 < 0)
-      {
-        auto exclude = ~(betweenMasks().from(oki_pos, ki_pos) | movesTable().caps(Figure::TypeKing, oki_pos));
-        auto ki_mask = movesTable().caps(Figure::TypeKing, ki_pos) & mask_all_inv & exclude;
-        for (; ki_mask;)
-        {
-          auto to = clear_lsb(ki_mask);
-          X_ASSERT(board_.getField(to), "king moves to occupied field");
-          from0 = ki_pos;
-          to0 = to;
-          break;
-        }
       }
     }
 
@@ -630,12 +560,6 @@ struct ChecksGenerator
                   to = _lsb64(to_mask & oqr_attack_mask);
                 else if (to_mask & or_attack_mask)
                   to = _lsb64(to_mask & or_attack_mask);
-                else if (from0 < 0)
-                {
-                  from0 = from;
-                  to0 = _lsb64(to_mask);
-                  continue;
-                }
                 if (to >= 0)
                 {
                   X_ASSERT(board_.getField(to), "field is occupied");
@@ -698,11 +622,6 @@ struct ChecksGenerator
                   to = _lsb64(to_mask & orb_attack_mask);
                 else if (to_mask & ob_attack_mask)
                   to = _lsb64(to_mask & ob_attack_mask);
-                else if (from0 < 0)
-                {
-                  from0 = from;
-                  to0 = _lsb64(to_mask);
-                }
                 if (to >= 0)
                 {
                   X_ASSERT(board_.getField(to), "field is occupied");
@@ -717,7 +636,6 @@ struct ChecksGenerator
     }
 
     // remaining direct attacks
-
     // rook
     if (moves_.empty())
     {
@@ -753,11 +671,6 @@ struct ChecksGenerator
               if(add(from, to))
                 break;
             }
-          }
-          if (from0 < 0 && board_.validateMove(MOVE{ from, to }))
-          {
-            from0 = from;
-            to0 = to;
           }
         }
       }
@@ -799,18 +712,58 @@ struct ChecksGenerator
                 break;
             }
           }
-          if (from0 < 0 && board_.validateMove(MOVE{ from, to }))
-          {
-            from0 = from;
-            to0 = to;
-          }
         }
       }
     }
 
-    if (moves_.empty() && atLeast && from0 >= 0)
+    // king castle with check 
+    if (moves_.empty())
     {
-      add(from0, to0);
+      auto const& ki_pos = board_.kingPos(color);
+      auto all_but_king_mask = mask_all_inv | set_mask_bit(ki_pos);
+      // short castle
+      if ((board_.castling(color, 0) && (movesTable().castleMasks(color, 0) & mask_all) == 0ULL) &&
+        ((oki_moves & ~pawnMasks().mask_column(5)) == 0ULL))
+      {
+        static int rook_positions[] = { 61, 5 };
+        auto const& r_pos = rook_positions[board_.color()];
+        X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
+        X_ASSERT(color && board_.getField(7).type() != Figure::TypeRook
+          || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
+        if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
+        {
+          add(ki_pos, ki_pos + 2);
+        }
+      }
+
+      // long castle
+      if ((moves_.empty() && board_.castling(color, 1) && (movesTable().castleMasks(color, 1) & mask_all) == 0ULL) &&
+        ((oki_moves & ~pawnMasks().mask_column(3)) == 0ULL))
+      {
+        static int rook_positions[] = { 59, 3 };
+        auto const& r_pos = rook_positions[board_.color()];
+        X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
+        X_ASSERT(color && board_.getField(0).type() != Figure::TypeRook
+          || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
+        if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
+        {
+          add(ki_pos, ki_pos - 2);
+        }
+      }
+
+      if ((moves_.empty() && board_.discoveredCheck(ki_pos, mask_all, color, oki_pos)) &&
+        ((oki_moves & ~betweenMasks().from(ki_pos, oki_pos)) == 0ULL))
+      {
+        auto exclude = ~(betweenMasks().from(oki_pos, ki_pos) | movesTable().caps(Figure::TypeKing, oki_pos));
+        auto ki_mask = movesTable().caps(Figure::TypeKing, ki_pos) & mask_all_inv & exclude;
+        for (; ki_mask;)
+        {
+          auto to = clear_lsb(ki_mask);
+          X_ASSERT(board_.getField(to), "king moves to occupied field");
+          add(ki_pos, to);
+          break;
+        }
+      }
     }
 
     iter_ = moves_.begin();

@@ -799,8 +799,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       + (num_rooks > 0)*EvalCoefficients::additionalRooksAttacksCoeff_
       + (num_queens > 0)*EvalCoefficients::additionalQueensAttacksCoeff_;
   }
-  score_king = (score_king * coeff) >> 5;
 #endif
+  score_king = (score_king * coeff) >> 5;
 
 #ifdef EVAL_KING_CHECK
   score_king += check_score;

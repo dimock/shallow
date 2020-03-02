@@ -318,28 +318,28 @@ struct TacticalGenerator
 
   MOVE* next(bool dangerous)
   {
-    if(order_ == oEscape)
+    if (order_ == oEscape)
     {
       return eg_.next();
     }
-    if(order_ == oHash)
+    if (order_ == oHash)
     {
       order_ = oGenCaps;
-      if(hmove_)
+      if (hmove_)
       {
         hmove_.set_ok();
         needUsual_ = false;
         return &hmove_;
       }
     }
-    if(order_ == oGenCaps)
+    if (order_ == oGenCaps)
     {
       cg_.generateCaps();
       order_ = oCaps;
     }
-    if(order_ == oCaps)
+    if (order_ == oCaps)
     {
-      while(auto* move = cg_.next())
+      while (auto* move = cg_.next())
       {
         if (*move == hmove_)
           continue;
@@ -347,25 +347,27 @@ struct TacticalGenerator
       }
       order_ = oGenChecks;
     }
-    if(order_ == oGenChecks)
+    if (order_ == oGenChecks)
     {
       if (depth_ >= 0)
       {
         ckg_.generate();
       }
       else
-        ckg_.generateOne(false);
+        ckg_.generateOne();
       order_ = oChecks;
     }
-    if(order_ == oChecks)
+    if (order_ == oChecks)
     {
-      while(auto* move = ckg_.next())
+      while (auto* move = ckg_.next())
       {
         if (*move == hmove_)
           continue;
         return move;
       }
-      if(needUsual_ && dangerous && depth_ < 0)
+
+#ifdef GEN_USUAL_AFETER_HORIZON
+      if (needUsual_ && dangerous && depth_ < 0)
         order_ = oGenUsual;
     }
     if (order_ == oGenUsual)
@@ -383,6 +385,8 @@ struct TacticalGenerator
         order_ = oStop;
         return move;
       }
+#endif
+
     }
     return nullptr;
   }

@@ -95,7 +95,7 @@ namespace nst
   extern bool get_bit_dir_[10];
 };
 
-//#define LOG_PV
+#undef LOG_PV
 #undef USE_MINIDUMP
 
 #define USE_IID
@@ -131,6 +131,8 @@ namespace nst
 
 #define EVAL_KING_CHECK
 #undef ADDITIONAL_KING_ATTACK_COEFF
+#define GEN_USUAL_AFETER_HORIZON
+#undef EVAL_MULTI_PASSERS
 
 static const SortValueType CaptureRecentlyBonus = 10;
 
