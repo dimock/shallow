@@ -602,7 +602,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   bi_check &= finfo_[color].bishopAttacks_ & (cango_mask | include_mask);
 #endif
 
-  BitMask all_xray_attacks{0ULL};
+  //BitMask all_xray_attacks{0ULL};
 
   // x-ray bishop attack
   auto bq_mask = fmgr.queen_mask(color) | fmgr.bishop_mask(color);
@@ -634,7 +634,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::bishop_moves(n, all_bq);
-    all_xray_attacks |= xray_moves;
+    //all_xray_attacks |= xray_moves;
     if(auto bi_att = (xray_moves & ki_fields))
     {
       int bi_num = pop_count(bi_att);
@@ -693,7 +693,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(r_num || !(movesTable().caps(Figure::TypeRook, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::rook_moves(n, all_rq);
-    all_xray_attacks |= xray_moves;
+    //all_xray_attacks |= xray_moves;
     if(auto r_att = (xray_moves & ki_fields))
     {
       r_num = pop_count(r_att);
@@ -753,7 +753,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     if(q_num || !(movesTable().caps(Figure::TypeQueen, n) & ki_fields))
       continue;
     auto const& xray_moves = magic_ns::queen_moves(n, all_brq);
-    all_xray_attacks |= xray_moves;
+    //all_xray_attacks |= xray_moves;
     if(auto q_att = (xray_moves & ki_fields))
     {
       q_num = pop_count(q_att);

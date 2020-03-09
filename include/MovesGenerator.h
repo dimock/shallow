@@ -328,7 +328,9 @@ struct TacticalGenerator
       if (hmove_)
       {
         hmove_.set_ok();
+#ifdef GEN_USUAL_AFETER_HORIZON
         needUsual_ = false;
+#endif
         return &hmove_;
       }
     }
@@ -394,11 +396,15 @@ struct TacticalGenerator
   CapsGenerator<BOARD, MOVE> cg_;
   ChecksGenerator<BOARD, MOVE> ckg_;
   EscapeGenerator<BOARD, MOVE> eg_;
+#ifdef GEN_USUAL_AFETER_HORIZON
   UsualGenerator<BOARD, MOVE> ug_;
+#endif
   BOARD const& board_;
   MOVE hmove_;
   int depth_{};
+#ifdef GEN_USUAL_AFETER_HORIZON
   bool needUsual_{true};
+#endif
 };
 
 } // NEngine

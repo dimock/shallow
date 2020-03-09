@@ -484,11 +484,6 @@ struct Board
 
   bool isDangerPawn(Move & move) const;
 
-  bool isPawnMove(const Move& move) const
-  {
-    const Field & ffrom = getField(move.from());
-    return ffrom.type() == Figure::TypePawn;
-  }
 
 private:
   // for initialization only
