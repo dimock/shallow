@@ -200,8 +200,13 @@ void Engine::testInput(int ictx)
   if(updateRequested_)
   {
     updateRequested_ = false;
-    if(callbacks_.sendStats_)
-      (callbacks_.sendStats_)(sdata);
+    if (callbacks_.sendStats_)
+    {
+      SearchData sdataTotal = sdata;
+      for (size_t i = 1; i < scontexts_.size(); ++i)
+        sdataTotal.nodesCount_ += scontexts_[i].sdata_.nodesCount_;
+      (callbacks_.sendStats_)(sdataTotal);
+    }
   }
 }
 

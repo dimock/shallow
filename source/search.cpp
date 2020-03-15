@@ -10,6 +10,7 @@
 #include <Helpers.h>
 #include <History.h>
 #include <xalgorithm.h>
+#include <thread>
 
 namespace NEngine
 {
@@ -79,8 +80,24 @@ bool Engine::search(SearchResult& sres)
     scontexts_[ictx] = scontexts_[0];
   }
 
+  // start threads
+  std::array<std::unique_ptr<std::thread>, N_THREADS-1> threads;
+  for (int ictx = 1; ictx < scontexts_.size(); ++ictx)
+  {
+    auto& sres = scontexts_[ictx].sres_;
+    threads[ictx - 1] = std::unique_ptr<std::thread>(new std::thread{[this](int ictx, SearchResult& sres) {
+      this->threadSearch(ictx, sres);
+    }, ictx, std::ref(sres)});
+  }
+
   // search in main thread
   auto bres = threadSearch(0, sres);
+
+  for (auto& thread : threads)
+  {
+    thread->join();
+  }
+
   return bres;
 }
 
@@ -142,8 +159,12 @@ bool Engine::threadSearch(int ictx, SearchResult& sres)
 
       X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
 
-      if(ictx == 0 && callbacks_.sendOutput_)
+      if (ictx == 0 && callbacks_.sendOutput_)
+      {
+        for (size_t j = 1; j < scontexts_.size(); ++j)
+          sres.totalNodes_ += scontexts_[j].sres_.totalNodes_;
         (callbacks_.sendOutput_)(sres);
+      }
     }
     // we haven't found move and spend more time for search it than on prev. iteration
     else if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 && callbacks_.giveTime_ && !sparams_.analyze_mode_)
@@ -265,8 +286,13 @@ ScoreType Engine::alphaBetta0(int ictx)
     else
       hist.inc_bad();
 
-    if(callbacks_.sendStats_ && sparams_.analyze_mode_)
-      (callbacks_.sendStats_)(sdata);
+    if (ictx == 0 && callbacks_.sendStats_ && sparams_.analyze_mode_)
+    {
+      SearchData sdataTotal = sdata;
+      for (size_t j = 1; j < scontexts_.size(); ++j)
+        sdataTotal.nodesCount_ += scontexts_[j].sdata_.nodesCount_;
+      (callbacks_.sendStats_)(sdataTotal);
+    }
   } // end of for loop
 
   // don't need to continue
