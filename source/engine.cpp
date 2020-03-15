@@ -17,11 +17,31 @@ void SearchParams::reset()
   scoreLimit_ = Figure::MatScore;
 }
 
+void Engine::SearchContext::reset()
+{
+  sdata_.reset();
+  for (auto& pls : plystack_)
+    pls.clearKiller();
+  stop_ = false;
+}
+
+Engine::SearchContext& Engine::SearchContext::operator = (SearchContext const& other)
+{
+  board_ = static_cast<Board>(other.board_);
+  for(size_t i = 0; i < plystack_.size(); ++i)
+    plystack_[i] = other.plystack_[i];
+  for(size_t i = 0; i < moves_.size(); ++i)
+    moves_[i] = other.moves_[i];
+  sdata_ = other.sdata_;
+  sres_ = other.sres_;
+  stop_ = other.stop_;
+  return *this;
+}
+
 //////////////////////////////////////////////////////////////////////////
 Engine::Engine() :
-  stop_(false)
 #ifdef USE_HASH
-  , hash_(0)
+  hash_(0)
 #endif
 {
   setMemory(options_.hash_size_);
@@ -63,7 +83,8 @@ void Engine::setMemory(int mb)
 
 bool Engine::fromFEN(std::string const& fen)
 {
-  stop_ = false;
+  for(auto& sctx : scontexts_)
+    sctx.stop_ = false;
 
   SBoard<Board, UndoInfo, Board::GameLength> tboard(scontexts_[0].board_);
 
@@ -78,7 +99,8 @@ bool Engine::fromFEN(std::string const& fen)
 
 void Engine::setBoard(Board const& board)
 {
-  stop_ = false;
+  for (auto& sctx : scontexts_)
+    sctx.stop_ = false;
   clear_history();
   scontexts_[0].board_ = board;
 }
@@ -97,12 +119,13 @@ void Engine::clearHash()
 
 void Engine::reset()
 {
-  sdata_.reset();
-  stop_ = false;
+  for (auto& sctx : scontexts_)
+  {
+    sctx.reset();
+  }
+
   clear_history();
 
-  for(int i = 0; i < MaxPly; ++i)
-    scontexts_[0].plystack_[i].clearKiller();
 }
 
 void Engine::setCallbacks(xCallback cs)
@@ -131,33 +154,44 @@ void Engine::setScoreLimit(ScoreType score)
   sparams_.scoreLimit_ = score;
 }
 
-void Engine::pleaseStop()
+void Engine::pleaseStop(int ictx)
 {
-  stop_ = true;
+  if (ictx != 0)
+    return;
+  scontexts_[ictx].stop_ = true;
 }
 
-bool Engine::checkForStop()
+bool Engine::checkForStop(int ictx)
 {
-  if(sdata_.totalNodes_ && !(sdata_.totalNodes_ & TIMING_FLAG))
+  if (ictx != 0)
+    return false;
+  auto& sdata = scontexts_[ictx].sdata_;
+  if(sdata.totalNodes_ && !(sdata.totalNodes_ & TIMING_FLAG))
   {
     if(sparams_.timeLimit_ > NTime::duration(0))
-      testTimer();
+      testTimer(ictx);
     else
-      testInput();
+      testInput(ictx);
   }
-  return stop_;
+  return scontexts_[ictx].stop_;
 }
 
-void Engine::testTimer()
+void Engine::testTimer(int ictx)
 {
-  if((NTime::now() - sdata_.tstart_) > sparams_.timeLimit_)
-    pleaseStop();
+  if (ictx != 0)
+    return;
+  auto& sdata = scontexts_[ictx].sdata_;
+  if((NTime::now() - sdata.tstart_) > sparams_.timeLimit_)
+    pleaseStop(ictx);
 
-  testInput();
+  testInput(ictx);
 }
 
-void Engine::testInput()
+void Engine::testInput(int ictx)
 {
+  if (ictx != 0)
+    return;
+  auto& sdata = scontexts_[ictx].sdata_;
   if(callbacks_.queryInput_)
   {
     (callbacks_.queryInput_)();
@@ -167,13 +201,13 @@ void Engine::testInput()
   {
     updateRequested_ = false;
     if(callbacks_.sendStats_)
-      (callbacks_.sendStats_)(sdata_);
+      (callbacks_.sendStats_)(sdata);
   }
 }
 
 void Engine::assemblePV(int ictx, const Move & move, bool checking, int ply)
 {
-  if(ply >= MaxPly-1)
+  if(ictx != 0 || ply >= MaxPly-1)
     return;
 
   scontexts_[ictx].plystack_[ply].pv_[ply] = move;

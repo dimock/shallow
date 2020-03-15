@@ -17,6 +17,8 @@ class SearchResult
 public:
   SearchResult();
 
+  SearchResult& operator = (SearchResult const& other);
+
   /// statistic
   NTime::duration dt_{};
   int nodesCount_{};
@@ -30,7 +32,7 @@ public:
   Move best_{};
   int  depth_{};
   ScoreType score_;
-  Move pv_[MaxPly+4];
+  std::array<Move, MaxPly + 4> pv_;
 };
 
 struct SearchData

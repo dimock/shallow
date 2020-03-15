@@ -15,6 +15,54 @@ namespace NEngine
 {
 
 //////////////////////////////////////////////////////////////////////////
+bool Engine::generateStartposMoves(int ictx, SearchResult& sres)
+{
+  auto& board = scontexts_[ictx].board_;
+  auto& sdata = scontexts_[ictx].sdata_;
+  
+  // generate moves from startpos
+  auto moves = generate<Board, SMove>(board);
+  for (auto move : moves)
+  {
+    move.sort_value = 0;
+    if (!board.validateMoveBruteforce(move))
+      continue;
+    if (board.see(move, 0))
+      move.set_ok();
+    if (move.new_type() || board.is_capture(move))
+    {
+      if (move.see_ok())
+        move.sort_value = 10000000 + board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type());
+      else
+        move.sort_value = board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type()) - 10000;
+    }
+    else
+    {
+      board.makeMove(move);
+      move.sort_value = scontexts_[ictx].eval_(-ScoreMax, +ScoreMax);
+      if (!move.see_ok())
+        move.sort_value -= 10000;
+      board.unmakeMove(move);
+    }
+    scontexts_[ictx].moves_[sdata.numOfMoves_++] = move;
+  }
+  scontexts_[ictx].moves_[sdata.numOfMoves_] = SMove{ true };
+  auto* b = scontexts_[ictx].moves_.data();
+  auto* e = b + sdata.numOfMoves_;
+  std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
+  auto const* hitem = hash_.find(board.fmgr().hashCode());
+  if (hitem && hitem->move_)
+  {
+    SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
+    X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
+    X_ASSERT(!board.validateMove(best), "move from hash is invalid");
+    bring_to_front(b, e, best);
+  }
+
+  sres.numOfMoves_ = sdata.numOfMoves_;
+  return sdata.numOfMoves_ > 0;
+}
+
 bool Engine::search(SearchResult& sres)
 {
 #ifdef USE_HASH
@@ -22,126 +70,99 @@ bool Engine::search(SearchResult& sres)
 #endif
 
   reset();
-
-  // stash board to correctly print status later
-  sres.board_ = scontexts_[0].board_;
-  sdata_.board_ = scontexts_[0].board_;
-  auto& board = scontexts_[0].board_;
-
-  {
-    auto moves = generate<Board, SMove>(board);
-    for(auto move : moves)
-    {
-      move.sort_value = 0;
-      if(!board.validateMoveBruteforce(move))
-        continue;
-      if(board.see(move, 0))
-        move.set_ok();
-      if(move.new_type() || board.is_capture(move))
-      {
-        if(move.see_ok())
-          move.sort_value = 10000000 + board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type());
-        else
-          move.sort_value = board.sortValueOfCap(move.from(), move.to(), (Figure::Type)move.new_type()) - 10000;
-      }
-      else
-      {
-        board.makeMove(move);
-        move.sort_value = scontexts_[0].eval_(-ScoreMax, +ScoreMax);
-        if(!move.see_ok())
-          move.sort_value -= 10000;
-        board.unmakeMove(move);
-      }
-      scontexts_[0].moves_[sdata_.numOfMoves_++] = move;
-    }
-    scontexts_[0].moves_[sdata_.numOfMoves_] = SMove{ true };
-    auto* b = scontexts_[0].moves_.data();
-    auto* e = b + sdata_.numOfMoves_;
-    std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
-    auto const* hitem = hash_.find(board.fmgr().hashCode());
-    if(hitem && hitem->move_)
-    {
-      SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
-      X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
-      X_ASSERT(!board.validateMove(best), "move from hash is invalid");
-      bring_to_front(b, e, best);
-    }
-  }
-
-  sres.numOfMoves_ = sdata_.numOfMoves_;
-  if(!sdata_.numOfMoves_)
+ 
+  if (!generateStartposMoves(0, sres))
     return false;
 
-  for(sdata_.depth_ = depth0_; !stopped() && sdata_.depth_ <= sparams_.depthMax_; ++sdata_.depth_)
+  for (size_t ictx = 1; ictx < scontexts_.size(); ++ictx)
   {
-    scontexts_[0].plystack_[0].clearPV(sparams_.depthMax_);
+    scontexts_[ictx] = scontexts_[0];
+  }
 
-    sdata_.restart();
+  // search in main thread
+  auto bres = threadSearch(0, sres);
+  return bres;
+}
 
-    ScoreType score = alphaBetta0();
+bool Engine::threadSearch(int ictx, SearchResult& sres)
+{
+  // stash board to correctly print status later
+  sres.board_ = scontexts_[ictx].board_;
+  auto& board = scontexts_[ictx].board_;
+  auto& sdata = scontexts_[ictx].sdata_;
+  // copy to print stats later
+  sdata.board_ = board;
 
-    if(sdata_.best_)
+  for(sdata.depth_ = depth0_; !stopped(ictx) && sdata.depth_ <= sparams_.depthMax_; ++sdata.depth_)
+  {
+    scontexts_[ictx].plystack_[0].clearPV(sparams_.depthMax_);
+
+    sdata.restart();
+
+    ScoreType score = alphaBetta0(ictx);
+
+    if(sdata.best_)
     {
-      if(stop_ && sdata_.depth_ > 2 &&
-        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/3 || (sdata_.best_ != sres.best_ /*&& abs(score-sres->score_) >= 5*/)) &&
+      if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 &&
+        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/3 || (sdata.best_ != sres.best_)) &&
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
         auto t_add = (callbacks_.giveTime_)();
         if(NTime::milli_seconds<int>(t_add) > 0)
         {
-          stop_ = false;
+          scontexts_[ictx].stop_ = false;
           sparams_.timeLimit_ += t_add;
-          if(sdata_.counter_ < sdata_.numOfMoves_)
-            sdata_.depth_--;
+          if(sdata.counter_ < sdata.numOfMoves_)
+            sdata.depth_--;
           continue;
         }
       }
 
       auto t  = NTime::now();
-      auto dt = t - sdata_.tstart_;
-      sdata_.tprev_ = t;
+      auto dt = t - sdata.tstart_;
+      sdata.tprev_ = t;
 
       sres.score_ = score;
-      sres.best_ = sdata_.best_;
-      sres.depth_ = sdata_.depth_;
-      sres.nodesCount_ = sdata_.nodesCount_;
-      sres.totalNodes_ = sdata_.totalNodes_;
+      sres.best_ = sdata.best_;
+      sres.depth_ = sdata.depth_;
+      sres.nodesCount_ = sdata.nodesCount_;
+      sres.totalNodes_ = sdata.totalNodes_;
       sres.depthMax_ = 0;
       sres.dt_ = dt;
-      sres.counter_ = sdata_.counter_;
+      sres.counter_ = sdata.counter_;
 
       for(int i = 0; i < MaxPly; ++i)
       {
         sres.depthMax_ = i;
-        sres.pv_[i] = scontexts_[0].plystack_[0].pv_[i];
+        sres.pv_[i] = scontexts_[ictx].plystack_[0].pv_[i];
         if(!sres.pv_[i])
           break;
       }
 
-      X_ASSERT(sres.pv_[0] != sdata_.best_, "invalid PV found");
+      X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
 
-      if(callbacks_.sendOutput_)
+      if(ictx == 0 && callbacks_.sendOutput_)
         (callbacks_.sendOutput_)(sres);
     }
     // we haven't found move and spend more time for search it than on prev. iteration
-    else if(stop_ && sdata_.depth_ > 2 && callbacks_.giveTime_ && !sparams_.analyze_mode_)
+    else if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 && callbacks_.giveTime_ && !sparams_.analyze_mode_)
     {
       auto t = NTime::now();
-      if((t - sdata_.tprev_) >= (sdata_.tprev_ - sdata_.tstart_))
+      if((t - sdata.tprev_) >= (sdata.tprev_ - sdata.tstart_))
       {
         auto t_add = (callbacks_.giveTime_)();
         if(t_add > NTime::duration(0))
         {
-          stop_ = false;
+          scontexts_[ictx].stop_ = false;
           sparams_.timeLimit_ += t_add;
-          sdata_.depth_--;
+          sdata.depth_--;
           continue;
         }
       }
     }
 
-    if(!sdata_.best_ ||
+    if(!sdata.best_ ||
        ((score >= sparams_.scoreLimit_-MaxPly || score <= MaxPly-sparams_.scoreLimit_) &&
       !sparams_.analyze_mode_))
     {
@@ -149,12 +170,21 @@ bool Engine::search(SearchResult& sres)
     }
   }
 
-  sres.totalNodes_ = sdata_.totalNodes_;
+  sres.totalNodes_ = sdata.totalNodes_;
 
-  sres.dt_ = NTime::now() - sdata_.tstart_;
+  sres.dt_ = NTime::now() - sdata.tstart_;
 
-  if(sparams_.analyze_mode_ && callbacks_.sendFinished_)
+  if(ictx == 0 && sparams_.analyze_mode_ && callbacks_.sendFinished_)
     (callbacks_.sendFinished_)(sres);
+
+  if (ictx == 0)
+  {
+    // stop all threads
+    for(auto& sctx : scontexts_)
+    {
+      sctx.stop_ = true;
+    }
+  }
 
   return sres.best_;
 }
@@ -189,18 +219,19 @@ int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) 
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Engine::alphaBetta0()
+ScoreType Engine::alphaBetta0(int ictx)
 {
-  if(stopped())
-    return scontexts_[0].eval_(-ScoreMax, +ScoreMax);
+  if(stopped(ictx))
+    return scontexts_[ictx].eval_(-ScoreMax, +ScoreMax);
 
-  X_ASSERT(sdata_.numOfMoves_ == 0, "no moves");
+  auto& sdata = scontexts_[ictx].sdata_;
+  X_ASSERT(sdata.numOfMoves_ == 0, "no moves");
 
-  auto& board = scontexts_[0].board_;
-  if(sdata_.numOfMoves_ == 0)
+  auto& board = scontexts_[ictx].board_;
+  if(sdata.numOfMoves_ == 0)
   {
     board.setNoMoves();
-    ScoreType score = scontexts_[0].eval_(-ScoreMax, +ScoreMax);
+    ScoreType score = scontexts_[ictx].eval_(-ScoreMax, +ScoreMax);
     return score;
   }
 
@@ -211,52 +242,52 @@ ScoreType Engine::alphaBetta0()
   Board board0{ board };
 #endif
 
-  for(sdata_.counter_ = 0; sdata_.counter_ < sdata_.numOfMoves_; ++sdata_.counter_)
+  for(sdata.counter_ = 0; sdata.counter_ < sdata.numOfMoves_; ++sdata.counter_)
   {
-    if(checkForStop())
+    if(checkForStop(ictx))
       break;
 
-    auto& move = scontexts_[0].moves_[sdata_.counter_];
-    ScoreType score = processMove0(move, alpha, betta, !sdata_.counter_);
+    auto& move = scontexts_[ictx].moves_[sdata.counter_];
+    ScoreType score = processMove0(ictx, move, alpha, betta, !sdata.counter_);
     X_ASSERT(board != board0, "board undo error");
 
-    if(stopped())
+    if(stopped(ictx))
       break;
 
     auto& hist = history(board.color(), move.from(), move.to());
     if(score > alpha)
     {
       hist.inc_good();
-      sdata_.best_ = move;
+      sdata.best_ = move;
       alpha = score;
-      assemblePV(0, sdata_.best_, board.underCheck(), 0);
+      assemblePV(ictx, sdata.best_, board.underCheck(), 0);
     }
     else
       hist.inc_bad();
 
     if(callbacks_.sendStats_ && sparams_.analyze_mode_)
-      (callbacks_.sendStats_)(sdata_);
+      (callbacks_.sendStats_)(sdata);
   } // end of for loop
 
   // don't need to continue
-  if(!stopped() && sdata_.numOfMoves_ == 1 && !sparams_.analyze_mode_)
-    pleaseStop();
+  if(!stopped(ictx) && sdata.numOfMoves_ == 1 && !sparams_.analyze_mode_)
+    pleaseStop(ictx);
 
-  if(sdata_.numOfMoves_ == 1)
+  if(sdata.numOfMoves_ == 1)
     return alpha;
 
-  if(sdata_.best_)
+  if(sdata.best_)
   {
-    auto& hist = history(board.color(), sdata_.best_.from(), sdata_.best_.to());
-    hist.inc_score(sdata_.depth_ / ONE_PLY);
-    bring_to_front(scontexts_[0].moves_.data(),
-                   scontexts_[0].moves_.data()+sdata_.numOfMoves_,
-                   sdata_.best_);
+    auto& hist = history(board.color(), sdata.best_.from(), sdata.best_.to());
+    hist.inc_score(sdata.depth_ / ONE_PLY);
+    bring_to_front(scontexts_[ictx].moves_.data(),
+                   scontexts_[ictx].moves_.data()+sdata.numOfMoves_,
+                   sdata.best_);
   
-    if(sdata_.numOfMoves_ > 2)
+    if(sdata.numOfMoves_ > 2)
     {
-      auto* b = scontexts_[0].moves_.data();
-      auto* e = b + sdata_.numOfMoves_;
+      auto* b = scontexts_[ictx].moves_.data();
+      auto* e = b + sdata.numOfMoves_;
       b++;
       for(auto* m = b; m != e; ++m)
       {
@@ -268,40 +299,41 @@ ScoreType Engine::alphaBetta0()
       std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
     }
 
-    X_ASSERT(!(scontexts_[0].moves_[0] == sdata_.best_), "not best move first");
+    X_ASSERT(!(scontexts_[ictx].moves_[0] == sdata.best_), "not best move first");
   }
   return alpha;
 }
 
-ScoreType Engine::processMove0(SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv)
+ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv)
 {
   ScoreType score = -ScoreMax;
-  const int depth = sdata_.depth_ * ONE_PLY;
+  auto& sdata = scontexts_[ictx].sdata_;
+  const int depth = sdata.depth_ * ONE_PLY;
 
-  auto& board = scontexts_[0].board_;
+  auto& board = scontexts_[ictx].board_;
 
 #ifdef USE_LMR0
   bool check_escape = board.underCheck();
 #endif
 
   board.makeMove(move);
-  sdata_.inc_nc();
+  sdata.inc_nc();
 
-  if(!stopped())
+  if(!stopped(ictx))
   {
     if(pv)
     {
-      int depthInc = depthIncrement(0, move, true, false);
-      score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
+      int depthInc = depthIncrement(ictx, move, true, false);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
     }
     else
     {
-      int depthInc = depthIncrement(0, move, false, false);
+      int depthInc = depthIncrement(ictx, move, false, false);
 
       int R = 0;
   #ifdef USE_LMR0
       if(!check_escape &&
-         sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+         sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
          depth >= LMR_DepthLimit &&
          alpha > -Figure::MatScore-MaxPly &&
          board.canBeReduced(move))
@@ -309,14 +341,14 @@ ScoreType Engine::processMove0(SMove const& move, ScoreType const alpha, ScoreTy
         R = ONE_PLY;
       }
   #endif
-      score = -alphaBetta(0, depth + depthInc - R - ONE_PLY, 1, -alpha-1, -alpha, false, true);
-      if(!stopped() && score > alpha && R > 0)
-        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -alpha - 1, -alpha, false, true);
+      score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, 1, -alpha-1, -alpha, false, true);
+      if(!stopped(ictx) && score > alpha && R > 0)
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -alpha - 1, -alpha, false, true);
 
-      if(!stopped() && score > alpha)
+      if(!stopped(ictx) && score > alpha)
       {
-        depthInc = depthIncrement(0, move, true, false);
-        score = -alphaBetta(0, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
+        depthInc = depthIncrement(ictx, move, true, false);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
       }
     }
   }
@@ -334,6 +366,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     return alpha;
 
   auto& board = scontexts_[ictx].board_;
+  auto& sdata = scontexts_[ictx].sdata_;
 
   if(ply < MaxPly-1)
   {
@@ -344,7 +377,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(board.drawState() || board.hasReps())
     return Figure::DrawScore;
 
-  if(stopped() || ply >= MaxPly)
+  if(stopped(ictx) || ply >= MaxPly)
     return scontexts_[ictx].eval_(alpha, betta);
 
   ScoreType const alpha0 = alpha;
@@ -469,7 +502,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   
   bool check_escape = board.underCheck();
   FastGenerator<Board, SMove> fg(board, hmove, scontexts_[ictx].plystack_[ply].killer_);
-  for (; alpha < betta && !checkForStop();)
+  for (; alpha < betta && !checkForStop(ictx);)
   {
     auto* pmove = fg.next();
     if (!pmove)
@@ -487,12 +520,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     ScoreType score = -ScoreMax;
     board.makeMove(move);
-    sdata_.inc_nc();
+    sdata.inc_nc();
     int depthInc = 0;
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-    //if (sdata_.depth_ == 11 && findSequence(ictx, move, ply, true))
+    //if (sdata.depth_ == 11 && findSequence(ictx, move, ply, true))
     //{
     //  depthInc = depthInc;
     //}
@@ -530,7 +563,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_LMR
         if (!check_escape &&
           !danger_pawn &&
-          sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+          sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
           alpha > -Figure::MatScore - MaxPly &&
           scontexts_[ictx].board_.canBeReduced(move))
@@ -549,7 +582,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         }
         else if(!check_escape &&
                 counter > 10 &&
-                sdata_.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+                sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
                 depth > LMR_DepthLimit &&
                 alpha > -Figure::MatScore-MaxPly &&
                 !move.see_ok() &&
@@ -565,12 +598,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
         curr.mflags_ &= ~UndoInfo::Reduced;
 
-        if (!stopped() && score > alpha && R > 0)
+        if (!stopped(ictx) && score > alpha && R > 0)
           score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
 
-        if (!stopped() && score > alpha && score < betta && pv)
+        if (!stopped(ictx) && score > alpha && score < betta && pv)
         {
-          depthInc = depthIncrement(0, move, pv, singular);
+          depthInc = depthIncrement(ictx, move, pv, singular);
           score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm);
         }
       }
@@ -586,7 +619,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
 
-    if(!stopped())
+    if(!stopped(ictx))
     {
 #ifdef SINGULAR_EXT
       if(pv && score > alpha0)
@@ -621,7 +654,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     ++counter;
   }
 
-  if(stopped())
+  if(stopped(ictx))
     return scoreBest;
 
   if(!counter)
@@ -642,14 +675,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     singular = true;
 
     board.makeMove(best);
-    sdata_.inc_nc();
+    sdata.inc_nc();
 
     alpha = alpha0;
     ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true);
 
     board.unmakeMove(best);
 
-    if(!stopped())
+    if(!stopped(ictx))
     {
       scoreBest = score;
       if(score > alpha)
@@ -669,7 +702,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
 #if ((defined USE_LMR) && (defined VERIFY_LMR))
     // have to recalculate with full depth, or indicate threat in hash
-    if ( !stopped() && !dont_reduce && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )
+    if ( !stopped(ictx) && !dont_reduce && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )
     {
       if(prev.is_reduced())
         return betta-1;
@@ -694,8 +727,9 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     return alpha;
 
   auto& board = scontexts_[ictx].board_;
+  auto& sdata = scontexts_[ictx].sdata_;
 
-  if(board.drawState() || board.hasReps() || stopped() || ply >= MaxPly)
+  if(board.drawState() || board.hasReps() || stopped(ictx) || ply >= MaxPly)
     return Figure::DrawScore;
 
   SMove hmove{true};
@@ -746,7 +780,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 #endif
 
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
-  for(; alpha < betta && !checkForStop();)
+  for(; alpha < betta && !checkForStop(ictx);)
   {
     auto* pmove = tg.next(dangerous);
     if(!pmove)
@@ -762,7 +796,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     ScoreType score = -ScoreMax;
 
     board.makeMove(move);
-    sdata_.inc_nc();
+    sdata.inc_nc();
 
     int depthInc = board.underCheck() ? ONE_PLY : 0;
     bool dng = false;
@@ -771,7 +805,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
 
-    if(!stopped() && score > scoreBest)
+    if(!stopped(ictx) && score > scoreBest)
     {
       best = move;
       scoreBest = score;
@@ -783,7 +817,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     counter++;
   }
 
-  if(stopped())
+  if(stopped(ictx))
     return scoreBest;
 
   if(!counter)
@@ -816,20 +850,22 @@ void Engine::prefetchHash(int ictx)
 GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular)
 {
   auto& board = scontexts_[ictx].board_;
-  auto const* hitem = hash_.find(board.fmgr().hashCode());
-  if(!hitem)
+  auto const* pitem = hash_.find(board.fmgr().hashCode());
+  if(!pitem)
     return GHashTable::NoFlag;
 
-  X_ASSERT(hitem->hkey_ != board.fmgr().hashCode(), "invalid hash item found");
+  auto hitem = *pitem;
+  if(hitem.hkey_ != board.fmgr().hashCode())
+    return GHashTable::NoFlag;
 
-  singular = hitem->singular_;
-  hmove = hitem->move_;
+  singular = hitem.singular_;
+  hmove = hitem.move_;
   if(pv)
     return GHashTable::AlphaBetta;
 
   depth = (depth + ONE_PLY - 1) / ONE_PLY;
 
-  hscore = hitem->score_;
+  hscore = hitem.score_;
   if(hscore >= Figure::MatScore-MaxPly)
     hscore = hscore - ply;
   else if(hscore <= MaxPly-Figure::MatScore)
@@ -837,15 +873,15 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
 
-  if(hitem->flag_  != GHashTable::NoFlag && (int)hitem->depth_ >= depth && ply > 0 && hscore != 0)
+  if(hitem.flag_  != GHashTable::NoFlag && (int)hitem.depth_ >= depth && ply > 0 && hscore != 0)
   {
-    if(GHashTable::Alpha == hitem->flag_ && hscore <= alpha)
+    if(GHashTable::Alpha == hitem.flag_ && hscore <= alpha)
     {
-      X_ASSERT(!stop_ && alpha < -32760, "invalid hscore");
+      X_ASSERT(!scontexts_[ictx].stop_ && alpha < -32760, "invalid hscore");
       return GHashTable::Alpha;
     }
 
-    if(hitem->flag_ > GHashTable::Alpha && hscore >= betta && hmove)
+    if(hitem.flag_ > GHashTable::Alpha && hscore >= betta && hmove)
     {
       if(betta > 0 && board.hasReps(hmove))
       {
@@ -856,7 +892,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
       {
         /// danger move was reduced - recalculate it with full depth
         auto const& prev = board.lastUndo();
-        if(hitem->threat_ && prev.is_reduced())
+        if(hitem.threat_ && prev.is_reduced())
         {
           hscore = betta-1;
           return GHashTable::Alpha;

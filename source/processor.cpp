@@ -167,7 +167,7 @@ bool Processor::undo()
 {
   if(is_thinking())
   {
-    engine_.pleaseStop();
+    engine_.pleaseStop(0);
     return false;
   }
 
@@ -198,7 +198,7 @@ bool Processor::init()
 {
   if(is_thinking())
   {
-    engine_.pleaseStop();
+    engine_.pleaseStop(0);
     return true;
   }
 
@@ -230,7 +230,7 @@ bool Processor::analyze()
 
 void Processor::stop()
 {
-  engine_.pleaseStop();
+  engine_.pleaseStop(0);
 }
 
 ReplyStruct Processor::reply(bool winboardFormat)
@@ -422,7 +422,7 @@ std::pair<bool, bool> Processor::fromFEN(xCmd const& cmd)
 {
   if(is_thinking())
   {
-    engine_.pleaseStop();
+    engine_.pleaseStop(0);
     return { true, false };
   }
   if(fromFEN(cmd.fen()))

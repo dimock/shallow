@@ -68,11 +68,15 @@ public:
   // call it to start search
   bool search(SearchResult& result);
 
+  // prepare and start in threads
+  bool generateStartposMoves(int ictx, SearchResult& sres);
+  bool threadSearch(int ictx, SearchResult& result);
+
   void setBoard(Board const& board);
   Board & getBoard() { return scontexts_[0].board_; }
   const Board & getBoard() const { return scontexts_[0].board_; }
 
-  void pleaseStop();
+  void pleaseStop(int ictx);
 
   void setAnalyzeMode(bool);
   void setTimeLimit(NTime::duration const& tm);
@@ -83,21 +87,21 @@ private:
 
   void setMemory(int mb);
 
-  bool checkForStop();
+  bool checkForStop(int ictx);
   void reset();
 
 //  // logging
-  void logPV();
-  void logMovies();
+  void logPV(int ictx);
+  void logMovies(int ictx);
 
   // time control
-  void testTimer();
-  bool stopped() const { return stop_; }
-  void testInput();
+  void testTimer(int ictx);
+  void testInput(int ictx);
+  bool stopped(int ictx) const { return scontexts_[ictx].stop_; }
 
   // search routine
-  ScoreType alphaBetta0();
-  ScoreType processMove0(SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
+  ScoreType alphaBetta0(int ictx);
+  ScoreType processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm);
   ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0 = -ScoreMax);
   int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;
@@ -122,20 +126,24 @@ private:
 
   // search data
   static const int depth0_ = 1; // start depth
-  volatile bool stop_;
 
   struct SearchContext
   {
-    SBoard<Board, UndoInfo, Board::GameLength>     board_;
+    SBoard<Board, UndoInfo, Board::GameLength> board_;
     Evaluator eval_;
-    std::array<PlyStack, MaxPly+4>    plystack_;
+    std::array<PlyStack, MaxPly+4> plystack_;
     std::array<SMove, Board::MovesMax> moves_;
+    SearchData sdata_;
+    SearchResult sres_;
+    volatile bool stop_{ false };
+
+    SearchContext& operator = (SearchContext const& other);
+    void reset();
   };
 
   // will be used in multi-threading mode???
-  std::array<SearchContext, 1> scontexts_;
+  std::array<SearchContext, N_THREADS> scontexts_;
 
-  SearchData sdata_;
   SearchParams sparams_;
   xOptions options_;
 

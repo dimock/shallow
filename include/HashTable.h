@@ -140,21 +140,21 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HBucket
   {
     for (int i = 0; i < BucketSize; ++i)
     {
-      if ( items_[i].hkey_ == hkey )
+      if (items_[i].hkey_ == hkey)
         return items_ + i;
     }
     return 0;
   }
 
-  HItem * get(const uint64 & hkey)
+  HItem* get(const uint64 & hkey)
   {
     HItem * hfar = 0;
     for (int i = 0; i < BucketSize; ++i)
     {
-      if ( !items_[i].hkey_ || items_[i].hkey_ == hkey )
+      if (!items_[i].hkey_ || items_[i].hkey_ == hkey)
         return items_ + i;
       
-      if ( !hfar || items_[i].movesCount_ < hfar->movesCount_ )
+      if (!hfar || items_[i].movesCount_ < hfar->movesCount_)
         hfar = items_ + i;
     }
 
@@ -190,14 +190,17 @@ public:
 
     X_ASSERT(score > 32760, "wrong value to hash");
 
-    hitem->hkey_   = hkey;
-    hitem->score_  = score;
-    hitem->depth_  = depth;
-    hitem->flag_   = flag;
-    hitem->movesCount_ = movesCount_;
-    hitem->move_   = move;
-    hitem->threat_ = threat;
-    hitem->singular_ = singular;
+    HItem newItem;
+    newItem.hkey_   = hkey;
+    newItem.score_  = score;
+    newItem.depth_  = depth;
+    newItem.flag_   = flag;
+    newItem.movesCount_ = movesCount_;
+    newItem.move_   = move;
+    newItem.threat_ = threat;
+    newItem.singular_ = singular;
+
+    *hitem = newItem;
   }
 
   const HItem * find(const uint64 & hkey) const

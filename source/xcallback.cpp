@@ -15,6 +15,13 @@ SearchResult::SearchResult()
   }
 }
 
+SearchResult& SearchResult::operator = (SearchResult const& other)
+{
+  for (size_t i = 0; i < pv_.size(); ++i)
+    pv_[i] = other.pv_[i];
+  return *this;
+}
+
 void SearchData::reset()
 {
   depth_ = 0;

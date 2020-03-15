@@ -54,7 +54,7 @@ void Engine::loadHash(std::string const& fname)
 ////////////////////////////////////////////////////////////////////////////
 /// for DEBUG
 ////////////////////////////////////////////////////////////////////////////
-void Engine::logPV()
+void Engine::logPV(int ictx)
 {
   if(!callbacks_.slog_)
     return;
@@ -63,12 +63,13 @@ void Engine::logPV()
   std::ostringstream oss;
   oss << std::put_time(std::localtime(&tm), "%d:%m:%Y %H:%M:%S ");
 
-  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[0].board_);
+  auto& sdata = scontexts_[ictx].sdata_;
+  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[ictx].board_);
 
-  oss << "iter " << sdata_.depth_ << " ";
-  if(sdata_.best_)
+  oss << "iter " << sdata.depth_ << " ";
+  if(sdata.best_)
   {
-    auto strbest = printSAN(board, sdata_.best_);
+    auto strbest = printSAN(board, sdata.best_);
     if(!strbest.empty())
     {
       oss << " bm " << strbest << " ";
@@ -78,7 +79,7 @@ void Engine::logPV()
   oss << "pv ";
   for(int i = 0; i < MaxPly; ++i)
   {
-    auto const& move = scontexts_[0].plystack_[0].pv_[i];
+    auto const& move = scontexts_[ictx].plystack_[0].pv_[i];
     if(!move)
       break;
     auto str = printSAN(board, move);
@@ -90,12 +91,13 @@ void Engine::logPV()
   (*callbacks_.slog_) << oss.str() << std::endl;
 }
 
-void Engine::logMovies()
+void Engine::logMovies(int ictx)
 {
   if(!callbacks_.slog_)
     return;
 
-  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[0].board_);
+  auto& sdata = scontexts_[ictx].sdata_;
+  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[ictx].board_);
 
   auto fen = NEngine::toFEN(board);
 
@@ -103,16 +105,16 @@ void Engine::logMovies()
   std::ostringstream oss;
   oss << std::put_time(std::localtime(&tm), "%d:%m:%Y %H:%M:%S ");
   oss << " position " << fen << " ";
-  oss << " halfmovies count " << scontexts_[0].board_.halfmovesCount() << " ";
-  oss << "iter " << sdata_.depth_ << " ";
+  oss << " halfmovies count " << scontexts_[ictx].board_.halfmovesCount() << " ";
+  oss << "iter " << sdata.depth_ << " ";
   oss << "movies ";
 
-  for(int i = 0; i < sdata_.numOfMoves_; ++i)
+  for(int i = 0; i < sdata.numOfMoves_; ++i)
   {
-    if(checkForStop())
+    if(checkForStop(ictx))
       break;
 
-    Move move = scontexts_[0].moves_[i];
+    Move move = scontexts_[ictx].moves_[i];
     auto str = printSAN(board, move);
     if(str.empty())
       break;
