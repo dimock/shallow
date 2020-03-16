@@ -47,7 +47,6 @@ int main(int argn, char *argv[])
   //  NEngine::evaluateFen(argv[1]);
   //  return 0;
   //}
-  //for(; xpr.doCmd(););
 
   main_loop(xpr);
 

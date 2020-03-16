@@ -70,6 +70,7 @@ public:
 
   // prepare and start in threads
   bool generateStartposMoves(int ictx, SearchResult& sres);
+  bool mainThreadSearch(int ictx, SearchResult& result);
   bool threadSearch(int ictx, SearchResult& result);
 
   void setBoard(Board const& board);

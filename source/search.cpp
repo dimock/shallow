@@ -91,7 +91,7 @@ bool Engine::search(SearchResult& sres)
   }
 
   // search in main thread
-  auto bres = threadSearch(0, sres);
+  auto bres = mainThreadSearch(0, sres);
 
   for (auto& thread : threads)
   {
@@ -101,7 +101,7 @@ bool Engine::search(SearchResult& sres)
   return bres;
 }
 
-bool Engine::threadSearch(int ictx, SearchResult& sres)
+bool Engine::mainThreadSearch(int ictx, SearchResult& sres)
 {
   // stash board to correctly print status later
   sres.board_ = scontexts_[ictx].board_;
@@ -162,7 +162,7 @@ bool Engine::threadSearch(int ictx, SearchResult& sres)
       if (ictx == 0 && callbacks_.sendOutput_)
       {
         for (size_t j = 1; j < scontexts_.size(); ++j)
-          sres.totalNodes_ += scontexts_[j].sres_.totalNodes_;
+          sres.totalNodes_ += scontexts_[j].sdata_.totalNodes_;
         (callbacks_.sendOutput_)(sres);
       }
     }
@@ -206,6 +206,71 @@ bool Engine::threadSearch(int ictx, SearchResult& sres)
       sctx.stop_ = true;
     }
   }
+
+  return sres.best_;
+}
+
+bool Engine::threadSearch(int ictx, SearchResult& sres)
+{
+  // stash board to correctly print status later
+  sres.board_ = scontexts_[ictx].board_;
+  auto& board = scontexts_[ictx].board_;
+  auto& sdata = scontexts_[ictx].sdata_;
+  // copy to print stats later
+  sdata.board_ = board;
+
+  int depth0 = depth0_;
+  for (auto const& sctx : scontexts_)
+    depth0 = std::max(sctx.sdata_.depth_, depth0);
+  depth0++;
+  for (sdata.depth_ = depth0; !stopped(ictx) && sdata.depth_ <= sparams_.depthMax_;)
+  {
+    scontexts_[ictx].plystack_[0].clearPV(sparams_.depthMax_);
+
+    sdata.restart();
+
+    ScoreType score = alphaBetta0(ictx);
+
+    if (sdata.best_)
+    {
+      auto t = NTime::now();
+      auto dt = t - sdata.tstart_;
+      sdata.tprev_ = t;
+
+      sres.score_ = score;
+      sres.best_ = sdata.best_;
+      sres.depth_ = sdata.depth_;
+      sres.nodesCount_ = sdata.nodesCount_;
+      sres.totalNodes_ = sdata.totalNodes_;
+      sres.depthMax_ = 0;
+      sres.dt_ = dt;
+      sres.counter_ = sdata.counter_;
+
+      for (int i = 0; i < MaxPly; ++i)
+      {
+        sres.depthMax_ = i;
+        sres.pv_[i] = scontexts_[ictx].plystack_[0].pv_[i];
+        if (!sres.pv_[i])
+          break;
+      }
+
+      X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
+    }
+
+    if (!sdata.best_ ||
+      ((score >= sparams_.scoreLimit_ - MaxPly || score <= MaxPly - sparams_.scoreLimit_) &&
+        !sparams_.analyze_mode_))
+    {
+      break;
+    }
+
+    for (auto const& sctx : scontexts_)
+      sdata.depth_ = std::max(sctx.sdata_.depth_, sdata.depth_);
+    sdata.depth_++;
+  }
+
+  sres.totalNodes_ = sdata.totalNodes_;
+  sres.dt_ = NTime::now() - sdata.tstart_;
 
   return sres.best_;
 }
