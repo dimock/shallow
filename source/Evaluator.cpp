@@ -173,11 +173,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   FullScore score;
 
   // evaluate figures weight
-  score.common_ = fmgr.weight()
+  score.common_ = fmgr.weight();
 #ifdef EVAL_MATD
-    + evaluateMaterialDiff()
+  score.common_ += evaluateMaterialDiff();
 #endif
-    ;
 
   /// use lazy evaluation level 0
   {

@@ -861,8 +861,8 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     scoreBest = score0;
   }
 
-  //if (!board.underCheck() && depth < -12 * ONE_PLY && hmove && !board.is_capture(hmove) && !dangerous)
-  //  hmove = SMove{ true };
+  if (!board.underCheck() && depth < -NumUsualAfterHorizon * ONE_PLY && hmove && !board.is_capture(hmove))
+    hmove = SMove{ true };
 
   Move best{true};
 

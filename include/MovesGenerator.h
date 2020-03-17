@@ -369,7 +369,7 @@ struct TacticalGenerator
       }
 
 #ifdef GEN_USUAL_AFETER_HORIZON
-      if (needUsual_ && dangerous && depth_ < 0)
+      if (needUsual_ && dangerous && depth_ < 0 && depth_ >= -NumUsualAfterHorizon * ONE_PLY)
         order_ = oGenUsual;
     }
     if (order_ == oGenUsual)
