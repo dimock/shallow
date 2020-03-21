@@ -308,8 +308,11 @@ struct TacticalGenerator
 
   TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
     board_(board),
-    cg_(board), ckg_(board), eg_(board, hmove), ug_(board),
-    hmove_(hmove),
+    cg_(board), ckg_(board), eg_(board, hmove)
+#ifdef GEN_USUAL_AFETER_HORIZON
+    , ug_(board)
+#endif
+    ,hmove_(hmove),
     depth_(depth)
   {
     if(!board.underCheck())
@@ -398,13 +401,11 @@ struct TacticalGenerator
   EscapeGenerator<BOARD, MOVE> eg_;
 #ifdef GEN_USUAL_AFETER_HORIZON
   UsualGenerator<BOARD, MOVE> ug_;
+  bool needUsual_{ true };
 #endif
   BOARD const& board_;
   MOVE hmove_;
   int depth_{};
-#ifdef GEN_USUAL_AFETER_HORIZON
-  bool needUsual_{true};
-#endif
 };
 
 } // NEngine
