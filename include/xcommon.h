@@ -134,6 +134,8 @@ namespace nst
 #define GEN_USUAL_AFETER_HORIZON
 #undef EVAL_MULTI_PASSERS
 
+#undef SYNCHRONIZE_LAST_ITER
+
 static const SortValueType CaptureRecentlyBonus = 10;
 
 static const int NumUsualAfterHorizon = 16;

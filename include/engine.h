@@ -149,6 +149,10 @@ private:
   // multi-threading mode
   std::vector<SearchContext> scontexts_;
 
+#ifdef SYNCHRONIZE_LAST_ITER
+  std::mutex m_mutex;
+#endif // SYNCHRONIZE_LAST_ITER
+
   SearchParams sparams_;
 
 #ifdef USE_HASH

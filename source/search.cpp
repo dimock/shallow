@@ -18,7 +18,7 @@ namespace NEngine
 //////////////////////////////////////////////////////////////////////////
 bool Engine::generateStartposMoves(int ictx)
 {
-  if (scontexts_.size() < ictx)
+  if (scontexts_.size() <= ictx)
     return false;
 
   auto& sres = scontexts_.at(ictx).sres_;
@@ -194,6 +194,51 @@ bool Engine::mainThreadSearch(int ictx)
           continue;
         }
       }
+
+#ifdef SYNCHRONIZE_LAST_ITER
+      int jcbest = -1;
+      {
+        std::lock_guard<std::mutex> g{ m_mutex };
+
+        int depth_best = sdata.depth_;
+        bool best_found = false;
+        for (int jctx = 1; jctx < scontexts_.size(); ++jctx)
+        {
+          auto const& jsres = scontexts_[jctx].sres_;
+          if (!jsres.best_)
+            continue;
+          if ((jsres.depth_ > depth_best) || (jsres.depth_ == depth_best && !best_found))
+          {
+            jcbest = jctx;
+            depth_best = jsres.depth_;
+            best_found = true;
+          }
+        }
+
+        if (jcbest > 0)
+        {
+          sres = scontexts_[jcbest].sres_;
+          sres.depth_ = sdata.depth_;
+          sres.nodesCount_ = sdata.nodesCount_;
+          sres.totalNodes_ = sdata.totalNodes_;
+          sres.dt_ = t - sdata.tstart_;
+          sdata.best_ = SMove{ sres.best_.from(), sres.best_.to(), static_cast<Figure::Type>(sres.best_.new_type()) };
+          sortMoves0(ictx);
+        }
+      }
+
+      if (sres.best_ && jcbest > 0)
+      {
+        X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
+
+        if (ictx == 0 && callbacks_.sendOutput_)
+        {
+          for (size_t j = 1; j < scontexts_.size(); ++j)
+            sres.totalNodes_ += scontexts_.at(j).sdata_.totalNodes_;
+          (callbacks_.sendOutput_)(sres);
+        }
+      }
+#endif // SYNCHRONIZE_LAST_ITER
     }
 
     if(!sdata.best_ ||
@@ -251,22 +296,27 @@ bool Engine::threadSearch(int ictx)
       auto dt = t - sdata.tstart_;
       sdata.tprev_ = t;
 
-      sres.score_ = score;
-      sres.best_ = sdata.best_;
-      sres.depth_ = sdata.depth_;
-      sres.nodesCount_ = sdata.nodesCount_;
-      sres.totalNodes_ = sdata.totalNodes_;
-      sres.depthMax_ = 0;
-      sres.dt_ = dt;
-      sres.counter_ = sdata.counter_;
-
-      for (int i = 0; i < MaxPly; ++i)
+#ifdef SYNCHRONIZE_LAST_ITER
       {
-        sres.depthMax_ = i;
-        sres.pv_[i] = scontexts_.at(ictx).plystack_[0].pv_[i];
-        if (!sres.pv_[i])
-          break;
+        std::lock_guard<std::mutex> g{ m_mutex };
+        sres.score_ = score;
+        sres.best_ = sdata.best_;
+        sres.depth_ = sdata.depth_;
+        sres.nodesCount_ = sdata.nodesCount_;
+        sres.totalNodes_ = sdata.totalNodes_;
+        sres.depthMax_ = 0;
+        sres.dt_ = dt;
+        sres.counter_ = sdata.counter_;
+
+        for (int i = 0; i < MaxPly; ++i)
+        {
+          sres.depthMax_ = i;
+          sres.pv_[i] = scontexts_.at(ictx).plystack_[0].pv_[i];
+          if (!sres.pv_[i])
+            break;
+        }
       }
+#endif // SYNCHRONIZE_LAST_ITER
 
       X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
     }
@@ -292,9 +342,11 @@ bool Engine::threadSearch(int ictx)
 //////////////////////////////////////////////////////////////////////////
 int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) const
 {
+  auto& board = scontexts_.at(ictx).board_;
+  
   int depthInc = 0;
 
-  if(scontexts_.at(ictx).board_.underCheck())
+  if(board.underCheck())
     depthInc += ONE_PLY;
 
   if(!pv || !move.see_ok())
@@ -304,10 +356,10 @@ int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) 
     return depthInc + ONE_PLY;
 
   // recapture
-  if(scontexts_.at(ictx).board_.halfmovesCount() > 1)
+  if(board.halfmovesCount() > 1)
   {
-    auto const& prev = scontexts_.at(ictx).board_.reverseUndo(1);
-    auto const& curr = scontexts_.at(ictx).board_.lastUndo();
+    auto const& prev = board.reverseUndo(1);
+    auto const& curr = board.lastUndo();
 
     if(prev.move_.to() == curr.move_.to() && prev.eaten_type_ > 0)
     {
