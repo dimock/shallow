@@ -147,9 +147,17 @@ void xProtocolMgr::printStat(NEngine::SearchData const& sdata)
 
 void xProtocolMgr::setOption(const xCmd & cmd)
 {
-  NEngine::xOptions xopts;
-  xopts.hash_size_ = cmd.param("Hash");
-  proc_.setOptions(xopts);
+  auto mb = cmd.param("Hash");
+  if(mb > 1)
+  {
+    proc_.setHashSize(mb);
+  }
+  
+  auto nthreads = cmd.param("Threads");
+  if (nthreads > 0)
+  {
+    proc_.setThreadsNumber(nthreads);
+  }
 }
 
 void xProtocolMgr::uciPosition(const xCmd & cmd)
@@ -384,9 +392,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
 
   case xType::xMemory:
     {
-      NEngine::xOptions xopts;
-      xopts.hash_size_ = cmd.value();
-      proc_.setOptions(xopts);
+      proc_.setHashSize(cmd.value());
     }
     break;
 

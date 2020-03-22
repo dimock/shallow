@@ -9,12 +9,6 @@ xoptions.h - Copyright (C) 2016 by Dmitry Sultanov
 namespace NEngine
 {
 
-struct xOptions
-{
-  // in Mb
-  int   hash_size_{256};
-};
-
 struct xOptionInfo
 {
   std::string name;

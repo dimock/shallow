@@ -30,7 +30,7 @@ void Engine::saveHash(std::string const&  fname) const
 #endif
 
   std::ofstream ofs(bfname, std::ios::out);
-  save(scontexts_[0].board_, ofs);
+  save(scontexts_.at(0).board_, ofs);
   save_history(hfname);
 }
 
@@ -47,7 +47,7 @@ void Engine::loadHash(std::string const& fname)
 #endif
 
   //std::ifstream ifs(bfname, std::ios::in);
-  //load(scontexts_[0].board_, ifs);
+  //load(scontexts_.at(0).board_, ifs);
   load_history(hfname);
 }
 
@@ -63,8 +63,8 @@ void Engine::logPV(int ictx)
   std::ostringstream oss;
   oss << std::put_time(std::localtime(&tm), "%d:%m:%Y %H:%M:%S ");
 
-  auto& sdata = scontexts_[ictx].sdata_;
-  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[ictx].board_);
+  auto& sdata = scontexts_.at(ictx).sdata_;
+  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_.at(ictx).board_);
 
   oss << "iter " << sdata.depth_ << " ";
   if(sdata.best_)
@@ -79,7 +79,7 @@ void Engine::logPV(int ictx)
   oss << "pv ";
   for(int i = 0; i < MaxPly; ++i)
   {
-    auto const& move = scontexts_[ictx].plystack_[0].pv_[i];
+    auto const& move = scontexts_.at(ictx).plystack_[0].pv_[i];
     if(!move)
       break;
     auto str = printSAN(board, move);
@@ -96,8 +96,8 @@ void Engine::logMovies(int ictx)
   if(!callbacks_.slog_)
     return;
 
-  auto& sdata = scontexts_[ictx].sdata_;
-  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_[ictx].board_);
+  auto& sdata = scontexts_.at(ictx).sdata_;
+  SBoard<Board, UndoInfo, Board::GameLength> board(scontexts_.at(ictx).board_);
 
   auto fen = NEngine::toFEN(board);
 
@@ -105,7 +105,7 @@ void Engine::logMovies(int ictx)
   std::ostringstream oss;
   oss << std::put_time(std::localtime(&tm), "%d:%m:%Y %H:%M:%S ");
   oss << " position " << fen << " ";
-  oss << " halfmovies count " << scontexts_[ictx].board_.halfmovesCount() << " ";
+  oss << " halfmovies count " << scontexts_.at(ictx).board_.halfmovesCount() << " ";
   oss << "iter " << sdata.depth_ << " ";
   oss << "movies ";
 
@@ -114,7 +114,7 @@ void Engine::logMovies(int ictx)
     if(checkForStop(ictx))
       break;
 
-    Move move = scontexts_[ictx].moves_[i];
+    Move move = scontexts_.at(ictx).moves_[i];
     auto str = printSAN(board, move);
     if(str.empty())
       break;
@@ -129,6 +129,7 @@ static std::vector<std::string> sequence({ "b5b4", "g1f2", "b4b3", "a2b3", "a4b3
 bool Engine::findSequence(int ictx, const Move & move, int ply, bool exactMatch) const
 {
   bool identical = false;
+  auto& board = scontexts_.at(ictx).board_;
 
   if((ply < sequence.size() && !exactMatch) || (ply == sequence.size()-1 && exactMatch))
   {
@@ -136,9 +137,9 @@ bool Engine::findSequence(int ictx, const Move & move, int ply, bool exactMatch)
     {
       identical = true;
       int j = ply-i;
-      if(j >= scontexts_[ictx].board_.halfmovesCount())
+      if(j >= board.halfmovesCount())
         break;
-      const UndoInfo & undo = scontexts_[ictx].board_.reverseUndo(j);
+      const UndoInfo & undo = board.reverseUndo(j);
       auto smove = sequence[i];
       auto move = strToMove(smove);
       if(undo.move_.from() != move.from() || undo.move_.to() != move.to())
@@ -152,7 +153,7 @@ bool Engine::findSequence(int ictx, const Move & move, int ply, bool exactMatch)
   //if(identical)
   //{
   //  std::ostringstream oss;
-  //  NEngine::save(scontexts_[ictx].board_, oss, false);
+  //  NEngine::save(board, oss, false);
   //  oss << "PLY: " << ply << std::endl;
   //  oss << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = "
   //    << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;

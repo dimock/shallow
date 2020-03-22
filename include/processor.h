@@ -36,7 +36,8 @@ class Processor
 public:
   bool init();
   void enableBook(int v);
-  void setOptions(NEngine::xOptions const& opts);
+  void setHashSize(int mb);
+  void setThreadsNumber(int n);
   bool setDepth(int depth);
   bool setScoreLimit(ScoreType score);
   bool setTimePerMove(NTime::duration const& tm);

@@ -9,6 +9,7 @@ engine.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <xoptions.h>
 #include <queue>
 #include <array>
+#include <mutex>
 
 namespace NEngine
 {
@@ -57,7 +58,6 @@ public:
   Engine();
 
   void clearHash();
-  void setOptions(xOptions const& opts);
   void setCallbacks(xCallback callback);
 
   void needUpdate();
@@ -66,16 +66,18 @@ public:
   std::string toFEN() const;
 
   // call it to start search
-  bool search(SearchResult& result);
+  bool search();
 
+  // return result of last search
+  SearchResult const& result() const;
   // prepare and start in threads
-  bool generateStartposMoves(int ictx, SearchResult& sres);
-  bool mainThreadSearch(int ictx, SearchResult& result);
-  bool threadSearch(int ictx, SearchResult& result);
+  bool generateStartposMoves(int ictx);
+  bool mainThreadSearch(int ictx);
+  bool threadSearch(int ictx);
 
   void setBoard(Board const& board);
-  Board & getBoard() { return scontexts_[0].board_; }
-  const Board & getBoard() const { return scontexts_[0].board_; }
+  Board & getBoard() { return scontexts_.at(0).board_; }
+  const Board & getBoard() const { return scontexts_.at(0).board_; }
 
   void pleaseStop(int ictx);
 
@@ -84,9 +86,10 @@ public:
   void setMaxDepth(int d);
   void setScoreLimit(ScoreType score);
 
-private:
-
   void setMemory(int mb);
+  void setThreadsNumber(int n);
+
+private:
 
   bool checkForStop(int ictx);
   void reset();
@@ -98,7 +101,7 @@ private:
   // time control
   void testTimer(int ictx);
   void testInput(int ictx);
-  bool stopped(int ictx) const { return scontexts_[ictx].stop_; }
+  bool stopped(int ictx) const { return scontexts_.at(ictx).stop_; }
 
   // search routine
   ScoreType alphaBetta0(int ictx);
@@ -108,6 +111,7 @@ private:
   int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;
   void assemblePV(int ictx, Move const & move, bool checking, int ply);
 
+  void sortMoves0(int ictx);
 
   // is given movement caused by previous. this mean that if we don't do this move we loose
   // we actually check if moved figure was attacked by previously moved one or from direction it was moved from
@@ -142,11 +146,10 @@ private:
     void reset();
   };
 
-  // will be used in multi-threading mode???
-  std::array<SearchContext, N_THREADS> scontexts_;
+  // multi-threading mode
+  std::vector<SearchContext> scontexts_;
 
   SearchParams sparams_;
-  xOptions options_;
 
 #ifdef USE_HASH
   GHashTable hash_;

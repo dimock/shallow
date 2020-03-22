@@ -136,7 +136,7 @@ namespace nst
 
 static const SortValueType CaptureRecentlyBonus = 10;
 
-static const int NumUsualAfterHorizon = 12;
+static const int NumUsualAfterHorizon = 16;
 static const int ONE_PLY = 20;
 static const int MaxPly = 64;
 static const int LMR_DepthLimit = 3 * ONE_PLY;
@@ -148,4 +148,6 @@ static const int Probcut_PlyReduce = 4 * ONE_PLY;
 static const int Position_Gain = 130;
 static const int AlphaProbCutThreshold = 200;
 
-static const size_t N_THREADS = 4;
+static const size_t N_THREADS_MAX = 8;
+static const size_t N_THREADS_DEFAULT = 1;
+static const size_t HASH_SIZE_DEFAULT = 256;

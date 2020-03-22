@@ -181,12 +181,20 @@ bool Processor::undo()
   return false;
 }
 
-void Processor::setOptions(NEngine::xOptions const& opts)
+void Processor::setHashSize(int mb)
 {
-  if(is_thinking())
+  if (is_thinking())
     return;
 
-  engine_.setOptions(opts);
+  engine_.setMemory(mb);
+}
+
+void Processor::setThreadsNumber(int n)
+{
+  if (is_thinking())
+    return;
+
+  engine_.setThreadsNumber(n);
 }
 
 NEngine::Figure::Color Processor::color() const
@@ -215,10 +223,9 @@ bool Processor::analyze()
   engine_.setTimeLimit(NTime::duration(0));
   engine_.setMaxDepth(DepthMaximum);
 
-  NEngine::SearchResult sres;
 
   engine_.setAnalyzeMode(true);
-  engine_.search(sres);
+  engine_.search();
   engine_.setAnalyzeMode(false);
   engine_.setScoreLimit(NEngine::Figure::MatScore);
 
@@ -253,8 +260,9 @@ ReplyStruct Processor::reply(bool winboardFormat)
   thinking_ = true;
   givetimeCounter_ = 0;
   NEngine::SearchResult sres;
-  if(engine_.search(sres))
+  if(engine_.search())
   {
+    sres = engine_.result();
     if(board.validateMoveBruteforce(sres.best_))
     {
       board.makeMove(sres.best_);

@@ -788,7 +788,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   finfo_[ocolor].matThreat_ = (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL) &&
     (oking_moves == 0ULL);
 
-  static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
+  static const int number_of_attackers[8] = { 0, 10, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   int coeff = number_of_attackers[num_total];
 

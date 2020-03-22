@@ -20,6 +20,7 @@ void SearchParams::reset()
 void Engine::SearchContext::reset()
 {
   sdata_.reset();
+  sres_.reset();
   for (auto& pls : plystack_)
     pls.clearKiller();
   stop_ = false;
@@ -44,27 +45,16 @@ Engine::Engine() :
   hash_(0)
 #endif
 {
-  setMemory(options_.hash_size_);
+  setMemory(HASH_SIZE_DEFAULT);
+  setThreadsNumber(N_THREADS_DEFAULT);
 
   initGlobals();
-
-  for(auto& scontext : scontexts_)
-  {
-    scontext.eval_.initialize(&scontext.board_);
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////
 void Engine::needUpdate()
 {
   updateRequested_ = true;
-}
-
-void Engine::setOptions(xOptions const& opts)
-{
-  options_ = opts;
-
-  setMemory(options_.hash_size_);
 }
 
 void Engine::setMemory(int mb)
@@ -80,13 +70,41 @@ void Engine::setMemory(int mb)
 #endif
 }
 
+void Engine::setThreadsNumber(int n)
+{
+  if (n < 1)
+    return;
+
+  if (n > N_THREADS_MAX)
+    n = N_THREADS_MAX;
+
+  if (!scontexts_.empty())
+  {
+    // stash/restore existing context
+    auto sctx0 = scontexts_.at(0);
+    scontexts_.resize(n);
+    scontexts_.at(0) = sctx0;
+  }
+  else
+  {
+    scontexts_.resize(n);
+  }
+  
+  for (auto& scontext : scontexts_)
+  {
+    scontext.eval_.initialize(&scontext.board_);
+  }
+}
 
 bool Engine::fromFEN(std::string const& fen)
 {
+  if (scontexts_.empty())
+    return false;
+
   for(auto& sctx : scontexts_)
     sctx.stop_ = false;
 
-  SBoard<Board, UndoInfo, Board::GameLength> tboard(scontexts_[0].board_);
+  SBoard<Board, UndoInfo, Board::GameLength> tboard(scontexts_.at(0).board_);
 
   // verify FEN first
   if(!NEngine::fromFEN(fen, tboard))
@@ -94,20 +112,22 @@ bool Engine::fromFEN(std::string const& fen)
 
   clear_history();
 
-  return NEngine::fromFEN(fen, scontexts_[0].board_);
+  return NEngine::fromFEN(fen, scontexts_.at(0).board_);
 }
 
 void Engine::setBoard(Board const& board)
 {
+  if (scontexts_.empty())
+    return;
   for (auto& sctx : scontexts_)
     sctx.stop_ = false;
   clear_history();
-  scontexts_[0].board_ = board;
+  scontexts_.at(0).board_ = board;
 }
 
 std::string Engine::toFEN() const
 {
-  return NEngine::toFEN(scontexts_[0].board_);
+  return NEngine::toFEN(scontexts_.at(0).board_);
 }
 
 void Engine::clearHash()
@@ -158,14 +178,14 @@ void Engine::pleaseStop(int ictx)
 {
   if (ictx != 0)
     return;
-  scontexts_[ictx].stop_ = true;
+  scontexts_.at(ictx).stop_ = true;
 }
 
 bool Engine::checkForStop(int ictx)
 {
   if (ictx != 0)
     return false;
-  auto& sdata = scontexts_[ictx].sdata_;
+  auto& sdata = scontexts_.at(ictx).sdata_;
   if(sdata.totalNodes_ && !(sdata.totalNodes_ & TIMING_FLAG))
   {
     if(sparams_.timeLimit_ > NTime::duration(0))
@@ -173,14 +193,14 @@ bool Engine::checkForStop(int ictx)
     else
       testInput(ictx);
   }
-  return scontexts_[ictx].stop_;
+  return scontexts_.at(ictx).stop_;
 }
 
 void Engine::testTimer(int ictx)
 {
   if (ictx != 0)
     return;
-  auto& sdata = scontexts_[ictx].sdata_;
+  auto& sdata = scontexts_.at(ictx).sdata_;
   if((NTime::now() - sdata.tstart_) > sparams_.timeLimit_)
     pleaseStop(ictx);
 
@@ -191,7 +211,7 @@ void Engine::testInput(int ictx)
 {
   if (ictx != 0)
     return;
-  auto& sdata = scontexts_[ictx].sdata_;
+  auto& sdata = scontexts_.at(ictx).sdata_;
   if(callbacks_.queryInput_)
   {
     (callbacks_.queryInput_)();
@@ -204,7 +224,7 @@ void Engine::testInput(int ictx)
     {
       SearchData sdataTotal = sdata;
       for (size_t i = 1; i < scontexts_.size(); ++i)
-        sdataTotal.nodesCount_ += scontexts_[i].sdata_.nodesCount_;
+        sdataTotal.nodesCount_ += scontexts_.at(i).sdata_.nodesCount_;
       (callbacks_.sendStats_)(sdataTotal);
     }
   }
@@ -212,16 +232,16 @@ void Engine::testInput(int ictx)
 
 void Engine::assemblePV(int ictx, const Move & move, bool checking, int ply)
 {
-  if(ictx != 0 || ply >= MaxPly-1)
+  if(ply >= MaxPly-1)
     return;
 
-  scontexts_[ictx].plystack_[ply].pv_[ply] = move;
-  scontexts_[ictx].plystack_[ply].pv_[ply+1] = Move{true};
+  scontexts_.at(ictx).plystack_[ply].pv_[ply] = move;
+  scontexts_.at(ictx).plystack_[ply].pv_[ply+1] = Move{true};
 
   for(int i = ply+1; i < MaxPly-1; ++i)
   {
-    scontexts_[ictx].plystack_[ply].pv_[i] = scontexts_[ictx].plystack_[ply+1].pv_[i];
-    if(!scontexts_[ictx].plystack_[ply].pv_[i])
+    scontexts_.at(ictx).plystack_[ply].pv_[i] = scontexts_.at(ictx).plystack_[ply+1].pv_[i];
+    if(!scontexts_.at(ictx).plystack_[ply].pv_[i])
     {
       break;
     }

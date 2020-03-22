@@ -4,7 +4,6 @@ xcallback.h - Copyright (C) 2016 by Dmitry Sultanov
 #pragma once
 
 #include <xoptimize.h>
-//#include <Move.h>
 #include <xtime.h>
 #include <array>
 #include <functional>
@@ -19,6 +18,7 @@ public:
 
   SearchResult& operator = (SearchResult const& other);
 
+  void reset();
   /// statistic
   NTime::duration dt_{};
   int nodesCount_{};
@@ -31,7 +31,7 @@ public:
   /// result
   Move best_{};
   int  depth_{};
-  ScoreType score_;
+  ScoreType score_{};
   std::array<Move, MaxPly + 4> pv_;
 };
 

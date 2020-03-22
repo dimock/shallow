@@ -18,6 +18,14 @@ std::vector<xOptionInfo> all_options()
       "1024",
       "256",
       {},
+    },
+    {
+      "Threads",
+      "spin",
+      "1",
+      "8",
+      "1",
+      {},
     }
   };
 }
