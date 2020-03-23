@@ -241,7 +241,7 @@ bool Board::see(const Move & move, int threshold) const
   const auto& tfield = getField(move.to());
   bool en_passant{ false };
 
-  if(tfield.type())
+  if(tfield)
   {
     // victim >= attacker
     int tgain = Figure::figureWeight_[tfield.type()] - Figure::figureWeight_[ffield.type()];
@@ -257,11 +257,6 @@ bool Board::see(const Move & move, int threshold) const
     if(Figure::figureWeight_[Figure::TypePawn] >= threshold)
       return true;
     en_passant = true;
-  }
-  // promotion with capture
-  else if(tfield && (ffield.type() == Figure::TypePawn) && ((move.to() >> 3) == 0 || (move.to() >> 3) == 7))
-  {
-    return true;
   }
 
   SeeCalc see_calc(*this, move, en_passant);
@@ -283,7 +278,7 @@ bool Board::see(const Move & move, int threshold) const
   int fscore = -Figure::figureWeight_[ffield.type()];
   if (see_calc.promotion_)
   {
-    score_gain = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypePawn];
+    score_gain += Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypePawn];
     fscore = -Figure::figureWeight_[Figure::TypeQueen];
   }
   if(score_gain < threshold)

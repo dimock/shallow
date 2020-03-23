@@ -44,7 +44,7 @@ int main(int argn, char *argv[])
 
   //if (argn > 1)
   //{
-  //  NEngine::evaluateFen(argv[1]);
+  //  NEngine::testSee(argv[1]);
   //  return 0;
   //}
 

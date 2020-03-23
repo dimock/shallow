@@ -251,6 +251,12 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
 #ifdef PROCESS_DANGEROUS_EVAL
   detectDangerous();
+
+#ifdef EVALUATE_DANGEROUS_ATTACKS
+  auto dangerousScore = evaluateDangerous();
+  score += dangerousScore;
+#endif // EVALUATE_DANGEROUS_ATTACKS
+
 #endif // PROCESS_DANGEROUS_EVAL
 
   auto result = considerColor(lipolScore(score, phaseInfo));
@@ -1046,6 +1052,33 @@ void Evaluator::detectDangerous()
     finfo_[ocolor].pawnPromotion_ ||
     finfo_[color].matThreat_;
 }
-#endif
+
+#ifdef EVALUATE_DANGEROUS_ATTACKS
+Evaluator::FullScore Evaluator::evaluateDangerous() const
+{
+  FullScore score;
+  for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
+  {
+    bool hasAttacks = finfo_[color].pawnsUnderAttack_ + finfo_[color].knightsUnderAttack_ + finfo_[color].bishopsUnderAttack_
+      + finfo_[color].rooksUnderAttack_ + finfo_[color].queensUnderAttack_ > 1;
+    int coeff = hasAttacks;
+    if (color == Figure::ColorWhite)
+      coeff = -coeff;
+    if (coeff != 0)
+    {
+      coeff = coeff;
+    }
+    auto const& finfo = finfo_[color];
+    score.common_ += (finfo.pawnsUnderAttack_*EvalCoefficients::dangerousAttacksOnPawn_ +
+      finfo.knightsUnderAttack_*EvalCoefficients::dangerousAttacksOnKnight_ +
+      finfo.bishopsUnderAttack_*EvalCoefficients::dangerousAttacksOnBishop_ +
+      finfo.rooksUnderAttack_*EvalCoefficients::dangerousAttacksOnRook_ +
+      finfo.queensUnderAttack_*EvalCoefficients::dangerousAttacksOnQueen_) * coeff;
+  }
+  return score;
+}
+#endif // EVALUATE_DANGEROUS_ATTACKS
+
+#endif // PROCESS_DANGEROUS_EVAL
 
 } //NEngine

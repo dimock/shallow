@@ -133,6 +133,11 @@ private:
 
 #ifdef PROCESS_DANGEROUS_EVAL
   void detectDangerous();
+
+#ifdef EVALUATE_DANGEROUS_ATTACKS
+  FullScore evaluateDangerous() const;
+#endif
+
 #endif
 
   // linear interpolation between opening & endgame

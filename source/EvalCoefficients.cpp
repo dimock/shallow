@@ -29,6 +29,14 @@ namespace NEngine
   int EvalCoefficients::forkBonus_{ 35 };
   int EvalCoefficients::doublePawnAttack_{ 50 };
 
+#ifdef EVALUATE_DANGEROUS_ATTACKS
+  int EvalCoefficients::dangerousAttacksOnPawn_{6};
+  int EvalCoefficients::dangerousAttacksOnKnight_{11};
+  int EvalCoefficients::dangerousAttacksOnBishop_{10};
+  int EvalCoefficients::dangerousAttacksOnRook_{15};
+  int EvalCoefficients::dangerousAttacksOnQueen_{23};
+#endif // EVALUATE_DANGEROUS_ATTACKS
+
   // king
   int EvalCoefficients::castleImpossible_{ -25 };
   int EvalCoefficients::fakeCastle_{ -30 };
@@ -74,11 +82,11 @@ namespace NEngine
   int EvalCoefficients::queenChecking_{ 12 };
 
   // pinned figures
-  int EvalCoefficients::pinnedPawn_{ 4 };
-  int EvalCoefficients::pinnedKnight_{ 7 };
-  int EvalCoefficients::pinnedBishop_{ 7 };
-  int EvalCoefficients::pinnedRook_{ 10 };
-  int EvalCoefficients::pinnedQueen_{ 12 };
+  int EvalCoefficients::pinnedPawn_{ 3 };
+  int EvalCoefficients::pinnedKnight_{ 5 };
+  int EvalCoefficients::pinnedBishop_{ 5 };
+  int EvalCoefficients::pinnedRook_{ 8 };
+  int EvalCoefficients::pinnedQueen_{ 13 };
 
   // arrays
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 8, 5, 2, 1, 0 };
