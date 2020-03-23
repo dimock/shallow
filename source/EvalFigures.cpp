@@ -345,12 +345,14 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
   }
   ki_fields &= ~finfo_[ocolor].pawnAttacks_;
 
+#ifdef PROCESS_DANGEROUS_EVAL
   auto pw_under_attack = board_->fmgr().pawn_mask(color) & finfo_[ocolor].attack_mask_ & ~finfo_[color].attack_mask_;
   finfo_[color].pawnsUnderAttack_ = pop_count(pw_under_attack);
   if (finfo_[color].pawnsUnderAttack_ > 0)
   {
     finfo_[color].pawnsUnderAttack_ = finfo_[color].pawnsUnderAttack_;
   }
+#endif // PROCESS_DANGEROUS_EVAL
 
   // number of king attackers
   int num_pawns = 0;
@@ -394,6 +396,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     auto knight_moves = movesTable().caps(Figure::TypeKnight, n) & (cango_mask | include_mask);
     int num_moves = pop_count(knight_moves);
     score_mob += EvalCoefficients::knightMobility_[num_moves & 15];
+
+#ifdef PROCESS_DANGEROUS_EVAL
     if (num_moves == 0)
     {
       auto kn_mask = set_mask_bit(n);
@@ -403,8 +407,10 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       if((notProtected && attacked) || pawnAttack)
         finfo_[color].knightsUnderAttack_++;
     }
+#endif // PROCESS_DANGEROUS_EVAL
   }
-#endif
+#endif // EVAL_MOB
+
   // knight check
 #ifdef EVAL_KING_CHECK
   auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
@@ -502,7 +508,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       }
     }
   }
-#endif
+#endif // EVAL_PIN
 
   auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
   
@@ -594,7 +600,7 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       }
     }
   }
-#endif
+#endif // EVAL_PIN
 
 #ifdef EVAL_KING_CHECK
   auto q_check = bi_check | r_check;
@@ -618,6 +624,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     auto bishop_moves = magic_ns::bishop_moves(n, mask_all_) & (cango_mask | include_mask);
     int num_moves = pop_count(bishop_moves);
     score_mob += EvalCoefficients::bishopMobility_[num_moves & 15];
+
+#ifdef PROCESS_DANGEROUS_EVAL
     if (num_moves == 0)
     {
       auto bi_mask = set_mask_bit(n);
@@ -627,8 +635,10 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       if ((notProtected && attacked) || pawnAttack)
         finfo_[color].bishopsUnderAttack_++;
     }
+#endif // PROCESS_DANGEROUS_EVAL
 
-#endif
+#endif // EVAL_MOB
+
     // king pressure
 #ifdef EVAL_KING_PR
     if(!(movesTable().caps(Figure::TypeBishop, n) & ki_fields))
@@ -676,6 +686,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #ifdef EVAL_MOB
     int num_moves = pop_count(cango_mask & rook_moves);
     score_mob += EvalCoefficients::rookMobility_[num_moves & 15];
+
+#ifdef PROCESS_DANGEROUS_EVAL
     if (num_moves == 0)
     {
       auto r_mask = set_mask_bit(n);
@@ -686,7 +698,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       if ((notProtected && attacked) || lowerAttack)
         finfo_[color].rooksUnderAttack_++;
     }
-#endif
+#endif // PROCESS_DANGEROUS_EVAL
+
+#endif // EVAL_MOB
 
     // king pressure
 #ifdef EVAL_KING_PR
@@ -735,6 +749,8 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 #ifdef EVAL_MOB
     int num_moves = pop_count(queen_moves);
     score_mob += EvalCoefficients::queenMobility_[num_moves & 31];
+
+#ifdef PROCESS_DANGEROUS_EVAL
     if (num_moves == 0)
     {
       auto q_mask = set_mask_bit(n);
@@ -746,7 +762,9 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
       if ((notProtected && attacked) || lowerAttack)
         finfo_[color].queensUnderAttack_++;
     }
-#endif
+#endif // PROCESS_DANGEROUS_EVAL
+
+#endif // EVAL_MOB
 
     // king pressure
 #ifdef EVAL_KING_PR
@@ -782,13 +800,15 @@ int Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
     num_queens = 1;
 #endif
 
-  auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-  
+#ifdef PROCESS_DANGEROUS_EVAL
+  auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |
+    board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);  
   BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
   finfo_[ocolor].matThreat_ = (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL) &&
     (oking_moves == 0ULL);
+#endif // PROCESS_DANGEROUS_EVAL
 
-  static const int number_of_attackers[8] = { 0, 10, 32, 48, 64, 64, 64, 64 };
+  static const int number_of_attackers[8] = { 0, 0, 32, 48, 64, 64, 64, 64 };
   int num_total = std::min(num_pawns + num_knights + num_bishops + num_rooks + num_queens + has_king, 7);
   int coeff = number_of_attackers[num_total];
 

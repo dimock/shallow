@@ -304,14 +304,19 @@ struct TacticalGenerator
 {
   using MovesList = xlist<MOVE, BOARD::MovesMax>;
 
-  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks, oGenUsual, oUsual, oStop } order_{ oEscape };
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks
+#ifdef GEN_USUAL_AFETER_HORIZON
+    , oGenUsual, oUsual
+#endif // GEN_USUAL_AFETER_HORIZON
+    , oStop }
+  order_{ oEscape };
 
   TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
     board_(board),
     cg_(board), ckg_(board), eg_(board, hmove)
 #ifdef GEN_USUAL_AFETER_HORIZON
     , ug_(board)
-#endif
+#endif // GEN_USUAL_AFETER_HORIZON
     ,hmove_(hmove),
     depth_(depth)
   {
@@ -357,10 +362,15 @@ struct TacticalGenerator
       if (depth_ >= 0)
       {
         ckg_.generate();
+        order_ = oChecks;
       }
+#ifdef GENERATE_MAT_CHECK_AFTER_HORIZON
       else
+      {
         ckg_.generateOne();
-      order_ = oChecks;
+        order_ = oChecks;
+      }
+#endif // GENERATE_MAT_CHECK_AFTER_HORIZON
     }
     if (order_ == oChecks)
     {

@@ -98,6 +98,8 @@ class Evaluator
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
     BitMask multiattack_mask_{};
+
+#ifdef PROCESS_DANGEROUS_EVAL
     int pawnsUnderAttack_{};
     int knightsUnderAttack_{};
     int bishopsUnderAttack_{};
@@ -105,6 +107,7 @@ class Evaluator
     int queensUnderAttack_{};
     bool matThreat_{};
     bool pawnPromotion_{};
+#endif // PROCESS_DANGEROUS_EVAL
   } finfo_[2];
 
 public:
@@ -115,17 +118,22 @@ public:
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
 
+#ifdef PROCESS_DANGEROUS_EVAL
   bool dangerous() const
   {
     return dangerous_;
   }
+#endif // PROCESS_DANGEROUS_EVAL
 
   static const int colored_y_[2][8];
 
 private:
 
   void prepare();
+
+#ifdef PROCESS_DANGEROUS_EVAL
   void detectDangerous();
+#endif
 
   // linear interpolation between opening & endgame
   ScoreType lipolScore(FullScore const& score, PhaseInfo const& phase) const
@@ -249,7 +257,9 @@ private:
   int alpha1_{};
   int betta1_{};
 
+#ifdef PROCESS_DANGEROUS_EVAL
   bool dangerous_{ false };
+#endif // PROCESS_DANGEROUS_EVAL
 };
 
 } // NEngine

@@ -98,7 +98,9 @@ void Evaluator::prepare()
 //////////////////////////////////////////////////////////////////////////
 ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 {
-  dangerous_ = false;
+#ifdef PROCESS_DANGEROUS_EVAL
+    dangerous_ = false;
+#endif // PROCESS_DANGEROUS_EVAL
 
   X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
@@ -247,7 +249,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score += scorePassers;
 #endif
 
+#ifdef PROCESS_DANGEROUS_EVAL
   detectDangerous();
+#endif // PROCESS_DANGEROUS_EVAL
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;
@@ -632,10 +636,12 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       if ((next_mask & finfo_[ocolor].attack_mask_) == 0ULL)
         info.score.common_ += EvalCoefficients::cangoPawn_[cy];
 
+#ifdef PROCESS_DANGEROUS_EVAL
       if ((cy == 6) && (((next_mask & finfo_[ocolor].attack_mask_) == 0ULL) || ((next_mask & finfo_[color].attack_mask_) != 0ULL)))
       {
         finfo_[color].pawnPromotion_ = true;
       }
+#endif // PROCESS_DANGEROUS_EVAL
     }
     // field is occupied by my figure
     else if(next_field.color() == color)
@@ -1030,6 +1036,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color) const
   return 0;
 }
 
+#ifdef PROCESS_DANGEROUS_EVAL
 void Evaluator::detectDangerous()
 {
   auto color = board_->color();
@@ -1039,5 +1046,6 @@ void Evaluator::detectDangerous()
     finfo_[ocolor].pawnPromotion_ ||
     finfo_[color].matThreat_;
 }
+#endif
 
 } //NEngine

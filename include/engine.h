@@ -91,6 +91,15 @@ public:
 
 private:
 
+  struct CapturesResult
+  {
+    CapturesResult(ScoreType s, bool d) : score{s}, dangerous{d}
+    {}
+
+    ScoreType score{ -ScoreMax };
+    bool dangerous{ false };
+  };
+
   bool checkForStop(int ictx);
   void reset();
 
@@ -107,7 +116,7 @@ private:
   ScoreType alphaBetta0(int ictx);
   ScoreType processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm);
-  ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool& dangerous, ScoreType score0 = -ScoreMax);
+  CapturesResult captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
   int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;
   void assemblePV(int ictx, Move const & move, bool checking, int ply);
 
