@@ -143,6 +143,7 @@ void testFen(std::string const& ffname,
 
 }
 
+void testMovegen(std::string const& ffname);
 void testSee(std::string const& ffname);
 void evaluateFen(std::string const& ffname);
 void see_perf_test(std::string const& fname);

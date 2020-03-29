@@ -266,7 +266,7 @@ bool Board::see(const Move & move, int threshold) const
     return true;
 
   // could be checkmate
-  if(threshold > 50 && see_calc.is_usual_check())
+  if(threshold > 0 && see_calc.is_usual_check())
   {
     threshold = 0;
   }

@@ -54,6 +54,26 @@ void optimizeFen(std::string const& ffname,
 
 }
 
+void testMovegen(std::string const& ffname)
+{
+  testFen<Board, Move, UndoInfo>(ffname,
+    [](size_t i, xEPD<Board, Move, UndoInfo>& epd)
+  {
+    std::cout << toFEN(epd.board_) << std::endl;
+    ChecksGenerator<Board, SMove> ckg{ epd.board_ };
+    ckg.generateStrongest();
+    Move* move = nullptr;
+    for (int j = 1; move = ckg.next();)
+    {
+      if (epd.board_.see(*move, 0))
+        std::cout << "    " << i + 1 << "[" << j++ << "]: " << moveToStr(*move, false) << std::endl;
+    }
+  },
+    [](std::string const& err)
+  {
+    std::cout << "error: " << err << std::endl;
+  });
+}
 
 void testSee(std::string const& ffname)
 {
