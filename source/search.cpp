@@ -951,7 +951,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   //  ckgValidate.generateStrongest();
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(dangerous);
+    auto* pmove = tg.next(dangerous, counter);
     if(!pmove)
       break;
 

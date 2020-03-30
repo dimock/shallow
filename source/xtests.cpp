@@ -61,7 +61,7 @@ void testMovegen(std::string const& ffname)
   {
     std::cout << toFEN(epd.board_) << std::endl;
     ChecksGenerator<Board, SMove> ckg{ epd.board_ };
-    ckg.generateStrongest();
+    ckg.generateStrongest(0);
     Move* move = nullptr;
     for (int j = 1; move = ckg.next();)
     {

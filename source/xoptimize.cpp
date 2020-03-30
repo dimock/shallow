@@ -18,7 +18,7 @@ void xcaptures(Board& board, int depth)
   //{
     for(;;)
     {
-      auto* pmove = tg.next(false);
+      auto* pmove = tg.next(false, 0);
       if(!pmove)
         break;
       auto& move = *pmove;
@@ -99,7 +99,7 @@ bool compare(std::vector<MOVE> const& moves1, std::vector<MOVE> const& moves2)
 bool xverifyMoves(Board& board)
 {
   bool ok = false;
-  std::vector<Move> fmoves;
+  std::vector<SMove> fmoves;
   FastGenerator<Board, SMove> fg(board, SMove{ true }, SMove{ true });
   for(;;)
   {
@@ -117,9 +117,9 @@ bool xverifyMoves(Board& board)
     fmoves.push_back(move);
     ok = true;
   }
-  auto moves = generate<Board, Move>(board);
-  std::vector<Move> etalons;
-  std::vector<Move> checks;
+  auto moves = generate<Board, SMove>(board);
+  std::vector<SMove> etalons;
+  std::vector<SMove> checks;
   auto ocolor = Figure::otherColor(board.color());
   for(auto& move : moves)
   {
@@ -143,9 +143,9 @@ bool xverifyMoves(Board& board)
     return false;
   if(board.underCheck())
     return true;
-  ChecksGenerator<Board, Move> cg(board);
+  ChecksGenerator<Board, SMove> cg(board);
   cg.generate();
-  std::vector<Move> checks2;
+  std::vector<SMove> checks2;
   for(auto& move : cg.moves_)
   {
     X_ASSERT(board.validateMoveBruteforce(move) != board.validateMove(move), "inalid move validator");

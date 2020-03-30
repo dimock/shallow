@@ -16,7 +16,43 @@ struct ChecksGenerator
     board_(board)
   {}
 
-  inline bool add(int from, int to)
+  SortValueType sortValue(BitMask mask, Figure::Type a) const
+  {
+    Figure::Type vt = Figure::TypeNone;
+    while (mask != 0ULL && vt != Figure::TypeQueen)
+    {
+      auto p = clear_lsb(mask);
+      vt = std::max(board_.getField(p).type(), vt);
+    }
+    if (vt != Figure::TypeNone)
+      return Figure::figureWeight_[vt] - Figure::figureWeight_[a];
+    else
+      return Figure::MatScore + Figure::figureWeight_[a];
+  }
+
+  inline bool add(int from, int to, SortValueType sort_value)
+  {
+    MOVE move{ from, to, Figure::Type::TypeNone, sort_value };
+    if (board_.validateMove(move) && !find(move))
+    {
+      insert_sorted(moves_, move);
+      return true;
+    }
+    return false;
+  }
+
+  inline bool add_sh(int from, int to)
+  {
+    MOVE move{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() };
+    if (board_.validateMove(move) && !find(move))
+    {
+      insert_sorted(moves_, move);
+      return true;
+    }
+    return false;
+  }
+
+  inline bool push_back(int from, int to)
   {
     MOVE move{ from, to };
     if (board_.validateMove(move) && !find(move))
@@ -87,7 +123,7 @@ struct ChecksGenerator
           auto from = clear_lsb(pw_from);
           if(board_.is_something_between(from, to, mask_all_inv))
             continue;
-          add(from, to);
+          add_sh(from, to);
           break;
         }
       }
@@ -107,7 +143,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(kn_moves);
           X_ASSERT(board_.getField(to), "field, from that we are going to check is occupied");
-          add(from, to);
+          add_sh(from, to);
         }
       }
     }
@@ -127,7 +163,7 @@ struct ChecksGenerator
                   || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
         if((oki_pos&7) == (r_pos&7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add(ki_pos, ki_pos+2);
+          add_sh(ki_pos, ki_pos+2);
           castle = true;
         }
       }
@@ -142,7 +178,7 @@ struct ChecksGenerator
                   || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
         if((oki_pos&7) == (r_pos&7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add(ki_pos, ki_pos-2);
+          add_sh(ki_pos, ki_pos-2);
           castle = true;
         }
       }
@@ -155,7 +191,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(ki_mask);
           X_ASSERT(board_.getField(to), "king moves to occupied field");
-          add(ki_pos, to);
+          add_sh(ki_pos, to);
         }
       }
     }
@@ -184,7 +220,7 @@ struct ChecksGenerator
             X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discoved check");
             const auto* to = movesTable().pawn(color, from) + 2; // skip captures
             for(; *to >= 0 && !board_.getField(*to); ++to)
-              add(from, *to);
+              add_sh(from, *to);
           }
           auto rm = btw_mask & r_mask;
           visited |= rm;
@@ -219,7 +255,7 @@ struct ChecksGenerator
             X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discover check");
             const auto* to = movesTable().pawn(color, from) + 2; // skip captures
             for(; *to >= 0 && !board_.getField(*to); ++to)
-              add(from, *to);
+              add_sh(from, *to);
           }
           auto bm = btw_mask & bi_mask;
           visited |= bm;
@@ -248,7 +284,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(q_moves);
           X_ASSERT(board_.getField(to), "queen goes to occupied field");
-          add(from, to);
+          add_sh(from, to);
         }
       }
     }
@@ -263,7 +299,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(bi_moves);
           X_ASSERT(board_.getField(to), "bishop goes to occupied field");
-          add(from, to);
+          add_sh(from, to);
         }
       }
     }
@@ -279,7 +315,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(r_moves);
           X_ASSERT(board_.getField(to), "rook goes to occupied field");
-          add(from, to);
+          add_sh(from, to);
         }
       }
     }
@@ -301,7 +337,7 @@ struct ChecksGenerator
         to += delta;
         if(board_.getField(to))
           break;
-        add(from, to);
+        add_sh(from, to);
       }
     }
   }
@@ -460,7 +496,7 @@ struct ChecksGenerator
           {
             // do we unblock some moves, previously blocked by this rook?
             auto qki_unblocked_to = ~q_att_to & qki_blocked_from;
-            if ((qki_unblocked_to == 0ULL) && add(from, to))
+            if ((qki_unblocked_to == 0ULL) && push_back(from, to))
               break;
           }
           // attack through king
@@ -469,7 +505,7 @@ struct ChecksGenerator
             auto atf_mask = (fmgr.pawn_mask(ocolor) | o_kbrq_mask) & ~o_attack_but_king_mask & magic_ns::queen_moves(oki_pos, mask_all | set_mask_bit(to)) & through_mask;
             if (atf_mask != 0ULL && (~through_mask & oki_moves_all & movesTable().caps(Figure::TypeKing, _lsb64(atf_mask))) == 0ULL)
             {
-              if (add(from, to))
+              if (push_back(from, to))
                 break;
             }
           }
@@ -479,7 +515,7 @@ struct ChecksGenerator
               ~o_attack_but_king_mask;
             has_attack = has_attack || ((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor)) & magic_ns::rook_moves(to, mask_all & ~set_mask_bit(from)) &
               ~o_attack_but_king_mask);
-            if (has_attack && add(from, to))
+            if (has_attack && push_back(from, to))
               break;
           }
         }
@@ -510,7 +546,7 @@ struct ChecksGenerator
             auto pki_blocked_from = movesTable().pawnCaps(color, to) & oki_moves_all & ~multiattack_mask;
             auto pki_blocked_to = movesTable().pawnCaps(color, to) & oki_moves_all;
             pki_blocked_to = pki_blocked_from & ~pki_blocked_to;
-            if (pki_blocked_to == 0ULL && add(from, to))
+            if (pki_blocked_to == 0ULL && push_back(from, to))
               break;
           }
         }
@@ -545,7 +581,7 @@ struct ChecksGenerator
             (discovered && (!can_escape || kn_attacks)) ||
             (o_pbrq_mask & movesTable().caps(Figure::TypeKnight, to)) != 0ULL)
           {
-            if (add(from, to))
+            if (push_back(from, to))
               break;
           }
         }        
@@ -574,7 +610,7 @@ struct ChecksGenerator
             if ((*to >= 0 && !board_.getField(*to)) &&
                 ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL || ((movesTable().pawnCaps(color, *to) & o_kbrq_mask) != 0ULL)) )
             {
-              if(add(from, *to))
+              if(push_back(from, *to))
                 break;
             }
           }
@@ -615,7 +651,7 @@ struct ChecksGenerator
                   auto r_att_to = magic_ns::rook_moves(to, mask_all & ~rook_from_mask) | betweenMasks().from(to, oki_pos) | betweenMasks().from(from, oki_pos);
                   if (!is_mat || ((oki_moves & ~r_att_to) == 0ULL && (~r_att_to & rki_blocked_from) == 0ULL))
                   {
-                    if(add(from, to))
+                    if(push_back(from, to))
                       break;
                   }
                 }
@@ -650,7 +686,7 @@ struct ChecksGenerator
             if ((*to >= 0 && !board_.getField(*to)) &&
               ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL || ((movesTable().pawnCaps(color, *to) & o_kbrq_mask) != 0ULL)))
             {
-              if (add(from, *to))
+              if (push_back(from, *to))
                 break;
             }
           }
@@ -677,7 +713,7 @@ struct ChecksGenerator
                 if (to >= 0)
                 {
                   X_ASSERT(board_.getField(to), "field is occupied");
-                  if(add(from, to))
+                  if(push_back(from, to))
                     break;
                 }
               }
@@ -730,18 +766,18 @@ struct ChecksGenerator
             {
               // do we unblock some moves, previously blocked by this rook?
               auto rki_unblocked_to = ~r_att_to & rki_blocked_from;
-              if((rki_unblocked_to == 0ULL) && add(from, to))
+              if((rki_unblocked_to == 0ULL) && push_back(from, to))
                 break;
             }
           }
           // attack through king
           {
             auto atk_mask = magic_ns::rook_moves(oki_pos, mask_all | set_mask_bit(to)) & betweenMasks().from(to, oki_pos);
-            if (((atk_mask & o_q_mask) != 0ULL) && add(from, to))
+            if (((atk_mask & o_q_mask) != 0ULL) && push_back(from, to))
               break;
             if (((atk_mask & (o_pnbr_mask & ~o_attack_but_king_mask)) != 0ULL))// && distanceCounter().getDistance(oki_pos, _lsb64(atk_mask)) > 2)
             {
-              if(add(from, to))
+              if(push_back(from, to))
                 break;
             }
           }
@@ -749,7 +785,7 @@ struct ChecksGenerator
           {
             bool has_attack = (((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor)) & ~o_attack_but_king_mask) | fmgr.queen_mask(ocolor)) &
               magic_ns::rook_moves(to, mask_all & ~set_mask_bit(from));
-            if (has_attack && add(from, to))
+            if (has_attack && push_back(from, to))
               break;
           }
         }
@@ -779,17 +815,17 @@ struct ChecksGenerator
           {
             // do we unblock some moves, previously blocked by this rook?
             auto bki_unblocked_to = ~bi_att_to & bki_blocked_from;
-            if ((bki_unblocked_to == 0ULL) && add(from, to))
+            if ((bki_unblocked_to == 0ULL) && push_back(from, to))
               break;
           }
           // attack through king
           {
             auto atk_mask = magic_ns::bishop_moves(oki_pos, mask_all | set_mask_bit(to)) & betweenMasks().from(to, oki_pos);
-            if (((atk_mask & o_rq_mask) != 0ULL) && add(from, to))
+            if (((atk_mask & o_rq_mask) != 0ULL) && push_back(from, to))
               break;
             if (((atk_mask & (o_pnb_mask & ~o_attack_but_king_mask)) != 0ULL) && distanceCounter().getDistance(oki_pos, _lsb64(atk_mask)) > 1)
             {
-              if(add(from, to))
+              if(push_back(from, to))
                 break;
             }
           }
@@ -797,7 +833,7 @@ struct ChecksGenerator
           {
             bool has_attack = (((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor)) & ~o_attack_but_king_mask) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)) &
               magic_ns::bishop_moves(to, mask_all & ~set_mask_bit(from));
-            if (has_attack && add(from, to))
+            if (has_attack && push_back(from, to))
               break;
           }
         }
@@ -820,7 +856,7 @@ struct ChecksGenerator
           || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
         if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add(ki_pos, ki_pos + 2);
+          push_back(ki_pos, ki_pos + 2);
         }
       }
 
@@ -835,7 +871,7 @@ struct ChecksGenerator
           || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
         if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add(ki_pos, ki_pos - 2);
+          push_back(ki_pos, ki_pos - 2);
         }
       }
 
@@ -848,7 +884,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(ki_mask);
           X_ASSERT(board_.getField(to), "king moves to occupied field");
-          add(ki_pos, to);
+          push_back(ki_pos, to);
           break;
         }
       }
@@ -857,7 +893,7 @@ struct ChecksGenerator
     iter_ = moves_.begin();
   }
 
-  void generateStrongest()
+  void generateStrongest(int counter)
   {
     BitMask visited{};
     const auto& color = board_.color();
@@ -977,6 +1013,7 @@ struct ChecksGenerator
 
     auto const o_kbrq_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
     auto const o_pbrq_mask = ((fmgr.pawn_mask(ocolor) | fmgr.bishop_mask(ocolor)) & ~o_attack_mask) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
+    auto const o_pnbrq_mask = fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
 
     auto oki_moves_all = movesTable().caps(Figure::TypeKing, oki_pos);
     auto oki_moves = oki_moves_all & ~blocked_mask;
@@ -1005,13 +1042,14 @@ struct ChecksGenerator
           auto from = clear_lsb(pw_from);
           if (board_.is_something_between(from, to, mask_all_inv))
             continue;
-          if ((oki_moves == 0ULL) || (o_kbrq_mask & movesTable().pawnCaps(color, to)) != 0ULL)
+          auto attacked_mask = o_kbrq_mask & movesTable().pawnCaps(color, to);
+          if (oki_moves == 0ULL || attacked_mask != 0ULL)
           {
             auto pki_blocked_from = movesTable().pawnCaps(color, to) & oki_moves_all & ~multiattack_mask;
             auto pki_blocked_to = movesTable().pawnCaps(color, to) & oki_moves_all;
             pki_blocked_to = pki_blocked_from & ~pki_blocked_to;
-            if (pki_blocked_to == 0ULL)
-              add(from, to);
+            if (pki_blocked_to == 0ULL || attacked_mask != 0ULL)
+              add(from, to, sortValue(attacked_mask, Figure::TypePawn));
           }
         }
       }
@@ -1037,14 +1075,14 @@ struct ChecksGenerator
           auto to = clear_lsb(kn_moves);
           X_ASSERT(board_.getField(to), "field, from that we are going to check is occupied");
 
-          bool kn_attacks = movesTable().caps(Figure::TypeKnight, to)
-            & ((o_kbrq_mask & ~o_attack_but_king_mask) | o_pbrq_mask);
+          auto kn_attacks_to = movesTable().caps(Figure::TypeKnight, to);
+          bool kn_attacks = kn_attacks_to & ((o_kbrq_mask & ~o_attack_but_king_mask) | o_pbrq_mask);
 
           if (!oki_moves ||
             (discovered && (!can_escape || kn_attacks)) ||
-            (o_pbrq_mask & movesTable().caps(Figure::TypeKnight, to)) != 0ULL)
+            (o_pbrq_mask & kn_attacks_to) != 0ULL)
           {
-            add(from, to);
+            add(from, to, sortValue(kn_attacks_to & o_pbrq_mask, Figure::TypeKnight));
             continue;
           }
           auto attacked_mask = o_attack_mask & (o_attack_pnb_mask | ~multiattack_mask);
@@ -1075,8 +1113,12 @@ struct ChecksGenerator
             X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discoved check");
             if (*to >= 0 && !board_.getField(*to))
             {
-              if (((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL) || ((movesTable().pawnCaps(color, *to) & o_kbrq_mask) != 0ULL))
-                add(from, *to);
+              auto pw_attacked_mask = movesTable().pawnCaps(color, *to) & o_kbrq_mask;
+              if (((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL) || (pw_attacked_mask != 0ULL))
+              {
+                if(pw_attacked_mask != 0ULL)
+                  add(from, *to, sortValue(pw_attacked_mask, Figure::TypePawn));
+              }
               else if (!move1 && board_.validateMove(MOVE{ from, *to }))
                 move1 = MOVE{from, *to};
             }
@@ -1125,9 +1167,10 @@ struct ChecksGenerator
                   break;
                 to_mask &= ~set_mask_bit(to);
                 X_ASSERT(board_.getField(to), "field is occupied");
-                auto r_att_to = magic_ns::rook_moves(to, mask_all & ~rook_from_mask) | betweenMasks().from(to, oki_pos) | betweenMasks().from(from, oki_pos);
+                auto r_attacked_mask = magic_ns::rook_moves(to, mask_all & ~rook_from_mask);
+                auto r_att_to = r_attacked_mask | betweenMasks().from(to, oki_pos) | betweenMasks().from(from, oki_pos);
                 if (!stash_move && (!is_mat || ((oki_moves & ~r_att_to) == 0ULL && (~r_att_to & rki_blocked_from) == 0ULL)))
-                  add(from, to);
+                  add(from, to, sortValue(is_mat ? 0ULL : (r_attacked_mask & o_pnbrq_mask), Figure::TypeRook));
                 else if (!move1 && (stash_move || ((set_mask_bit(to) & o_attack_mask) == 0ULL) && board_.validateMove(MOVE{ from, to })))
                   move1 = MOVE{ from, to };
                 if (stash_move)
@@ -1159,10 +1202,12 @@ struct ChecksGenerator
               continue;
             X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discover check");
             const auto* to = movesTable().pawn(color, from) + 2; // skip captures
-            if ((*to >= 0 && !board_.getField(*to)))
+            if ((*to >= 0) && !board_.getField(*to))
             {
-              if (((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL) || ((movesTable().pawnCaps(color, *to) & o_kbrq_mask) != 0ULL))
-                add(from, *to);
+              auto is_mat = (oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL;
+              auto pw_attacked_mask = movesTable().pawnCaps(color, *to) & o_kbrq_mask;
+              if (is_mat || (pw_attacked_mask != 0ULL))
+                add(from, *to, sortValue(is_mat ? 0ULL : pw_attacked_mask, Figure::TypePawn));
               else if (!move1 && ((set_mask_bit(*to) & o_attack_mask) == 0ULL) && board_.validateMove(MOVE{ from, *to }))
                 move1 = MOVE{ from, *to };
             }
@@ -1178,8 +1223,9 @@ struct ChecksGenerator
               while (to_mask != 0ULL)
               {
                 bool stash_move = false;
+                bool is_mat = (oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL;
                 int to = -1;
-                if ((oki_moves & ~betweenMasks().from(from, oki_pos)) == 0ULL)
+                if (is_mat)
                   to = _lsb64(to_mask);
                 else if (to_mask & oqb_attack_mask)
                   to = _lsb64(to_mask & oqb_attack_mask);
@@ -1200,7 +1246,10 @@ struct ChecksGenerator
                 to_mask &= ~set_mask_bit(to);
                 X_ASSERT(board_.getField(to), "field is occupied");
                 if (!stash_move)
-                  add(from, to);
+                {
+                  auto bi_attacked_mask = magic_ns::bishop_moves(to, mask_all) & o_pnbrq_mask;
+                  add(from, to, sortValue(is_mat? 0ULL : bi_attacked_mask, Figure::TypeBishop));
+                }
                 else
                 {
                   move1 = MOVE{ from, to };
@@ -1257,7 +1306,7 @@ struct ChecksGenerator
               auto rki_unblocked_to = ~r_att_to & rki_blocked_from;
               if (rki_unblocked_to == 0ULL)
               {
-                add(from, to);
+                add(from, to, sortValue(0ULL, Figure::TypeRook));
                 continue;
               }
             }
@@ -1265,26 +1314,26 @@ struct ChecksGenerator
           // attack through king
           {
             auto atk_mask = magic_ns::rook_moves(oki_pos, mask_all | set_mask_bit(to)) & betweenMasks().from(to, oki_pos);
-            if ((atk_mask & o_q_mask) != 0ULL && add(from, to))
+            if ((atk_mask & o_q_mask) != 0ULL && add(from, to, sortValue(atk_mask & o_q_mask, Figure::TypeRook)))
               continue;
             if (((atk_mask & (o_pnbr_mask & ~o_attack_but_king_mask)) != 0ULL) && distanceCounter().getDistance(oki_pos, _lsb64(atk_mask)) > 2)
             {
-              if (add(from, to))
+              if (add(from, to, sortValue((atk_mask & (o_pnbr_mask & ~o_attack_but_king_mask)), Figure::TypeRook)))
                 continue;
             }
           }
           // check with attack to unsafe figure
           {
-            bool has_attack = (((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor)) & ~o_attack_but_king_mask) | fmgr.queen_mask(ocolor)) &
+            auto r_attacked_mask = (((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor)) & ~o_attack_but_king_mask) | fmgr.queen_mask(ocolor)) &
               magic_ns::rook_moves(to, mask_all & ~set_mask_bit(from));
-            if (has_attack && add(from, to))
+            if (r_attacked_mask != 0ULL && add(from, to, sortValue(r_attacked_mask, Figure::TypeRook)))
               continue;
           }
           // rook under attack
           {
             bool under_attack = (set_mask_bit(from) & o_attack_but_king_mask) != 0ULL;
             bool be_attacked = (set_mask_bit(to) & o_attack_mask) == 0ULL;
-            if (under_attack && !be_attacked && add(from, to))
+            if (under_attack && !be_attacked && add(from, to, 0))
               continue;
           }
           auto attacked_mask = o_attack_mask & (o_attack_pnbr_mask | ~multiattack_mask);
@@ -1316,7 +1365,7 @@ struct ChecksGenerator
             auto qki_unblocked_to = ~q_att_to & qki_blocked_from;
             if (qki_unblocked_to == 0ULL)
             {
-              add(from, to);
+              add(from, to, sortValue(0ULL, Figure::TypeQueen));
               continue;
             }
           }
@@ -1326,24 +1375,24 @@ struct ChecksGenerator
             auto atf_mask = o_kbrq_mask & ~o_attack_but_king_mask & magic_ns::queen_moves(oki_pos, mask_all | set_mask_bit(to)) & through_mask;
             if (atf_mask != 0ULL)// && (~through_mask & oki_moves_all & movesTable().caps(Figure::TypeKing, _lsb64(atf_mask))) == 0ULL)
             {
-              add(from, to);
+              add(from, to, sortValue(atf_mask, Figure::TypeQueen));
               continue;
             }
           }
           // check with attack to unsafe figure
           {
-            bool has_attack = (fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.rook_mask(ocolor)) & magic_ns::bishop_moves(to, mask_all & ~set_mask_bit(from)) &
+            auto q_attacked_mask = (fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.rook_mask(ocolor)) & magic_ns::bishop_moves(to, mask_all & ~set_mask_bit(from)) &
               ~o_attack_but_king_mask;
-            has_attack = has_attack || ((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor)) & magic_ns::rook_moves(to, mask_all & ~set_mask_bit(from)) &
+            q_attacked_mask |= ((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor)) & magic_ns::rook_moves(to, mask_all & ~set_mask_bit(from)) &
               ~o_attack_but_king_mask);
-            if (has_attack && add(from, to))
+            if (q_attacked_mask != 0ULL&& add(from, to, sortValue(q_attacked_mask, Figure::TypeQueen)))
               continue;
           }
           // queen under attack
           {
             bool under_attack = (set_mask_bit(from) & o_attack_but_king_mask) != 0ULL;
             bool be_attacked = (set_mask_bit(to) & o_attack_mask) == 0ULL;
-            if (under_attack && !be_attacked && add(from, to))
+            if (under_attack && !be_attacked && add(from, to, 0))
               continue;
           }
           auto attacked_mask = o_attack_mask & (o_attack_pnbr_mask | ~multiattack_mask);
@@ -1376,25 +1425,25 @@ struct ChecksGenerator
           {
             // do we unblock some moves, previously blocked by this rook?
             auto bki_unblocked_to = ~bi_att_to & bki_blocked_from;
-            if ((bki_unblocked_to == 0ULL) && add(from, to))
-              add(from, to);
+            if ((bki_unblocked_to == 0ULL) && add(from, to, sortValue(0ULL, Figure::TypeBishop)))
+              continue;
           }
           // attack through king
           {
             auto atk_mask = magic_ns::bishop_moves(oki_pos, mask_all | set_mask_bit(to)) & betweenMasks().from(to, oki_pos);
-            if ((atk_mask & o_rq_mask) != 0ULL && add(from, to))
+            if ((atk_mask & o_rq_mask) != 0ULL && add(from, to, sortValue(atk_mask & o_rq_mask, Figure::TypeBishop)))
               continue;
             if ((atk_mask & (o_pnb_mask & ~o_attack_but_king_mask)) != 0ULL)// && distanceCounter().getDistance(oki_pos, _lsb64(atk_mask)) > 1)
             {
-              if (add(from, to))
+              if (add(from, to, sortValue(atk_mask & (o_pnb_mask & ~o_attack_but_king_mask), Figure::TypeBishop)))
                 continue;
             }
           }
           // check with attack to unsafe figure
           {
-            bool has_attack = (((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor)) & ~o_attack_but_king_mask) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)) &
+            auto bi_attacked_mask = (((fmgr.pawn_mask(ocolor) | fmgr.knight_mask(ocolor)) & ~o_attack_but_king_mask) | fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)) &
               magic_ns::bishop_moves(to, mask_all & ~set_mask_bit(from));
-            if (has_attack && add(from, to))
+            if (bi_attacked_mask != 0ULL && add(from, to, sortValue(bi_attacked_mask, Figure::TypeBishop)))
               continue;
           }
           auto attacked_mask = o_attack_mask & (o_attack_pnb_mask | ~multiattack_mask);
@@ -1406,6 +1455,7 @@ struct ChecksGenerator
 
 
     // king
+    if(!move1)
     {
       auto const& ki_pos = board_.kingPos(color);
       auto all_but_king_mask = mask_all_inv | set_mask_bit(ki_pos);
@@ -1418,14 +1468,14 @@ struct ChecksGenerator
         X_ASSERT(color && ki_pos != 4 || !color && ki_pos != 60, "invalid king position for castle");
         X_ASSERT(color && board_.getField(7).type() != Figure::TypeRook
           || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
-        if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
+        if (!move1 && (oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add(ki_pos, ki_pos + 2);
+          move1 = MOVE{ ki_pos, ki_pos + 2 };
         }
       }
 
       // long castle
-      if ((board_.castling(color, 1) && (movesTable().castleMasks(color, 1) & mask_all) == 0ULL) &&
+      if (!move1 && (board_.castling(color, 1) && (movesTable().castleMasks(color, 1) & mask_all) == 0ULL) &&
           ((oki_moves & ~pawnMasks().mask_column(3)) == 0ULL))
       {
         static int rook_positions[] = { 59, 3 };
@@ -1435,11 +1485,11 @@ struct ChecksGenerator
           || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
         if ((oki_pos & 7) == (r_pos & 7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add(ki_pos, ki_pos - 2);
+          move1 = MOVE{ ki_pos, ki_pos - 2 };
         }
       }
 
-      if ((board_.discoveredCheck(ki_pos, mask_all, color, oki_pos)) &&
+      if (!move1 && (board_.discoveredCheck(ki_pos, mask_all, color, oki_pos)) &&
         ((oki_moves & ~betweenMasks().from(ki_pos, oki_pos)) == 0ULL))
       {
         auto exclude = ~(betweenMasks().from(oki_pos, ki_pos) | movesTable().caps(Figure::TypeKing, oki_pos));
@@ -1448,7 +1498,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(ki_mask);
           X_ASSERT(board_.getField(to), "king moves to occupied field");
-          add(ki_pos, to);
+          move1 = MOVE{ ki_pos, to };
         }
       }
     }
