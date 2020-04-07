@@ -96,7 +96,10 @@ namespace nst
 };
 
 #undef LOG_PV
+
+#ifdef NDEBUG
 #define USE_MINIDUMP
+#endif
 
 #define USE_IID
 #define USE_FUTILITY_PRUNING
@@ -132,8 +135,8 @@ namespace nst
 #define EVAL_KING_CHECK
 #define ADDITIONAL_KING_ATTACK_COEFF
 
-#undef GEN_USUAL_AFETER_HORIZON
-#undef PROCESS_DANGEROUS_EVAL
+#define GEN_USUAL_AFETER_HORIZON
+#define PROCESS_DANGEROUS_EVAL
 #undef GENERATE_MAT_CHECK_AFTER_HORIZON
 
 #undef EVALUATE_DANGEROUS_ATTACKS
@@ -145,6 +148,7 @@ namespace nst
 static const SortValueType CaptureRecentlyBonus = 10;
 
 static const int NumUsualAfterHorizon = 16;
+static const int MinimumDepthForUsualAfterHorizon = 3;
 static const int ONE_PLY = 20;
 static const int MaxPly = 64;
 static const int LMR_DepthLimit = 3 * ONE_PLY;

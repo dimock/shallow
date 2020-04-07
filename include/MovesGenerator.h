@@ -324,7 +324,7 @@ struct TacticalGenerator
       order_ = oHash;
   }
 
-  MOVE* next(bool dangerous, int counter)
+  MOVE* next(bool dangerous)
   {
     if (order_ == oEscape)
     {
@@ -361,10 +361,10 @@ struct TacticalGenerator
     {
       if (depth_ >= 0)
       {
-        ckg_.generateStrongest(counter);
+        ckg_.generateStrongest();
         order_ = oChecks;
       }
-#ifdef GENERATE_MAT_CHECK_AFTER_HORIZON
+#if((defined GENERATE_MAT_CHECK_AFTER_HORIZON))
       else
       {
         ckg_.generateOne();

@@ -919,7 +919,8 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
       score0 = eval(alpha, betta);
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    dangerous = eval.dangerous();
+    if(score0 > alpha)
+      dangerous = eval.dangerous();
 #endif // PROCESS_DANGEROUS_EVAL
 
     if(score0 >= betta)
@@ -935,8 +936,11 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     scoreBest = score0;
   }
 
-  if (!board.underCheck() && depth < -NumUsualAfterHorizon * ONE_PLY && hmove && !board.is_capture(hmove))
+  if ((!board.underCheck() && depth < -NumUsualAfterHorizon * ONE_PLY && hmove && !board.is_capture(hmove))
+     || (!board.is_capture(hmove) && sdata.depth_ < MinimumDepthForUsualAfterHorizon))
+  {
     hmove = SMove{ true };
+  }
 
   Move best{true};
 
@@ -945,13 +949,9 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
 #endif
 
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
-  //ChecksGenerator<Board, SMove> ckgValidate{board};
-  //bool under_check = board.underCheck();
-  //if(!under_check)
-  //  ckgValidate.generateStrongest();
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(dangerous, counter);
+    auto* pmove = tg.next(dangerous);
     if(!pmove)
       break;
 
@@ -965,7 +965,6 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     dangerous = false;
 
     board.makeMove(move);
-    bool give_check = board.underCheck();
     sdata.inc_nc();
 
     int depthInc = board.underCheck() ? ONE_PLY : 0;
@@ -977,15 +976,8 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     if(!stopped(ictx) && score > scoreBest)
     {
       if(score > alpha)
-      {
-        //if (!under_check && give_check && !board.is_capture(move) && !ckgValidate.find(move))
-        //{
-        //  auto moveStr = moveToStr(move, false);
-        //  auto fenStr = NEngine::toFEN(board);
-        //  bool foundErr = true;
-        //}
         alpha = score;
-      }
+
       best = move;
       scoreBest = score;
     }

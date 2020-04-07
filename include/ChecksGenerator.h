@@ -893,7 +893,7 @@ struct ChecksGenerator
     iter_ = moves_.begin();
   }
 
-  void generateStrongest(int counter)
+  void generateStrongest()
   {
     BitMask visited{};
     const auto& color = board_.color();
