@@ -115,6 +115,7 @@ public:
   inline int bishops() const { return tcount_[Figure::TypeBishop]; }
   inline int rooks() const { return tcount_[Figure::TypeRook]; }
   inline int queens() const { return tcount_[Figure::TypeQueen]; }
+  inline int allFigures() const { return knights() + bishops() + rooks() + queens(); }
   inline ScoreType weight() const { return weight_; }
   inline const BitMask & pawn_mask() const { return tmask_[Figure::TypePawn]; }
   inline const BitMask & knight_mask() const { return tmask_[Figure::TypeKnight]; }
@@ -246,6 +247,7 @@ public:
   inline int knights(Figure::Color color) const { return fcounter_[color].knights(); }
   inline int rooks(Figure::Color color) const { return fcounter_[color].rooks(); }
   inline int queens(Figure::Color color) const { return fcounter_[color].queens(); }
+  inline int allFigures(Figure::Color color) const { return fcounter_[color].allFigures(); }
   inline ScoreType weight(Figure::Color color) const { return fcounter_[color].weight(); }
   inline ScoreType weight() const { return weight(Figure::ColorWhite) - weight(Figure::ColorBlack); }
   inline const BitMask & pawn_mask(Figure::Color color) const { return fcounter_[color].pawn_mask(); }

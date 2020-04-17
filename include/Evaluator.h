@@ -77,7 +77,8 @@ class Evaluator
     FullScore score;
     BitMask   passers_[2] = {};
     bool      searched_passers_[2] = {};
-    int       most_y{ 0 };
+    int       most_passer_y{ 0 };
+    int       most_unstoppable_y{ 0 };
   };
 
   struct FieldsInfo

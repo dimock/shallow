@@ -936,8 +936,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     scoreBest = score0;
   }
 
-  if ((!board.underCheck() && depth < -NumUsualAfterHorizon * ONE_PLY && hmove && !board.is_capture(hmove))
-     || (!board.is_capture(hmove) && sdata.depth_ < MinimumDepthForUsualAfterHorizon))
+  if (!board.underCheck() && hmove && !board.is_capture(hmove) && hmove.new_type() == 0 && depth < 0)
   {
     hmove = SMove{ true };
   }

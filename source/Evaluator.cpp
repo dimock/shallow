@@ -560,10 +560,15 @@ Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi)
   auto infoW = passerEvaluation(Figure::ColorWhite, pi);
   auto infoB = passerEvaluation(Figure::ColorBlack, pi);
 
-  if(infoW.most_y > infoB.most_y)
-    infoW.score.endGame_ += EvalCoefficients::closeToPromotion_[infoW.most_y - infoB.most_y];
-  else if(infoB.most_y > infoW.most_y)
-    infoB.score.endGame_ += EvalCoefficients::closeToPromotion_[infoB.most_y - infoW.most_y];
+  if ((infoW.most_unstoppable_y > infoB.most_unstoppable_y) && (board_->fmgr().allFigures(Figure::ColorBlack) == 0))
+    infoW.score.endGame_ += 2 * EvalCoefficients::closeToPromotion_[infoW.most_unstoppable_y - infoB.most_unstoppable_y];
+  else if ((infoB.most_unstoppable_y > infoW.most_unstoppable_y) && (board_->fmgr().allFigures(Figure::ColorWhite) == 0))
+    infoB.score.endGame_ += 2 * EvalCoefficients::closeToPromotion_[infoB.most_unstoppable_y - infoW.most_unstoppable_y];
+
+  if (infoW.most_passer_y > infoB.most_passer_y)
+    infoW.score.endGame_ += EvalCoefficients::closeToPromotion_[infoW.most_passer_y - infoB.most_passer_y];
+  else if (infoB.most_passer_y > infoW.most_passer_y)
+    infoB.score.endGame_ += EvalCoefficients::closeToPromotion_[infoB.most_passer_y - infoW.most_passer_y];
 
   infoW.score -= infoB.score;
   return infoW.score;
@@ -609,8 +614,8 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     if((opmsk & passmsk) || (pmask & blckmsk))
       continue;
 
-    if(cy > info.most_y)
-      info.most_y = cy;
+    if (cy > info.most_passer_y)
+      info.most_passer_y = cy;
 
     // my rook behind passed pawn - give bonus
     BitMask behind_msk = betweenMasks().from_dir(n, dir_behind[color]) & fmgr.rook_mask(color) ;
@@ -667,9 +672,19 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     if(!findRootToPawn(color, promo_pos, pawn_dist_promo+1))
     {
       info.score.endGame_ += EvalCoefficients::farKingPawn_[cy];
+      if (cy > info.most_unstoppable_y)
+        info.most_unstoppable_y = cy;
     }
   }
-  info.most_y += (color == board_->color());
+  
+  if (color == board_->color())
+  {
+    if (info.most_passer_y > 0)
+      info.most_passer_y++;
+    if (info.most_unstoppable_y > 0)
+      info.most_unstoppable_y++;
+  }
+  
   return info;
 }
 

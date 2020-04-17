@@ -115,7 +115,7 @@ namespace NEngine
   int EvalCoefficients::farKingPawn_[8] = { 0, 10, 12, 16, 20, 30, 40, 0 };
   int EvalCoefficients::cangoPawn_[8] = { 0, 6, 7, 8, 10, 12, 16, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 3, 6, 8, 10, 12, 15, 0 };
-  int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 5, 6, 7, 8, 9 };
+  int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 6, 8, 10, 12, 16 };
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 
   // mobility
