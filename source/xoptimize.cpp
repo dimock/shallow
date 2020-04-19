@@ -18,7 +18,7 @@ void xcaptures(Board& board, int depth)
   //{
     for(;;)
     {
-      auto* pmove = tg.next(false);
+      auto* pmove = tg.next(false, 0, 0);
       if(!pmove)
         break;
       auto& move = *pmove;

@@ -950,7 +950,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(dangerous);
+    auto* pmove = tg.next(dangerous, threshold, counter);
     if(!pmove)
       break;
 
