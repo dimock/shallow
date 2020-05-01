@@ -125,7 +125,7 @@ bool Processor::setMovesToGo(int mtogo)
 
 NTime::duration Processor::giveMoreTime()
 {
-  if(timePerMove_ > NTime::duration(0) || xtime_ <= minimalXtimeToGive_ || givetimeCounter_ > 1)
+  if(timePerMove_ > NTime::duration(0) || xtime_ <= minimalXtimeToGive_ || givetimeCounter_ > 2)
     return NTime::duration(0);
 
   NTime::duration add_t(0);

@@ -4,6 +4,12 @@
 
 namespace NEngine
 {
+  template <class T>
+  T get_sign(T t)
+  {
+    return (T{} < t) - (t < T{});
+  }
+  
   template <class MOVE, class LIST>
   void insert_sorted(LIST& moves, MOVE const& move)
   {

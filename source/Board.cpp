@@ -897,7 +897,7 @@ bool Board::isDangerPawn(Move & move) const
   const uint64 & pmsk = fmgr_.pawn_mask(color());
   const uint64 & opmsk = fmgr_.pawn_mask(ocolor);
   const uint64 & passmsk = pawnMasks().mask_passed(color(), move.to());
-  const uint64 & blckmsk = pawnMasks().mask_line_blocked(color(), move.to());
+  const uint64 & blckmsk = pawnMasks().mask_forward(color(), move.to());
 
   if(!(opmsk & passmsk) && !(pmsk & blckmsk))
     return true;

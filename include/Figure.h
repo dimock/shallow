@@ -17,14 +17,16 @@ namespace Figure
   enum Color : int8  { ColorBlack, ColorWhite };
   
   extern const BitMask pawnCutoffMasks_[2];
-  extern const ScoreType figureWeight_[7]; // TypeNone, TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
+  
+  // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
+  constexpr ScoreType figureWeight_[7] = { 0, 85, 330, 330, 510, 1020, 0 };
+
   extern const uint8     mirrorIndex_[64];
   // color, castle (K = 0, Q = 1)
   extern const BitMask   quaterBoard_[2][2];
 
   inline Figure::Color otherColor(Figure::Color color)
   {
-    //return (Figure::Color)((static_cast<int>(color) + 1) & 1);
     return (Figure::Color)(!color);
   }
 

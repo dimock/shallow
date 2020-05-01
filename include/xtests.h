@@ -83,7 +83,7 @@ public:
         continue;
       if(sline[0] == '#')
         continue;
-      std::cout << sline << std::endl;
+//      std::cout << sline << std::endl;
       std::smatch m;
       if(!std::regex_search(sline, m, r) || m.size() < 4)
       {
@@ -145,7 +145,7 @@ void testFen(std::string const& ffname,
 
 void testMovegen(std::string const& ffname);
 void testSee(std::string const& ffname);
-void evaluateFen(std::string const& ffname);
+void evaluateFen(std::string const& ffname, std::string const& refname);
 void see_perf_test(std::string const& fname);
 void kpkTable(std::string const& fname);
 void speedTest();

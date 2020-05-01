@@ -133,8 +133,8 @@ bool Engine::mainThreadSearch(int ictx)
 
     if(sdata.best_)
     {
-      if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 &&
-        (abs(score-sres.score_) >= Figure::figureWeight_[Figure::TypePawn]/3 || (sdata.best_ != sres.best_)) &&
+      if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 && sdata.counter_ < sdata.numOfMoves_ && 
+        ((sres.score_ - score >= Figure::figureWeight_[Figure::TypePawn]/4) || (sdata.best_ != sres.best_)) &&
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
@@ -575,7 +575,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(
     !board.underCheck()
     && !pv
-    && allow_nm
+//    && allow_nm
     && board.allowNullMove()
     && depth > board.nullMoveDepthMin()
     && std::abs(betta) < Figure::MatScore+MaxPly
@@ -730,28 +730,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           board.canBeReduced(move))
         {
           R = ONE_PLY;
+          //auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
+          //if (depth > LMR_DepthLimit && (!move.see_ok() || hist.good() < hist.bad()))
+          //{
+          //  R += ONE_PLY + ONE_PLY*counter/ 10;
+          //}
+          //R = std::min(3*ONE_PLY, R);
 
-#ifdef LMR_REDUCE_MORE
-          auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-          if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
-          {
-            R += ONE_PLY;
-            if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
-              R += ONE_PLY;
-          }
-          curr.mflags_ |= UndoInfo::Reduced;
-        }
-        else if(!check_escape &&
-                counter > 10 &&
-                sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-                depth > LMR_DepthLimit &&
-                alpha > -Figure::MatScore-MaxPly &&
-                !move.see_ok() &&
-                !curr.castle() &&
-                !board.underCheck())
-        {
-          R = ONE_PLY;
-#endif // LMR_REDUCE_MORE
           curr.mflags_ |= UndoInfo::Reduced;
         }
 #endif //USE_LMR
@@ -923,17 +908,20 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
       dangerous = eval.dangerous();
 #endif // PROCESS_DANGEROUS_EVAL
 
-    if(score0 >= betta)
+    if(score0 >= betta && (depth >= 0 || !dangerous))
       return { score0, dangerous };
 
     threshold = (int)alpha - (int)score0 - Position_Gain;
     if(threshold > Figure::figureWeight_[Figure::TypePawn] && board.isWinnerLoser())
       threshold = Figure::figureWeight_[Figure::TypePawn];
     
-    if (score0 > alpha)
-      alpha = score0;
+    if (!dangerous)
+    {
+      if (score0 > alpha)
+        alpha = score0;
 
-    scoreBest = score0;
+      scoreBest = score0;
+    }
   }
 
   if (!board.underCheck() && hmove && !board.is_capture(hmove) && hmove.new_type() == 0 && depth < 0)

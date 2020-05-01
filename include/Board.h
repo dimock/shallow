@@ -402,7 +402,8 @@ struct Board
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
     auto const& undo = lastUndo();
-    return  ((hist.good()<<2) <= hist.bad()) &&
+    return
+      //((hist.good()<<2) <= hist.bad()) &&
       !(lastUndo().capture() || move.new_type() > 0
 #ifdef VERIFY_LMR
       || undo.threat()
@@ -425,15 +426,36 @@ struct Board
       return NullMove_DepthMin + ONE_PLY;
   }
 
+  inline int nullMoveReduce() const
+  {
+    if (fmgr_.queens(color()) + fmgr_.rooks(color()) + fmgr_.knights(color()) + fmgr_.bishops(color()) > 1)
+      return NullMove_PlyReduce;
+    else
+      return NullMove_PlyReduce - ONE_PLY;
+  }
+
   inline int nullMoveDepth(int depth, ScoreType betta) const
   {
     Figure::Color ocolor = Figure::otherColor(color());
     ScoreType score = fmgr().weight(color()) - fmgr().weight(ocolor);
-    if(score > betta + 4*Figure::figureWeight_[Figure::TypePawn] && depth > 7*ONE_PLY)
-    {
-      return std::max(1, depth - NullMove_PlyReduce - ONE_PLY);
-    }
-    return std::max(1, depth - NullMove_PlyReduce);
+    //if (score < betta + (Figure::figureWeight_[Figure::TypePawn] << 1))
+    //{
+    //  if (depth < 4 * ONE_PLY)
+    //    return 0;
+    //  else if (depth < 5 * ONE_PLY)
+    //    return ONE_PLY;
+    //  else if (depth < 6 * ONE_PLY)
+    //    return 2 * ONE_PLY;
+    //}
+
+    int null_depth = depth - nullMoveReduce();// -depth / 7;
+    //if (score > betta) {
+    //  null_depth -= (score - betta)*ONE_PLY / (4*Figure::figureWeight_[Figure::TypePawn]);
+    //}
+    if (null_depth < 0)
+      null_depth = 0;
+
+    return null_depth;
   }
 
   inline void setNoMoves()

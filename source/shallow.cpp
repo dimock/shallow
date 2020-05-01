@@ -42,11 +42,13 @@ int main(int argn, char *argv[])
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
 
+#ifndef NDEBUG
   if (argn > 1)
   {
-    NEngine::evaluateFen(argv[1]);
+    NEngine::evaluateFen(argv[1], argn > 2 ? argv[2] : "");
     return 0;
   }
+#endif
 
   main_loop(xpr);
 

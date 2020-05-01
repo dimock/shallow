@@ -616,7 +616,7 @@ void SpecialCasesDetector::initWinnerLoser()
                         | board.fmgr().king_mask(pawnColor) | board.fmgr().king_mask(knightColor)
                         | (movesTable().caps(Figure::TypeKing, kp) & ~movesTable().caps(Figure::TypeKing, kn))
                         | blocked_additional);
-    BitMask target = (pawnMasks().mask_line_blocked(pawnColor, p1) | set_mask_bit(p1));
+    BitMask target = (pawnMasks().mask_forward(pawnColor, p1) | set_mask_bit(p1));
     for(; current != 0ULL;)
     {
       BitMask next{};
@@ -657,7 +657,7 @@ void SpecialCasesDetector::initWinnerLoser()
                         | board.fmgr().king_mask(pawnColor) | board.fmgr().bishop_mask(bishopColor)
                         | (movesTable().caps(Figure::TypeKing, kp) & ~movesTable().caps(Figure::TypeKing, kb))
                         | blocked_additional);
-    BitMask target = (pawnMasks().mask_line_blocked(pawnColor, p1) | set_mask_bit(p1));
+    BitMask target = (pawnMasks().mask_forward(pawnColor, p1) | set_mask_bit(p1));
     BitMask mask_all = board.fmgr().mask(Figure::ColorBlack) | board.fmgr().mask(Figure::ColorWhite);
     for(; current != 0ULL;)
     {
@@ -822,14 +822,14 @@ void SpecialCasesDetector::initWinnerLoser()
     auto loserColor = Figure::otherColor(winnerColor);
     int kw = board.kingPos(winnerColor);
     int kl = board.kingPos(loserColor);
-    ScoreType score = board.fmgr().pawns(winnerColor) * 30;
+    ScoreType score = board.fmgr().pawns(winnerColor) * 10;
     auto pmask = board.fmgr().pawn_mask(winnerColor);
     for(; pmask;)
     {
       Index p(clear_lsb(pmask));
       Index pp(p.x(), winnerColor*7);
       int y = pawn_colored_y_[winnerColor][p.y()];
-      score += EvalCoefficients::passerPawn_[y];
+      score += EvalCoefficients::passerPawnSc_[y];
       score += (7 - distanceCounter().getDistance(kw, pp) + distanceCounter().getDistance(kl, pp)) * EvalCoefficients::kingToPawnDistanceMulti_;
     }
     if(winnerColor == Figure::ColorBlack)

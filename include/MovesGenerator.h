@@ -378,7 +378,10 @@ struct TacticalGenerator
       {
         if (*move == hmove_)
           continue;
+
+#ifdef GEN_USUAL_AFETER_HORIZON
         needUsual_ = false;
+#endif
         return move;
       }
 

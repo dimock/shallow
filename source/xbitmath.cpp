@@ -113,35 +113,6 @@ PawnMasks::PawnMasks()
     full_column_msk |= set_mask_bit(Index(0, i));
   }
 
-  for(int mask = 3; mask < 256; ++mask)
-  {
-    int nmax = 1;
-    BitMask best_multi_mask{};
-    for(int8 i = 0; i < 8; ++i)
-    {
-      if((mask & (1 << i)) == 0)
-        continue;
-      BitMask multi_mask{};
-      int n = 0;
-      for(int8 j = i; j < 8; ++j, ++n)
-      {
-        if((mask & (1 << j)) == 0)
-        {
-          i = j;
-          break;
-        }
-        multi_mask |= full_column_msk << j;
-      }
-      if(n > nmax)
-      {
-        nmax = n;
-        best_multi_mask = multi_mask;
-      }
-    }
-    pmask_multi_passer_[mask] = best_multi_mask;
-    pcount_multi_passer_[mask] = nmax;
-  }
-
   for(int color = 0; color < 2; ++color)
   {
     for(int i = 0; i < 64; ++i)
@@ -149,23 +120,22 @@ PawnMasks::PawnMasks()
       int x = i & 7;
       int y = i >> 3;
 
-      BitMask pass_msk{};
+      BitMask forward_msk{};
+      BitMask backward_msk{};
       int deltay = color ? 1 : -1;
       for(int yy = y+deltay; yy < 8 && yy >= 0; yy += deltay)
       {
-        pass_msk |= set_mask_bit(Index(0, yy));
+        forward_msk |= set_mask_bit(Index(0, yy));
+      }
+      for (int yy = y; yy < 7 && yy > 0; yy -= deltay)
+      {
+        backward_msk |= set_mask_bit(Index(0, yy));
       }
 
       pmask_doubled_[x] |= full_column_msk << x;
       pmask_column_[x] = full_column_msk << x;
-      pmasks_line_blocked_[color][i] = pass_msk << x;
-      pmasks_passed_[color][i] = pass_msk << x;
-
-      BitMask back_mask{};
-      for(int yy = y; yy < 8 && yy > 0; yy -= deltay)
-      {
-        back_mask |= set_mask_bit(Index(0, yy));
-      }
+      pmasks_forward_[color][i] = forward_msk << x;
+      pmasks_passed_[color][i] = forward_msk << x;
 
       BitMask support_mask = set_mask_bit(Index(0, y));
       if(y > 0 && y < 7)
@@ -176,16 +146,16 @@ PawnMasks::PawnMasks()
       if(x > 0)
       {
         pmask_isolated_[x] |= full_column_msk << (x-1);
-        pmasks_passed_[color][i] |= pass_msk << (x-1);
-        pmasks_backward_[color][i] |= back_mask << (x-1);
+        pmasks_passed_[color][i] |= forward_msk << (x-1);
         pmasks_supported_[color][i] |= support_mask << (x-1);
+        pmasks_backward_[color][i] |= backward_msk << (x-1);
       }
       if(x < 7)
       {
         pmask_isolated_[x] |= full_column_msk << (x+1);
-        pmasks_passed_[color][i] |= pass_msk << (x+1);
-        pmasks_backward_[color][i] |= back_mask << (x+1);
+        pmasks_passed_[color][i] |= forward_msk << (x+1);
         pmasks_supported_[color][i] |= support_mask << (x+1);
+        pmasks_backward_[color][i] |= backward_msk << (x+1);
       }
     }
   }

@@ -66,6 +66,15 @@ class Evaluator
       return result;
     }
 
+    FullScore operator - (FullScore const& other) const
+    {
+      FullScore result{ *this };
+      result.common_ -= other.common_;
+      result.opening_ -= other.opening_;
+      result.endGame_ -= other.endGame_;
+      return result;
+    }
+
     bool operator == (FullScore const& other) const
     {
       return common_ == other.common_ && opening_ == other.opening_ && endGame_ == other.endGame_;
@@ -76,7 +85,7 @@ class Evaluator
   {
     FullScore score;
     BitMask   passers_[2] = {};
-    bool      searched_passers_[2] = {};
+    bool      passers_observed_[2] = {};
     int       most_passer_y{ 0 };
     int       most_unstoppable_y{ 0 };
   };
@@ -96,6 +105,9 @@ class Evaluator
     BitMask bishopAttacks_{};
     BitMask rookAttacks_{};
     BitMask queenAttacks_{};
+    BitMask bishopDirectAttacks_{};
+    BitMask rookDirectAttacks_{};
+    BitMask queenDirectAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
     BitMask multiattack_mask_{};
@@ -170,30 +182,27 @@ private:
   // + king's pawn shield???
   PasserInfo hashedEvaluation();
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
-  bool couldBeSupported(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk) const;
+  bool isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
+  bool isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
+  bool couldBeGuarded(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field, int n1) const;
 
   PasserInfo evaluatePawns(Figure::Color color) const;
-  PasserInfo evaluatePawns() const
-  {
-    auto info_w = evaluatePawns(Figure::ColorWhite);
-    auto info_b = evaluatePawns(Figure::ColorBlack);
-    info_w.score -= info_b.score;
-    info_w.searched_passers_[0] = true;
-    info_w.searched_passers_[1] = true;
-    info_w.passers_[0] = info_b.passers_[0];
-    return info_w;
-  }
+  PasserInfo evaluatePawns() const;
 
   // attacked field
   // blocked knighs/bishops
   // rooks on open column
   // mobility
   // basic king pressure == distance to king
+  bool blockedKnight(Figure::Color color, int n) const;
+  bool blockedBishop(Figure::Color color, int n) const;
+  bool blockedRook(Figure::Color color, int n) const;
+
   FullScore evaluateKnights();
   FullScore evaluateBishops();
-  int evaluateRook(Figure::Color color);
-  int evaluateQueens(Figure::Color color);
-  int evaluateMobilityAndKingPressure(Figure::Color color);
+  FullScore evaluateRook(Figure::Color color);
+  FullScore evaluateQueens(Figure::Color color);
+  FullScore evaluateMobilityAndKingPressure(Figure::Color color);
 
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&);
   FullScore passerEvaluation(PasserInfo const&);
@@ -205,7 +214,7 @@ private:
     return NEngine::findRootToPawn(*board_, inv_mask_all_, finfo_[color].attack_mask_, color, promo_pos, stepsMax);
   }
 
-  ScoreType evaluateMaterialDiff() const;
+  FullScore evaluateMaterialDiff() const;
 
   /// find knight and pawn forks
   ScoreType evaluateForks(Figure::Color color) const;
@@ -213,6 +222,8 @@ private:
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
   
+  bool fakeCastle(Figure::Color color, int rpos) const;
+
   int evaluateCastle(Figure::Color color) const;
   int evaluateCastle() const
   {
@@ -222,26 +233,18 @@ private:
   }
 
   int evaluateKingSafety(Figure::Color color) const;
-  FullScore evaluateKingSafety() const
-  {
-    FullScore score;
-    score.opening_ = evaluateKingSafety(Figure::ColorWhite);
-    score.opening_ -= evaluateKingSafety(Figure::ColorBlack);
-    return score;
-  }
 
   FullScore evaluatePawnsPressure(Figure::Color color);
-  FullScore evaluateGeneralPressure(Figure::Color color);
 
   // sum of weights of all figures
   const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
-                                + 2*Figure::figureWeight_[Figure::TypeKnight]
-                                + 6*Figure::figureWeight_[Figure::TypePawn]);
+                                + 3*Figure::figureWeight_[Figure::TypeKnight]
+                                + 5*Figure::figureWeight_[Figure::TypePawn]);
 
-  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
+  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeRook]
                                 + Figure::figureWeight_[Figure::TypeKnight]
-                                + 3*Figure::figureWeight_[Figure::TypePawn]);
+                                + 2*Figure::figureWeight_[Figure::TypePawn]);
 
   const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 
@@ -255,6 +258,7 @@ private:
 
   static const BitMask castle_mask_[2][2];
   static const BitMask king_attack_mask_[2][2];
+  static const BitMask blocked_rook_mask_[2];
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
@@ -262,6 +266,11 @@ private:
   int betta0_{};
   int alpha1_{};
   int betta1_{};
+
+  static const int maximumAttackersWeight_ = 2 * Figure::figureWeight_[Figure::TypeKnight] +
+    2 * Figure::figureWeight_[Figure::TypeBishop] +
+    2 * Figure::figureWeight_[Figure::TypeRook] +
+    Figure::figureWeight_[Figure::TypeQueen];
 
 #ifdef PROCESS_DANGEROUS_EVAL
   bool dangerous_{ false };

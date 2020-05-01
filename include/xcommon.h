@@ -110,38 +110,23 @@ namespace nst
 #undef USE_LMR0
 #define VERIFY_LMR
 #define SINGULAR_EXT
-#define LMR_REDUCE_MORE
+#undef LMR_REDUCE_MORE
 #undef USE_PROBCUT
 
 #define EVAL_SPECC
-#define EVAL_MATD
-#define EVAL_PAWNS
-#define EVAL_KINGSF
 #define EVAL_CASTLE
 #define EVAL_KP_BASIC
 #define EVAL_MOB
 #define EVAL_KING_PR
 
-#define EVAL_BLOCK_KN
-#define EVAL_BLOCK_BI
-
 #define EVAL_FORKS
 #define EVAL_OPEN_R
-#define EVAL_PAWN_PR
-#define EVAL_GP
-#define EVAL_PASSERS
-#undef EVAL_PIN
-
-#define EVAL_KING_CHECK
-#define ADDITIONAL_KING_ATTACK_COEFF
 
 #define GEN_USUAL_AFETER_HORIZON
 #define PROCESS_DANGEROUS_EVAL
 #define GENERATE_MAT_CHECK_AFTER_HORIZON
 
 #undef EVALUATE_DANGEROUS_ATTACKS
-
-#undef EVAL_MULTI_PASSERS
 
 #undef SYNCHRONIZE_LAST_ITER
 

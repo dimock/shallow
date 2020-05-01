@@ -17,15 +17,12 @@ struct EvalCoefficients
   static int doubledPawn_;
   static int isolatedPawn_;
   static int backwardPawn_;
-  static int unsupportedPawn_;
-  static int unprotectedPawn_;
+  static int weakHalfopenPawn_;
   static int rookBehindBonus_;
   static int protectedPawnPressure_;
   static int unprotectedPawnPressure_;
   static int protectedPawnBishopTreat_;
   static int unprotectedPawnBishopTreat_;
-  static int kingPressure_;
-  static int generalPressure_;
 
   // forks
   static int forkBonus_;
@@ -43,16 +40,15 @@ struct EvalCoefficients
   static int castleImpossible_;
   static int fakeCastle_;
   static int castleBonus_;
+  static int kingIsUnsafe_;
   static int pawnPenaltyA_;
   static int pawnPenaltyB_;
   static int pawnPenaltyC_;
-  static int noPawnPenaltyA_;
-  static int noPawnPenaltyB_;
-  static int noPawnPenaltyC_;
 
   // blocked figure
   static int knightBlocked_;
   static int bishopBlocked_;
+  static int rookBlocked_;
 
   // king attacks
   static int pawnKingAttack_;
@@ -61,14 +57,11 @@ struct EvalCoefficients
   static int rookKingAttack_;
   static int queenKingAttack_;
 
-  // additional coefficients for king attack
-  static int additionalBishopsAttacksCoeff_;
-  static int additionalRooksAttacksCoeff_;
-  static int additionalQueensAttacksCoeff_;
-
-  // x-ray attacks
-  static int rookKingAttackXray_;
-  static int queenKingAttackXray_;
+  static int unprotectedKingMultiattacksCoeff_;
+  static int unprotectedKingAttacksCoeff_;
+  static int allKingAttacksCoeff_;
+  static int generalKingPressure_;
+  static int generalOpponentPressure_;
 
     // for special cases
   static int kingToPawnDistanceMulti_;
@@ -82,13 +75,6 @@ struct EvalCoefficients
   static int rookChecking_;
   static int queenChecking_;
 
-  // pinned figures
-  static int pinnedPawn_;
-  static int pinnedKnight_;
-  static int pinnedBishop_;
-  static int pinnedRook_;
-  static int pinnedQueen_;
-
   // arrays
   static int opponentPawnPressure_[8];
 
@@ -96,7 +82,9 @@ struct EvalCoefficients
   static int openRook_[4];
 
   // material diff
-  static int bishopBonus_[4];
+  static int knightBonus_[2][2];
+  static int bishopBonus_[2][2];
+  static int rookBonus_[2][2];
   static int figureAgainstPawnBonus_[2];
   static int rookAgainstFigureBonus_[2];
   static int figuresAgainstRookBonus_[2];
@@ -111,7 +99,6 @@ struct EvalCoefficients
   static int multipasserPawn_[8];
   static int passerPawnSc_[8]; // special cases only
   static int semipasserPawn_[8];
-  static int protectedPasser_[8];
   static int farKingPawn_[8];
   static int cangoPawn_[8];
   static int canpromotePawn_[8];

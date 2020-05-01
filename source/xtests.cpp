@@ -127,22 +127,47 @@ void see_perf_test(std::string const& fname)
   });
 }
 
-void evaluateFen(std::string const& ffname)
+void evaluateFen(std::string const& ffname, std::string const& refname)
 {
+  std::vector<int> refEvals;
+  if (!refname.empty()) {
+    std::ifstream rfs{ refname };
+    std::string line;
+    for (;std::getline(rfs, line);) {
+      auto evals = NEngine::split(line, [](char c) { return NEngine::is_any_of(" ,;cp", c); });
+      if (evals.size() != 2)
+        break;
+      refEvals.push_back(std::stoi(evals[1]));
+    }
+  }
+  std::cout << "N: score, refScore, diff, cp" << std::endl;
+  float totalError = 0.0f;
+
+  NShallow::Processor proc;
   testFen<Board, Move, UndoInfo>(
     ffname,
-    [](size_t, xEPD<Board, Move, UndoInfo>& e)
+    [&totalError, &refEvals](size_t i, xEPD<Board, Move, UndoInfo>& e)
   {
-    NShallow::Processor proc;
     NEngine::Evaluator eval;
     eval.initialize(&e.board_);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
-    std::cout << score << std::endl;
+    int diff = -100000;
+    float t = 0.0f;
+    int refScore = -10000;
+    if (i < refEvals.size()) {
+      refScore = refEvals[i];
+      diff = score - refEvals[i];
+      t = static_cast<float>(std::abs(diff)) / 100.f;// (std::abs(refEvals[i]) + std::abs(score)) / 2.0f;
+      totalError += t;
+    }
+    std::cout << i+1 << ": " << score << ", " << refScore << ", " << diff << ", " << std::setprecision(2) << t << std::endl;
   },
-    [](std::string const& err_str)
+  [](std::string const& err_str)
   {
     std::cout << "Error: " << err_str << std::endl;
   });
+  std::cout << "total error: " << totalError << std::endl;
+  std::cout << "average error: " << totalError/refEvals.size() << std::endl;
 }
 
 void generateMoves(std::string const& ffname, std::string const& ofname)

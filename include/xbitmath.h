@@ -192,22 +192,22 @@ public:
     return pmasks_passed_[color][pos];
   }
 
-  inline const BitMask & mask_line_blocked(int color, int pos) const
+  inline const BitMask & mask_forward(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
-    return pmasks_line_blocked_[color][pos];
-  }
-
-  inline const BitMask & mask_backward(int color, int pos) const
-  {
-    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
-    return pmasks_backward_[color][pos];
+    return pmasks_forward_[color][pos];
   }
 
   inline const BitMask & mask_supported(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmasks_supported_[color][pos];
+  }
+
+  inline const BitMask & mask_backward(int color, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
+    return pmasks_backward_[color][pos];
   }
 
   inline const BitMask & mask_isolated(int x) const
@@ -228,28 +228,14 @@ public:
     return pmask_column_[x];
   }
 
-  inline const BitMask & mask_multi_passer(int mask) const
-  {
-    X_ASSERT((unsigned)mask > 255, "invalid pawns row-mask");
-    return pmask_multi_passer_[mask];
-  }
-
-  inline int count_multi_passer(int mask) const
-  {
-    X_ASSERT((unsigned)mask > 255, "invalid pawns row-mask");
-    return pcount_multi_passer_[mask];
-  }
-
 private:
   BitMask pmasks_passed_[2][64] = {};
-  BitMask pmasks_line_blocked_[2][64] = {};
-  BitMask pmasks_backward_[2][64] = {};
+  BitMask pmasks_forward_[2][64] = {};
   BitMask pmasks_supported_[2][64] = {};
+  BitMask pmasks_backward_[2][64] = {};
   BitMask pmask_isolated_[8] = {};
   BitMask pmask_doubled_[8] = {};
-  BitMask pmask_multi_passer_[256] = {};
   BitMask pmask_column_[8] = {};
-  int pcount_multi_passer_[256] = {};
 };
 
 class BitsCounter
