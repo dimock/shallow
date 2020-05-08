@@ -18,6 +18,10 @@ const int Evaluator::colored_y_[2][8] = {
   { 7, 6, 5, 4, 3, 2, 1, 0 },
   { 0, 1, 2, 3, 4, 5, 6, 7 } };
 
+const int Evaluator::promo_y_[] = { 0, 7 };
+const int Evaluator::delta_y_[] = { -1, +1 };
+
+
 const BitMask Evaluator::castle_mask_[2][2] = {
   {
     set_mask_bit(F8) | set_mask_bit(G8) | set_mask_bit(H8) |
@@ -197,19 +201,18 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);
 
-  ///// use lazy evaluation level 0
-  //{
-  //  auto score0 = considerColor(score.common_);
-  //  if(score0 < alpha0_ || score0 > betta0_)
-  //    return score0;
-  //}
-
+  /// use lazy evaluation level 0
+  {
+    auto score0 = considerColor(score.common_);
+    if(score0 < alpha0_ || score0 > betta0_)
+      return score0;
+  }
 
   prepare();
 
   //// take pawns eval from hash if possible
-  auto hashedScore = hashedEvaluation();
-  score += hashedScore.score;
+  //auto hashedScore = hashedEvaluation();
+  //score += hashedScore.score;
 
 #if 0
 
@@ -396,15 +399,34 @@ bool Evaluator::couldBeGuarded(Index const& idx, Figure::Color color, Figure::Co
   if ((finfo_[color].pawnAttacks_ & set_mask_bit(idx)) != 0ULL)
     return true;
   // could move fwd to guarded field
-  if (((opmsk & fwd_field) == 0ULL) && ((finfo_[color].pawnAttacks_ & fwd_field) != 0ULL)) {
-    // not attacked
-    if ((finfo_[ocolor].pawnAttacks_ & fwd_field) == 0ULL)
-      return true;
-    // guarded by 2 and attacked by 1
-    auto attackers = movesTable().pawnCaps(color, n1) & opmsk;
-    auto guardians = movesTable().pawnCaps(ocolor, n1) & pmask;
-    if (pop_count(attackers) < pop_count(guardians))
-      return true;
+  if ((opmsk & fwd_field) == 0ULL) {
+    // protected
+    if ((finfo_[color].pawnAttacks_ & fwd_field) != 0ULL) {
+      // not attacked
+      if ((finfo_[ocolor].pawnAttacks_ & fwd_field) == 0ULL)
+        return true;
+      // protected by 2 and attacked by 1
+      auto attackers = movesTable().pawnCaps(color, n1) & opmsk;
+      auto guardians = movesTable().pawnCaps(ocolor, n1) & pmask;
+      if (pop_count(attackers) <= pop_count(guardians))
+        return true;
+    }
+    // on 1st line. could it move 2 lines forward?
+    if (colored_y_[color][idx.y()] == 1) {
+      int n2 = static_cast<int>(Index(idx.x(), idx.y() + (delta_y_[color] << 1)));
+      BitMask fwd_field2 = set_mask_bit(n2);
+      // not occupied and protected
+      if (((opmsk & fwd_field2) == 0ULL) && ((finfo_[color].pawnAttacks_ & fwd_field2) != 0ULL)) {
+        // not attacked
+        if ((finfo_[ocolor].pawnAttacks_ & fwd_field2) == 0ULL)
+          return true;
+        // protected by 2 and attacked by 1
+        auto attackers = movesTable().pawnCaps(color, n2) & opmsk;
+        auto guardians = movesTable().pawnCaps(ocolor, n2) & pmask;
+        if (pop_count(attackers) <= pop_count(guardians))
+          return true;
+      }
+    }
   }
   BitMask blockers_mask = (finfo_[ocolor].pawnAttacks_ & (~finfo_[color].pawnAttacks_)) | opmsk;
   BitMask left  = (idx.x() != 0) ? (pawnMasks().mask_forward(ocolor, idx - 1) & pmask) : 0ULL;
@@ -463,9 +485,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
   PasserInfo info;
 
-  static int promo_y[] = { 0, 7 };
-  static int delta_y[] = { -1, +1 };
-
   Figure::Color ocolor = Figure::otherColor(color);
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
@@ -473,7 +492,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
   uint8 x_visited{ 0 };
   uint8 x_passers{ 0 };
-  int dy = delta_y[color];
+  int dy = delta_y_[color];
 
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
@@ -483,7 +502,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
     int x  = idx.x();
     int cy = colored_y_[color][idx.y()];
-    int py = promo_y[color];
+    int py = promo_y_[color];
     auto n1 = n + (dy << 3);
     auto pw_field = set_mask_bit(n);
     auto fwd_field = set_mask_bit(n1);
@@ -501,22 +520,30 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       auto const& dblmsk = pawnMasks().mask_doubled(x);
       auto num_dbl = pop_count(pmask & dblmsk);
       X_ASSERT(num_dbl <= 0, "doubled pawns number is zero or negative");
-      info.score.common_ += (num_dbl - 1) * EvalCoefficients::doubledPawn_;
+      info.score.opening_ += (num_dbl - 1) * EvalCoefficients::doubledPawn_[0];
+      info.score.endGame_ += (num_dbl - 1) * EvalCoefficients::doubledPawn_[1];
     }
 
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
+    //bool unsupported = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
 
-    info.score.common_ += isolated * EvalCoefficients::isolatedPawn_;
-    info.score.common_ += backward * EvalCoefficients::backwardPawn_;
+    info.score.opening_ += isolated * EvalCoefficients::isolatedPawn_[0];
+    info.score.opening_ += backward * EvalCoefficients::backwardPawn_[0];
+    //info.score.opening_ += unsupported * EvalCoefficients::unsupportedPawn_[0];
 
-    // could be attacked by RQ
-    if (((pawnMasks().mask_forward(color, n) & pawns_all) == 0ULL) &&
-         (isolated || backward || !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1)))
-    {
-      info.score.opening_ += EvalCoefficients::weakHalfopenPawn_;
-    }
+    info.score.endGame_ += isolated * EvalCoefficients::isolatedPawn_[1];
+    info.score.endGame_ += backward * EvalCoefficients::backwardPawn_[1];
+    //info.score.endGame_ += unsupported * EvalCoefficients::unsupportedPawn_[1];
+
+    //// could be attacked by RQ
+    //if (((pawnMasks().mask_forward(color, n) & pawns_all) == 0ULL) &&
+    //     (isolated || backward/* || unsupported*/))
+    //{
+    //  info.score.opening_ += EvalCoefficients::weakHalfopenPawn_[0];
+    //  info.score.endGame_ += EvalCoefficients::weakHalfopenPawn_[1];
+    //}
 
     // passer pawn
     {
@@ -528,12 +555,25 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       // half-passer
       else if((pawnMasks().mask_forward(color, n) & opmsk) == 0ULL)
       {
-        bool left = (x != 0) && ((pawnMasks().mask_forward(color, Index(x-1, idx.y())) & opmsk)== 0ULL);
-        bool right = (x != 7) && ((pawnMasks().mask_forward(color, Index(x+1, idx.y())) & opmsk) == 0ULL);
-        X_ASSERT(((left && right) || (x == 0 && right) || (x == 7 && left)), "half-passed pawn was not detected");
-        auto const& semipasserCoeff = EvalCoefficients::semipasserPawn_[cy];
-        auto scoreSemipasser = (semipasserCoeff + (left || right) * semipasserCoeff) >> 1;
-        info.score.common_ += scoreSemipasser;
+        BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
+        BitMask attackers = pawnMasks().mask_passed(color, n) & opmsk;
+        auto scoreSemipasser = EvalCoefficients::passerPawn_[cy] >> 1;
+        auto nguards = 0;
+        for (; guards;) {
+          int g = clear_lsb(guards);
+          auto fwd = pawnMasks().mask_forward(color, g);
+          if (fwd & opmsk) {
+            int o = color ? _lsb64(fwd & opmsk) : _msb64(fwd & opmsk);
+            fwd = betweenMasks().between(g, o);
+          }
+          if((fwd & finfo_[ocolor].pawnAttacks_) == 0)
+            nguards++;
+        }
+        auto nattackers = pop_count(attackers);
+        if (nguards >= nattackers)
+          scoreSemipasser += EvalCoefficients::passerPawn_[cy];
+        scoreSemipasser >>= 1;
+        //info.score.common_ += scoreSemipasser;
       }
     }
   }
@@ -558,15 +598,15 @@ Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi)
   auto infoW = passerEvaluation(Figure::ColorWhite, pi);
   auto infoB = passerEvaluation(Figure::ColorBlack, pi);
 
-  if ((infoW.most_unstoppable_y > infoB.most_unstoppable_y) && (board_->fmgr().allFigures(Figure::ColorBlack) == 0))
-    infoW.score.endGame_ += 2 * EvalCoefficients::closeToPromotion_[infoW.most_unstoppable_y - infoB.most_unstoppable_y];
-  else if ((infoB.most_unstoppable_y > infoW.most_unstoppable_y) && (board_->fmgr().allFigures(Figure::ColorWhite) == 0))
-    infoB.score.endGame_ += 2 * EvalCoefficients::closeToPromotion_[infoB.most_unstoppable_y - infoW.most_unstoppable_y];
+  //if ((infoW.most_unstoppable_y > infoB.most_unstoppable_y) && (board_->fmgr().allFigures(Figure::ColorBlack) == 0))
+  //  infoW.score.endGame_ += 2 * EvalCoefficients::closeToPromotion_[infoW.most_unstoppable_y - infoB.most_unstoppable_y];
+  //else if ((infoB.most_unstoppable_y > infoW.most_unstoppable_y) && (board_->fmgr().allFigures(Figure::ColorWhite) == 0))
+  //  infoB.score.endGame_ += 2 * EvalCoefficients::closeToPromotion_[infoB.most_unstoppable_y - infoW.most_unstoppable_y];
 
-  if (infoW.most_passer_y > infoB.most_passer_y)
-    infoW.score.endGame_ += EvalCoefficients::closeToPromotion_[infoW.most_passer_y - infoB.most_passer_y];
-  else if (infoB.most_passer_y > infoW.most_passer_y)
-    infoB.score.endGame_ += EvalCoefficients::closeToPromotion_[infoB.most_passer_y - infoW.most_passer_y];
+  //if (infoW.most_passer_y > infoB.most_passer_y)
+  //  infoW.score.endGame_ += EvalCoefficients::closeToPromotion_[infoW.most_passer_y - infoB.most_passer_y];
+  //else if (infoB.most_passer_y > infoW.most_passer_y)
+  //  infoB.score.endGame_ += EvalCoefficients::closeToPromotion_[infoB.most_passer_y - infoW.most_passer_y];
 
   infoW.score -= infoB.score;
   return infoW.score;
@@ -578,12 +618,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   const BitMask & pmask = fmgr.pawn_mask(color);
   if(!pmask || (pi.passers_observed_[color] && !pi.passers_[color]))
     return{};
-
-  static int delta_y[] = { -1, 1 };
-  static int promo_y[] = {  0, 7 };
     
-  int py = promo_y[color];
-  int dy = delta_y[color];
+  int py = promo_y_[color];
+  int dy = delta_y_[color];
   
   nst::dirs dir_behind[] = {nst::no, nst::so};
 
@@ -618,6 +655,21 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       if (pawn_dist_promo < o_dist_promo)
         info.score.endGame_ += EvalCoefficients::farKingPawn_[cy] >> 1;
       info.score.endGame_ += (7 - dist_promo) * 3;
+    }
+
+    {
+      BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
+      if (guards) {
+        info.score.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+      }
+      while (guards != 0ULL) {
+        int g = clear_lsb(guards);
+        auto fwd_mask = pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_);
+        if (!fwd_mask) {
+          info.score.common_ += EvalCoefficients::passerPawn_[cy] >> 1;
+          break;
+        }
+      }
     }
 
     if (cy > info.most_passer_y)
@@ -667,13 +719,12 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       int steps_to_promotion = 7 - cy;
       X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
       info.score.common_ += (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
-    }
-    
+    }    
 
-    // opponent king could not go to my pawns promotion field
+    // opponent king could not go to my pawns promotion path
     int promo_pos = x | (py<<3);
     int pawn_dist_promo = std::abs(py - y);
-    if(!findRootToPawn(color, promo_pos, pawn_dist_promo+1))
+    if(!couldIntercept(color, n, promo_pos, pawn_dist_promo+1))
     {
       info.score.endGame_ += EvalCoefficients::farKingPawn_[cy];
       if (cy > info.most_unstoppable_y)

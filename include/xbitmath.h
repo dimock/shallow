@@ -204,6 +204,12 @@ public:
     return pmasks_supported_[color][pos];
   }
 
+  inline const BitMask & mask_guards(int color, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
+    return pmasks_guards_[color][pos];
+  }
+
   inline const BitMask & mask_backward(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
@@ -232,6 +238,7 @@ private:
   BitMask pmasks_passed_[2][64] = {};
   BitMask pmasks_forward_[2][64] = {};
   BitMask pmasks_supported_[2][64] = {};
+  BitMask pmasks_guards_[2][64] = {};
   BitMask pmasks_backward_[2][64] = {};
   BitMask pmask_isolated_[8] = {};
   BitMask pmask_doubled_[8] = {};
@@ -360,10 +367,11 @@ public:
 };
 
 struct Board;
-bool findRootToPawn(Board const& board,
+bool couldIntercept(Board const& board,
                     BitMask const& inv_mask_all,
                     BitMask const& attack_mask_c,
                     int8 color,
+                    int pawn_pos,
                     int promo_pos,
                     int stepsLimit);
 } // NEngine

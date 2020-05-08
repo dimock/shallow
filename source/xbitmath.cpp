@@ -138,9 +138,12 @@ PawnMasks::PawnMasks()
       pmasks_passed_[color][i] = forward_msk << x;
 
       BitMask support_mask = set_mask_bit(Index(0, y));
+      BitMask guard_mask = set_mask_bit(Index(0, y));
       if(y > 0 && y < 7)
       {
         support_mask |= set_mask_bit(Index(0, y-deltay));
+        guard_mask |= set_mask_bit(Index(0, y-deltay));
+        guard_mask |= set_mask_bit(Index(0, y+deltay));
       }
 
       if(x > 0)
@@ -148,6 +151,7 @@ PawnMasks::PawnMasks()
         pmask_isolated_[x] |= full_column_msk << (x-1);
         pmasks_passed_[color][i] |= forward_msk << (x-1);
         pmasks_supported_[color][i] |= support_mask << (x-1);
+        pmasks_guards_[color][i] |= guard_mask << (x-1);
         pmasks_backward_[color][i] |= backward_msk << (x-1);
       }
       if(x < 7)
@@ -155,6 +159,7 @@ PawnMasks::PawnMasks()
         pmask_isolated_[x] |= full_column_msk << (x+1);
         pmasks_passed_[color][i] |= forward_msk << (x+1);
         pmasks_supported_[color][i] |= support_mask << (x+1);
+        pmasks_guards_[color][i] |= guard_mask << (x+1);
         pmasks_backward_[color][i] |= backward_msk << (x+1);
       }
     }
@@ -275,10 +280,11 @@ void print_bitmask(uint64 mask)
 
 // idea from CCRL
 // "color" belongs to pawn
-bool findRootToPawn(Board const& board,
+bool couldIntercept(Board const& board,
                     BitMask const& inv_mask_all,
                     BitMask const& attack_mask_c,
                     int8 color,
+                    int pawn_pos,
                     int promo_pos,
                     int stepsLimit)
 {
@@ -291,14 +297,14 @@ bool findRootToPawn(Board const& board,
     return true;
   }
 
-  BitMask to_mask = set_mask_bit(promo_pos);
+  BitMask target = (set_mask_bit(promo_pos) | betweenMasks().between(pawn_pos, promo_pos)) & ~attack_mask_c;
 
-  // promotion field is attacked
-  if(attack_mask_c & to_mask)
+  // whole pawn track to promotion field is attacked
+  if(target == 0ULL)
     return false;
 
   BitMask from_mask = set_mask_bit(oki_pos);
-  BitMask path_mask = (inv_mask_all & ~attack_mask_c) | from_mask | to_mask;
+  BitMask path_mask = (inv_mask_all & ~attack_mask_c) | from_mask | target;
 
   const BitMask cut_le = ~0x0101010101010101;
   const BitMask cut_ri = ~0x8080808080808080;
@@ -311,8 +317,12 @@ bool findRootToPawn(Board const& board,
     BitMask mask_ri = ((from_mask >> 1) | (from_mask >> 9) | (from_mask << 7) | (from_mask >> 8)) & cut_ri;
     BitMask next_mask = from_mask | ((mask_le | mask_ri) & path_mask);
 
-    if(next_mask & to_mask)
-      return true;
+    if (next_mask & target) {
+      int p = color ? _msb64(next_mask & target) : _lsb64(next_mask & target);
+      if (distanceCounter().getDistance(p, pawn_pos) >= i)
+        return true;
+      break;
+    }
 
     if(next_mask == from_mask)
       break;

@@ -139,6 +139,8 @@ public:
 #endif // PROCESS_DANGEROUS_EVAL
 
   static const int colored_y_[2][8];
+  static const int promo_y_[2];
+  static const int delta_y_[2];
 
 private:
 
@@ -207,11 +209,13 @@ private:
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&);
   FullScore passerEvaluation(PasserInfo const&);
 
-  // search path from opponent king to pawn's promotion of given color
+  // search path from opponent king to pawn's promotion path of given color
   // idea from CCRL
-  inline bool findRootToPawn(Figure::Color color, int promo_pos, int stepsMax) const
+  inline bool couldIntercept(Figure::Color color, int pawn_pos, int promo_pos, int stepsMax) const
   {
-    return NEngine::findRootToPawn(*board_, inv_mask_all_, finfo_[color].attack_mask_, color, promo_pos, stepsMax);
+    auto ocolor = Figure::otherColor(color);
+    BitMask inv_mask_all = ~(board_->fmgr().pawn_mask(ocolor) | board_->fmgr().king_mask(ocolor) | board_->fmgr().king_mask(color));
+    return NEngine::couldIntercept(*board_, inv_mask_all, finfo_[color].attack_mask_, color, pawn_pos, promo_pos, stepsMax);
   }
 
   FullScore evaluateMaterialDiff() const;
