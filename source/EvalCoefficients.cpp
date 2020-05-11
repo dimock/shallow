@@ -74,7 +74,7 @@ namespace NEngine
   int EvalCoefficients::isolatedPawn_[2] = { -12, -12 };
   int EvalCoefficients::backwardPawn_[2] = { -10, -10 };
   int EvalCoefficients::unsupportedPawn_[2] = { -8, -4 };
-  int EvalCoefficients::weakHalfopenPawn_[2] = { -8, 0 };
+  int EvalCoefficients::weakHalfopenPawn_[2] = { -6, 0 };
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
@@ -96,10 +96,10 @@ namespace NEngine
   int EvalCoefficients::rookAgainstPawnBonus_[2] = { 0, 30 };
 
   // arrays
-  int EvalCoefficients::passerPawn_[8] = { 0, 7, 10, 16, 32, 55, 85, 0 };
+  int EvalCoefficients::passerPawn_[8] = { 0, 7, 10, 20, 37, 60, 90, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 3, 5, 8, 12, 17, 35, 0 };
-  int EvalCoefficients::canpromotePawn_[8] = { 0, 5, 8, 17, 35, 50, 70, 0 };
+  int EvalCoefficients::canpromotePawn_[8] = { 0, 5, 8, 15, 28, 47, 70, 0 };
   int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 6, 8, 10, 12, 16 };
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 

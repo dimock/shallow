@@ -210,9 +210,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   prepare();
 
-  //// take pawns eval from hash if possible
-  //auto hashedScore = hashedEvaluation();
-  //score += hashedScore.score;
+  // take pawns eval from hash if possible
+  auto hashedScore = hashedEvaluation();
+  score += hashedScore.score;
 
 #if 0
 
@@ -263,8 +263,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score += scorePP;
 #endif // 0
 
-  //auto scorePassers = passerEvaluation(hashedScore);
-  //score += scorePassers;
+  auto scorePassers = passerEvaluation(hashedScore);
+  score += scorePassers;
 
 
 #ifdef PROCESS_DANGEROUS_EVAL
@@ -539,7 +539,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
     //// could be attacked by RQ
     //if (((pawnMasks().mask_forward(color, n) & pawns_all) == 0ULL) &&
-    //     (isolated || backward/* || unsupported*/))
+    //     (isolated || backward || unsupported))
     //{
     //  info.score.opening_ += EvalCoefficients::weakHalfopenPawn_[0];
     //  info.score.endGame_ += EvalCoefficients::weakHalfopenPawn_[1];
@@ -573,7 +573,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         if (nguards >= nattackers)
           scoreSemipasser += EvalCoefficients::passerPawn_[cy];
         scoreSemipasser >>= 1;
-        //info.score.common_ += scoreSemipasser;
+        info.score.common_ += scoreSemipasser;
       }
     }
   }
