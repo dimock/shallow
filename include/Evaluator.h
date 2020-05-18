@@ -243,12 +243,9 @@ private:
   // sum of weights of all figures
   const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
-                                + 3*Figure::figureWeight_[Figure::TypeKnight]
-                                + 5*Figure::figureWeight_[Figure::TypePawn]);
+                                + 4*Figure::figureWeight_[Figure::TypeKnight]);
 
-  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeRook]
-                                + Figure::figureWeight_[Figure::TypeKnight]
-                                + 2*Figure::figureWeight_[Figure::TypePawn]);
+  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeKnight]);
 
   const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 

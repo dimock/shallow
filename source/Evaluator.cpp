@@ -215,7 +215,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score += hashedScore.score;
 
 #if 0
-
   // penalty for lost or fake castle
 #ifdef EVAL_CASTLE
   score.opening_ += evaluateCastle();
@@ -224,8 +223,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
   score.opening_ = kingSafety;
 
-  score += evaluateKnights();
-
 #ifdef EVAL_FORKS
   auto scoreForks = evaluateForks(Figure::ColorWhite);
   scoreForks -= evaluateForks(Figure::ColorBlack);
@@ -233,7 +230,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 #endif
 #endif // 0
 
-#if 0
+#if 1
+  score += evaluateKnights();
   score += evaluateBishops();
 
   score += evaluateRook(Figure::ColorWhite);
@@ -254,7 +252,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 #if (defined EVAL_MOB || defined EVAL_KING_PR)
   auto scoreKing = evaluateMobilityAndKingPressure(Figure::ColorWhite);
   scoreKing -= evaluateMobilityAndKingPressure(Figure::ColorBlack);
-  //score.common_ += scoreKing.common_;
+  score.common_ += scoreKing.common_;
 #endif
 
 #if 0
@@ -286,7 +284,7 @@ Evaluator::PhaseInfo Evaluator::detectPhase() const
 {
   const FiguresManager & fmgr = board_->fmgr();
 
-  auto wei = fmgr.weight(Figure::ColorBlack) + fmgr.weight(Figure::ColorWhite);
+  auto wei = fmgr.figuresWeight(Figure::ColorBlack) + fmgr.figuresWeight(Figure::ColorWhite);
 
   PhaseInfo phaseInfo;
   phaseInfo.phase_ = MiddleGame;
@@ -652,9 +650,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       int pawn_dist_promo = std::abs(py - idx.y());
       int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
       int dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
-      if (pawn_dist_promo < o_dist_promo)
-        info.score.endGame_ += EvalCoefficients::farKingPawn_[cy] >> 1;
-      info.score.endGame_ += (7 - dist_promo) * 3;
+      //if (pawn_dist_promo >= o_dist_promo)
+      //  info.score.endGame_ -= EvalCoefficients::farKingPawn_[cy] >> 1;
+      info.score.endGame_ += (o_dist_promo - dist_promo) * 3;
     }
 
     {
@@ -666,7 +664,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         int g = clear_lsb(guards);
         auto fwd_mask = pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_);
         if (!fwd_mask) {
-          info.score.common_ += EvalCoefficients::passerPawn_[cy] >> 1;
+          info.score.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
           break;
         }
       }
@@ -724,9 +722,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     // opponent king could not go to my pawns promotion path
     int promo_pos = x | (py<<3);
     int pawn_dist_promo = std::abs(py - y);
-    if(!couldIntercept(color, n, promo_pos, pawn_dist_promo+1))
+    if(couldIntercept(color, n, promo_pos, pawn_dist_promo+1))
     {
-      info.score.endGame_ += EvalCoefficients::farKingPawn_[cy];
+      info.score.endGame_ -= EvalCoefficients::farKingPawn_[cy];
       if (cy > info.most_unstoppable_y)
         info.most_unstoppable_y = cy;
     }

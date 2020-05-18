@@ -236,17 +236,17 @@ Evaluator::FullScore Evaluator::evaluateKnights()
       finfo_[color].attack_mask_ |= knight_moves;
       finfo_[color].knightAttacks_ |= knight_moves;
 
-      // king pressure
+      // king protection
 #ifdef EVAL_KP_BASIC
-      auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-      score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][oki_dist];
+      //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
+      //score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][oki_dist];
 
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
 #endif
     }
   }
-  return score[1] - score[0];
+  return score[Figure::ColorWhite] - score[Figure::ColorBlack];
 }
 
 Evaluator::FullScore Evaluator::evaluateBishops()
@@ -268,17 +268,17 @@ Evaluator::FullScore Evaluator::evaluateBishops()
       finfo_[color].bishopAttacks_ |= bishop_moves;
       finfo_[color].bishopDirectAttacks_ |= magic_ns::bishop_moves(n, mask_all_);
 
-      // king pressure
+      // king protection
 #ifdef EVAL_KP_BASIC
-      auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-      score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][oki_dist];
+      //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
+      //score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][oki_dist];
 
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][ki_dist];
 #endif
     }
   }
-  return score[1] - score[0];
+  return score[Figure::ColorWhite] - score[Figure::ColorBlack];
 }
 
 Evaluator::FullScore Evaluator::evaluateRook(Figure::Color color)
@@ -307,10 +307,10 @@ Evaluator::FullScore Evaluator::evaluateRook(Figure::Color color)
     score.endGame_ += EvalCoefficients::openRook_[(no_pw_color + no_pw_ocolor) & 3] >> 2;
 #endif
     
-    // king pressure
+    // king protection
 #ifdef EVAL_KP_BASIC
-    auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][oki_dist];
+    //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
+    //score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][oki_dist];
 
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
     score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
@@ -337,10 +337,10 @@ Evaluator::FullScore Evaluator::evaluateQueens(Figure::Color color)
     finfo_[color].queenAttacks_ |= queen_moves;
     finfo_[color].queenDirectAttacks_ |= magic_ns::queen_moves(n, mask_all_);
 
-    // king pressure
+    // king protection
 #ifdef EVAL_KP_BASIC
-    auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][oki_dist];
+    //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
+    //score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][oki_dist];
 
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
     score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];

@@ -19,7 +19,7 @@ namespace Figure
   extern const BitMask pawnCutoffMasks_[2];
   
   // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
-  constexpr ScoreType figureWeight_[7] = { 0, 85, 330, 330, 510, 1020, 0 };
+  constexpr ScoreType figureWeight_[7] = { 0, 90, 350, 350, 540, 1080, 0 };
 
   extern const uint8     mirrorIndex_[64];
   // color, castle (K = 0, Q = 1)
@@ -57,6 +57,7 @@ public:
   {
     //count_ = 0;
     weight_ = 0;
+    figuresWeight_ = 0;
     mask_all_ = 0ULL;
     for (int i = 0; i < 8; ++i)
     {
@@ -72,6 +73,8 @@ public:
     tcount_[t]++;
     //count_++;
     weight_ += Figure::figureWeight_[t];
+    if (t != Figure::TypePawn)
+      figuresWeight_ += Figure::figureWeight_[t];
 
     auto mask_set = set_mask_bit(p);
     tmask_[t] |= mask_set;
@@ -80,6 +83,9 @@ public:
     X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::Type::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop]
              + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
              + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
+    X_ASSERT(figuresWeight_ != bishops()*Figure::figureWeight_[Figure::TypeBishop]
+      + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
+      + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid figures weight");
   }
 
   inline void decr(const Figure::Color c, const Figure::Type t, int p)
@@ -89,6 +95,8 @@ public:
     tcount_[t]--;
     //count_--;
     weight_ -= Figure::figureWeight_[t];
+    if(t != Figure::TypePawn)
+      figuresWeight_ -= Figure::figureWeight_[t];
 
     auto mask_clear = set_mask_bit(p);
     tmask_[t] ^= mask_clear;
@@ -98,6 +106,9 @@ public:
     X_ASSERT(weight_ != pawns()*Figure::figureWeight_[Figure::TypePawn] + bishops()*Figure::figureWeight_[Figure::TypeBishop]
              + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
              + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid weight" );
+    X_ASSERT(figuresWeight_ != bishops()*Figure::figureWeight_[Figure::TypeBishop]
+      + knights()*Figure::figureWeight_[Figure::TypeKnight] + rooks()*Figure::figureWeight_[Figure::TypeRook]
+      + queens()*Figure::figureWeight_[Figure::TypeQueen], "invalid figures weight");
   }
 
   inline void move(const Figure::Color c, const Figure::Type t, int from, int to)
@@ -119,6 +130,7 @@ public:
   inline int queens() const { return tcount_[Figure::TypeQueen]; }
   inline int allFigures() const { return knights() + bishops() + rooks() + queens(); }
   inline ScoreType weight() const { return weight_; }
+  inline ScoreType figuresWeight() const { return figuresWeight_; }
   inline const BitMask & pawn_mask() const { return tmask_[Figure::TypePawn]; }
   inline const BitMask & knight_mask() const { return tmask_[Figure::TypeKnight]; }
   inline const BitMask & bishop_mask() const { return tmask_[Figure::TypeBishop]; }
@@ -137,6 +149,7 @@ private:
   BitMask   mask_all_;
   uint8     tcount_[8];
   ScoreType weight_;
+  ScoreType figuresWeight_;
 };
 
 class FiguresManager
@@ -251,6 +264,7 @@ public:
   inline int queens(Figure::Color color) const { return fcounter_[color].queens(); }
   inline int allFigures(Figure::Color color) const { return fcounter_[color].allFigures(); }
   inline ScoreType weight(Figure::Color color) const { return fcounter_[color].weight(); }
+  inline ScoreType figuresWeight(Figure::Color color) const { return fcounter_[color].figuresWeight(); }
   inline ScoreType weight() const { return weight(Figure::ColorWhite) - weight(Figure::ColorBlack); }
   inline const BitMask & pawn_mask(Figure::Color color) const { return fcounter_[color].pawn_mask(); }
   inline const BitMask & knight_mask(Figure::Color color) const { return fcounter_[color].knight_mask(); }

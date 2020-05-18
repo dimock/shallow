@@ -57,21 +57,26 @@ namespace
     return score;
   }
 
-  ScoreType kpkPassed(Board const& board, Figure::Color pawnColor)
+  bool kpkPassed(Board const& board, Figure::Color pawnColor, int pawnPos)
   {
     auto loserColor = Figure::otherColor(pawnColor);
     auto moveColor = board.color();
-    int p = _lsb64(board.fmgr().pawn_mask(pawnColor));
     int kw = board.kingPos(pawnColor);
     int kl = board.kingPos(loserColor);
-    if(pawnColor == Figure::ColorBlack)
+    if (pawnColor == Figure::ColorBlack)
     {
-      p = Figure::mirrorIndex_[p];
+      pawnPos = Figure::mirrorIndex_[pawnPos];
       kw = Figure::mirrorIndex_[kw];
       kl = Figure::mirrorIndex_[kl];
       moveColor = Figure::otherColor(moveColor);
     }
-    return (kpk_[kw][kl][moveColor] & (1ULL<<p)) != 0ULL;
+    return (kpk_[kw][kl][moveColor] & (1ULL << pawnPos)) != 0ULL;
+  }
+
+  bool kpkPassed(Board const& board, Figure::Color pawnColor)
+  {
+    int p = _lsb64(board.fmgr().pawn_mask(pawnColor));
+    return kpkPassed(board, pawnColor, p);
   }
 
   //SBoard<8> sboard;
@@ -95,15 +100,59 @@ namespace
       score = -score;
     return score;
   }
+  
+  bool couldIntercept(Board const& board, Figure::Color pawnColor, Index pawnPos)
+  {
+    auto const& fmgr = board.fmgr();
+    int promo_pos = pawnPos.x() | (pawnColor*56);
+    int stepsMax = std::abs(pawnColor*7 - pawnPos.y());
+    auto ocolor = Figure::otherColor(pawnColor);
+    BitMask mask_all = fmgr.king_mask(ocolor) | fmgr.king_mask(pawnColor);
+    BitMask inv_mask_all = ~mask_all;
+    BitMask attack_mask = movesTable().caps(Figure::TypeKing, board.kingPos(pawnColor));
+    auto rmask = fmgr.rook_mask(pawnColor);
+    while (rmask) {
+      int n = clear_lsb(rmask);
+      auto rook_moves = magic_ns::rook_moves(n, mask_all | fmgr.pawn_mask(pawnColor));
+      attack_mask |= rook_moves;
+    }
+    auto qmask = fmgr.queen_mask(pawnColor);
+    while (qmask) {
+      int n = clear_lsb(qmask);
+      auto queen_moves = magic_ns::queen_moves(n, mask_all | fmgr.pawn_mask(pawnColor));
+      attack_mask |= queen_moves;
+    }
+    return NEngine::couldIntercept(board, inv_mask_all, attack_mask, pawnColor, pawnPos, promo_pos, stepsMax);
+  }
 
   ScoreType pawnAndHeavy(Board const& board, Figure::Color pawnColor)
   {
-    ScoreType score{ +20 };
-    if(kpkPassed(board, pawnColor))
-    {
-      Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
-      auto xpawnColor = (pawnColor == Figure::ColorWhite) ? pawnColor : Figure::otherColor(pawnColor);
-      score = 50 + pawn_colored_y_[xpawnColor][index.y()] * 8;
+    ScoreType score{ 0 };
+    if (board.fmgr().rooks(pawnColor))
+      score += Figure::figureWeight_[Figure::TypePawn];
+    else if (board.fmgr().queens(pawnColor))
+      score += (Figure::figureWeight_[Figure::TypePawn]*3)/2;
+    auto ocolor = Figure::otherColor(pawnColor);
+    Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
+    Index kingP(board.kingPos(pawnColor));
+    Index kingO(board.kingPos(ocolor));
+    int pcy = pawn_colored_y_[pawnColor][index.y()];
+    score += EvalCoefficients::passerPawn_[pcy];
+    int pp = index.x() | (pawnColor * 56);
+    int o_dist_promo = distanceCounter().getDistance(kingO, pp) - (board.color() == ocolor);
+    int dist_promo = distanceCounter().getDistance(kingP, pp);
+    score += (o_dist_promo - dist_promo) * 3;
+    if (std::abs(kingO.x() - index.x()) < 2 && pawn_colored_y_[pawnColor][kingO.y()] >= pcy) {
+      score /= 4;
+    }
+    else if (couldIntercept(board, pawnColor, index)) {
+      score = (score * 3) / 4;
+    }
+    else {
+      score += EvalCoefficients::passerPawn_[pcy] / 2;
+    }
+    if (index.x() == 0 || index.x() == 7) {
+      score = (score * 3) / 4;
     }
     if(pawnColor == Figure::ColorBlack)
       score = -score;
@@ -292,6 +341,8 @@ void SpecialCasesDetector::initMatCases()
   {
     return bishop_and_pawn(board, Figure::ColorBlack);
   };
+
+  // only 1 pawn
   matCases_[format({ { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [](Board const& board)
   {
     return pawnOnly(board, Figure::ColorBlack);
@@ -890,6 +941,68 @@ inline SpecialCasesDetector::Scase toScpecialCase(FiguresManager const& fmgr)
   return sc;
 }
 
+std::pair<bool, ScoreType> SpecialCasesDetector::evalBishopAndPawns(Board const& board) const
+{
+  auto const& fmgr = board.fmgr();
+  for (Figure::Color winColor : {Figure::ColorBlack, Figure::ColorWhite})
+  {
+    auto losColor = Figure::otherColor(winColor);
+    if (fmgr.bishops(winColor) == 1 && fmgr.allFigures(losColor) == 0 && fmgr.allFigures(winColor) == 1 && fmgr.pawns(winColor) > 0)
+    {
+      auto pw_mask = fmgr.pawn_mask(winColor);
+      if (((pw_mask & pawnMasks().mask_column(0)) != pw_mask) &&
+          ((pw_mask & pawnMasks().mask_column(7)) != pw_mask))
+      {
+        return { false, ScoreType{} };
+      }
+      ScoreType losScore = 0;
+      auto b = _lsb64(fmgr.bishop_mask(winColor));
+      auto opw_mask = fmgr.pawn_mask(losColor);
+      while (opw_mask)
+      {
+        int n = clear_lsb(opw_mask);
+        Index op{n};
+        int cy = pawn_colored_y_[losColor][op.y()];
+        if (cy > 4)
+          losScore += 5*cy;
+      }
+      Index p(_lsb64(pw_mask));
+      Index pp(p.x(), winColor * 7);
+      if (FiguresCounter::s_whiteColors_[b] != FiguresCounter::s_whiteColors_[pp])
+      {
+        int kw = board.kingPos(winColor);
+        int kl = board.kingPos(losColor);
+        int pr_dist = distanceCounter().getDistance(p, pp);
+        int l_pr_dist = distanceCounter().getDistance(kl, pp);
+        int w_pr_dist = distanceCounter().getDistance(kw, pp);
+        if ((pr_dist > l_pr_dist && l_pr_dist <= w_pr_dist) || (l_pr_dist < 2 && pr_dist > 0))
+        {
+          ScoreType score = winColor == Figure::ColorBlack ? -20 + losScore : +20 - losScore;
+          return { true, score };
+        }
+      }
+      return { false, ScoreType{} };
+    }
+    else if(fmgr.allFigures(losColor) == 0 && fmgr.allFigures(winColor) == 0 && fmgr.pawns(winColor) > 0 && fmgr.pawns(losColor) == 0)
+    {
+      auto pw_mask = fmgr.pawn_mask(winColor);
+      if (((pw_mask & pawnMasks().mask_column(0)) != pw_mask) &&
+        ((pw_mask & pawnMasks().mask_column(7)) != pw_mask))
+      {
+        return { false, ScoreType{} };
+      }
+      int ppos = winColor == Figure::ColorWhite ? _msb64(pw_mask) : _lsb64(pw_mask);
+      if(!kpkPassed(board, winColor, ppos))
+      {
+        ScoreType score = winColor == Figure::ColorBlack ? -20 : +20;
+        return { true, score };
+      }
+      return { false, ScoreType{} };
+    }
+  }
+  return { false, ScoreType{} };
+}
+
 std::pair<bool, ScoreType> SpecialCasesDetector::eval(Board const& board) const
 {
   auto const& fmgr = board.fmgr();
@@ -900,10 +1013,9 @@ std::pair<bool, ScoreType> SpecialCasesDetector::eval(Board const& board) const
     if(iter != matCases_.end())
       return { true, (iter->second)(board) };
     X_ASSERT(scases_.find(sc) != scases_.end() || winnerLoser_.find(sc) != winnerLoser_.end(), "special case was not detected");
-    return {false, 0};
+    return evalBishopAndPawns(board);
   }
-  if(fmgr.queens(Figure::ColorBlack) + fmgr.rooks(Figure::ColorBlack)+fmgr.bishops(Figure::ColorBlack)+fmgr.knights(Figure::ColorBlack) > 2 ||
-     fmgr.queens(Figure::ColorWhite) + fmgr.rooks(Figure::ColorWhite)+fmgr.bishops(Figure::ColorWhite)+fmgr.knights(Figure::ColorWhite) > 2)
+  if(fmgr.allFigures(Figure::ColorBlack) > 2 || fmgr.allFigures(Figure::ColorWhite) > 2)
   {
     return {false, 0};
   }
@@ -918,7 +1030,7 @@ std::pair<bool, ScoreType> SpecialCasesDetector::eval(Board const& board) const
     if(iter != winnerLoser_.end())
       return { true, (iter->second)(board) };
   }
-  return {false, 0};
+  return evalBishopAndPawns(board);
 }
 
 }
