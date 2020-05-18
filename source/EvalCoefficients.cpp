@@ -87,13 +87,13 @@ namespace NEngine
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::knightBonus_[2][2] = { {-18, 0}, {0, 17} };
-  int EvalCoefficients::bishopBonus_[2][2] = { {5, 25}, {12, 75} };
+  int EvalCoefficients::knightBonus_[2][2] = { {0, 15}, {-20, 0} };
+  int EvalCoefficients::bishopBonus_[2][2] = { {12, 75}, {5, 25} };
   int EvalCoefficients::rookBonus_[2][2] = { {0, 0}, {0, 0} };
-  int EvalCoefficients::figureAgainstPawnBonus_[2] = { 17, 44 };
-  int EvalCoefficients::rookAgainstFigureBonus_[2] = { -18, 22 };
-  int EvalCoefficients::figuresAgainstRookBonus_[2] = { 54, 65 };
-  int EvalCoefficients::rookAgainstPawnBonus_[2] = { 0, 33 };
+  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 45}, {10, 25} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {15, 30}, {-25, 15} };
+  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 65}, {0, 55} };
+  int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {10, 35}, {0, 10} };
 
   // arrays
   int EvalCoefficients::passerPawn_[8] = { 0, 7, 11, 21, 39, 63, 95, 0 };

@@ -87,10 +87,10 @@ struct EvalCoefficients
   static int knightBonus_[2][2];
   static int bishopBonus_[2][2];
   static int rookBonus_[2][2];
-  static int figureAgainstPawnBonus_[2];
-  static int rookAgainstFigureBonus_[2];
-  static int figuresAgainstRookBonus_[2];
-  static int rookAgainstPawnBonus_[2];
+  static int figureAgainstPawnBonus_[2][2];
+  static int rookAgainstFigureBonus_[2][2];
+  static int figuresAgainstRookBonus_[2][2];
+  static int rookAgainstPawnBonus_[2][2];
 
   static int pawnShieldA_[2];
   static int pawnShieldB_[2];
