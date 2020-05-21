@@ -228,15 +228,8 @@ private:
   
   bool fakeCastle(Figure::Color color, int rpos) const;
 
-  int evaluateCastle(Figure::Color color) const;
-  int evaluateCastle() const
-  {
-    auto score = evaluateCastle(Figure::ColorWhite);
-    score -= evaluateCastle(Figure::ColorBlack);
-    return score;
-  }
-
   int evaluateKingSafety(Figure::Color color) const;
+  int evaluateKingSafety(Figure::Color color, Index const& kingPos) const;
 
   FullScore evaluatePawnsPressure(Figure::Color color);
 
@@ -245,7 +238,7 @@ private:
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
                                 + 4*Figure::figureWeight_[Figure::TypeKnight]);
 
-  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeKnight]);
+  const int endgameWeight_ = 2*(2*Figure::figureWeight_[Figure::TypeKnight]);
 
   const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 

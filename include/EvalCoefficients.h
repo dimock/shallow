@@ -33,9 +33,8 @@ struct EvalCoefficients
 #endif // EVALUATE_DANGEROUS_ATTACKS
 
   // king
-  static int castleImpossible_;
+  static int castlePossible_;
   static int fakeCastle_;
-  static int castleBonus_;
   static int kingIsUnsafe_;
   static int pawnPenaltyA_;
   static int pawnPenaltyB_;

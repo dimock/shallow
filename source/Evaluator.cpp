@@ -25,18 +25,22 @@ const int Evaluator::delta_y_[] = { -1, +1 };
 const BitMask Evaluator::castle_mask_[2][2] = {
   {
     set_mask_bit(F8) | set_mask_bit(G8) | set_mask_bit(H8) |
-    set_mask_bit(F7) | set_mask_bit(G7) | set_mask_bit(H7),
+    set_mask_bit(F7) | set_mask_bit(G7) | set_mask_bit(H7) |
+    set_mask_bit(F6) | set_mask_bit(G6) | set_mask_bit(H6),
 
     set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(C8) |
-    set_mask_bit(A7) | set_mask_bit(B7) | set_mask_bit(C7)
+    set_mask_bit(A7) | set_mask_bit(B7) | set_mask_bit(C7) |
+    set_mask_bit(A6) | set_mask_bit(B6) | set_mask_bit(C6)
   },
 
   {
     set_mask_bit(F1) | set_mask_bit(G1) | set_mask_bit(H1) |
-    set_mask_bit(F2) | set_mask_bit(G2) | set_mask_bit(H2),
+    set_mask_bit(F2) | set_mask_bit(G2) | set_mask_bit(H2) |
+    set_mask_bit(F3) | set_mask_bit(G3) | set_mask_bit(H3),
 
     set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(C1) |
-    set_mask_bit(A2) | set_mask_bit(B2) | set_mask_bit(C2)
+    set_mask_bit(A2) | set_mask_bit(B2) | set_mask_bit(C2) |
+    set_mask_bit(A3) | set_mask_bit(B3) | set_mask_bit(C3)
   }
 };
 
@@ -214,21 +218,14 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto hashedScore = hashedEvaluation();
   score += hashedScore.score;
 
-#if 0
-  // penalty for lost or fake castle
-#ifdef EVAL_CASTLE
-  score.opening_ += evaluateCastle();
-#endif
-
   int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
-  score.opening_ = kingSafety;
+  score.opening_ += kingSafety;
 
 #ifdef EVAL_FORKS
   auto scoreForks = evaluateForks(Figure::ColorWhite);
   scoreForks -= evaluateForks(Figure::ColorBlack);
   score.common_ += scoreForks;
 #endif
-#endif // 0
 
 #if 1
   score += evaluateKnights();
@@ -770,6 +767,28 @@ int Evaluator::getCastleType(Figure::Color color) const
 
 int Evaluator::evaluateKingSafety(Figure::Color color) const
 {
+  if (board_->castling(color))
+    return EvalCoefficients::castlePossible_;
+  Index kingPos(board_->kingPos(color));
+  int ctype = getCastleType(color);
+  int score = 0;
+  if (ctype == 0) // king side
+  {
+    Index kingPosK{ 6, kingPos.y() };
+    score = evaluateKingSafety(color, kingPosK);
+  }
+  else if (ctype == 1) // queen side
+  {
+    Index kingPosQ{ 1, kingPos.y() };
+    score = evaluateKingSafety(color, kingPosQ);
+  }
+  else
+    score = evaluateKingSafety(color, kingPos);
+  return score;
+}
+
+int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) const
+{
   static const int delta_y[2] = { -8, 8 };
   const FiguresManager & fmgr = board_->fmgr();
   auto const& pmask  = fmgr.pawn_mask(color);
@@ -777,12 +796,11 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
   auto const& opmask = fmgr.pawn_mask(ocolor);
 
-  Index kingPos(board_->kingPos(color));
   auto king_cy = colored_y_[color][kingPos.y()];
   if (king_cy > 5)
     return EvalCoefficients::kingIsUnsafe_;
 
-  int above1 = (board_->kingPos(color) + delta_y[color]) & 63;
+  int above1 = (kingPos + delta_y[color]) & 63;
   int above2 = (above1 + delta_y[color]) & 63;
   BitMask mabove1{ set_mask_bit(above1) };
   BitMask mabove2{ set_mask_bit(above2) };
@@ -903,23 +921,6 @@ bool Evaluator::fakeCastle(Figure::Color color, int rpos) const
 bool Evaluator::blockedRook(Figure::Color color, int n) const
 {
   return (blocked_rook_mask_[color] & set_mask_bit(n)) != 0ULL;
-}
-
-int Evaluator::evaluateCastle(Figure::Color color) const
-{
-  if(board_->castling(color))
-    return 0;
-
-  const FiguresManager & fmgr = board_->fmgr();
-  Figure::Color ocolor = Figure::otherColor((Figure::Color)color);
-  Index ki_pos(board_->kingPos(color));
-  auto castleType = getCastleType(color);
-  X_ASSERT(castleType < -1 || castleType > 1, "invalid castle type detected");
-
-  if(castleType < 0)
-    return EvalCoefficients::castleImpossible_;
-
-  return EvalCoefficients::castleBonus_;
 }
 
 Evaluator::FullScore Evaluator::evaluateMaterialDiff() const

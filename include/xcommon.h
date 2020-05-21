@@ -114,12 +114,11 @@ namespace nst
 #undef USE_PROBCUT
 
 #define EVAL_SPECC
-#define EVAL_CASTLE
 #define EVAL_KP_BASIC
 #define EVAL_MOB
 #define EVAL_KING_PR
 
-#define EVAL_FORKS
+#undef EVAL_FORKS
 #define EVAL_OPEN_R
 
 #define GEN_USUAL_AFETER_HORIZON
