@@ -75,6 +75,14 @@ class Evaluator
       return result;
     }
 
+    FullScore& operator >>= (int shift)
+    {
+      common_ >>= shift;
+      opening_ >>= shift;
+      endGame_ >>= shift;
+      return *this;
+    }
+
     bool operator == (FullScore const& other) const
     {
       return common_ == other.common_ && opening_ == other.opening_ && endGame_ == other.endGame_;

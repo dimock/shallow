@@ -768,6 +768,27 @@ void Board::detectCheck(Move const& move)
   data_.checking_ = pt;
 }
 
+bool Board::isDrawMaterial() const
+{
+  if (fmgr_.pawns(Figure::ColorBlack) + fmgr_.pawns(Figure::ColorWhite) +
+      fmgr_.rooks(Figure::ColorBlack) + fmgr_.rooks(Figure::ColorWhite) +
+      fmgr_.queens(Figure::ColorBlack) + fmgr_.queens(Figure::ColorWhite) > 0)
+  {
+    return false;
+  }
+  if ((fmgr_.knights(Figure::ColorBlack) + fmgr_.bishops(Figure::ColorBlack)) < 2 &&
+      (fmgr_.knights(Figure::ColorWhite) + fmgr_.bishops(Figure::ColorWhite)) < 2)
+  {
+    return true;
+  }
+  if ((fmgr_.knights(Figure::ColorBlack) == 2 && fmgr_.bishops(Figure::ColorBlack) == 0 && fmgr_.allFigures(Figure::ColorWhite) == 0) ||
+      (fmgr_.knights(Figure::ColorWhite) == 2 && fmgr_.bishops(Figure::ColorWhite) == 0 && fmgr_.allFigures(Figure::ColorBlack) == 0))
+  {
+    return true;
+  }
+  return false;
+}
+
 void Board::verifyChessDraw(bool irreversibleLast)
 {
   if((data_.fiftyMovesCount_ == 100 && !underCheck()) || (data_.fiftyMovesCount_ > 100))
@@ -776,16 +797,10 @@ void Board::verifyChessDraw(bool irreversibleLast)
     return;
   }
 
-  if(!fmgr_.pawns(Figure::ColorBlack) && !fmgr_.pawns(Figure::ColorWhite))
+  if(isDrawMaterial())
   {
-    if((fmgr_.rooks(Figure::ColorBlack) + fmgr_.queens(Figure::ColorBlack)
-      + fmgr_.rooks(Figure::ColorWhite) + fmgr_.queens(Figure::ColorWhite) == 0)
-      && (fmgr_.knights(Figure::ColorBlack) + fmgr_.bishops(Figure::ColorBlack)) < 2
-      && (fmgr_.knights(Figure::ColorWhite) + fmgr_.bishops(Figure::ColorWhite)) < 2)
-    {
-      data_.state_ |= DrawInsuf;
-      return;
-    }
+    data_.state_ |= DrawInsuf;
+    return;
   }
   
   if(irreversibleLast)

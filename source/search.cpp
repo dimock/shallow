@@ -551,7 +551,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_HASH
   ScoreType hscore = -ScoreMax;
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
-  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  if((flag == GHashTable::Alpha || flag == GHashTable::Betta) && !board.isWinnerLoser())
   {
     return hscore;
   }
@@ -579,6 +579,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && board.allowNullMove()
     && depth > board.nullMoveDepthMin()
     && std::abs(betta) < Figure::MatScore+MaxPly
+    && !board.isWinnerLoser()
     )
   {
     int null_depth = board.nullMoveDepth(depth, betta);
@@ -727,7 +728,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
           alpha > -Figure::MatScore - MaxPly &&
-          board.canBeReduced(move))
+          board.canBeReduced(move) &&
+          !board.isWinnerLoser())
         {
           R = ONE_PLY;
           //auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
@@ -885,7 +887,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   ScoreType hscore = -ScoreMax;
   bool singular = false;
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
-  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  if((flag == GHashTable::Alpha || flag == GHashTable::Betta) && !board.isWinnerLoser())
   {
     return { hscore, false };
   }

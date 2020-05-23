@@ -923,6 +923,17 @@ void SpecialCasesDetector::initWinnerLoser()
       else
         return figure_vs_pawns(board, Figure::ColorWhite);
     };
+
+    winnerLoser_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
+    { Figure::TypePawn, Figure::ColorBlack, static_cast<char>(i) } })] = [figure_vs_pawns, i](Board const& board)
+    {
+      return figure_vs_pawns(board, Figure::ColorBlack);
+    };
+    winnerLoser_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
+    { Figure::TypePawn, Figure::ColorWhite, static_cast<char>(i) } })] = [figure_vs_pawns, i](Board const& board)
+    {
+      return figure_vs_pawns(board, Figure::ColorWhite);
+    };
   }
 }
 

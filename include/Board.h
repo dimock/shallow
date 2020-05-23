@@ -304,6 +304,7 @@ struct Board
 
   bool invalidate();
   void verifyState();
+  bool isDrawMaterial() const;
   void verifyChessDraw(bool irreversibleLast);
   void findCheckingFigures(Figure::Color ocolor, int ki_pos);
 
@@ -394,8 +395,21 @@ struct Board
 
   bool isWinnerLoser() const
   {
-    return (fmgr_.weight(Figure::ColorBlack) == fmgr_.pawns(Figure::ColorBlack)*Figure::figureWeight_[Figure::TypePawn])
-        || (fmgr_.weight(Figure::ColorWhite) == fmgr_.pawns(Figure::ColorWhite)*Figure::figureWeight_[Figure::TypePawn]);
+    bool winners[2] = { false, false };
+    for (auto color : { Figure::ColorBlack , Figure::ColorWhite })
+    {
+      if (fmgr_.pawns(color) != 0 || fmgr_.rooks(color) != 0 || fmgr_.queens(color) != 0)
+      {
+        winners[color] = true;
+        continue;
+      }
+      if((fmgr_.bishops(color) > 0 && fmgr_.knights(color) > 0) || (fmgr_.bishops(color) > 1))
+      {
+        winners[color] = true;
+        continue;
+      }
+    }
+    return winners[0] != winners[1];
   }
 
   bool canBeReduced(Move const& move) const
