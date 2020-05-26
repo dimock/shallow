@@ -159,6 +159,18 @@ namespace
     return score;
   }
 
+  ScoreType queenAndFigure(Board const& board, Figure::Color winnerColor)
+  {
+    ScoreType score = Figure::figureWeight_[Figure::TypeKnight] / 3;
+    auto ocolor = Figure::otherColor(winnerColor);
+    Index kingW(board.kingPos(winnerColor));
+    Index kingL(board.kingPos(ocolor));
+    score += board.fmgr().eval(1);
+    if (winnerColor == Figure::ColorBlack)
+      score = -score;
+    return score;
+  }
+
 } // namespace {}
 
 SpecialCasesDetector::SpecialCasesDetector()
@@ -647,6 +659,34 @@ void SpecialCasesDetector::initUsual()
     { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board)
   {
     return pawnAndHeavy(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
+    { Figure::TypeKnight, Figure::ColorBlack, 1 },
+    { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return queenAndFigure(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
+    { Figure::TypeKnight, Figure::ColorWhite, 1 },
+    { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return queenAndFigure(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return queenAndFigure(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 },
+    { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return queenAndFigure(board, Figure::ColorWhite);
   };
 }
 

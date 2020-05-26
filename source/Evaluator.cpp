@@ -614,22 +614,21 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     int x = idx.x();
     int y = idx.y();
     int cy = colored_y_[color][idx.y()];
+    Index idx1{ x, y + dy };
 
-    const auto& passmsk = pawnMasks().mask_passed(color, n);
+    const auto & passmsk = pawnMasks().mask_passed(color, n);
     const auto& halfpassmsk = pawnMasks().mask_forward(color, n);
     if((opmsk & halfpassmsk) != 0ULL)
       continue;
 
     bool halfpasser = (opmsk & passmsk) != 0ULL;
     FullScore pwscore;
-
-    pwscore.common_ = EvalCoefficients::passerPawn_[cy];
-
     if(halfpasser)
     {
+      pwscore.common_ = EvalCoefficients::passerPawn_[cy] >> 1;
       BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
       BitMask attackers = pawnMasks().mask_passed(color, n) & opmsk;
-      auto nguards = 0;
+      auto nguards = pop_count(guards);
       for (; guards;) {
         int g = clear_lsb(guards);
         auto fwd = pawnMasks().mask_forward(color, g);
@@ -646,6 +645,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     }
     else
     {
+      pwscore.common_ = EvalCoefficients::passerPawn_[cy];
       Index pp(x, py);
       int pawn_dist_promo = std::abs(py - idx.y());
       int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
@@ -727,15 +727,13 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
     if (halfpasser)
       pwscore >>= 1;
-
     pinfo.score += pwscore;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    int next_pos = x | ((y + dy) << 3);
     X_ASSERT(((y + dy)) > 7 || ((y + dy)) < 0, "pawn goes to invalid line");
-    if (!board_->getField(next_pos) && !halfpasser)
+    if (!board_->getField(idx1) && !halfpasser)
     {
-      BitMask next_mask = set_mask_bit(next_pos);
+      BitMask next_mask = set_mask_bit(idx1);
       if ((cy == 6) && ((next_mask & blockers_mask) == 0ULL))
       {
         finfo_[color].pawnPromotion_ = true;

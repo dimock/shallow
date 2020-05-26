@@ -143,7 +143,6 @@ PawnMasks::PawnMasks()
       {
         support_mask |= set_mask_bit(Index(0, y-deltay));
         guard_mask |= set_mask_bit(Index(0, y-deltay));
-        guard_mask |= set_mask_bit(Index(0, y+deltay));
       }
 
       if(x > 0)
