@@ -34,8 +34,8 @@ namespace NEngine
   int EvalCoefficients::castlePossible_{ 10 };
   int EvalCoefficients::fakeCastle_{ -30 };
   int EvalCoefficients::kingIsUnsafe_{ -20 };
-  int EvalCoefficients::pawnPenaltyA_{ -10 };
-  int EvalCoefficients::pawnPenaltyB_{ -12 };
+  int EvalCoefficients::pawnPenaltyA_{ -12 };
+  int EvalCoefficients::pawnPenaltyB_{ -14 };
   int EvalCoefficients::pawnPenaltyC_{ -4 };
 
   // blocked figure
@@ -77,8 +77,8 @@ namespace NEngine
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {10, 8};
-  int EvalCoefficients::pawnShieldB_[2] = {12, 10};
+  int EvalCoefficients::pawnShieldA_[2] = {14, 12};
+  int EvalCoefficients::pawnShieldB_[2] = {14, 12};
   int EvalCoefficients::pawnShieldC_[2] = { 6, 5};
 
   // rook on open column
@@ -97,7 +97,7 @@ namespace NEngine
   // arrays
   int EvalCoefficients::passerPawn_[8] = { 0, 7, 10, 20, 37, 60, 90, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
-  int EvalCoefficients::farKingPawn_[8] = { 0, 3, 4, 9, 16, 27, 40, 0 };
+  int EvalCoefficients::farKingPawn_[8] = { 0, 3, 5, 12, 24, 40, 60, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 7, 11, 23, 42, 70, 105, 0 };
   int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 6, 8, 10, 12, 16 };
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };

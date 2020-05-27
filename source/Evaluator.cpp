@@ -718,9 +718,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     // opponent king could not go to my pawns promotion path
     int promo_pos = x | (py<<3);
     int pawn_dist_promo = std::abs(py - y);
-    if(couldIntercept(color, n, promo_pos, pawn_dist_promo+1))
+    if(!couldIntercept(color, n, promo_pos, pawn_dist_promo+1))
     {
-      pwscore.endGame_ -= EvalCoefficients::farKingPawn_[cy];
+      pwscore.endGame_ += EvalCoefficients::farKingPawn_[cy];
       if (cy > pinfo.most_unstoppable_y && !halfpasser)
         pinfo.most_unstoppable_y = cy;
     }
