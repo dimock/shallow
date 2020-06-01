@@ -110,7 +110,7 @@ namespace nst
 #undef USE_LMR0
 #define VERIFY_LMR
 #define SINGULAR_EXT
-#undef LMR_REDUCE_MORE
+#define LMR_REDUCE_MORE
 #undef USE_PROBCUT
 
 #define EVAL_SPECC
@@ -131,7 +131,7 @@ namespace nst
 
 static const SortValueType CaptureRecentlyBonus = 10;
 
-static const int NumUsualAfterHorizon = 16;
+static const int NumUsualAfterHorizon = 3;
 static const int MinimumDepthForUsualAfterHorizon = 3;
 static const int ONE_PLY = 20;
 static const int MaxPly = 64;

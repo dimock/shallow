@@ -650,7 +650,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       int pawn_dist_promo = std::abs(py - idx.y());
       int o_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
       int dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
-      pwscore.endGame_ += (o_dist_promo - dist_promo) * 3;
+      pwscore.endGame_ += (o_dist_promo - dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_;
 
       BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
       if (guards) {
@@ -880,8 +880,6 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
       {
         int y = std::max(0, Index(_lsb64(m)).y() - king_cy);
         auto penalty = EvalCoefficients::opponentPawnPressure_[y];
-        if (x == xk)
-          penalty >>= 1;
         opponent_penalty += penalty;
       }
     }

@@ -19,6 +19,7 @@ struct EvalCoefficients
   static int unprotectedPawnPressure_;
   static int protectedPawnBishopTreat_;
   static int unprotectedPawnBishopTreat_;
+  static int kingToPasserDistanceBonus_;
 
   // forks
   static int forkBonus_;

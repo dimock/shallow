@@ -551,7 +551,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_HASH
   ScoreType hscore = -ScoreMax;
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
-  if((flag == GHashTable::Alpha || flag == GHashTable::Betta) && !board.isWinnerLoser())
+  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
     return hscore;
   }
@@ -575,7 +575,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(
     !board.underCheck()
     && !pv
-//    && allow_nm
+    && allow_nm
     && board.allowNullMove()
     && depth > board.nullMoveDepthMin()
     && std::abs(betta) < Figure::MatScore+MaxPly
@@ -739,6 +739,27 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           //}
           //R = std::min(3*ONE_PLY, R);
 
+#ifdef LMR_REDUCE_MORE
+          auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
+          if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
+          {
+            R += ONE_PLY;
+            if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
+              R += ONE_PLY;
+          }
+          curr.mflags_ |= UndoInfo::Reduced;
+        }
+        else if(!check_escape &&
+                counter > 10 &&
+                sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+                depth > LMR_DepthLimit &&
+                alpha > -Figure::MatScore-MaxPly &&
+                !move.see_ok() &&
+                !curr.castle() &&
+                !board.underCheck())
+        {
+          R = ONE_PLY;
+#endif // LMR_REDUCE_MORE
           curr.mflags_ |= UndoInfo::Reduced;
         }
 #endif //USE_LMR
@@ -887,7 +908,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   ScoreType hscore = -ScoreMax;
   bool singular = false;
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
-  if((flag == GHashTable::Alpha || flag == GHashTable::Betta) && !board.isWinnerLoser())
+  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
     return { hscore, false };
   }
