@@ -71,9 +71,9 @@ namespace NEngine
 
   // arrays
   int EvalCoefficients::doubledPawn_[2] = { -10, -8 };
-  int EvalCoefficients::isolatedPawn_[2] = { -14, -12 };
+  int EvalCoefficients::isolatedPawn_[2] = { -14, -10 };
   int EvalCoefficients::backwardPawn_[2] = { -12, -10 };
-  int EvalCoefficients::unsupportedPawn_[2] = { -8, 8 };
+  int EvalCoefficients::unprotectedPawn_[2] = { -8, -4 };
   int EvalCoefficients::weakHalfopenPawn_[2] = { -6, 0 };
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };

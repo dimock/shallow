@@ -522,15 +522,17 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
-    //bool unsupported = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
+    auto const& protectMask = movesTable().pawnCaps(ocolor, n);
+    bool unprotected = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
+    //  ((protectMask & pmask) == 0ULL);    
 
     info.score.opening_ += isolated * EvalCoefficients::isolatedPawn_[0];
     info.score.opening_ += backward * EvalCoefficients::backwardPawn_[0];
-    //info.score.opening_ += unsupported * EvalCoefficients::unsupportedPawn_[0];
+    info.score.opening_ += unprotected * EvalCoefficients::unprotectedPawn_[0];
 
     info.score.endGame_ += isolated * EvalCoefficients::isolatedPawn_[1];
     info.score.endGame_ += backward * EvalCoefficients::backwardPawn_[1];
-    //info.score.endGame_ += unsupported * EvalCoefficients::unsupportedPawn_[1];
+    info.score.endGame_ += unprotected * EvalCoefficients::unprotectedPawn_[1];
 
     //// could be attacked by RQ
     //if (((pawnMasks().mask_forward(color, n) & pawns_all) == 0ULL) &&
