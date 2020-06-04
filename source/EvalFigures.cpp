@@ -489,14 +489,15 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     // mobility
 #ifdef EVAL_MOB
     auto const& rook_moves = magic_ns::rook_moves(n, mask_all_);
-    int n_moves = pop_count(rook_moves & cango_mask);
+    auto r_moves_mask = rook_moves & cango_mask;
+    int n_moves = pop_count(r_moves_mask);
     score_mob += EvalCoefficients::rookMobility_[n_moves & 15];
 
     // fake castle possible
     if (n_moves < 4) {
-      if (fakeCastle(color, n))
+      if (fakeCastle(color, n, r_moves_mask))
         score_mob += EvalCoefficients::fakeCastle_;
-      else if (blockedRook(color, n))
+      else if (blockedRook(color, n, r_moves_mask))
         score_mob -= EvalCoefficients::rookBlocked_;
     }
 
