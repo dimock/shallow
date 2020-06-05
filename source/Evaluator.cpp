@@ -707,9 +707,8 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         o_attack_mask |= or_attacks;
       }
     }
-    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor);// | fmgr.mask(color);
+    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor);
     blockers_mask &= ~finfo_[color].pawnAttacks_;
-    //blockers_mask |= fmgr.mask(ocolor) | fmgr.mask(color);
 
     // ahead fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
