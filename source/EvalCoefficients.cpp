@@ -88,11 +88,11 @@ namespace NEngine
   // material diff
   // endgame, opening
   int EvalCoefficients::knightBonus_[2][2] = { {0, 15}, {-5, 5} };
-  int EvalCoefficients::bishopBonus_[2][2] = { {12, 75}, {5, 35} };
+  int EvalCoefficients::bishopBonus_[2][2] = { {10, 75}, {5, 35} };
   int EvalCoefficients::rookBonus_[2][2] = { {0, 10}, {0, 10} };
-  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 45}, {10, 25} };
+  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {15, 35}, {0, 15} };
   int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {15, 30}, {-25, 15} };
-  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 65}, {0, 55} };
+  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {0, 25}, {0, 10} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 35}, {0, 20} };
 
   // arrays
@@ -113,14 +113,14 @@ namespace NEngine
   // king position eval for BN-mat
   int EvalCoefficients::bishopKnightMat_[64] =
   {
-     20,  16,  8, -1, -2, -8, -16, -20,
-     16,  16,  8, -1, -3, -8, -16, -16,
-      8,   8,  6, -2, -4, -6, -8,   -8,
-     -1,  -1, -2, -8, -8, -4, -3,   -2,
-     -2,  -3, -4, -8, -8, -2, -1,   -1,
-     -8,  -8, -6, -4, -2,  6,  8,    8,
-    -16, -16, -8, -3, -1,  8,  16,  16,
-    -20, -16, -8, -2, -1,  8,  16,  20
+     30,  20,  10,  -1,  -5, -10, -20, -30,
+     20,  16,   8,  -1,  -6,  -8, -16, -20,
+     10,   8,   6,  -2,  -8,  -6,  -8, -10,
+     -1,  -1,  -2, -15, -15,  -8,  -6,  -5,
+     -5,  -6,  -8, -15, -15,  -2,  -1,  -1,
+    -10,  -8,  -6,  -8,  -2,   6,   8,  10,
+    -20, -16,  -8,  -6,  -1,   8,  16,  20,
+    -30, -20, -10,  -5,  -1,  10,  20,  30
   };
 
   int EvalCoefficients::kingDistanceBonus_[8][8] =
@@ -282,12 +282,12 @@ namespace NEngine
       },
       {
         -25, -20, -17, -15, -15, -17, -20, -25,
-        -15, -12,   0,   0,   0,   0, -12, -12,
-        -12,   0,   8,  10,  10,   8,   0,  -8,
-        -10,   0,  10,  20,  20,  10,   0,  -6,
-        -10,   0,  10,  20,  20,  10,   0,  -6,
-        -12,   0,   8,  10,  10,   8,   0,  -8,
-        -15,  -8,   0,   0,   0,   0,  -8, -12,
+        -20, -12,  -8,  -5,  -5,  -8, -12, -12,
+        -17,  -8,   8,   8,   8,   8,  -8, -17,
+        -15,  -5,   8,  20,  20,   8,  -5, -15,
+        -15,  -5,   8,  20,  20,   8,  -5, -15,
+        -17,  -8,   8,   8,   8,   8,  -8, -17,
+        -20, -12,  -8,  -5,  -5,  -8, -12, -20,
         -25, -20, -17, -15, -15, -17, -20, -25
       },
       {

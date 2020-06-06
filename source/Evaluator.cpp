@@ -227,11 +227,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
   score.opening_ += kingSafety;
 
-#ifdef EVAL_FORKS
-  auto scoreForks = evaluateForks(Figure::ColorWhite);
-  scoreForks -= evaluateForks(Figure::ColorBlack);
-  score.common_ += scoreForks;
-#endif
+  //auto scoreForks = evaluateForks(Figure::ColorWhite);
+  //scoreForks -= evaluateForks(Figure::ColorBlack);
+  //score.common_ += scoreForks;
 
 #if 1
   score += evaluateKnights();
@@ -258,11 +256,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.common_ += scoreKing.common_;
 #endif
 
-#if 0
-  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-  score += scorePP;
-#endif // 0
+  //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+  //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+  //score += scorePP;
 
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
@@ -322,15 +318,15 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
   score.common_ = pop_count(pw_protected & attackers) * EvalCoefficients::protectedPawnPressure_;
   score.common_ += pop_count(pw_unprotected & attackers) * EvalCoefficients::unprotectedPawnPressure_;
-  // bishop treat
-  if(fmgr.bishops(color) == 1)
-  {
-    auto bi_mask = (fmgr.bishop_mask(color) & FiguresCounter::s_whiteMask_)
-      ?  FiguresCounter::s_whiteMask_
-      : ~FiguresCounter::s_whiteMask_;
-    score.endGame_ += pop_count(pw_protected   & bi_mask) * EvalCoefficients::protectedPawnBishopTreat_;
-    score.endGame_ += pop_count(pw_unprotected & bi_mask) * EvalCoefficients::unprotectedPawnBishopTreat_;
-  }
+  //// bishop treat
+  //if(fmgr.bishops(color) == 1)
+  //{
+  //  auto bi_mask = (fmgr.bishop_mask(color) & FiguresCounter::s_whiteMask_)
+  //    ?  FiguresCounter::s_whiteMask_
+  //    : ~FiguresCounter::s_whiteMask_;
+  //  score.endGame_ += pop_count(pw_protected   & bi_mask) * EvalCoefficients::protectedPawnBishopTreat_;
+  //  score.endGame_ += pop_count(pw_unprotected & bi_mask) * EvalCoefficients::unprotectedPawnBishopTreat_;
+  //}
   return score;
 }
 

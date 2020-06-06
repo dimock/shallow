@@ -118,7 +118,6 @@ namespace nst
 #define EVAL_MOB
 #define EVAL_KING_PR
 
-#undef EVAL_FORKS
 #define EVAL_OPEN_R
 
 #define GEN_USUAL_AFETER_HORIZON

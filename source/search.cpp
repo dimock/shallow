@@ -1037,7 +1037,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   singular = hitem.singular_;
   hmove = hitem.move_;
-  if(pv)
+  if(pv || board.hashValueForbidden())
     return GHashTable::AlphaBetta;
 
   depth = (depth + ONE_PLY - 1) / ONE_PLY;

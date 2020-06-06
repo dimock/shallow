@@ -165,7 +165,46 @@ namespace
     auto ocolor = Figure::otherColor(winnerColor);
     Index kingW(board.kingPos(winnerColor));
     Index kingL(board.kingPos(ocolor));
-    score += board.fmgr().eval(1);
+    int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
+    int queenL = _lsb64(board.fmgr().queen_mask(ocolor));
+    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kingL];
+    score -= distanceCounter().getDistance(kingW, kingL) * 2;
+    score -= distanceCounter().getDistance(queenW, kingL) * 2;
+    score += distanceCounter().getDistance(queenL, kingL) * 2;
+    int figurePos = -1;
+    auto fmask = board.fmgr().bishop_mask(winnerColor);
+    for (; fmask;) {
+      figurePos = clear_lsb(fmask);
+      break;
+    }
+    if (figurePos < 0) {
+      auto fmask = board.fmgr().knight_mask(winnerColor);
+      for (; fmask;) {
+        figurePos = clear_lsb(fmask);
+        break;
+      }
+    }
+    if (figurePos > 0) {
+      score -= distanceCounter().getDistance(figurePos, kingL) * 2;
+    }
+    if (winnerColor == Figure::ColorBlack)
+      score = -score;
+    return score;
+  }
+
+  ScoreType queenAgainstRook(Board const& board, Figure::Color winnerColor)
+  {
+    auto ocolor = Figure::otherColor(winnerColor);
+    ScoreType score = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypeRook];
+    Index kingW(board.kingPos(winnerColor));
+    Index kingL(board.kingPos(ocolor));
+    int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
+    int rookL = _lsb64(board.fmgr().rook_mask(ocolor));
+    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kingL];
+    score -= distanceCounter().getDistance(kingW, kingL) * 2;
+    score -= distanceCounter().getDistance(queenW, kingL) * 2;
+    score += distanceCounter().getDistance(rookL, kingL) * 2;
+    score -= board.fiftyMovesCount();
     if (winnerColor == Figure::ColorBlack)
       score = -score;
     return score;
@@ -191,6 +230,7 @@ void SpecialCasesDetector::initMatCases()
     auto score = (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
     score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kl];
     score += board.fmgr().weight(winnerColor) + 20;
+    score -= board.fiftyMovesCount();
     if(!winnerColor)
       score = -score;
     return score;
@@ -302,12 +342,12 @@ void SpecialCasesDetector::initMatCases()
     {
       kp = Figure::mirrorIndex_[kp];
     }
-    score += EvalCoefficients::bishopKnightMat_[kp];
+    score += EvalCoefficients::bishopKnightMat_[kp]*2;
     int ndist = distanceCounter().getDistance(kn, kl);
     int bdist = distanceCounter().getDistance(bp, kl);
     score -= ndist;
     score -= bdist >> 1;
-    return score;
+    return score - board.fiftyMovesCount();
   };
   matCases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
   { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [bishopKnightMat](Board const& board)
@@ -687,6 +727,18 @@ void SpecialCasesDetector::initUsual()
     { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board)
   {
     return queenAndFigure(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return queenAgainstRook(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return queenAgainstRook(board, Figure::ColorWhite);
   };
 }
 

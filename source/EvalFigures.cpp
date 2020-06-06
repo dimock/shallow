@@ -406,7 +406,7 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   for(; knights;)
   {
     int n = clear_lsb(knights);
-    auto const& knight_moves = movesTable().caps(Figure::TypeKnight, n);
+    auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
 
 #ifdef EVAL_KING_PR
     int n_attack = (knight_moves & oki_fields) != 0ULL;
@@ -415,6 +415,9 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 #endif // EVAL_KING_PR
 
 #ifdef EVAL_MOB
+    if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      knight_moves = 0ULL;
+    }
     auto n_moves = pop_count(knight_moves & cango_mask);
     score_mob += EvalCoefficients::knightMobility_[n_moves & 15];
 
@@ -451,7 +454,10 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 
     // mobility
 #ifdef EVAL_MOB
-    auto const& bishop_moves = magic_ns::bishop_moves(n, mask_all_);
+    auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
+    if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      bishop_moves = 0ULL;
+    }
     int n_moves = pop_count(bishop_moves & cango_mask);
     score_mob += EvalCoefficients::bishopMobility_[n_moves & 15];
 
@@ -488,7 +494,10 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 
     // mobility
 #ifdef EVAL_MOB
-    auto const& rook_moves = magic_ns::rook_moves(n, mask_all_);
+    auto rook_moves = magic_ns::rook_moves(n, mask_all_);
+    if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      rook_moves = 0ULL;
+    }
     auto r_moves_mask = rook_moves & cango_mask;
     int n_moves = pop_count(r_moves_mask);
     score_mob += EvalCoefficients::rookMobility_[n_moves & 15];
@@ -531,7 +540,10 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 
     // mobility
 #ifdef EVAL_MOB
-    auto const& queen_moves = magic_ns::queen_moves(n, mask_all_);
+    auto queen_moves = magic_ns::queen_moves(n, mask_all_);
+    if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      queen_moves = 0ULL;
+    }
     auto n_moves = pop_count(queen_moves & cango_mask);
     score_mob += EvalCoefficients::queenMobility_[n_moves & 31];
 

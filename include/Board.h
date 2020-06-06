@@ -412,6 +412,24 @@ struct Board
     return winners[0] != winners[1];
   }
 
+  bool hashValueForbidden() const
+  {
+    if (isWinnerLoser())
+      return true;
+
+    if (fmgr_.pawns(Figure::ColorBlack) > 0 || fmgr_.pawns(Figure::ColorWhite) > 0)
+      return false;
+
+    if (fmgr_.allFigures(Figure::ColorBlack) != 1 || fmgr_.allFigures(Figure::ColorWhite) != 1)
+      return false;
+
+    if ((fmgr_.rooks(Figure::ColorBlack) == 1 && fmgr_.queens(Figure::ColorWhite) == 1) ||
+        (fmgr_.rooks(Figure::ColorWhite) == 1 && fmgr_.queens(Figure::ColorBlack) == 1))
+      return true;
+
+    return false;
+  }
+
   bool canBeReduced(Move const& move) const
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
