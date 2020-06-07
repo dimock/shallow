@@ -972,7 +972,6 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
       continue;
 
     ScoreType score = -ScoreMax;
-    dangerous = false;
 
     board.makeMove(move);
     sdata.inc_nc();
@@ -983,10 +982,14 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
 
-    if(!stopped(ictx) && score > scoreBest)
+    if(score > -Figure::MatScore+MaxPly)
+      dangerous = false;
+
+    if (!stopped(ictx) && score > scoreBest)
     {
-      if(score > alpha)
+      if (score > alpha) {
         alpha = score;
+      }
 
       best = move;
       scoreBest = score;

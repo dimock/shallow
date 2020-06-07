@@ -371,10 +371,12 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   const BitMask cango_mask = ~(finfo_[ocolor].pawnAttacks_ | fmgr.pawn_mask(color) | fmgr.king_mask(color) | fmgr.king_mask(ocolor));
   const BitMask can_check_mask = ~(fmgr.mask(color) | attacked_any_but_oking | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
 
+  const BitMask o_nb_attacked = finfo_[ocolor].kingAttacks_ | finfo_[ocolor].bishopAttacks_;
+  const BitMask o_nbr_attacked = o_nb_attacked | finfo_[ocolor].rookAttacks_;
   const BitMask allowed_not_o_attacked = ~(fmgr.mask(color) | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
-  const BitMask allowed_moves_q = (cango_mask & allowed_not_o_attacked) | fmgr.queen_mask(ocolor);
-  const BitMask allowed_moves_r = allowed_moves_q | fmgr.rook_mask(ocolor);
-  const BitMask allowed_moves_nb = allowed_moves_r | fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor);
+  const BitMask allowed_moves_q = (cango_mask & allowed_not_o_attacked & ~o_nbr_attacked) | fmgr.queen_mask(ocolor);
+  const BitMask allowed_moves_r = (cango_mask & allowed_not_o_attacked & ~o_nb_attacked) | fmgr.queen_mask(ocolor) | fmgr.rook_mask(ocolor);
+  const BitMask allowed_moves_nb = (cango_mask & allowed_not_o_attacked) | fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.queen_mask(ocolor) | fmgr.rook_mask(ocolor);
 
   //auto ctype = getCastleType(ocolor);
   //auto castle_mask = ctype >= 0 ? king_attack_mask_[ocolor][ctype] : 0ULL;
@@ -456,7 +458,8 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 #ifdef EVAL_MOB
     auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
     if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
-      bishop_moves = 0ULL;
+      auto from_mask = betweenMasks().from(board_->kingPos(color), n);
+      bishop_moves &= from_mask;
     }
     int n_moves = pop_count(bishop_moves & cango_mask);
     score_mob += EvalCoefficients::bishopMobility_[n_moves & 15];
@@ -496,7 +499,8 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 #ifdef EVAL_MOB
     auto rook_moves = magic_ns::rook_moves(n, mask_all_);
     if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
-      rook_moves = 0ULL;
+      auto from_mask = betweenMasks().from(board_->kingPos(color), n);
+      rook_moves &= from_mask;
     }
     auto r_moves_mask = rook_moves & cango_mask;
     int n_moves = pop_count(r_moves_mask);
@@ -542,7 +546,8 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 #ifdef EVAL_MOB
     auto queen_moves = magic_ns::queen_moves(n, mask_all_);
     if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
-      queen_moves = 0ULL;
+      auto from_mask = betweenMasks().from(board_->kingPos(color), n);
+      queen_moves &= from_mask;
     }
     auto n_moves = pop_count(queen_moves & cango_mask);
     score_mob += EvalCoefficients::queenMobility_[n_moves & 31];

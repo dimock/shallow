@@ -88,11 +88,11 @@ namespace NEngine
   // material diff
   // endgame, opening
   int EvalCoefficients::knightBonus_[2][2] = { {0, 15}, {-5, 5} };
-  int EvalCoefficients::bishopBonus_[2][2] = { {10, 75}, {5, 35} };
+  int EvalCoefficients::bishopBonus_[2][2] = { {12, 75}, {5, 35} };
   int EvalCoefficients::rookBonus_[2][2] = { {0, 10}, {0, 10} };
-  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {15, 35}, {0, 15} };
+  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 45}, {0, 25} };
   int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {15, 30}, {-25, 15} };
-  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {0, 25}, {0, 10} };
+  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {10, 35}, {0, 20} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 35}, {0, 20} };
 
   // arrays
@@ -104,9 +104,9 @@ namespace NEngine
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 
   // mobility
-  int EvalCoefficients::knightMobility_[16] = { -30, -15, 0, 6, 10, 14, 17, 22, 25 };
-  int EvalCoefficients::bishopMobility_[16] = { -30, -15, 0, 6, 10, 14, 17, 22, 25, 27, 29, 30, 30, 30, 30, 30 };
-  int EvalCoefficients::rookMobility_[16]   = { -30, -15, 0, 6, 10, 14, 17, 22, 25, 27, 29, 30, 30, 30, 30, 30 };
+  int EvalCoefficients::knightMobility_[16] = { -30, -15, 0, 3, 7, 10, 14, 19, 25 };
+  int EvalCoefficients::bishopMobility_[16] = { -30, -15, 0, 3, 7, 10, 14, 19, 25, 25, 25, 25, 25, 25, 25, 25 };
+  int EvalCoefficients::rookMobility_[16]   = { -30, -15, 0, 4, 9, 13, 17, 22, 25, 27, 29, 30, 30, 30, 30, 30 };
   int EvalCoefficients::queenMobility_[32]  = { -55, -25, 0, 7, 11, 15, 18, 23, 26, 28, 30, 32, 33, 34, 35, 36, 36,
                                                  36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36 };
 

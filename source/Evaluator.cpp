@@ -626,6 +626,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       continue;
 
     bool halfpasser = (opmsk & passmsk) != 0ULL;
+    bool couldPass = false;
     FullScore pwscore;
     if(halfpasser)
     {
@@ -644,8 +645,10 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
           nguards++;
       }
       auto nattackers = pop_count(attackers);
-      if (nguards >= nattackers)
+      if (nguards >= nattackers) {
         pwscore.common_ += EvalCoefficients::passerPawn_[cy];
+        couldPass = true;
+      }
     }
     else
     {
@@ -716,7 +719,10 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       int steps = last_cango - cy;
       int steps_to_promotion = 7 - cy;
       X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
-      pwscore.common_ += (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
+      int prmBonus = (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
+      if (halfpasser && !couldPass)
+        prmBonus >>= 1;
+      pwscore.common_ += prmBonus;
     }    
 
     // opponent king could not go to my pawns promotion path
@@ -724,7 +730,10 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     int pawn_dist_promo = std::abs(py - y);
     if(!couldIntercept(color, n, promo_pos, pawn_dist_promo+1))
     {
-      pwscore.endGame_ += EvalCoefficients::farKingPawn_[cy];
+      auto icpBonus = EvalCoefficients::farKingPawn_[cy];
+      if (halfpasser && !couldPass)
+        icpBonus >>= 1;
+      pwscore.endGame_ += icpBonus;
       if (cy > pinfo.most_unstoppable_y && !halfpasser)
         pinfo.most_unstoppable_y = cy;
     }
@@ -921,7 +930,9 @@ bool Evaluator::fakeCastle(Figure::Color color, int rpos, BitMask rmask) const
     return false;
   if ((color == Figure::ColorWhite && ki_pos.y() != 0) || (color == Figure::ColorBlack && ki_pos.y() != 7))
     return false;
-  if (!blockedRook(Figure::otherColor(color), rpos, rmask))
+  auto ocolor = Figure::otherColor(color);
+  bool rblocked = ((blocked_rook_mask_[ocolor][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[ocolor][ctype]) == 0ULL);
+  if (!rblocked)
     return false;
   int y = r_pos.y() < 3 ? 0 : 7;
   int x = r_pos.x() < 2 ? 0 : 7;
@@ -940,8 +951,30 @@ bool Evaluator::fakeCastle(Figure::Color color, int rpos, BitMask rmask) const
 bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) const
 {
   int ctype = rpos.x() < 4;
-  return ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) &&
-    ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL);
+  bool rblocked = ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL);
+  if (!rblocked)
+    return false;
+  auto ocolor = Figure::otherColor(color);
+  const FiguresManager & fmgr = board_->fmgr();
+  int y = rpos.y() < 3 ? 0 : 7;
+  int x = rpos.x() < 2 ? 0 : 7;
+  int dx = x == 0 ? 1 : -1;
+  Index ppos01{ x, y + delta_y_[ocolor] };
+  Index ppos02{ x, y + 2 * delta_y_[ocolor] };
+  Index ppos03{ x, y + 3 * delta_y_[ocolor] };
+  Index ppos11{ x + dx, y + delta_y_[ocolor] };
+  Index ppos12{ x + dx, y + 2 * delta_y_[ocolor] };
+  auto pwblockers0 = set_mask_bit(ppos01) | set_mask_bit(ppos02) | set_mask_bit(ppos03);
+  auto pwblockers1 = set_mask_bit(ppos11) | set_mask_bit(ppos12);
+  auto const& pmask = fmgr.pawn_mask(ocolor);
+  bool opawns_blocking = (pmask & pwblockers0) != 0ULL || (pmask & pwblockers1) != 0ULL;
+  if (!opawns_blocking)
+    return false;
+  //int ki_pos = board_->kingPos(color);
+  //int ki_dist = distanceCounter().getDistance(rpos, ki_pos);
+  //if (ki_dist < 3)
+  //  return false;
+  return true;
 }
 
 Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
