@@ -34,6 +34,7 @@ xCmd xCmdQueue::next()
   {
     auto cmd = commands_.front();
     commands_.pop();
+    return cmd;
   }
   return parse(input_.getInput(), uci_);
 }
