@@ -12,6 +12,8 @@ namespace NEngine
 struct EvalCoefficients
 {
   // single vars
+  static int additionalMatBonus_;
+
   // pawns
   static int pawnEndgameBonus_;
   static int rookBehindBonus_;
@@ -34,7 +36,7 @@ struct EvalCoefficients
 #endif // EVALUATE_DANGEROUS_ATTACKS
 
   // king
-  static int castlePossible_;
+  static int castleBonus_;
   static int fakeCastle_;
   static int kingIsUnsafe_;
   static int pawnPenaltyA_;

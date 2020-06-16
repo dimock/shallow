@@ -213,7 +213,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   /// use lazy evaluation level 0
   {
-    auto score0 = considerColor(score.common_);
+    auto score0 = considerColor(lipolScore(score, phaseInfo));
     if(score0 < alpha0_ || score0 > betta0_)
       return score0;
   }
@@ -720,8 +720,8 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       int steps_to_promotion = 7 - cy;
       X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
       int prmBonus = (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
-      if (halfpasser && !couldPass)
-        prmBonus >>= 1;
+      //if (halfpasser && !couldPass)
+      //  prmBonus >>= 1;
       pwscore.common_ += prmBonus;
     }    
 
@@ -731,8 +731,8 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     if(!couldIntercept(color, n, promo_pos, pawn_dist_promo+1))
     {
       auto icpBonus = EvalCoefficients::farKingPawn_[cy];
-      if (halfpasser && !couldPass)
-        icpBonus >>= 1;
+      //if (halfpasser && !couldPass)
+      //  icpBonus >>= 1;
       pwscore.endGame_ += icpBonus;
       if (cy > pinfo.most_unstoppable_y && !halfpasser)
         pinfo.most_unstoppable_y = cy;
@@ -788,12 +788,12 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   if (ctype == 0) // king side
   {
     Index kingPosK{ 6, kingPos.y() };
-    score = evaluateKingSafety(color, kingPosK);
+    score = evaluateKingSafety(color, kingPosK);// +EvalCoefficients::castleBonus_;
   }
   else if (ctype == 1) // queen side
   {
     Index kingPosQ{ 1, kingPos.y() };
-    score = evaluateKingSafety(color, kingPosQ);
+    score = evaluateKingSafety(color, kingPosQ);// +EvalCoefficients::castleBonus_;
   }
   else
     score = evaluateKingSafety(color, kingPos);

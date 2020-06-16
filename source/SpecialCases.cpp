@@ -94,7 +94,7 @@ namespace
     {
       Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
       auto xpawnColor = (pawnColor == Figure::ColorWhite) ? pawnColor : Figure::otherColor(pawnColor);
-      score = 2*Figure::figureWeight_[Figure::TypePawn] + pawn_colored_y_[xpawnColor][index.y()] * 20;
+      score = 4*Figure::figureWeight_[Figure::TypePawn] + pawn_colored_y_[xpawnColor][index.y()] * 20 + EvalCoefficients::additionalMatBonus_;
     }
     if(pawnColor == Figure::ColorBlack)
       score = -score;
@@ -229,7 +229,7 @@ void SpecialCasesDetector::initMatCases()
     auto kl = board.kingPos(loserColor);
     auto score = (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
     score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kl];
-    score += board.fmgr().weight(winnerColor) + 20;
+    score += board.fmgr().weight(winnerColor) + EvalCoefficients::additionalMatBonus_;
     score -= board.fiftyMovesCount();
     if(!winnerColor)
       score = -score;
@@ -342,7 +342,7 @@ void SpecialCasesDetector::initMatCases()
     {
       kp = Figure::mirrorIndex_[kp];
     }
-    score += EvalCoefficients::bishopKnightMat_[kp]*2;
+    score += EvalCoefficients::bishopKnightMat_[kp]*2 + EvalCoefficients::additionalMatBonus_;
     int ndist = distanceCounter().getDistance(kn, kl);
     int bdist = distanceCounter().getDistance(bp, kl);
     score -= ndist;
@@ -378,7 +378,7 @@ void SpecialCasesDetector::initMatCases()
       if((pr_dist > l_pr_dist && l_pr_dist <= w_pr_dist) || (l_pr_dist < 2 && pr_dist > 0))
         return score;
     }
-    auto fscore = Figure::figureWeight_[Figure::TypePawn] + Figure::figureWeight_[Figure::TypeBishop];
+    auto fscore = Figure::figureWeight_[Figure::TypePawn] + Figure::figureWeight_[Figure::TypeBishop] + EvalCoefficients::additionalMatBonus_;
     return score + (winnerColor ? fscore : -fscore);
   };
 
