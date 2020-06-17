@@ -227,10 +227,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
   score.opening_ += kingSafety;
 
-  //auto scoreForks = evaluateForks(Figure::ColorWhite);
-  //scoreForks -= evaluateForks(Figure::ColorBlack);
-  //score.common_ += scoreForks;
-
 #if 1
   score += evaluateKnights();
   score += evaluateBishops();
@@ -256,9 +252,14 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score.common_ += scoreKing.common_;
 #endif
 
-  //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-  //score += scorePP;
+
+  auto scoreForks = evaluateForks(Figure::ColorWhite);
+  scoreForks -= evaluateForks(Figure::ColorBlack);
+  score.common_ += scoreForks;
+
+  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+  score += scorePP;
 
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
@@ -318,15 +319,15 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
   score.common_ = pop_count(pw_protected & attackers) * EvalCoefficients::protectedPawnPressure_;
   score.common_ += pop_count(pw_unprotected & attackers) * EvalCoefficients::unprotectedPawnPressure_;
-  //// bishop treat
-  //if(fmgr.bishops(color) == 1)
-  //{
-  //  auto bi_mask = (fmgr.bishop_mask(color) & FiguresCounter::s_whiteMask_)
-  //    ?  FiguresCounter::s_whiteMask_
-  //    : ~FiguresCounter::s_whiteMask_;
-  //  score.endGame_ += pop_count(pw_protected   & bi_mask) * EvalCoefficients::protectedPawnBishopTreat_;
-  //  score.endGame_ += pop_count(pw_unprotected & bi_mask) * EvalCoefficients::unprotectedPawnBishopTreat_;
-  //}
+  // bishop treat
+  if(fmgr.bishops(color) == 1)
+  {
+    auto bi_mask = (fmgr.bishop_mask(color) & FiguresCounter::s_whiteMask_)
+      ?  FiguresCounter::s_whiteMask_
+      : ~FiguresCounter::s_whiteMask_;
+    score.endGame_ += pop_count(pw_protected   & bi_mask) * EvalCoefficients::protectedPawnBishopTreat_;
+    score.endGame_ += pop_count(pw_unprotected & bi_mask) * EvalCoefficients::unprotectedPawnBishopTreat_;
+  }
   return score;
 }
 
@@ -788,12 +789,12 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   if (ctype == 0) // king side
   {
     Index kingPosK{ 6, kingPos.y() };
-    score = evaluateKingSafety(color, kingPosK);// +EvalCoefficients::castleBonus_;
+    score = evaluateKingSafety(color, kingPosK);
   }
   else if (ctype == 1) // queen side
   {
     Index kingPosQ{ 1, kingPos.y() };
-    score = evaluateKingSafety(color, kingPosQ);// +EvalCoefficients::castleBonus_;
+    score = evaluateKingSafety(color, kingPosQ);
   }
   else
     score = evaluateKingSafety(color, kingPos);
@@ -1091,6 +1092,10 @@ ScoreType Evaluator::evaluateForks(Figure::Color color) const
   int knightsN = pop_count(kn_fork);
   if(knightsN > 1 || (pawnsN+knightsN > 0 && color == board_->color()))
     return EvalCoefficients::forkBonus_;
+  BitMask bi_fork = o_rq_mask & finfo_[color].bishopAttacks_;
+  int bishopsN = pop_count(bi_fork);
+  if (bishopsN + knightsN > 1 || (pawnsN + bishopsN + knightsN > 0 && color == board_->color()))
+    return EvalCoefficients::bishopsAttackBonus_;
   return 0;
 }
 

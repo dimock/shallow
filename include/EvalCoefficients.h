@@ -24,6 +24,7 @@ struct EvalCoefficients
   static int kingToPasserDistanceBonus_;
 
   // forks
+  static int bishopsAttackBonus_;
   static int forkBonus_;
   static int doublePawnAttack_;
 
@@ -36,7 +37,6 @@ struct EvalCoefficients
 #endif // EVALUATE_DANGEROUS_ATTACKS
 
   // king
-  static int castleBonus_;
   static int fakeCastle_;
   static int kingIsUnsafe_;
   static int pawnPenaltyA_;

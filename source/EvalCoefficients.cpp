@@ -21,8 +21,9 @@ namespace NEngine
   int EvalCoefficients::kingToPasserDistanceBonus_{ 2 };
 
   // forks
-  int EvalCoefficients::forkBonus_{ 60 };
-  int EvalCoefficients::doublePawnAttack_{ 50 };
+  int EvalCoefficients::bishopsAttackBonus_{ 25 };
+  int EvalCoefficients::forkBonus_{ 50 };
+  int EvalCoefficients::doublePawnAttack_{ 60 };
 
 #ifdef EVALUATE_DANGEROUS_ATTACKS
   int EvalCoefficients::dangerousAttacksOnPawn_{6};
@@ -33,7 +34,6 @@ namespace NEngine
 #endif // EVALUATE_DANGEROUS_ATTACKS
 
   // king
-  int EvalCoefficients::castleBonus_{ 10 };
   int EvalCoefficients::fakeCastle_{ -40 };
   int EvalCoefficients::kingIsUnsafe_{ -20 };
   int EvalCoefficients::pawnPenaltyA_{ -12 };
