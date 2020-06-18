@@ -250,6 +250,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto scoreKing = evaluateMobilityAndKingPressure(Figure::ColorWhite);
   scoreKing -= evaluateMobilityAndKingPressure(Figure::ColorBlack);
   score.common_ += scoreKing.common_;
+  score.opening_ += scoreKing.opening_;
 #endif
 
 
