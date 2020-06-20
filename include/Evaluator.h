@@ -254,7 +254,7 @@ private:
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
                                 + 4*Figure::figureWeight_[Figure::TypeKnight]);
 
-  const int endgameWeight_ = 2*(2*Figure::figureWeight_[Figure::TypeKnight]);
+  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeKnight]);
 
   const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 

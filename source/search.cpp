@@ -464,7 +464,7 @@ void Engine::sortMoves0(int ictx)
       auto& hist = history(board.color(), m->from(), m->to());
       m->sort_value = hist.score();
     }
-    std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
+    std::stable_sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
   }
 }
 
