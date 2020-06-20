@@ -137,11 +137,10 @@ PawnMasks::PawnMasks()
       pmasks_forward_[color][i] = forward_msk << x;
       pmasks_passed_[color][i] = forward_msk << x;
 
-      BitMask support_mask = set_mask_bit(Index(0, y));
+      BitMask neighbor_mask = set_mask_bit(Index(0, y));
       BitMask guard_mask = set_mask_bit(Index(0, y));
       if(y > 0 && y < 7)
       {
-        support_mask |= set_mask_bit(Index(0, y-deltay));
         guard_mask |= set_mask_bit(Index(0, y-deltay));
       }
 
@@ -149,7 +148,7 @@ PawnMasks::PawnMasks()
       {
         pmask_isolated_[x] |= full_column_msk << (x-1);
         pmasks_passed_[color][i] |= forward_msk << (x-1);
-        pmasks_supported_[color][i] |= support_mask << (x-1);
+        pmasks_neighbor_[color][i] |= neighbor_mask << (x-1);
         pmasks_guards_[color][i] |= guard_mask << (x-1);
         pmasks_backward_[color][i] |= backward_msk << (x-1);
       }
@@ -157,7 +156,7 @@ PawnMasks::PawnMasks()
       {
         pmask_isolated_[x] |= full_column_msk << (x+1);
         pmasks_passed_[color][i] |= forward_msk << (x+1);
-        pmasks_supported_[color][i] |= support_mask << (x+1);
+        pmasks_neighbor_[color][i] |= neighbor_mask << (x+1);
         pmasks_guards_[color][i] |= guard_mask << (x+1);
         pmasks_backward_[color][i] |= backward_msk << (x+1);
       }

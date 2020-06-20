@@ -74,7 +74,9 @@ namespace NEngine
   int EvalCoefficients::doubledPawn_[2] = { -12, -8 };
   int EvalCoefficients::isolatedPawn_[2] = { -15, -12 };
   int EvalCoefficients::backwardPawn_[2] = { -12, -8 };
-  int EvalCoefficients::unprotectedPawn_[2] = { -8, -4 };
+  int EvalCoefficients::unguardedPawn_[2] = {-8, -4 };
+  int EvalCoefficients::protectedPawn_[2] = { 8, 5};
+  int EvalCoefficients::hasneighborPawn_[2] = { 6, 4};
   int EvalCoefficients::weakHalfopenPawn_[2] = { -6, 0 };
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
@@ -282,14 +284,14 @@ namespace NEngine
          -5,  -3,   2,   2,   2,   2,  -3,  -5
       },
       {
-        -40, -32, -27, -24, -24, -27, -32, -40,
-        -32, -19, -12,  -8,  -8, -12, -19, -19,
-        -27, -12,  12,  16,  16,  12, -12, -27,
-        -24,  -8,  16,  40,  40,  16,  -8, -24,
-        -24,  -8,  16,  40,  40,  16,  -8, -24,
-        -27, -12,  12,  16,  16,  12, -12, -27,
-        -32, -19, -12,  -8,  -8, -12, -19, -32,
-        -40, -32, -27, -24, -24, -27, -32, -40
+        -35, -28, -23, -21, -21, -23, -28, -35,
+        -28, -16, -11,  -7,  -7, -11, -16, -16,
+        -23, -11,  14,  16,  16,  14, -11, -23,
+        -21,  -7,  16,  28,  28,  16,  -7, -21,
+        -21,  -7,  16,  28,  28,  14,  -7, -21,
+        -23, -11,  14,  16,  16,  14, -11, -23,
+        -28, -16, -11,  -7,  -7, -11, -16, -28,
+        -35, -28, -23, -21, -21, -23, -28, -35
       },
       {
           0,   0,   0,   0,   0,   0,   0,   0,

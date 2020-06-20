@@ -506,12 +506,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     auto pw_field = set_mask_bit(n);
     auto fwd_field = set_mask_bit(n1);
 
-    //int dist_to_oking = distanceCounter().getDistance(board_->kingPos(ocolor), n);
-    //int dist_to_myking = distanceCounter().getDistance(board_->kingPos(color), n);
-
-    //info.score.endGame_ -= EvalCoefficients::kingToPawnBonus_[dist_to_oking];
-    //info.score.endGame_ += EvalCoefficients::kingToPawnBonus_[dist_to_myking];
-
     // doubled pawn
     if(!(x_visited & (1<<x)))
     {
@@ -527,16 +521,22 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
     auto const& protectMask = movesTable().pawnCaps(ocolor, n);
-    bool unprotected = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
-    //  ((protectMask & pmask) == 0ULL);    
+    bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
+    bool isProtected = ((protectMask & pmask) != 0ULL);    
+    auto nb_mask = pawnMasks().mask_neighbor(color, n);
+    bool hasNeighbor = !isProtected && ((nb_mask & pmask) != 0ULL);
 
     info.score.opening_ += isolated * EvalCoefficients::isolatedPawn_[0];
     info.score.opening_ += backward * EvalCoefficients::backwardPawn_[0];
-    info.score.opening_ += unprotected * EvalCoefficients::unprotectedPawn_[0];
+    info.score.opening_ += unguarded * EvalCoefficients::unguardedPawn_[0];
+    info.score.opening_ += isProtected * EvalCoefficients::protectedPawn_[0];
+    info.score.opening_ += hasNeighbor * EvalCoefficients::hasneighborPawn_[0];
 
     info.score.endGame_ += isolated * EvalCoefficients::isolatedPawn_[1];
     info.score.endGame_ += backward * EvalCoefficients::backwardPawn_[1];
-    info.score.endGame_ += unprotected * EvalCoefficients::unprotectedPawn_[1];
+    info.score.endGame_ += unguarded * EvalCoefficients::unguardedPawn_[1];
+    info.score.opening_ += isProtected * EvalCoefficients::protectedPawn_[1];
+    info.score.opening_ += hasNeighbor * EvalCoefficients::hasneighborPawn_[1];
 
     //// could be attacked by RQ
     //if (((pawnMasks().mask_forward(color, n) & pawns_all) == 0ULL) &&
