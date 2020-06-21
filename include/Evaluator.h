@@ -147,6 +147,8 @@ public:
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
 
+  ScoreType materialScore() const;
+
 #ifdef PROCESS_DANGEROUS_EVAL
   bool dangerous() const
   {

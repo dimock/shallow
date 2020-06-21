@@ -157,6 +157,25 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 #endif
 }
 
+ScoreType Evaluator::materialScore() const
+{
+  const FiguresManager& fmgr = board_->fmgr();
+  FullScore score;
+
+  // determine game phase (opening, middle or end game)
+  auto phaseInfo = detectPhase();
+
+  // evaluate figures weight
+  score.common_ = fmgr.weight();
+  score += evaluateMaterialDiff();
+
+  score.opening_ += fmgr.eval(0);
+  score.endGame_ += fmgr.eval(1);
+
+  auto result = considerColor(lipolScore(score, phaseInfo));
+  return result;
+}
+
 ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 {
 #ifndef NDEBUG

@@ -687,7 +687,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-    //if (sdata.depth_ == 11 && findSequence(ictx, move, ply, true))
+    //if (findSequence(ictx, move, ply, true))
     //{
     //  depthInc = depthInc;
     //}
@@ -934,7 +934,8 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     if(score0 >= betta && (depth >= 0 || !dangerous))
       return { score0, dangerous };
 
-    threshold = (int)alpha - (int)score0 - Position_Gain;
+    auto mscore = eval.materialScore();
+    threshold = std::max((int)alpha - (int)mscore - Position_Gain, 0);
     if(threshold > Figure::figureWeight_[Figure::TypePawn] && board.isWinnerLoser())
       threshold = Figure::figureWeight_[Figure::TypePawn];
     

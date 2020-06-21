@@ -73,10 +73,10 @@ namespace NEngine
   // arrays
   int EvalCoefficients::doubledPawn_[2] = { -12, -8 };
   int EvalCoefficients::isolatedPawn_[2] = { -15, -12 };
-  int EvalCoefficients::backwardPawn_[2] = { -12, -8 };
-  int EvalCoefficients::unguardedPawn_[2] = {-8, -4 };
-  int EvalCoefficients::protectedPawn_[2] = { 8, 5};
-  int EvalCoefficients::hasneighborPawn_[2] = { 6, 4};
+  int EvalCoefficients::backwardPawn_[2] = { -10, -8 };
+  int EvalCoefficients::unguardedPawn_[2] = {-10, -8 };
+  int EvalCoefficients::protectedPawn_[2] = { 10, 8};
+  int EvalCoefficients::hasneighborPawn_[2] = { 7, 5};
   int EvalCoefficients::weakHalfopenPawn_[2] = { -6, 0 };
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
@@ -91,12 +91,12 @@ namespace NEngine
   // material diff
   // endgame, opening
   int EvalCoefficients::knightBonus_[2][2] = { {0, 15}, {-5, 5} };
-  int EvalCoefficients::bishopBonus_[2][2] = { {12, 75}, {5, 35} };
+  int EvalCoefficients::bishopBonus_[2][2] = { {12, 75}, {5, 50} };
   int EvalCoefficients::rookBonus_[2][2] = { {0, 10}, {0, 10} };
-  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 45}, {10, 25} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 25}, {-20, 15} };
+  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 50}, {10, 40} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 25}, {-10, 15} };
   int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 65}, {0, 55} };
-  int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 35}, {0, 20} };
+  int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 35}, {0, 30} };
 
   // arrays
   int EvalCoefficients::passerPawn_[8] = { 0, 7, 11, 23, 44, 73, 110, 0 };
@@ -154,11 +154,11 @@ namespace NEngine
       {
           0,   0,   0,   0,   0,   0,   0,   0,
           5,   5,   5,   5,   5,   5,   5,   5,
-          1,   1,   1,   3,   3,   1,   1,   1,
-          0,   0,   2,  13,  13,   2,   0,   0,
-          0,   0,   3,  13,  13,   3,   0,   0,
-          0,   0,   2,   5,   5,   2,   0,   0,
-          4,   4,   4,  -8,  -8,   4,   4,   4,
+          5,   6,   7,   8,   8,   7,   6,   5,
+          0,   1,   4,  13,  13,   4,   1,   0,
+         -5,   0,   3,  13,  13,   3,   0,  -5,
+         -3,   0,   2,   5,   5,   2,   0,  -3,
+          4,   3,   2,  -8,  -8,   2,   3,   4,
           0,   0,   0,   0,   0,   0,   0,   0
       },
       {
