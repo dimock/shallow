@@ -361,7 +361,7 @@ struct TacticalGenerator
     {
       if (depth_ >= 0)
       {
-        ckg_.generate();
+        ckg_.generateStrongest();
         order_ = oChecks;
       }
 #ifdef GENERATE_MAT_CHECK_AFTER_HORIZON

@@ -626,8 +626,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn],
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook] };
 
+    ScoreType mscore = scontexts_.at(ictx).eval_.materialScore();
     ScoreType score0 = scontexts_.at(ictx).eval_(alpha, betta);
-    int threshold = (int)alpha - (int)score0 - Position_Gain;
+    if (score0 > mscore)
+      mscore = score0;
+    int threshold = (int)alpha - (int)mscore - Position_GainFP;
     if (threshold > thresholds_[(depth / ONE_PLY) & 3])
       return captures(ictx, depth, ply, alpha, betta, pv, score0).score;
   }
@@ -687,7 +690,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-    //if (findSequence(ictx, move, ply, true))
+    //if (findSequence(ictx, ply, true))
     //{
     //  depthInc = depthInc;
     //}
@@ -784,6 +787,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       score = betta;
     }
 #endif
+
+    //if (findSequence(ictx, ply, true) && score > alpha)
+    //{
+    //  depthInc = depthInc;
+    //}
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
@@ -934,8 +942,10 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     if(score0 >= betta && (depth >= 0 || !dangerous))
       return { score0, dangerous };
 
-    auto mscore = eval.materialScore();
-    threshold = std::max((int)alpha - (int)mscore - Position_Gain, 0);
+    ScoreType mscore = eval.materialScore();
+    if (score0 > mscore)
+      mscore = score0;
+    threshold = std::max((int)alpha - (int)mscore - Position_GainThr, 0);
     if(threshold > Figure::figureWeight_[Figure::TypePawn] && board.isWinnerLoser())
       threshold = Figure::figureWeight_[Figure::TypePawn];
     
@@ -978,7 +988,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     sdata.inc_nc();
 
     int depthInc = board.underCheck() ? ONE_PLY : 0;
-    score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv, -ScoreMax).score;
+    score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv).score;
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");

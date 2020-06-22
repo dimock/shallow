@@ -268,6 +268,10 @@ Evaluator::FullScore Evaluator::evaluateBishops()
       finfo_[color].bishopAttacks_ |= bishop_moves;
       finfo_[color].bishopDirectAttacks_ |= magic_ns::bishop_moves(n, mask_all_);
 
+      auto mask_all_no_orq = mask_all_ & ~(board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor));
+      auto bishop_treat = magic_ns::bishop_moves(n, mask_all_no_orq);
+      finfo_[color].bishopTreatAttacks_ |= bishop_treat;
+
       // king protection
 #ifdef EVAL_KP_BASIC
       //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
@@ -600,11 +604,37 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   q_check &= finfo_[color].queenDirectAttacks_ & allowed_moves_q;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-  auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |
-    board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-  BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
-  finfo_[ocolor].matThreat_ = (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL) &&
-    (oking_moves == 0ULL);
+  if (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL)
+  {
+    auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |
+      board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
+    BitMask checking_attacked = 0ULL;
+    BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
+    if (kn_check != 0) {
+      int n = _lsb64(kn_check);
+      checking_attacked |= movesTable().caps(Figure::TypeKnight, n);
+      if ((oking_moves & ~checking_attacked) == 0ULL)
+        finfo_[ocolor].matThreat_ = true;
+    }
+    if (!finfo_[ocolor].matThreat_ && bi_check != 0) {
+      int n = _lsb64(bi_check);
+      checking_attacked |= magic_ns::bishop_moves(n, mask_all_);
+      if ((oking_moves & ~checking_attacked) == 0ULL)
+        finfo_[ocolor].matThreat_ = true;
+    }
+    if (!finfo_[ocolor].matThreat_ && r_check != 0) {
+      int n = _lsb64(r_check);
+      checking_attacked |= magic_ns::rook_moves(n, mask_all_);
+      if ((oking_moves & ~checking_attacked) == 0ULL)
+        finfo_[ocolor].matThreat_ = true;
+    }
+    if (!finfo_[ocolor].matThreat_ && q_check != 0) {
+      int n = _lsb64(q_check);
+      checking_attacked |= magic_ns::queen_moves(n, mask_all_);
+      if ((oking_moves & ~checking_attacked) == 0ULL)
+        finfo_[ocolor].matThreat_ = true;
+    }
+  }
 #endif // PROCESS_DANGEROUS_EVAL
 
 

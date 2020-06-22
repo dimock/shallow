@@ -123,9 +123,9 @@ void Engine::logMovies(int ictx)
   (*callbacks_.slog_) << oss.str() << std::endl;
 }
 
-static std::vector<std::string> sequence({ "d5d6", "c7d6", "d2d6", "g6e6", "d6d8", "e6e2", "d8e8", "d1d2", "e2d2" });
+static std::vector<std::string> sequence({ "d6c5", "c3e5", "c5d6", "d2d6", "d8d6", "h1c1", "f6h5" });
 
-bool Engine::findSequence(int ictx, const Move & move, int ply, bool exactMatch) const
+bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
 {
   bool identical = false;
   auto& board = scontexts_.at(ictx).board_;
@@ -140,11 +140,13 @@ bool Engine::findSequence(int ictx, const Move & move, int ply, bool exactMatch)
         break;
       const UndoInfo & undo = board.reverseUndo(j);
       auto smove = sequence[i];
-      auto move = strToMove(smove);
-      if(undo.move_.from() != move.from() || undo.move_.to() != move.to())
-      {
-        identical = false;
-        break;
+      if (!smove.empty()) {
+        auto move = strToMove(smove);
+        if (undo.move_.from() != move.from() || undo.move_.to() != move.to())
+        {
+          identical = false;
+          break;
+        }
       }
     }
   }

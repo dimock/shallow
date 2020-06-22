@@ -160,19 +160,19 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 ScoreType Evaluator::materialScore() const
 {
   const FiguresManager& fmgr = board_->fmgr();
-  FullScore score;
+  //FullScore score;
 
-  // determine game phase (opening, middle or end game)
-  auto phaseInfo = detectPhase();
+  //// determine game phase (opening, middle or end game)
+  //auto phaseInfo = detectPhase();
 
-  // evaluate figures weight
-  score.common_ = fmgr.weight();
-  score += evaluateMaterialDiff();
+  //// evaluate figures weight
+  //score.common_ = fmgr.weight();
+  //score += evaluateMaterialDiff();
 
-  score.opening_ += fmgr.eval(0);
-  score.endGame_ += fmgr.eval(1);
+  //score.opening_ += fmgr.eval(0);
+  //score.endGame_ += fmgr.eval(1);
 
-  auto result = considerColor(lipolScore(score, phaseInfo));
+  auto result = considerColor(fmgr.weight());
   return result;
 }
 
@@ -1095,7 +1095,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   return score;
 }
 
-ScoreType Evaluator::evaluateForks(Figure::Color color) const
+ScoreType Evaluator::evaluateForks(Figure::Color color)
 {
   Figure::Color ocolor = Figure::otherColor(color);
   BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
@@ -1106,16 +1106,22 @@ ScoreType Evaluator::evaluateForks(Figure::Color color) const
     : ((pawn_msk >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk >> 9) & Figure::pawnCutoffMasks_[1]);
   BitMask pawn_fork = o_mask & pawn_att;
   int pawnsN = pop_count(pawn_fork);
-  if(pawnsN > 1)
+  if (pawnsN > 1) {
+    finfo_[ocolor].forkTreat_ = true;
     return EvalCoefficients::doublePawnAttack_;
+  }
   BitMask kn_fork = o_rq_mask & finfo_[color].knightAttacks_;
   int knightsN = pop_count(kn_fork);
-  if(knightsN > 1 || (pawnsN+knightsN > 0 && color == board_->color()))
+  if (knightsN > 1 || (pawnsN + knightsN > 0 && color == board_->color())) {
+    finfo_[ocolor].forkTreat_ = true;
     return EvalCoefficients::forkBonus_;
-  BitMask bi_fork = o_rq_mask & finfo_[color].bishopAttacks_;
-  int bishopsN = pop_count(bi_fork);
-  if (bishopsN + knightsN > 1 || (pawnsN + bishopsN + knightsN > 0 && color == board_->color()))
+  }
+  BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
+  int bishopsN = pop_count(bi_treat);
+  if (bishopsN + knightsN > 1 || (pawnsN + bishopsN + knightsN > 0 && color == board_->color())) {
+    finfo_[ocolor].forkTreat_ = true;
     return EvalCoefficients::bishopsAttackBonus_;
+  }
   return 0;
 }
 
@@ -1127,7 +1133,8 @@ void Evaluator::detectDangerous()
   dangerous_ = (finfo_[color].pawnsUnderAttack_ + finfo_[color].knightsUnderAttack_ + finfo_[color].bishopsUnderAttack_
     + finfo_[color].rooksUnderAttack_ + finfo_[color].queensUnderAttack_ > 1) ||
     finfo_[ocolor].pawnPromotion_ ||
-    finfo_[color].matThreat_;
+    finfo_[color].matThreat_ ||
+    finfo_[ocolor].forkTreat_;
 }
 
 #ifdef EVALUATE_DANGEROUS_ATTACKS

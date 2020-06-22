@@ -169,7 +169,7 @@ private:
 #endif
 
 
-  bool findSequence(int ictx, const Move & move, int ply, bool exactMatch) const;
+  bool findSequence(int ictx, int ply, bool exactMatch) const;
   void verifyGenerators(int ictx, const Move & hmove);
 
 public:

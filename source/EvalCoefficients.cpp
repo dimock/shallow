@@ -21,7 +21,7 @@ namespace NEngine
   int EvalCoefficients::kingToPasserDistanceBonus_{ 2 };
 
   // forks
-  int EvalCoefficients::bishopsAttackBonus_{ 25 };
+  int EvalCoefficients::bishopsAttackBonus_{ 30 };
   int EvalCoefficients::forkBonus_{ 50 };
   int EvalCoefficients::doublePawnAttack_{ 60 };
 
@@ -73,10 +73,10 @@ namespace NEngine
   // arrays
   int EvalCoefficients::doubledPawn_[2] = { -12, -8 };
   int EvalCoefficients::isolatedPawn_[2] = { -15, -12 };
-  int EvalCoefficients::backwardPawn_[2] = { -10, -8 };
-  int EvalCoefficients::unguardedPawn_[2] = {-10, -8 };
-  int EvalCoefficients::protectedPawn_[2] = { 10, 8};
-  int EvalCoefficients::hasneighborPawn_[2] = { 7, 5};
+  int EvalCoefficients::backwardPawn_[2] = { -8, -7 };
+  int EvalCoefficients::unguardedPawn_[2] = {-8, -7 };
+  int EvalCoefficients::protectedPawn_[2] = { 8, 7};
+  int EvalCoefficients::hasneighborPawn_[2] = { 6, 5};
   int EvalCoefficients::weakHalfopenPawn_[2] = { -6, 0 };
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
@@ -94,7 +94,7 @@ namespace NEngine
   int EvalCoefficients::bishopBonus_[2][2] = { {12, 75}, {5, 50} };
   int EvalCoefficients::rookBonus_[2][2] = { {0, 10}, {0, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 50}, {10, 40} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 25}, {-10, 15} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {-10, 15} };
   int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 65}, {0, 55} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 35}, {0, 30} };
 

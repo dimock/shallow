@@ -119,6 +119,7 @@ class Evaluator
     BitMask pawnAttacks_{};
     BitMask knightAttacks_{};
     BitMask bishopAttacks_{};
+    BitMask bishopTreatAttacks_{};
     BitMask rookAttacks_{};
     BitMask queenAttacks_{};
     BitMask bishopDirectAttacks_{};
@@ -136,11 +137,12 @@ class Evaluator
     int queensUnderAttack_{};
     bool matThreat_{};
     bool pawnPromotion_{};
+    bool forkTreat_{};
 #endif // PROCESS_DANGEROUS_EVAL
   } finfo_[2];
 
 public:
-  const int lazyThreshold0_ = 800;
+  const int lazyThreshold0_ = 1000;
   const int lazyThreshold1_ = 600;
 
   void initialize(Board const* board);
@@ -239,7 +241,7 @@ private:
   FullScore evaluateMaterialDiff() const;
 
   /// find knight and pawn forks
-  ScoreType evaluateForks(Figure::Color color) const;
+  ScoreType evaluateForks(Figure::Color color);
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
