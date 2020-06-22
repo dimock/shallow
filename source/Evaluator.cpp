@@ -554,8 +554,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     info.score.endGame_ += isolated * EvalCoefficients::isolatedPawn_[1];
     info.score.endGame_ += backward * EvalCoefficients::backwardPawn_[1];
     info.score.endGame_ += unguarded * EvalCoefficients::unguardedPawn_[1];
-    info.score.opening_ += isProtected * EvalCoefficients::protectedPawn_[1];
-    info.score.opening_ += hasNeighbor * EvalCoefficients::hasneighborPawn_[1];
+    info.score.endGame_ += isProtected * EvalCoefficients::protectedPawn_[1];
+    info.score.endGame_ += hasNeighbor * EvalCoefficients::hasneighborPawn_[1];
 
     //// could be attacked by RQ
     //if (((pawnMasks().mask_forward(color, n) & pawns_all) == 0ULL) &&
@@ -1017,48 +1017,55 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
     queensDiff = 0;
   }
 
-  // bonus for knights
-  if (fmgr.knights(Figure::ColorWhite) > 0)
+  // bonus for double bishop
+  if (fmgr.bishops(Figure::ColorWhite) >= 2)
   {
-    int knightsN = std::min(fmgr.knights(Figure::ColorWhite) - 1, 1);
-    score.opening_ += EvalCoefficients::knightBonus_[0][knightsN];
-    score.endGame_ += EvalCoefficients::knightBonus_[1][knightsN];
+    int pawnsN = fmgr.pawns(Figure::ColorWhite) != 0;
+    score.opening_ += EvalCoefficients::doubleBishopBonus_[0][pawnsN];
+    score.endGame_ += EvalCoefficients::doubleBishopBonus_[1][pawnsN];
   }
-  if (fmgr.knights(Figure::ColorBlack) > 0)
+  if (fmgr.bishops(Figure::ColorBlack) >= 2)
   {
-    int knightsN = std::min(fmgr.knights(Figure::ColorBlack) - 1, 1);
-    score.opening_ -= EvalCoefficients::knightBonus_[0][knightsN];
-    score.endGame_ -= EvalCoefficients::knightBonus_[1][knightsN];
-  }
-
-  // bonus for bishops
-  if (fmgr.bishops(Figure::ColorWhite) > 0)
-  {
-    int bishopsN = std::min(fmgr.bishops(Figure::ColorWhite) - 1, 1);
-    score.opening_ += EvalCoefficients::bishopBonus_[0][bishopsN];
-    score.endGame_ += EvalCoefficients::bishopBonus_[1][bishopsN];
-  }
-  if (fmgr.bishops(Figure::ColorBlack) > 0)
-  {
-    int bishopsN = std::min(fmgr.bishops(Figure::ColorBlack) - 1, 1);
-    score.opening_ -= EvalCoefficients::bishopBonus_[0][bishopsN];
-    score.endGame_ -= EvalCoefficients::bishopBonus_[1][bishopsN];
+    int pawnsN = fmgr.pawns(Figure::ColorBlack) != 0;
+    score.opening_ -= EvalCoefficients::doubleBishopBonus_[0][pawnsN];
+    score.endGame_ -= EvalCoefficients::doubleBishopBonus_[1][pawnsN];
   }
 
-  // bonus for rooks
-  if (fmgr.rooks(Figure::ColorWhite) > 0)
+  // bonus for 2 knights
+  if (knightsDiff >= 2 || knightsDiff <= -2)
   {
-    int rooksN = std::min(fmgr.rooks(Figure::ColorWhite) - 1, 1);
-    score.opening_ += EvalCoefficients::rookBonus_[0][rooksN];
-    score.endGame_ += EvalCoefficients::rookBonus_[1][rooksN];
+    int kndiff = sign(knightsDiff);
+    Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
+    int pawnsN = fmgr.pawns(ncolor) != 0;
+    score.opening_ += kndiff * EvalCoefficients::twoKnightsBonus_[0][pawnsN];
+    score.endGame_ += kndiff * EvalCoefficients::twoKnightsBonus_[1][pawnsN];
   }
-  if (fmgr.rooks(Figure::ColorBlack) > 0)
+  // bonus for one bishops
+  if (bishopsDiff == 1 || bishopsDiff == -1)
   {
-    int rooksN = std::min(fmgr.rooks(Figure::ColorBlack) - 1, 1);
-    score.opening_ -= EvalCoefficients::rookBonus_[0][rooksN];
-    score.endGame_ -= EvalCoefficients::rookBonus_[1][rooksN];
+    Figure::Color ncolor = static_cast<Figure::Color>(bishopsDiff > 0);
+    int pawnsN = fmgr.pawns(ncolor) != 0;
+    score.opening_ += bishopsDiff * EvalCoefficients::oneBishopBonus_[0][pawnsN];
+    score.endGame_ += bishopsDiff * EvalCoefficients::oneBishopBonus_[1][pawnsN];
   }
-
+  // bonus for 2 bishops
+  if (bishopsDiff >= 2 || bishopsDiff <= -2)
+  {
+    int bdiff = sign(bishopsDiff);
+    Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
+    int pawnsN = fmgr.pawns(bcolor) != 0;
+    score.opening_ += bdiff * EvalCoefficients::twoBishopsBonus_[0][pawnsN];
+    score.endGame_ += bdiff * EvalCoefficients::twoBishopsBonus_[1][pawnsN];
+  }
+  // bonus for 2 rooks
+  if (rooksDiff >= 2 || rooksDiff <= -2)
+  {
+    int rdiff = sign(rooksDiff);
+    Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
+    int pawnsN = fmgr.pawns(rcolor) != 0;
+    score.opening_ += rdiff * EvalCoefficients::twoRooksBonus_[0][pawnsN];
+    score.endGame_ += rdiff * EvalCoefficients::twoRooksBonus_[1][pawnsN];
+  }
   // Figure vs. Pawns
   if(!rooksDiff && figuresDiff*pawnsDiff < 0)
   {
@@ -1106,23 +1113,41 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     : ((pawn_msk >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk >> 9) & Figure::pawnCutoffMasks_[1]);
   BitMask pawn_fork = o_mask & pawn_att;
   int pawnsN = pop_count(pawn_fork);
+  ScoreType forkScore = 0;
   if (pawnsN > 1) {
     finfo_[ocolor].forkTreat_ = true;
-    return EvalCoefficients::doublePawnAttack_;
+    forkScore += EvalCoefficients::doublePawnAttack_;
+  }
+  else if(pawnsN == 1) {
+    forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
   }
   BitMask kn_fork = o_rq_mask & finfo_[color].knightAttacks_;
   int knightsN = pop_count(kn_fork);
-  if (knightsN > 1 || (pawnsN + knightsN > 0 && color == board_->color())) {
+  if (knightsN > 1) {
     finfo_[ocolor].forkTreat_ = true;
-    return EvalCoefficients::forkBonus_;
+    forkScore += EvalCoefficients::knightForkBonus_;
+  }
+  else if (knightsN == 1) {
+    forkScore += EvalCoefficients::knightForkBonus_ >> 3;
   }
   BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
   int bishopsN = pop_count(bi_treat);
-  if (bishopsN + knightsN > 1 || (pawnsN + bishopsN + knightsN > 0 && color == board_->color())) {
+  if (bishopsN > 1) {
     finfo_[ocolor].forkTreat_ = true;
-    return EvalCoefficients::bishopsAttackBonus_;
+    forkScore += EvalCoefficients::bishopsAttackBonus_;
   }
-  return 0;
+  else if (bishopsN == 1) {
+    forkScore += EvalCoefficients::bishopsAttackBonus_ >> 3;
+  }
+  bool queensTreat = (board_->fmgr().queen_mask(ocolor) & finfo_[color].rookDirectAttacks_) != 0ULL;
+  if (queensTreat) {
+    forkScore += EvalCoefficients::queenUnderRookAttackBonus_;
+  }
+  if (!finfo_[ocolor].forkTreat_ && (pawnsN + knightsN + bishopsN + queensTreat > 1)) {
+    finfo_[ocolor].forkTreat_ = true;
+    forkScore += EvalCoefficients::multiAttackBonus_;
+  }
+  return forkScore;
 }
 
 #ifdef PROCESS_DANGEROUS_EVAL

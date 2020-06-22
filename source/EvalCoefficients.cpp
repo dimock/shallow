@@ -22,8 +22,11 @@ namespace NEngine
 
   // forks
   int EvalCoefficients::bishopsAttackBonus_{ 30 };
-  int EvalCoefficients::forkBonus_{ 50 };
-  int EvalCoefficients::doublePawnAttack_{ 60 };
+  int EvalCoefficients::knightForkBonus_{ 50 };
+  int EvalCoefficients::doublePawnAttack_{ 50 };
+  int EvalCoefficients::queenUnderRookAttackBonus_{ 8 };
+  int EvalCoefficients::multiAttackBonus_{ 15 };
+  int EvalCoefficients::pinnedAttackBonus_{ 20 };
 
 #ifdef EVALUATE_DANGEROUS_ATTACKS
   int EvalCoefficients::dangerousAttacksOnPawn_{6};
@@ -34,7 +37,7 @@ namespace NEngine
 #endif // EVALUATE_DANGEROUS_ATTACKS
 
   // king
-  int EvalCoefficients::fakeCastle_{ -40 };
+  int EvalCoefficients::fakeCastle_{ -20 };
   int EvalCoefficients::kingIsUnsafe_{ -25 };
   int EvalCoefficients::pawnPenaltyA_{ -14 };
   int EvalCoefficients::pawnPenaltyB_{ -16 };
@@ -73,33 +76,35 @@ namespace NEngine
   // arrays
   int EvalCoefficients::doubledPawn_[2] = { -12, -8 };
   int EvalCoefficients::isolatedPawn_[2] = { -15, -12 };
-  int EvalCoefficients::backwardPawn_[2] = { -8, -7 };
+  int EvalCoefficients::backwardPawn_[2] = { -10, -8 };
   int EvalCoefficients::unguardedPawn_[2] = {-8, -7 };
-  int EvalCoefficients::protectedPawn_[2] = { 8, 7};
-  int EvalCoefficients::hasneighborPawn_[2] = { 6, 5};
+  int EvalCoefficients::protectedPawn_[2] = { 5, 4};
+  int EvalCoefficients::hasneighborPawn_[2] = { 4, 3};
   int EvalCoefficients::weakHalfopenPawn_[2] = { -6, 0 };
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {14, 12};
-  int EvalCoefficients::pawnShieldB_[2] = {14, 12};
-  int EvalCoefficients::pawnShieldC_[2] = { 6, 5};
+  int EvalCoefficients::pawnShieldA_[2] = {15, 10};
+  int EvalCoefficients::pawnShieldB_[2] = {15, 10};
+  int EvalCoefficients::pawnShieldC_[2] = { 8, 5};
 
   // rook on open column
-  int EvalCoefficients::openRook_[4] = { 0, 10, 30, 30};
+  int EvalCoefficients::openRook_[4] = { 0, 7, 30, 30};
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::knightBonus_[2][2] = { {0, 15}, {-5, 5} };
-  int EvalCoefficients::bishopBonus_[2][2] = { {12, 75}, {5, 50} };
-  int EvalCoefficients::rookBonus_[2][2] = { {0, 10}, {0, 10} };
+  int EvalCoefficients::doubleBishopBonus_[2][2] = { {20, 30}, {15, 25} };
+  int EvalCoefficients::twoKnightsBonus_[2][2] = { {0, 15}, {0, 5} };
+  int EvalCoefficients::oneBishopBonus_[2][2] = { {5, 10}, {5, 10} };
+  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 50}, {15, 40} };
+  int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 50}, {10, 40} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {-10, 15} };
-  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 65}, {0, 55} };
-  int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 35}, {0, 30} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 25}, {-10, 15} };
+  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 50}, {0, 30} };
+  int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 
   // arrays
-  int EvalCoefficients::passerPawn_[8] = { 0, 7, 11, 23, 44, 73, 110, 0 };
+  int EvalCoefficients::passerPawn_[8] = { 0, 7, 10, 20, 37, 60, 90, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 3, 5, 12, 24, 40, 60, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 7, 11, 23, 44, 73, 110, 0 };
@@ -130,10 +135,10 @@ namespace NEngine
   {
     {},
     {},
-    { 0, 12, 8, 6, 3, 1, 0, -5 },
-    { 0, 12, 8, 6, 3, 1, 0, -5 },
-    { 0, 12, 8, 6, 3, 1, 0, -5 },
-    { 0, 12, 8, 6, 3, 1, 0, -5 },
+    { 0, 10, 7, 5, 3, 1, 0, -5 },
+    { 0, 10, 7, 5, 3, 1, 0, -5 },
+    { 0, 10, 7, 5, 3, 1, 0, -5 },
+    { 0, 10, 7, 5, 3, 1, 0, -5 },
     {},
     {}
   };
@@ -162,14 +167,14 @@ namespace NEngine
           0,   0,   0,   0,   0,   0,   0,   0
       },
       {
-        -16, -13,  -7,  -7,  -7,  -7, -13, -16,
+        -16, -13, -11, -11, -11, -11, -13, -16,
         -13,  -5,  -1,  -1,  -1,  -1,  -5, -13,
-         -7,   5,   5,   5,   5,   5,   5,  -7,
-         -2,   8,   9,  13,  13,   9,   8,  -2,
-         -2,   0,   9,  13,  13,   9,   0,  -2,
-         -7,   0,   6,   4,   4,   6,   0,  -7,
+        -11,   5,   5,   5,   5,   5,   5, -11,
+        -11,   8,   9,  13,  13,   9,   8, -11,
+        -11,   0,   9,  13,  13,   9,   0, -11,
+        -11,   0,   6,   4,   4,   6,   0, -11,
         -13,  -7,   2,   2,   2,   2,  -7, -13,
-        -16, -13,  -7,  -2,  -2,  -7, -13, -16
+        -16, -13, -11, -11, -11, -11, -13, -16
       },
       {
         -15, -10,  -8,  -8,  -8,  -8, -10, -15,

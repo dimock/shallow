@@ -9,6 +9,12 @@ xbitmath.h - Copyright (C) 2016 by Dmitry Sultanov
 
 namespace NEngine
 {
+
+template <class T>
+int sign(T v)
+{
+  return (T{0} < v) - (v < T{0});
+}
     
 typedef int(*FUNC_POP_COUNT64)(uint64);
 extern FUNC_POP_COUNT64 g_func_pop_count64;

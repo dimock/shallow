@@ -23,10 +23,13 @@ struct EvalCoefficients
   static int unprotectedPawnBishopTreat_;
   static int kingToPasserDistanceBonus_;
 
-  // forks
+  // forks & other treats
   static int bishopsAttackBonus_;
-  static int forkBonus_;
+  static int knightForkBonus_;
   static int doublePawnAttack_;
+  static int queenUnderRookAttackBonus_;
+  static int multiAttackBonus_;
+  static int pinnedAttackBonus_;
 
 #ifdef EVALUATE_DANGEROUS_ATTACKS
   static int dangerousAttacksOnPawn_;
@@ -88,9 +91,11 @@ struct EvalCoefficients
   static int openRook_[4];
 
   // material diff
-  static int knightBonus_[2][2];
-  static int bishopBonus_[2][2];
-  static int rookBonus_[2][2];
+  static int doubleBishopBonus_[2][2];
+  static int twoKnightsBonus_[2][2];
+  static int oneBishopBonus_[2][2];
+  static int twoBishopsBonus_[2][2];
+  static int twoRooksBonus_[2][2];
   static int figureAgainstPawnBonus_[2][2];
   static int rookAgainstFigureBonus_[2][2];
   static int figuresAgainstRookBonus_[2][2];
