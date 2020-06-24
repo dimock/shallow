@@ -182,12 +182,13 @@ BetweenMask::BetweenMask(DeltaPosCounter const& deltaPoscounter)
     for(int j = 0; j < 64; ++j)
     {
       // clear it first
-      s_between_[i][j] = 0;
-      s_from_[i][j] = 0;
+      s_between_[i][j] = 0ULL;
+      s_from_[i][j] = 0ULL;
+      s_tail_[i][j] = 0ULL;
 
       ///  to <- from
       FPos dp = deltaPoscounter.getDeltaPos(j, i);
-      if(FPos(0, 0) == dp)
+      if(dp.is_zero())
         continue;
 
       {
@@ -203,6 +204,13 @@ BetweenMask::BetweenMask(DeltaPosCounter const& deltaPoscounter)
 
         for(; p; p += dp)
           s_from_[i][j] |= set_mask_bit(p.index());
+      }
+
+      {
+        FPos p = FPosIndexer::get(j) + dp;
+
+        for (; p; p += dp)
+          s_tail_[i][j] |= set_mask_bit(p.index());
       }
     }
 

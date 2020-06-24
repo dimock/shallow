@@ -690,7 +690,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-    //if (findSequence(ictx, ply, true))
+    //if (sdata.depth_ == 9 && findSequence(ictx, ply, true))
     //{
     //  depthInc = depthInc;
     //}
@@ -788,7 +788,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     }
 #endif
 
-    //if (findSequence(ictx, ply, true) && score > alpha)
+    //if (sdata.depth_ == 9 && findSequence(ictx, ply, true) && score > alpha)
     //{
     //  depthInc = depthInc;
     //}
@@ -969,17 +969,18 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   Board board0{ board };
 #endif
 
+  int thr = 0;
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(dangerous, threshold, counter);
+    auto* pmove = tg.next(dangerous, thr, counter);
     if(!pmove)
       break;
 
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
-    if((!board.underCheck() || counter > 0) && !move.see_ok() && !board.see(move, threshold))
+    if((!board.underCheck() || counter > 0) && !move.see_ok() && !board.see(move, thr))
       continue;
 
     ScoreType score = -ScoreMax;
@@ -993,8 +994,10 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
 
-    if(score > -Figure::MatScore+MaxPly)
+    if (score > -Figure::MatScore + MaxPly) {
       dangerous = false;
+      thr = threshold;
+    }
 
     if (!stopped(ictx) && score > scoreBest)
     {

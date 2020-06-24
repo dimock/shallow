@@ -83,6 +83,11 @@ public:
   {
     return ((x_ + y_) & 1) != 0;
   }
+
+  bool is_zero() const
+  {
+    return x_ == 0 && y_ == 0;
+  }
 };
 
 

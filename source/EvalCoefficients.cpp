@@ -50,16 +50,16 @@ namespace NEngine
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 3 };
-  int EvalCoefficients::knightKingAttack_{ 10 };
-  int EvalCoefficients::bishopKingAttack_{ 10 };
-  int EvalCoefficients::rookKingAttack_{ 10 };
-  int EvalCoefficients::queenKingAttack_{ 10 };
+  int EvalCoefficients::knightKingAttack_{ 15 };
+  int EvalCoefficients::bishopKingAttack_{ 15 };
+  int EvalCoefficients::rookKingAttack_{ 15 };
+  int EvalCoefficients::queenKingAttack_{ 15 };
 
   int EvalCoefficients::unprotectedKingMultiattacksCoeff_{15};
   int EvalCoefficients::unprotectedKingAttacksCoeff_{10};
   int EvalCoefficients::allKingAttacksCoeff_{5};
-  int EvalCoefficients::generalKingPressure_{ 2 };
-  int EvalCoefficients::generalOpponentPressure_{ 1 };
+  int EvalCoefficients::generalKingPressure_{ 4 };
+  int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
   int EvalCoefficients::knightChecking_{ 45 };

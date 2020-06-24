@@ -23,6 +23,9 @@ struct SeeCalc
   Figure::Color color_;
   bool promotion_;
   bool discovered_check_;
+  bool discovered_attack_ = false;
+  mutable bool usual_check_detected_ = false;
+  mutable bool usual_check_ = false;
 
   SeeCalc(Board const& board, Move const& move, bool en_passant) :
     board_(board),
@@ -31,18 +34,26 @@ struct SeeCalc
   {
     all_mask_ = fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite) | set_mask_bit(move_.to());
     color_ = board_.getField(move_.from()).color();
+    auto ocolor = Figure::otherColor(color_);
     X_ASSERT((all_mask_ & set_mask_bit(move_.from())) == 0ULL, "no figure on field move.from");
-    X_ASSERT(discovered_check(move_.from(), Figure::otherColor(color_), board_.kingPos(color_)), "SEE move is illegal");
+    X_ASSERT(discovered_check(move_.from(), ocolor, board_.kingPos(color_)), "SEE move is illegal");
     if(en_passant)
     {
-      discovered_check_ = enpassant_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
-      X_ASSERT(!discovered_check_ && discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_))),
+      discovered_check_ = enpassant_check(move_.from(), color_, board_.kingPos(ocolor));
+      X_ASSERT(!discovered_check_ && discovered_check(move_.from(), color_, board_.kingPos(ocolor)),
                "discovered check was not detected");
     }
     else
-      discovered_check_ = discovered_check(move_.from(), color_, board_.kingPos(Figure::otherColor(color_)));
+      discovered_check_ = discovered_check(move_.from(), color_, board_.kingPos(ocolor));
     if(discovered_check_)
       return;
+    if (board_.fmgr().queens(ocolor) > 0 && board.getField(move.from()).type() != Figure::TypeQueen)
+    {
+      auto queenPos = _lsb64(board_.fmgr().queen_mask(ocolor));
+      auto const& queen_moves = magic_ns::queen_moves(queenPos, all_mask_);
+      if((queen_moves & set_mask_bit(move_.to())) == 0ULL)
+        discovered_attack_ = discovered_check(move_.from(), color_, queenPos);
+    }
     all_mask_ ^= set_mask_bit(move_.from());
     promotion_ = (move_.to() >> 3) == 0 || (move_.to() >> 3) == 7;
   }
@@ -157,21 +168,30 @@ struct SeeCalc
       return false;
     auto mask_all_f = all_mask_ & ~set_mask_bit(from);
     auto mask_all_t = mask_all_f & ~set_mask_bit(move_.to());
+    auto tail_mask = betweenMasks().tail(ki_pos, from);
     if(dir == nst::bishop)
     {
-      auto bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_f) & mask_all_t;
+      auto bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_f) & mask_all_t & tail_mask;
       auto const& bi_mask = fmgr_.bishop_mask(ocolor);
       auto const& q_mask = fmgr_.queen_mask(ocolor);
       return (bi_moves & (bi_mask | q_mask)) != 0ULL;
     }
     X_ASSERT(dir != nst::rook, "invalid direction from point to point");
-    auto r_moves = magic_ns::rook_moves(ki_pos, mask_all_f) & mask_all_t;
+    auto r_moves = magic_ns::rook_moves(ki_pos, mask_all_f) & mask_all_t & tail_mask;
     auto const& r_mask = fmgr_.rook_mask(ocolor);
     auto const& q_mask = fmgr_.queen_mask(ocolor);
     return (r_moves & (r_mask | q_mask)) != 0ULL;
   }
 
   inline bool is_usual_check() const
+  {
+    if (usual_check_detected_)
+      return usual_check_;
+    usual_check_detected_ = true;
+    return usual_check_ = detect_usual_check();
+  }
+
+  inline bool detect_usual_check() const
   {
 #ifndef NDEBUG
     SBoard<Board, UndoInfo, Board::GameLength> sbrd{ board_ };
@@ -263,6 +283,10 @@ bool Board::see(const Move & move, int threshold) const
 
   // assume discovered check is always good
   if(see_calc.discovered_check_)
+    return true;
+
+  // discovers attack to queen with check
+  if (see_calc.discovered_attack_ && see_calc.is_usual_check())
     return true;
 
   // could be checkmate
