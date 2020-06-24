@@ -265,7 +265,7 @@ private:
   Board const* board_{ nullptr };
 
 #ifdef USE_HASH
-  EHashTable ehash_{16};
+  EHashTable ehash_{18};
 #else
   EHashTable ehash_{0};
 #endif

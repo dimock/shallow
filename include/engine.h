@@ -168,9 +168,10 @@ private:
   GHashTable hash_;
 #endif
 
-
+#ifdef RELEASEDEBUGINFO
   bool findSequence(int ictx, int ply, bool exactMatch) const;
   void verifyGenerators(int ictx, const Move & hmove);
+#endif
 
 public:
   void saveHash(std::string const& fname) const;

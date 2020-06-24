@@ -123,7 +123,9 @@ void Engine::logMovies(int ictx)
   (*callbacks_.slog_) << oss.str() << std::endl;
 }
 
-static std::vector<std::string> sequence({ "e2d3", "h6g4", "e4h7", "g8h8", "d3c2", "g4e3", "f2e3", "b6e3", "f1f2", "f8f2", "c2f2", "e3c3", "a1e1" });
+
+#ifdef RELEASEDEBUGINFO
+static std::vector<std::string> sequence({ "h7g7", "f5f6", "g7g5", "e2h5", "d8f8", "c2d1", "c5e4", "h5f7", "f8f7", "d1d8", "f7f8", "f6f7", "g8h7", "d8f8", "g5e5" });
 
 bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
 {
@@ -166,5 +168,6 @@ bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
 
   return identical;
 }
+#endif // RELEASEDEBUGINFO
 
 } // NEngine

@@ -376,13 +376,13 @@ struct Board
       auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_t) & tail_mask;
       auto const& bi_mask = fmgr_.bishop_mask(ocolor);
       auto const& q_mask = fmgr_.queen_mask(ocolor);
-      return (bi_moves & through) && (bi_moves & (bi_mask | q_mask));
+      return (bi_moves & (bi_mask | q_mask)) != 0ULL;
     }
     X_ASSERT(dir != nst::rook, "invalid direction from point to point");
     auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all_t) & tail_mask;
     auto const& r_mask = fmgr_.rook_mask(ocolor);
     auto const& q_mask = fmgr_.queen_mask(ocolor);
-    return ((r_moves & through) && (r_moves & (r_mask | q_mask)));
+    return (r_moves & (r_mask | q_mask)) != 0ULL;
   }
 
   inline bool isPinned(int pos, BitMask const& mask_all, Figure::Color ocolor, int ki_pos, nst::bishop_rook_dirs interestDir) const
@@ -398,14 +398,14 @@ struct Board
       auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_t) & tail_mask;
       auto const& bi_mask = fmgr_.bishop_mask(ocolor);
       auto const& q_mask = fmgr_.queen_mask(ocolor);
-      return (bi_moves & through) && (bi_moves & (bi_mask | q_mask));
+      return (bi_moves & (bi_mask | q_mask)) != 0ULL;
     }
     if (dir == nst::rook && interestDir != nst::bishop)
     {
       auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all_t) & tail_mask;
       auto const& r_mask = fmgr_.rook_mask(ocolor);
       auto const& q_mask = fmgr_.queen_mask(ocolor);
-      return ((r_moves & through) && (r_moves & (r_mask | q_mask)));
+      return (r_moves & (r_mask | q_mask)) != 0ULL;
     }
     return false;
   }

@@ -244,7 +244,7 @@ public:
   inline void hashColor()
   {
     hashCode_ ^= colorCode();
-    kpwnCode_ ^= colorCode();
+    //kpwnCode_ ^= colorCode();
   }
 
   inline void hashNullmove()

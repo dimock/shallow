@@ -690,10 +690,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-    //if (sdata.depth_ == 9 && findSequence(ictx, ply, true))
-    //{
-    //  depthInc = depthInc;
-    //}
+#ifdef RELEASEDEBUGINFO
+    if (sdata.depth_ == 9 && findSequence(ictx, ply, true))
+    {
+      depthInc = depthInc;
+    }
+#endif // RELEASEDEBUGINFO
 
 #ifdef USE_PROBCUT
     ScoreType betta_pc = betta < ScoreMax - 1000 ? betta + 300 : betta;
@@ -788,10 +790,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     }
 #endif
 
-    //if (sdata.depth_ == 9 && findSequence(ictx, ply, true) && score > alpha)
-    //{
-    //  depthInc = depthInc;
-    //}
+#ifdef RELEASEDEBUGINFO
+    if (sdata.depth_ == 9 && findSequence(ictx, ply, true) && score > alpha)
+    {
+      depthInc = depthInc;
+    }
+#endif // RELEASEDEBUGINFO
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
@@ -973,7 +977,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(dangerous, thr, counter);
+    auto* pmove = tg.next(dangerous, thr, counter == 0);
     if(!pmove)
       break;
 
@@ -988,8 +992,22 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     board.makeMove(move);
     sdata.inc_nc();
 
+#ifdef RELEASEDEBUGINFO
+    if (sdata.depth_ == 9 && findSequence(ictx, ply, true))
+    {
+      thr = thr;
+    }
+#endif // RELEASEDEBUGINFO
+
     int depthInc = board.underCheck() ? ONE_PLY : 0;
     score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv).score;
+
+#ifdef RELEASEDEBUGINFO
+    if (sdata.depth_ == 9 && findSequence(ictx, ply, true) && score > alpha)
+    {
+      thr = thr;
+    }
+#endif // RELEASEDEBUGINFO
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");

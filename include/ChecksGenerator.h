@@ -610,10 +610,9 @@ struct ChecksGenerator
         auto kn_moves = movesTable().caps(Figure::TypeKnight, from) & mask_all_inv;
         bool discovered = board_.discoveredCheck(from, mask_all, color, oki_pos);
         bool can_escape = (oki_moves & ~betweenMasks().from(from, oki_pos)) != 0ULL;
-        auto nki_blocked_from = kn_moves & ~multiattack_mask;
         if (!discovered)
         {
-          kn_moves &= knight_check_mask & ~o_attack_mask;
+          kn_moves &= knight_check_mask & (~o_attack_mask| multiattack_mask) & ~o_attack_pnb_mask;
         }
         for (; kn_moves;)
         {
@@ -1085,7 +1084,6 @@ struct ChecksGenerator
         auto kn_moves = movesTable().caps(Figure::TypeKnight, from) & mask_all_inv;
         bool discovered = board_.discoveredCheck(from, mask_all, color, oki_pos);
         bool can_escape = (oki_moves & ~betweenMasks().from(from, oki_pos)) != 0ULL;
-        auto nki_blocked_from = kn_moves & ~multiattack_mask;
         if (!discovered)
         {
           kn_moves &= knight_check_mask;

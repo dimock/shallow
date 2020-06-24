@@ -151,6 +151,8 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
     NEngine::Evaluator eval;
     eval.initialize(&e.board_);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
+    ChecksGenerator<Board, SMove> ck{ e.board_ };
+    ck.generateOne(0, false);
     int diff = -100000;
     float t = 0.0f;
     int refScore = -10000;
