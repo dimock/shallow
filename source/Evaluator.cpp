@@ -763,13 +763,15 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     pinfo.score += pwscore;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    X_ASSERT(((y + dy)) > 7 || ((y + dy)) < 0, "pawn goes to invalid line");
-    if (!board_->getField(idx1) && !halfpasser)
-    {
-      BitMask next_mask = set_mask_bit(idx1);
-      if ((cy == 6) && ((next_mask & blockers_mask) == 0ULL))
+    if (board_->color() != color) {
+      X_ASSERT(((y + dy)) > 7 || ((y + dy)) < 0, "pawn goes to invalid line");
+      if (!board_->getField(idx1) && !halfpasser)
       {
-        finfo_[color].pawnPromotion_ = true;
+        BitMask next_mask = set_mask_bit(idx1);
+        if ((cy == 6) && ((next_mask & blockers_mask) == 0ULL))
+        {
+          finfo_[color].pawnPromotion_ = true;
+        }
       }
     }
 #endif // PROCESS_DANGEROUS_EVAL

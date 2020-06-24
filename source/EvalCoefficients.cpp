@@ -99,7 +99,7 @@ namespace NEngine
   int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 50}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 50}, {10, 40} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 25}, {-10, 15} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {15, 35}, {0, 20} };
   int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 50}, {0, 30} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 

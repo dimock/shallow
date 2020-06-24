@@ -125,7 +125,7 @@ void Engine::logMovies(int ictx)
 
 
 #ifdef RELEASEDEBUGINFO
-static std::vector<std::string> sequence({ "h7g7", "f5f6", "g7g5", "e2h5", "d8f8", "c2d1", "c5e4", "h5f7", "f8f7", "d1d8", "f7f8", "f6f7", "g8h7", "d8f8", "g5e5" });
+static std::vector<std::string> sequence({ "e5g4", "e4e5", "f6e4", "e2e4", "b6f2", "e1d1", "f7f5", "e4e2", "b7b6", "f1g2" });
 
 bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
 {

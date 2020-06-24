@@ -375,14 +375,17 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   const BitMask mask_xray_r = mask_all_ & ~(fmgr.rook_mask(color) | fmgr.queen_mask(color));
 
   const BitMask cango_mask = ~(finfo_[ocolor].pawnAttacks_ | fmgr.pawn_mask(color) | fmgr.king_mask(color) | fmgr.king_mask(ocolor));
-  const BitMask can_check_mask = ~(fmgr.mask(color) | attacked_any_but_oking | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
 
   const BitMask o_nb_attacked = finfo_[ocolor].knightAttacks_ | finfo_[ocolor].bishopAttacks_;
   const BitMask o_nbr_attacked = o_nb_attacked | finfo_[ocolor].rookAttacks_;
-  const BitMask not_occupied = ~(fmgr.mask(color) | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
+  const BitMask not_occupied = ~(fmgr.mask(color) | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_) | finfo_[ocolor].multiattack_mask_);
   const BitMask allowed_moves_q = (cango_mask & not_occupied & ~o_nbr_attacked) | fmgr.queen_mask(ocolor);
   const BitMask allowed_moves_r = (cango_mask & not_occupied & ~o_nb_attacked) | fmgr.queen_mask(ocolor) | fmgr.rook_mask(ocolor);
   const BitMask allowed_moves_nb = (cango_mask & not_occupied) | fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor) | fmgr.queen_mask(ocolor) | fmgr.rook_mask(ocolor);
+
+  const BitMask can_check_q = ~(fmgr.mask(color) | attacked_any_but_oking | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
+  const BitMask can_check_r = can_check_q | fmgr.queen_mask(ocolor);
+  const BitMask can_check_nb = can_check_r | fmgr.rook_mask(ocolor);
 
   //auto ctype = getCastleType(ocolor);
   //auto castle_mask = ctype >= 0 ? king_attack_mask_[ocolor][ctype] : 0ULL;
@@ -398,11 +401,9 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   oki_fields &= ~(fmgr.king_mask(ocolor) | finfo_[ocolor].pawnAttacks_);
 
 #ifdef PROCESS_DANGEROUS_EVAL
-  auto pw_under_attack = board_->fmgr().pawn_mask(color) & finfo_[ocolor].attack_mask_ & ~finfo_[color].attack_mask_;
-  finfo_[color].pawnsUnderAttack_ = pop_count(pw_under_attack);
-  if (finfo_[color].pawnsUnderAttack_ > 0)
-  {
-    finfo_[color].pawnsUnderAttack_ = finfo_[color].pawnsUnderAttack_;
+  if (board_->color() == color) {
+    auto pw_under_attack = board_->fmgr().pawn_mask(color) & finfo_[ocolor].attack_mask_ & ~finfo_[color].attack_mask_;
+    finfo_[color].pawnsUnderAttack_ = pop_count(pw_under_attack);
   }
 #endif // PROCESS_DANGEROUS_EVAL
 
@@ -444,14 +445,16 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     }
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if ((knight_moves & allowed_moves_nb) == 0ULL)
-    {
-      auto kn_mask = set_mask_bit(n);
-      bool notProtected = (kn_mask & finfo_[color].attack_mask_) == 0ULL;
-      bool attacked = (kn_mask & finfo_[ocolor].attack_mask_) != 0ULL;
-      bool pawnAttack = (kn_mask & finfo_[ocolor].pawnAttacks_) != 0ULL;
-      if((notProtected && attacked) || pawnAttack)
-        finfo_[color].knightsUnderAttack_++;
+    if (board_->color() == color) {
+      if ((knight_moves & allowed_moves_nb) == 0ULL)
+      {
+        auto kn_mask = set_mask_bit(n);
+        bool notProtected = (kn_mask & finfo_[color].attack_mask_) == 0ULL;
+        bool attacked = (kn_mask & finfo_[ocolor].attack_mask_) != 0ULL;
+        bool pawnAttack = (kn_mask & finfo_[ocolor].pawnAttacks_) != 0ULL;
+        if ((notProtected && attacked) || pawnAttack)
+          finfo_[color].knightsUnderAttack_++;
+      }
     }
 #endif // PROCESS_DANGEROUS_EVAL
 #endif // EVAL_MOB
@@ -496,14 +499,16 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     }
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if ((bishop_moves & allowed_moves_nb) == 0ULL)
-    {
-      auto bi_mask = set_mask_bit(n);
-      bool notProtected = (bi_mask & finfo_[color].attack_mask_) == 0ULL;
-      bool attacked = (bi_mask & finfo_[ocolor].attack_mask_) != 0ULL;
-      bool pawnAttack = (bi_mask & finfo_[ocolor].pawnAttacks_) != 0ULL;
-      if ((notProtected && attacked) || pawnAttack)
-        finfo_[color].bishopsUnderAttack_++;
+    if (board_->color() == color) {
+      if ((bishop_moves & allowed_moves_nb) == 0ULL)
+      {
+        auto bi_mask = set_mask_bit(n);
+        bool notProtected = (bi_mask & finfo_[color].attack_mask_) == 0ULL;
+        bool attacked = (bi_mask & finfo_[ocolor].attack_mask_) != 0ULL;
+        bool pawnAttack = (bi_mask & finfo_[ocolor].pawnAttacks_) != 0ULL;
+        if ((notProtected && attacked) || pawnAttack)
+          finfo_[color].bishopsUnderAttack_++;
+      }
     }
 #endif // PROCESS_DANGEROUS_EVAL
 
@@ -556,15 +561,17 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     }
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if ((rook_moves  & allowed_moves_r) == 0ULL)
-    {
-      auto r_mask = set_mask_bit(n);
-      bool notProtected = (r_mask & finfo_[color].attack_mask_) == 0ULL;
-      bool attacked = (r_mask & finfo_[ocolor].attack_mask_) != 0ULL;
-      auto rook_attackers = finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].knightAttacks_ | finfo_[ocolor].bishopAttacks_;
-      bool lowerAttack = (r_mask & rook_attackers) != 0ULL;
-      if ((notProtected && attacked) || lowerAttack)
-        finfo_[color].rooksUnderAttack_++;
+    if (board_->color() == color) {
+      if ((rook_moves  & allowed_moves_r) == 0ULL)
+      {
+        auto r_mask = set_mask_bit(n);
+        bool notProtected = (r_mask & finfo_[color].attack_mask_) == 0ULL;
+        bool attacked = (r_mask & finfo_[ocolor].attack_mask_) != 0ULL;
+        auto rook_attackers = finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].knightAttacks_ | finfo_[ocolor].bishopAttacks_;
+        bool lowerAttack = (r_mask & rook_attackers) != 0ULL;
+        if ((notProtected && attacked) || lowerAttack)
+          finfo_[color].rooksUnderAttack_++;
+      }
     }
 #endif // PROCESS_DANGEROUS_EVAL
 
@@ -605,16 +612,18 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     score_mob += EvalCoefficients::queenMobility_[n_moves & 31];
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if ((queen_moves & allowed_moves_q) == 0ULL)
-    {
-      auto q_mask = set_mask_bit(n);
-      bool notProtected = (q_mask & finfo_[color].attack_mask_) == 0ULL;
-      bool attacked = (q_mask & finfo_[ocolor].attack_mask_) != 0ULL;
-      auto queen_attackers = finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].knightAttacks_ |
-        finfo_[ocolor].bishopAttacks_ | finfo_[ocolor].rookAttacks_;
-      bool lowerAttack = (q_mask & queen_attackers) != 0ULL;
-      if ((notProtected && attacked) || lowerAttack)
-        finfo_[color].queensUnderAttack_++;
+    if (board_->color() == color) {
+      if ((queen_moves & allowed_moves_q) == 0ULL)
+      {
+        auto q_mask = set_mask_bit(n);
+        bool notProtected = (q_mask & finfo_[color].attack_mask_) == 0ULL;
+        bool attacked = (q_mask & finfo_[ocolor].attack_mask_) != 0ULL;
+        auto queen_attackers = finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].knightAttacks_ |
+          finfo_[ocolor].bishopAttacks_ | finfo_[ocolor].rookAttacks_;
+        bool lowerAttack = (q_mask & queen_attackers) != 0ULL;
+        if ((notProtected && attacked) || lowerAttack)
+          finfo_[color].queensUnderAttack_++;
+      }
     }
 #endif // PROCESS_DANGEROUS_EVAL
 
@@ -626,41 +635,43 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
   auto q_check = bi_check | r_check;
 
-  kn_check &= finfo_[color].knightAttacks_ & allowed_moves_nb;
-  bi_check &= finfo_[color].bishopDirectAttacks_ & allowed_moves_nb;
-  r_check &= finfo_[color].rookDirectAttacks_ & allowed_moves_r;
-  q_check &= finfo_[color].queenDirectAttacks_ & allowed_moves_q;
+  kn_check &= finfo_[color].knightAttacks_ & can_check_nb;
+  bi_check &= finfo_[color].bishopDirectAttacks_ & can_check_nb;
+  r_check &= finfo_[color].rookDirectAttacks_ & can_check_r;
+  q_check &= finfo_[color].queenDirectAttacks_ & can_check_q;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-  if (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL)
-  {
-    auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |
-      board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-    BitMask checking_attacked = 0ULL;
-    BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
-    if (kn_check != 0) {
-      int n = _lsb64(kn_check);
-      checking_attacked |= movesTable().caps(Figure::TypeKnight, n);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
-    }
-    if (!finfo_[ocolor].matThreat_ && bi_check != 0) {
-      int n = _lsb64(bi_check);
-      checking_attacked |= magic_ns::bishop_moves(n, mask_all_);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
-    }
-    if (!finfo_[ocolor].matThreat_ && r_check != 0) {
-      int n = _lsb64(r_check);
-      checking_attacked |= magic_ns::rook_moves(n, mask_all_);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
-    }
-    if (!finfo_[ocolor].matThreat_ && q_check != 0) {
-      int n = _lsb64(q_check);
-      checking_attacked |= magic_ns::queen_moves(n, mask_all_);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
+  if (board_->color() != color) {
+    if (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL)
+    {
+      auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |
+        board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
+      BitMask checking_attacked = 0ULL;
+      BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
+      if (kn_check != 0) {
+        int n = _lsb64(kn_check);
+        checking_attacked |= movesTable().caps(Figure::TypeKnight, n);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          finfo_[ocolor].matThreat_ = true;
+      }
+      if (!finfo_[ocolor].matThreat_ && bi_check != 0) {
+        int n = _lsb64(bi_check);
+        checking_attacked |= magic_ns::bishop_moves(n, mask_all_);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          finfo_[ocolor].matThreat_ = true;
+      }
+      if (!finfo_[ocolor].matThreat_ && r_check != 0) {
+        int n = _lsb64(r_check);
+        checking_attacked |= magic_ns::rook_moves(n, mask_all_);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          finfo_[ocolor].matThreat_ = true;
+      }
+      if (!finfo_[ocolor].matThreat_ && q_check != 0) {
+        int n = _lsb64(q_check);
+        checking_attacked |= magic_ns::queen_moves(n, mask_all_);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          finfo_[ocolor].matThreat_ = true;
+      }
     }
   }
 #endif // PROCESS_DANGEROUS_EVAL
