@@ -243,9 +243,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto hashedScore = hashedEvaluation();
   score += hashedScore.score;
 
-  int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
-  score.opening_ += kingSafety;
-
 #if 1
   score += evaluateKnights();
   score += evaluateBishops();
@@ -373,6 +370,8 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   }
 
   PasserInfo info = evaluatePawns();
+  int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
+  info.score.opening_ += kingSafety;
 
   if(heval)
   {
