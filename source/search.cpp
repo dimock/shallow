@@ -483,6 +483,11 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
   board.makeMove(move);
   sdata.inc_nc();
 
+#ifdef RELEASEDEBUGINFO
+  auto ff = (FIELD_NAME)move.from();
+  auto ft = (FIELD_NAME)move.to();
+#endif
+
   if(!stopped(ictx))
   {
     if(pv)
@@ -636,7 +641,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 #endif // futility pruning
 
-
 #ifdef SINGULAR_EXT
   int  aboveAlphaN = 0;
   int  depthIncBest = 0;
@@ -691,7 +695,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     bool check_or_cap = curr.capture() || board.underCheck();
 
 #ifdef RELEASEDEBUGINFO
-    if (sdata.depth_ == 9 && findSequence(ictx, ply, true))
+    auto ff = (FIELD_NAME)move.from();
+    auto ft = (FIELD_NAME)move.to();
+    if (findSequence(ictx, ply, true))
     {
       depthInc = depthInc;
     }
@@ -791,7 +797,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef RELEASEDEBUGINFO
-    if (sdata.depth_ == 9 && findSequence(ictx, ply, true) && score > alpha)
+    if (findSequence(ictx, ply, true) && score > alpha)
     {
       depthInc = depthInc;
     }
@@ -904,23 +910,23 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 //////////////////////////////////////////////////////////////////////////
 Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0)
 {
-  if(alpha >= Figure::MatScore-ply)
+  if (alpha >= Figure::MatScore - ply)
     return { alpha, false };
 
   auto& board = scontexts_.at(ictx).board_;
   auto& sdata = scontexts_.at(ictx).sdata_;
   auto& eval = scontexts_.at(ictx).eval_;
 
-  if(board.drawState() || board.hasReps() || stopped(ictx) || ply >= MaxPly)
+  if (board.drawState() || board.hasReps() || stopped(ictx) || ply >= MaxPly)
     return { Figure::DrawScore, false };
 
-  SMove hmove{true};
-  
+  SMove hmove{ true };
+
 #ifdef USE_HASH
   ScoreType hscore = -ScoreMax;
   bool singular = false;
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
-  if(flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  if (flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
     return { hscore, false };
   }
@@ -984,6 +990,12 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
+
+#ifdef RELEASEDEBUGINFO
+    auto ff = (FIELD_NAME)move.from();
+    auto ft = (FIELD_NAME)move.to();
+#endif
+
     if((!board.underCheck() || counter > 0) && !move.see_ok() && !board.see(move, thr))
       continue;
 
@@ -993,7 +1005,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     sdata.inc_nc();
 
 #ifdef RELEASEDEBUGINFO
-    if (sdata.depth_ == 9 && findSequence(ictx, ply, true))
+    if (findSequence(ictx, ply, true))
     {
       thr = thr;
     }
@@ -1003,7 +1015,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv).score;
 
 #ifdef RELEASEDEBUGINFO
-    if (sdata.depth_ == 9 && findSequence(ictx, ply, true) && score > alpha)
+    if (findSequence(ictx, ply, true) && score > alpha)
     {
       thr = thr;
     }

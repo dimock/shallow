@@ -41,7 +41,7 @@ namespace NEngine
   int EvalCoefficients::kingIsUnsafe_{ -25 };
   int EvalCoefficients::pawnPenaltyA_{ -14 };
   int EvalCoefficients::pawnPenaltyB_{ -16 };
-  int EvalCoefficients::pawnPenaltyC_{ -5 };
+  int EvalCoefficients::pawnPenaltyC_{ -6 };
 
   // blocked figure
   int EvalCoefficients::knightBlocked_{ 80 };
@@ -74,19 +74,18 @@ namespace NEngine
   int EvalCoefficients::figureToKingDistanceMulti_{ 2 };
 
   // arrays
-  int EvalCoefficients::doubledPawn_[2] = { -12, -8 };
-  int EvalCoefficients::isolatedPawn_[2] = { -15, -12 };
-  int EvalCoefficients::backwardPawn_[2] = { -10, -8 };
+  int EvalCoefficients::doubledPawn_[2] = { -10, -8 };
+  int EvalCoefficients::isolatedPawn_[2] = { -13, -12 };
+  int EvalCoefficients::backwardPawn_[2] = { -9, -7 };
   int EvalCoefficients::unguardedPawn_[2] = {-8, -7 };
   int EvalCoefficients::protectedPawn_[2] = { 5, 4};
-  int EvalCoefficients::hasneighborPawn_[2] = { 4, 3};
-  int EvalCoefficients::weakHalfopenPawn_[2] = { -6, 0 };
+  int EvalCoefficients::hasneighborPawn_[2] = { 3, 2};
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {15, 10};
-  int EvalCoefficients::pawnShieldB_[2] = {15, 10};
-  int EvalCoefficients::pawnShieldC_[2] = { 8, 5};
+  int EvalCoefficients::pawnShieldA_[2] = {14, 10};
+  int EvalCoefficients::pawnShieldB_[2] = {14, 10};
+  int EvalCoefficients::pawnShieldC_[2] = { 6, 4};
 
   // rook on open column
   int EvalCoefficients::openRook_[4] = { 0, 7, 30, 30};
@@ -207,14 +206,14 @@ namespace NEngine
         -10,  -7,  -6,  -5,  -5,  -6,  -7, -10
       },
       {
-        -48, -48, -48, -48, -48, -48, -48, -48,
-        -41, -41, -41, -41, -41, -41, -41, -41,
-        -38, -38, -38, -38, -38, -38, -38, -38,
-        -35, -35, -35, -35, -35, -35, -35, -35,
-        -25, -28, -32, -35, -35, -32, -28, -25,
-        -11, -16, -24, -32, -32, -24, -16, -11,
-          0,   0,  -8, -28, -28,  -8,   0,   0,
-         24,  32,   9, -20, -20,  14,  40,  32
+        -39, -39, -39, -39, -39, -39, -39, -39,
+        -33, -33, -33, -33, -33, -33, -33, -33,
+        -31, -31, -31, -31, -31, -31, -31, -31,
+        -28, -28, -28, -28, -28, -28, -28, -26,
+        -20, -23, -26, -28, -28, -23, -20, -18,
+         -9, -13, -19, -26, -26, -15, -10,  -9,
+          7,   7,  -5, -23, -23,  -2,  10,  10,
+         16,  22,  11, -16, -16,  15,  26,  20
       },
       {
           0,   0,   0,   0,   0,   0,   0,   0,

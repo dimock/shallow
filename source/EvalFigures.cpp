@@ -387,9 +387,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   const BitMask can_check_r = can_check_q | fmgr.queen_mask(ocolor);
   const BitMask can_check_nb = can_check_r | fmgr.rook_mask(ocolor);
 
-  //auto ctype = getCastleType(ocolor);
-  //auto castle_mask = ctype >= 0 ? king_attack_mask_[ocolor][ctype] : 0ULL;
-
   int queenPos = fmgr.queen_mask(color) != 0ULL ? _lsb64(fmgr.queen_mask(color)) : -1;
 
   auto oki_fields = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor));
@@ -686,8 +683,8 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
       (r_check != 0) * EvalCoefficients::rookChecking_ +
       (q_check != 0) * EvalCoefficients::queenChecking_;
 
-    static const int checkers_coefficients[8] = { 0, 32, 64, 64, 64 };
-    static const int attackers_coefficients[8] = { 0, 16, 32, 64, 96, 128, 128, 128 };
+    static const int checkers_coefficients[8] = { 0, 32, 48, 64, 64 };
+    static const int attackers_coefficients[8] = { 0, 16, 32, 48, 64, 80, 96, 96 };
 
     int num_attackers = attackers_count[Figure::TypePawn] + attackers_count[Figure::TypeKnight] + attackers_count[Figure::TypeBishop] +
       attackers_count[Figure::TypeRook] + attackers_count[Figure::TypeQueen] + attackers_count[Figure::TypeKing];

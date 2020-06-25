@@ -125,12 +125,24 @@ void Engine::logMovies(int ictx)
 
 
 #ifdef RELEASEDEBUGINFO
-static std::vector<std::string> sequence({ "e5g4", "e4e5", "f6e4", "e2e4", "b6f2", "e1d1", "f7f5", "e4e2", "b7b6", "f1g2" });
+
+static int TEST_DEPTH_MIN = 7;
+static int TEST_DEPTH_MAX = 9;
+static std::vector<std::string> sequence({ "h5f6", "g7f6", "e5f6", "b8c6", "a3e7", "c6e7", "f6f7", "g8g2", "g1g2", "e8f8", "f3g3", "f8f7" });
+
+bool compare_depth(int depth)
+{
+  return depth >= TEST_DEPTH_MIN && depth <= TEST_DEPTH_MAX;
+}
 
 bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
 {
   bool identical = false;
   auto& board = scontexts_.at(ictx).board_;
+  int depth = scontexts_.at(ictx).sdata_.depth_;
+
+  if (!compare_depth(depth))
+    return false;
 
   if((ply < sequence.size() && !exactMatch) || (ply == sequence.size()-1 && exactMatch))
   {
@@ -143,11 +155,20 @@ bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
       const UndoInfo & undo = board.reverseUndo(j);
       auto smove = sequence[i];
       if (!smove.empty()) {
-        auto move = strToMove(smove);
-        if (undo.move_.from() != move.from() || undo.move_.to() != move.to())
-        {
-          identical = false;
-          break;
+        if (undo.is_nullmove()) {
+          if (smove != "null")
+          {
+            identical = false;
+            break;
+          }
+        }
+        else {
+          auto move = strToMove(smove);
+          if (undo.move_.from() != move.from() || undo.move_.to() != move.to())
+          {
+            identical = false;
+            break;
+          }
         }
       }
     }

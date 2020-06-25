@@ -52,7 +52,84 @@ void optimizeFen(std::string const& ffname,
   std::cout << ft.size() << " cases; time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " (ms)" << std::endl;
 }
 
+void printInfo(NEngine::SearchResult const& sres)
+{
+  NEngine::SBoard<NEngine::Board, NEngine::UndoInfo, NEngine::Board::GameLength> board(sres.board_);
+
+  std::string pv_str;
+  for (int i = 0; i < MaxPly && sres.pv_[i]; ++i)
+  {
+    if (i)
+      pv_str += " ";
+
+    auto pv = sres.pv_[i];
+    if (!board.possibleMove(pv))
+      break;
+
+    auto str = moveToStr(pv, false);
+    if (str.empty())
+      break;
+
+    X_ASSERT(!board.validateMoveBruteforce(pv), "move is invalid but it is not detected by printSAN()");
+
+    board.makeMove(pv);
+
+    pv_str += str;
+  }
+
+  auto dt = NTime::seconds<double>(sres.dt_) + 0.001;
+  int nps = static_cast<int>(sres.totalNodes_ / dt);
+  std::ostringstream oss;
+
+  oss << "info "
+    << "depth " << sres.depth_ << " "
+    << "seldepth " << sres.depthMax_ << " ";
+
+  if (sres.score_ >= NEngine::Figure::MatScore - MaxPly)
+  {
+    int n = (NEngine::Figure::MatScore - sres.score_) / 2;
+    oss << "score mate " << n << " ";
+  }
+  else if (sres.score_ <= MaxPly - NEngine::Figure::MatScore)
+  {
+    int n = (-NEngine::Figure::MatScore - sres.score_) / 2;
+    oss << "score mate " << n << " ";
+  }
+  else
+    oss << "score cp " << sres.score_ << " ";
+
+  oss << "time " << NTime::milli_seconds<int>(sres.dt_) << " ";
+  oss << "nodes " << sres.totalNodes_ << " ";
+  oss << "nps " << nps << " ";
+
+  if (sres.best_)
+  {
+    oss << "currmove " << moveToStr(sres.best_, false) << " ";
+  }
+
+  oss << "currmovenumber " << sres.counter_ + 1 << " ";
+  oss << "pv " << pv_str;
+
+  std::cout << oss.str() << std::endl;
 }
+
+void printUciStat(NEngine::SearchData const& sdata)
+{
+  if (!sdata.best_)
+    return;
+
+  auto smove = moveToStr(sdata.best_, false);
+  if (smove.empty())
+    return;
+
+  std::cout << "info "
+    << "currmove " << smove << " "
+    << "currmovenumber " << sdata.counter_ + 1 << " "
+    << "nodes " << sdata.totalNodes_ << " "
+    << "depth " << sdata.depth_ << std::endl;
+}
+
+} // namespace {}
 
 void testMovegen(std::string const& ffname)
 {
@@ -143,7 +220,6 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
   std::cout << "N: score, refScore, diff, cp" << std::endl;
   float totalError = 0.0f;
 
-  NShallow::Processor proc;
   testFen<Board, Move, UndoInfo>(
     ffname,
     [&totalError, &refEvals](size_t i, xEPD<Board, Move, UndoInfo>& e)
@@ -170,6 +246,41 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
   });
   std::cout << "total error: " << totalError << std::endl;
   std::cout << "average error: " << totalError/refEvals.size() << std::endl;
+}
+
+void analyzeFen(std::string const& fname)
+{
+  NEngine::xCallback xcbk;
+  xcbk.sendOutput_ = [](NEngine::SearchResult const& sres)
+  {
+    printInfo(sres);
+  };
+
+  xcbk.sendStats_ = [](NEngine::SearchData const& sdata)
+  {
+    printUciStat(sdata);
+  };
+
+  NShallow::Processor proc;
+  proc.setCallback(xcbk);
+  
+  testFen<Board, Move, UndoInfo>(
+    fname,
+    [&proc](size_t i, xEPD<Board, Move, UndoInfo>& e)
+  {
+    SBoard<Board, UndoInfo, 512> board{ e.board_, true };
+    if (!board.invalidate())
+      return;
+    if (board.state() != State::Ok && board.state() != State::UnderCheck)
+      return;
+    proc.setBoard(board);
+    proc.clear();
+    proc.analyze();
+  },
+    [](std::string const& err_str)
+  {
+    std::cout << "Error: " << err_str << std::endl;
+  });
 }
 
 void generateMoves(std::string const& ffname, std::string const& ofname)

@@ -50,6 +50,14 @@ int main(int argn, char *argv[])
   }
 #endif
 
+#ifdef RELEASEDEBUGINFO
+  if (argn > 1)
+  {
+    NEngine::analyzeFen(argv[1]);
+    return 0;
+  }
+#endif
+
   main_loop(xpr);
 
 	return 0;
