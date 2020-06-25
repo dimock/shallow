@@ -13,6 +13,7 @@ struct EvalCoefficients
 {
   // single vars
   static int additionalMatBonus_;
+  static int queenRookVsPwPenalty_;
 
   // pawns
   static int pawnEndgameBonus_;

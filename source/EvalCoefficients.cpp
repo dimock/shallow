@@ -11,6 +11,7 @@ namespace NEngine
 {
   // single vars
   int EvalCoefficients::additionalMatBonus_{ 150 };
+  int EvalCoefficients::queenRookVsPwPenalty_{ 80 };
   // pawns
   int EvalCoefficients::pawnEndgameBonus_{ 15 };
   int EvalCoefficients::rookBehindBonus_{ 5 };

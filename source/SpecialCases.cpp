@@ -210,6 +210,44 @@ namespace
     return score;
   }
 
+  ScoreType queenAgainstRookVsPawn(Board const& board, Figure::Color winnerColor)
+  {
+    auto ocolor = Figure::otherColor(winnerColor);
+    ScoreType score = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypeRook]
+      - board.fmgr().pawns(ocolor)*Figure::figureWeight_[Figure::TypePawn] - EvalCoefficients::queenRookVsPwPenalty_;
+    Index kingW(board.kingPos(winnerColor));
+    Index kingL(board.kingPos(ocolor));
+    int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
+    int rookL = _lsb64(board.fmgr().rook_mask(ocolor));    
+    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kingL];
+    score -= distanceCounter().getDistance(kingW, kingL) * 2;
+    score -= distanceCounter().getDistance(queenW, kingL) * 2;
+    score += distanceCounter().getDistance(rookL, kingL) * 2;
+
+    bool noIsept = false;
+    bool closeTo = false;
+    bool farFrom = false;
+    auto pw_mask = board.fmgr().pawn_mask(ocolor);
+    while (pw_mask)
+    {
+      int n = clear_lsb(pw_mask);
+      Index pawn{n};
+      if (!closeTo && distanceCounter().getDistance(pawn, kingL) < 2)
+        closeTo = true;
+      if (!farFrom && distanceCounter().getDistance(pawn, kingW) > 1)
+        farFrom = true;
+      if (!couldIntercept(board, ocolor, pawn))
+        noIsept = true;
+      int pcy = pawn_colored_y_[ocolor][pawn.y()];
+      score -= EvalCoefficients::passerPawn_[pcy];
+    }
+    score -= closeTo * EvalCoefficients::queenRookVsPwPenalty_ + noIsept * EvalCoefficients::queenRookVsPwPenalty_;
+
+    if (winnerColor == Figure::ColorBlack)
+      score = -score;
+    return score;
+  }
+
 } // namespace {}
 
 SpecialCasesDetector::SpecialCasesDetector()
@@ -740,6 +778,23 @@ void SpecialCasesDetector::initUsual()
   {
     return queenAgainstRook(board, Figure::ColorWhite);
   };
+
+  for (char i = 1; i <= 3; ++i)
+  {
+    scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
+      { Figure::TypeRook, Figure::ColorWhite, 1 },
+      { Figure::TypePawn, Figure::ColorWhite, i } })] = [](Board const& board)
+    {
+      return queenAgainstRookVsPawn(board, Figure::ColorBlack);
+    };
+
+    scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
+      { Figure::TypeRook, Figure::ColorBlack, 1 },
+      { Figure::TypePawn, Figure::ColorBlack, i } })] = [](Board const& board)
+    {
+      return queenAgainstRookVsPawn(board, Figure::ColorWhite);
+    };
+  }
 }
 
 void SpecialCasesDetector::initWinnerLoser()
