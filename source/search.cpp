@@ -563,6 +563,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash"); 
 #endif
 
+#ifdef RELEASEDEBUGINFO
+  if (18172195891598111734 == board.fmgr().hashCode())
+  {
+    int x = 0;
+  }
+#endif
+
   if (depth <= 0)
   {
     auto capResult = captures(ictx, depth, ply, alpha, betta, pv);

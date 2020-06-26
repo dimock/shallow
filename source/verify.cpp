@@ -126,9 +126,9 @@ void Engine::logMovies(int ictx)
 
 #ifdef RELEASEDEBUGINFO
 
-static int TEST_DEPTH_MIN = 7;
+static int TEST_DEPTH_MIN = 6;
 static int TEST_DEPTH_MAX = 9;
-static std::vector<std::string> sequence({ "d8f8", "f5f4", "f8f4", "a2a3", "g3g4", "h6h5", "g4g5", "e1f3", "g5h5", "f3e5", "f4e5", "a3h3", "h5g5" });
+static std::vector<std::string> sequence({ "c1e3", "d8c7", "e1g1","c8b7", "b2b3",  "a8c8" });
 
 bool compare_depth(int depth)
 {
