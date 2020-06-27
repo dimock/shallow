@@ -30,7 +30,8 @@ struct EvalCoefficients
   static int doublePawnAttack_;
   static int queenUnderRookAttackBonus_;
   static int multiAttackBonus_;
-  static int pinnedAttackBonus_;
+  static int immobileAttackBonus_;
+  static int pinnedPenalty_;
 
 #ifdef EVALUATE_DANGEROUS_ATTACKS
   static int dangerousAttacksOnPawn_;
@@ -59,9 +60,6 @@ struct EvalCoefficients
   static int rookKingAttack_;
   static int queenKingAttack_;
 
-  static int unprotectedKingMultiattacksCoeff_;
-  static int unprotectedKingAttacksCoeff_;
-  static int allKingAttacksCoeff_;
   static int generalKingPressure_;
   static int generalOpponentPressure_;
 

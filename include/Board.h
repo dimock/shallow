@@ -385,29 +385,28 @@ struct Board
     return (r_moves & (r_mask | q_mask)) != 0ULL;
   }
 
-  inline bool isPinned(int pos, BitMask const& mask_all, Figure::Color ocolor, int ki_pos, nst::bishop_rook_dirs interestDir) const
+  inline BitMask isPinned(int pos, BitMask const& mask_all, Figure::Color ocolor, int t_pos, nst::bishop_rook_dirs interestDir) const
   {
-    auto dir = figureDir().br_dir(ki_pos, pos);
+    auto dir = figureDir().br_dir(t_pos, pos);
     if (!dir)
-      return false;
-    auto through = set_mask_bit(pos);
-    auto mask_all_t = mask_all & ~through;
-    auto tail_mask = betweenMasks().tail(ki_pos, pos);
+      return 0ULL;
+    auto mask_all_t = mask_all & ~set_mask_bit(pos);
+    auto tail_mask = betweenMasks().tail(t_pos, pos);
     if (dir == nst::bishop && interestDir != nst::rook)
     {
-      auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_t) & tail_mask;
+      auto const bi_moves = magic_ns::bishop_moves(t_pos, mask_all_t) & tail_mask;
       auto const& bi_mask = fmgr_.bishop_mask(ocolor);
       auto const& q_mask = fmgr_.queen_mask(ocolor);
-      return (bi_moves & (bi_mask | q_mask)) != 0ULL;
+      return (bi_moves & (bi_mask | q_mask));
     }
     if (dir == nst::rook && interestDir != nst::bishop)
     {
-      auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all_t) & tail_mask;
+      auto const r_moves = magic_ns::rook_moves(t_pos, mask_all_t) & tail_mask;
       auto const& r_mask = fmgr_.rook_mask(ocolor);
       auto const& q_mask = fmgr_.queen_mask(ocolor);
-      return (r_moves & (r_mask | q_mask)) != 0ULL;
+      return (r_moves & (r_mask | q_mask));
     }
-    return false;
+    return 0ULL;
   }
 
   bool see(Move const& move, int threshold) const;

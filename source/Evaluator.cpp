@@ -348,8 +348,6 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   }
 
   PasserInfo info = evaluatePawns();
-  int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
-  info.score.opening_ += kingSafety;
 
   if(heval)
   {
@@ -791,7 +789,17 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
     score = evaluateKingSafety(color, kingPosQ);
   }
   else
+  {
     score = evaluateKingSafety(color, kingPos);
+    if (board_->castling(color, 0)) {
+      int scoreK = evaluateKingSafety(color, Index{ 6, promo_y_[Figure::otherColor(color)] });
+      score = std::max(score, scoreK);
+    }
+    if (board_->castling(color, 1)) {
+      int scoreQ = evaluateKingSafety(color, Index{ 1, promo_y_[Figure::otherColor(color)] });
+      score = std::max(score, scoreQ);
+    }
+  }
   return score;
 }
 
