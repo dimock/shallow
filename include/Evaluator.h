@@ -214,7 +214,7 @@ private:
   FullScore evaluateRook(Figure::Color color);
   FullScore evaluateQueens(Figure::Color color);
   FullScore evaluateMobilityAndKingPressure(Figure::Color color);
-  bool isPinned(int pos, Figure::Color ocolor, BitMask targets, nst::bishop_rook_dirs dir) const;
+  bool isPinned(int pos, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&);
   FullScore passerEvaluation(PasserInfo const&);

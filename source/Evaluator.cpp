@@ -348,6 +348,8 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   }
 
   PasserInfo info = evaluatePawns();
+  int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
+  info.score.opening_ += kingSafety;
 
   if(heval)
   {

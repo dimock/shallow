@@ -31,7 +31,6 @@ struct EvalCoefficients
   static int queenUnderRookAttackBonus_;
   static int multiAttackBonus_;
   static int immobileAttackBonus_;
-  static int pinnedPenalty_;
 
 #ifdef EVALUATE_DANGEROUS_ATTACKS
   static int dangerousAttacksOnPawn_;
