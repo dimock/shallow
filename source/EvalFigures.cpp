@@ -441,10 +441,9 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 #endif // PROCESS_DANGEROUS_EVAL
 
 #ifdef EVAL_KING_PR
-  attackers_count[Figure::TypePawn] = (finfo_[color].pawnAttacks_ & (oki_fields | oki_fields_protected)) != 0ULL;
-  attackers_count[Figure::TypeKing] = (finfo_[color].kingAttacks_ & (oki_fields | oki_fields_protected)) != 0ULL;
-  //score_king += (pop_count(finfo_[color].pawnAttacks_ & oki_fields_protected) * EvalCoefficients::pawnKingAttack_) >> 2;
-  score_king += pop_count(finfo_[color].pawnAttacks_ & oki_fields) * EvalCoefficients::pawnKingAttack_;
+  attackers_count[Figure::TypePawn] = (finfo_[color].pawnAttacks_ & near_oking) != 0ULL;
+  attackers_count[Figure::TypeKing] = (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
+  score_king += pop_count(finfo_[color].pawnAttacks_ & near_oking) * EvalCoefficients::pawnKingAttack_;
 #endif // EVAL_KING_PR
 
   BitMask knights = fmgr.knight_mask(color);
@@ -723,7 +722,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
       (r_check != 0) * EvalCoefficients::rookChecking_ +
       (q_check != 0) * EvalCoefficients::queenChecking_;
 
-    //static const int checkers_coefficients[8] = { 0, 32, 48, 64, 64 };
     static const int attackers_coefficients[8] = { 0, 8, 16, 24, 32, 48, 64, 96 };
 
     int num_attackers = attackers_count[Figure::TypePawn] + attackers_count[Figure::TypeKnight] + attackers_count[Figure::TypeBishop] +
@@ -737,10 +735,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     attack_coeff += num_remaining_attacked * 2;
     int num_attack_noprotect = pop_count(near_oking_not_protected & finfo_[color].attack_mask_);
     attack_coeff += num_remaining_attacked * 6;
-
-    //int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL);
-    //num_checkers = std::min(num_checkers, 4);
-    //auto check_coeff = checkers_coefficients[num_checkers] + attack_coeff/2;
 
     score_king = ((score_king + check_score) * attack_coeff) >> 5;
 

@@ -564,7 +564,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef RELEASEDEBUGINFO
-  if (8631579569389013604 == board.fmgr().hashCode())
+  if (14995672985372787111 == board.fmgr().hashCode())
   {
     int x = 0;
   }
@@ -871,6 +871,15 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     board.makeMove(best);
     sdata.inc_nc();
 
+#ifdef RELEASEDEBUGINFO
+    auto ff = (FIELD_NAME)best.from();
+    auto ft = (FIELD_NAME)best.to();
+    if (findSequence(ictx, ply, true))
+    {
+      int y = 0;
+    }
+#endif // RELEASEDEBUGINFO
+
     alpha = alpha0;
     ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true);
 
@@ -906,8 +915,15 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
   }
 
+#ifdef RELEASEDEBUGINFO
+  if (14995672985372787111 == board.fmgr().hashCode())
+  {
+    int x = 0;
+  }
+#endif
+
 #ifdef USE_HASH
-  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, threat, singular);
+  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, threat, singular, pv);
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -1063,7 +1079,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   }
 
 #ifdef USE_HASH
-  putCaptureHash(ictx, best);
+  putCaptureHash(ictx, best, pv);
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -1138,7 +1154,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 }
 
 /// insert data to hash table
-void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular)
+void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular, bool pv)
 {
   auto& board = scontexts_.at(ictx).board_;
   if (board.hasReps())
@@ -1158,15 +1174,15 @@ void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType bet
     score += ply;
   else if ( score <= -Figure::MatScore+MaxPly )
     score -= ply;
-  hash_.push(board.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat, singular);
+  hash_.push(board.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat, singular, pv);
 }
 
-void Engine::putCaptureHash(int ictx, const Move & move)
+void Engine::putCaptureHash(int ictx, const Move & move, bool pv)
 {
   auto& board = scontexts_.at(ictx).board_;
   if(!move || board.hasReps())
     return;
-  hash_.push(board.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false, false);
+  hash_.push(board.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false, false, pv);
 }
 #endif
 

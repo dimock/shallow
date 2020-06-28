@@ -130,8 +130,8 @@ private:
   void prefetchHash(int ictx);
   // we should return alpha if flag is Alpha, or Betta if flag is Betta
   GHashTable::Flag getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular);
-  void putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular);
-  void putCaptureHash(int ictx, const Move & move);
+  void putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular, bool pv);
+  void putCaptureHash(int ictx, const Move & move, bool pv);
 #endif // USE_HASH
 
   // analyze mode support

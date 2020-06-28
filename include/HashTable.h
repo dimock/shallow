@@ -23,7 +23,8 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HItem
   uint16     depth_   : 6,
              flag_    : 2,
              threat_  : 1,
-             singular_: 1;
+             singular_: 1,
+             pv_      : 1;
   };
   uint16     mask_{};
   };
@@ -173,34 +174,35 @@ public:
   GHashTable(int size) : HashTable<HBucket>(size)
   {}
 
-  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat, bool singular)
+  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat, bool singular, bool pv)
   {
     HBucket & hb = (*this)[hkey];
     HItem * hitem = hb.get(hkey);
     if( !hitem )
       return;
 
-    if ( (hitem->hkey_ == hkey) &&
-          ( (hitem->depth_ > depth) || 
-            (depth == hitem->depth_ && Alpha == flag && hitem->flag_ > Alpha) ||
-            (depth == hitem->depth_ && Alpha == flag && hitem->flag_ == Alpha && score >= hitem->score_) ) )
+    //if (hitem->hkey_ == hkey && hitem->flag_ != NoFlag && flag == NoFlag && hitem->depth_ < depth) {
+    //  return;
+    //}
+
+    if ((hitem->hkey_ != hkey) || (depth >= hitem->depth_) ||
+        (((AlphaBetta == flag && hitem->flag_ < AlphaBetta) || (pv && !hitem->pv_ && flag != NoFlag)) && depth >= hitem->depth_-2 && depth > 0))
     {
-      return;
+      X_ASSERT(score > 32760, "write wrong value to the hash");
+
+      HItem newItem;
+      newItem.hkey_ = hkey;
+      newItem.score_ = score;
+      newItem.depth_ = depth;
+      newItem.flag_ = flag;
+      newItem.movesCount_ = movesCount_;
+      newItem.move_ = move;
+      newItem.threat_ = threat;
+      newItem.singular_ = singular;
+      newItem.pv_ = pv;
+
+      *hitem = newItem;
     }
-
-    X_ASSERT(score > 32760, "wrong value to hash");
-
-    HItem newItem;
-    newItem.hkey_   = hkey;
-    newItem.score_  = score;
-    newItem.depth_  = depth;
-    newItem.flag_   = flag;
-    newItem.movesCount_ = movesCount_;
-    newItem.move_   = move;
-    newItem.threat_ = threat;
-    newItem.singular_ = singular;
-
-    *hitem = newItem;
   }
 
   const HItem * find(const uint64 & hkey) const

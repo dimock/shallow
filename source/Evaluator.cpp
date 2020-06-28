@@ -1104,11 +1104,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   Figure::Color ocolor = Figure::otherColor(color);
   BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
   BitMask o_mask = board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | o_rq_mask;
-  auto pawn_msk = board_->fmgr().pawn_mask(color) & finfo_[color].pawnAttacks_;
-  auto pawn_att = color
-    ? ((pawn_msk << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk << 7) & Figure::pawnCutoffMasks_[1])
-    : ((pawn_msk >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk >> 9) & Figure::pawnCutoffMasks_[1]);
-  BitMask pawn_fork = o_mask & pawn_att;
+  BitMask pawn_fork = o_mask & finfo_[color].pawnAttacks_;
   int pawnsN = pop_count(pawn_fork);
   ScoreType forkScore = 0;
   if (pawnsN > 1) {
@@ -1117,12 +1113,16 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   }
   else if(pawnsN == 1) {
     forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
+    if(color == board_->color())
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
   }
   BitMask kn_fork = o_rq_mask & finfo_[color].knightAttacks_;
   int knightsN = pop_count(kn_fork);
   if (knightsN > 1) {
     finfo_[ocolor].forkTreat_ = true;
     forkScore += EvalCoefficients::knightForkBonus_;
+    if (color == board_->color())
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
   }
   else if (knightsN == 1) {
     forkScore += EvalCoefficients::knightForkBonus_ >> 3;
