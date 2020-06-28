@@ -128,7 +128,7 @@ void Engine::logMovies(int ictx)
 
 static int TEST_DEPTH_MIN = 6;
 static int TEST_DEPTH_MAX = 9;
-static std::vector<std::string> sequence({ "f1c4", "b4c4", "b3c4", "c8f5", "e4f5", "e8g8", "c3b5", "a6b5", "h4f6", "g7f6" });
+static std::vector<std::string> sequence({ "h4h7", "g8h7", "f2f4", "g6f5", "d4e3", "e5g4", "f4g4", "f5g4", "e3g5" });
 
 bool compare_depth(int depth)
 {

@@ -51,19 +51,19 @@ namespace NEngine
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 3 };
-  int EvalCoefficients::knightKingAttack_{ 15 };
-  int EvalCoefficients::bishopKingAttack_{ 15 };
-  int EvalCoefficients::rookKingAttack_{ 15 };
-  int EvalCoefficients::queenKingAttack_{ 15 };
+  int EvalCoefficients::knightKingAttack_{ 20 };
+  int EvalCoefficients::bishopKingAttack_{ 20 };
+  int EvalCoefficients::rookKingAttack_{ 20 };
+  int EvalCoefficients::queenKingAttack_{ 20 };
 
   int EvalCoefficients::generalKingPressure_{ 4 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
-  int EvalCoefficients::knightChecking_{ 45 };
+  int EvalCoefficients::knightChecking_{ 40 };
   int EvalCoefficients::bishopChecking_{ 40 };
-  int EvalCoefficients::rookChecking_{ 55 };
-  int EvalCoefficients::queenChecking_{ 65 };
+  int EvalCoefficients::rookChecking_{ 50 };
+  int EvalCoefficients::queenChecking_{ 50 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -79,7 +79,7 @@ namespace NEngine
   int EvalCoefficients::protectedPawn_[2] = { 5, 4};
   int EvalCoefficients::hasneighborPawn_[2] = { 3, 2};
   
-  int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
+  int EvalCoefficients::opponentPawnPressure_[8] = { 15, 15, 10, 5, 1, 0, 0, 0 };
 
   int EvalCoefficients::pawnShieldA_[2] = {14, 10};
   int EvalCoefficients::pawnShieldB_[2] = {14, 10};
