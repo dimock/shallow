@@ -336,9 +336,6 @@ struct TacticalGenerator
       if (hmove_)
       {
         hmove_.set_ok();
-//#ifdef GEN_USUAL_AFETER_HORIZON
-//        needUsual_ = false;
-//#endif
         return &hmove_;
       }
     }
@@ -378,15 +375,11 @@ struct TacticalGenerator
       {
         if (*move == hmove_)
           continue;
-
-//#ifdef GEN_USUAL_AFETER_HORIZON
-//        needUsual_ = false;
-//#endif
         return move;
       }
 
 #ifdef GEN_USUAL_AFETER_HORIZON
-      if (/*needUsual_ && */dangerous && depth_ < 0 && depth_ >= -NumUsualAfterHorizon * ONE_PLY)
+      if (dangerous && depth_ < 0 && depth_ >= -NumUsualAfterHorizon * ONE_PLY)
         order_ = oGenUsual;
     }
     if (order_ == oGenUsual)
@@ -415,7 +408,6 @@ struct TacticalGenerator
   EscapeGenerator<BOARD, MOVE> eg_;
 #ifdef GEN_USUAL_AFETER_HORIZON
   UsualGenerator<BOARD, MOVE> ug_;
-  //bool needUsual_{ true };
 #endif
   BOARD const& board_;
   MOVE hmove_;

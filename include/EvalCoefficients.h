@@ -32,14 +32,6 @@ struct EvalCoefficients
   static int multiAttackBonus_;
   static int immobileAttackBonus_;
 
-#ifdef EVALUATE_DANGEROUS_ATTACKS
-  static int dangerousAttacksOnPawn_;
-  static int dangerousAttacksOnKnight_;
-  static int dangerousAttacksOnBishop_;
-  static int dangerousAttacksOnRook_;
-  static int dangerousAttacksOnQueen_;
-#endif // EVALUATE_DANGEROUS_ATTACKS
-
   // king
   static int fakeCastle_;
   static int kingIsUnsafe_;

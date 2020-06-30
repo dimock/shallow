@@ -138,18 +138,6 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 ScoreType Evaluator::materialScore() const
 {
   const FiguresManager& fmgr = board_->fmgr();
-  //FullScore score;
-
-  //// determine game phase (opening, middle or end game)
-  //auto phaseInfo = detectPhase();
-
-  //// evaluate figures weight
-  //score.common_ = fmgr.weight();
-  //score += evaluateMaterialDiff();
-
-  //score.opening_ += fmgr.eval(0);
-  //score.endGame_ += fmgr.eval(1);
-
   auto result = considerColor(fmgr.weight());
   return result;
 }
@@ -160,17 +148,13 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
-#ifdef EVAL_SPECC
+  auto spec = specialCases().eval(*board_);
+  if (spec.first)
   {
-    auto spec = specialCases().eval(*board_);
-    if (spec.first)
-    {
-      ScoreType score = spec.second;
-      score = considerColor(score);
-      return score;
-    }
+    ScoreType score = spec.second;
+    score = considerColor(score);
+    return score;
   }
-#endif
 
   // prepare lazy evaluation
   if(alpha > -Figure::MatScore)
@@ -221,7 +205,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto hashedScore = hashedEvaluation();
   score += hashedScore.score;
 
-#if 1
   score += evaluateKnights();
   score += evaluateBishops();
 
@@ -230,23 +213,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   score += evaluateQueens(Figure::ColorWhite);
   score -= evaluateQueens(Figure::ColorBlack);
-#else
-  evaluateKnights();
-  evaluateBishops();
-  evaluateRook(Figure::ColorWhite);
-  evaluateRook(Figure::ColorBlack);
-  evaluateQueens(Figure::ColorWhite);
-  evaluateQueens(Figure::ColorBlack);
-#endif // 0
 
-
-#if (defined EVAL_MOB || defined EVAL_KING_PR)
   auto scoreKing = evaluateMobilityAndKingPressure(Figure::ColorWhite);
   scoreKing -= evaluateMobilityAndKingPressure(Figure::ColorBlack);
   score.common_ += scoreKing.common_;
   score.opening_ += scoreKing.opening_;
-#endif
-
 
   auto scoreForks = evaluateForks(Figure::ColorWhite);
   scoreForks -= evaluateForks(Figure::ColorBlack);
@@ -259,17 +230,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
 
-
 #ifdef PROCESS_DANGEROUS_EVAL
   detectDangerous();
-
-#ifdef EVALUATE_DANGEROUS_ATTACKS
-  auto dangerousScore = evaluateDangerous();
-  score += dangerousScore;
-#endif // EVALUATE_DANGEROUS_ATTACKS
-
 #endif // PROCESS_DANGEROUS_EVAL
-
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;
@@ -1108,7 +1071,9 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   int pawnsN = pop_count(pawn_fork);
   ScoreType forkScore = 0;
   if (pawnsN > 1) {
+#ifdef PROCESS_DANGEROUS_EVAL
     finfo_[ocolor].forkTreat_ = true;
+#endif
     forkScore += EvalCoefficients::doublePawnAttack_;
   }
   else if(pawnsN == 1) {
@@ -1119,7 +1084,9 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   BitMask kn_fork = o_rq_mask & finfo_[color].knightAttacks_;
   int knightsN = pop_count(kn_fork);
   if (knightsN > 1) {
+#ifdef PROCESS_DANGEROUS_EVAL
     finfo_[ocolor].forkTreat_ = true;
+#endif
     forkScore += EvalCoefficients::knightForkBonus_;
     if (color == board_->color())
       forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
@@ -1130,7 +1097,9 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
   int bishopsN = pop_count(bi_treat);
   if (bishopsN > 1) {
+#ifdef PROCESS_DANGEROUS_EVAL
     finfo_[ocolor].forkTreat_ = true;
+#endif
     forkScore += EvalCoefficients::bishopsAttackBonus_;
   }
   else if (bishopsN == 1) {
@@ -1140,10 +1109,16 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   if (queensTreat) {
     forkScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
+#ifdef PROCESS_DANGEROUS_EVAL
   if (!finfo_[ocolor].forkTreat_ && (pawnsN + knightsN + bishopsN + queensTreat > 1)) {
     finfo_[ocolor].forkTreat_ = true;
     forkScore += EvalCoefficients::multiAttackBonus_;
   }
+#else
+  if (pawnsN + knightsN + bishopsN + queensTreat > 1) {
+    forkScore += EvalCoefficients::multiAttackBonus_;
+  }
+#endif
   return forkScore;
 }
 
@@ -1158,33 +1133,6 @@ void Evaluator::detectDangerous()
     finfo_[color].matThreat_ ||
     finfo_[ocolor].forkTreat_;
 }
-
-#ifdef EVALUATE_DANGEROUS_ATTACKS
-Evaluator::FullScore Evaluator::evaluateDangerous() const
-{
-  FullScore score;
-  for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
-  {
-    bool hasAttacks = finfo_[color].pawnsUnderAttack_ + finfo_[color].knightsUnderAttack_ + finfo_[color].bishopsUnderAttack_
-      + finfo_[color].rooksUnderAttack_ + finfo_[color].queensUnderAttack_ > 1;
-    int coeff = hasAttacks;
-    if (color == Figure::ColorWhite)
-      coeff = -coeff;
-    if (coeff != 0)
-    {
-      coeff = coeff;
-    }
-    auto const& finfo = finfo_[color];
-    score.common_ += (finfo.pawnsUnderAttack_*EvalCoefficients::dangerousAttacksOnPawn_ +
-      finfo.knightsUnderAttack_*EvalCoefficients::dangerousAttacksOnKnight_ +
-      finfo.bishopsUnderAttack_*EvalCoefficients::dangerousAttacksOnBishop_ +
-      finfo.rooksUnderAttack_*EvalCoefficients::dangerousAttacksOnRook_ +
-      finfo.queensUnderAttack_*EvalCoefficients::dangerousAttacksOnQueen_) * coeff;
-  }
-  return score;
-}
-#endif // EVALUATE_DANGEROUS_ATTACKS
-
 #endif // PROCESS_DANGEROUS_EVAL
 
 } //NEngine

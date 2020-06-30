@@ -265,13 +265,8 @@ Evaluator::FullScore Evaluator::evaluateKnights()
       finfo_[color].knightAttacks_ |= knight_moves;
 
       // king protection
-#ifdef EVAL_KP_BASIC
-      //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-      //score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][oki_dist];
-
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
-#endif
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
@@ -301,13 +296,8 @@ Evaluator::FullScore Evaluator::evaluateBishops()
       finfo_[color].bishopTreatAttacks_ |= bishop_treat;
 
       // king protection
-#ifdef EVAL_KP_BASIC
-      //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-      //score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][oki_dist];
-
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color].opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][ki_dist];
-#endif
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
@@ -331,22 +321,15 @@ Evaluator::FullScore Evaluator::evaluateRook(Figure::Color color)
     finfo_[color].rookDirectAttacks_ |= magic_ns::rook_moves(n, mask_all_);
 
     // open column
-#ifdef EVAL_OPEN_R
     auto const& mask_col = pawnMasks().mask_column(n & 7);
     bool no_pw_color = (mask_col & fmgr.pawn_mask(color)) == 0ULL;
     bool no_pw_ocolor = (mask_col & fmgr.pawn_mask(ocolor)) == 0ULL;
     score.opening_ += EvalCoefficients::openRook_[(no_pw_color + no_pw_ocolor) & 3];
     score.endGame_ += EvalCoefficients::openRook_[(no_pw_color + no_pw_ocolor) & 3] >> 1;
-#endif
     
     // king protection
-#ifdef EVAL_KP_BASIC
-    //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    //score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][oki_dist];
-
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
     score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
-#endif
   }
   return score;
 }
@@ -370,29 +353,18 @@ Evaluator::FullScore Evaluator::evaluateQueens(Figure::Color color)
     finfo_[color].queenDirectAttacks_ |= magic_ns::queen_moves(n, mask_all_);
 
     // king protection
-#ifdef EVAL_KP_BASIC
-    //auto oki_dist = distanceCounter().getDistance(n, board_->kingPos(ocolor));
-    //score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][oki_dist];
-
     auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
     score.opening_ += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
-#endif
   }
   return score;
 }
 
 Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
 {
-#ifdef EVAL_MOB
   int score_mob = 0;
-#endif
-
-#ifdef EVAL_KING_PR
   int score_king = 0;
-  int attackers_count[Figure::TypesNum] = {};
-#endif
-
   int score_opening = 0;
+  int attackers_count[Figure::TypesNum] = {};
 
   auto const& fmgr = board_->fmgr();
   auto ocolor = Figure::otherColor(color);
@@ -437,11 +409,9 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   }
 #endif // PROCESS_DANGEROUS_EVAL
 
-#ifdef EVAL_KING_PR
   attackers_count[Figure::TypePawn] = (finfo_[color].pawnAttacks_ & oki_fields) != 0ULL;
   score_king += pop_count(finfo_[color].pawnAttacks_ & oki_fields) * EvalCoefficients::pawnKingAttack_;
   attackers_count[Figure::TypeKing] = (finfo_[color].kingAttacks_ & oki_fields) != 0ULL;
-#endif // EVAL_KING_PR
 
   BitMask knights = fmgr.knight_mask(color);
   for(; knights;)
@@ -449,21 +419,20 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     int n = clear_lsb(knights);
     auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
 
-#ifdef EVAL_KING_PR
     auto n_attacks = knight_moves & oki_fields;
     auto n_attacks_p = knight_moves & oki_fields_protected;
     attackers_count[Figure::TypeKnight] += ((n_attacks|| n_attacks_p) != 0ULL);
     score_king += pop_count(n_attacks) * EvalCoefficients::knightKingAttack_;
     score_king += (pop_count(n_attacks_p) * EvalCoefficients::knightKingAttack_) >> 2;
-#endif // EVAL_KING_PR
 
-#ifdef EVAL_MOB
     if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) ||
         isPinned(n, ocolor, q_targets, obrq_mask, nst::none))
     {
       knight_moves = 0ULL;
       if ((finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
+#ifdef PROCESS_DANGEROUS_EVAL
         finfo_[color].forkTreat_ = true;
+#endif
         score_mob -= EvalCoefficients::immobileAttackBonus_;
       }
     }
@@ -486,7 +455,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
       }
     }
 #endif // PROCESS_DANGEROUS_EVAL
-#endif // EVAL_MOB
 
   }
 
@@ -495,7 +463,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   {
     int n = clear_lsb(bishops);
 
-#ifdef EVAL_KING_PR
     auto const& bishop_attacks = magic_ns::bishop_moves(n, mask_xray_b);
     auto direct_attacks = bishop_attacks & finfo_[color].bishopDirectAttacks_;
     auto xray_attacks = bishop_attacks & ~finfo_[color].bishopDirectAttacks_;
@@ -506,17 +473,17 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     score_king += pop_count(bi_attacks_d) * EvalCoefficients::bishopKingAttack_;
     score_king += (pop_count(bi_attacks_x) * EvalCoefficients::bishopKingAttack_) >> 2;
     score_king += (pop_count(bi_attacks_p) * EvalCoefficients::bishopKingAttack_) >> 2;
-#endif // EVAL_KING_PR
 
     // mobility
-#ifdef EVAL_MOB
     auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
     if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) ||
         isPinned(n, ocolor, q_targets, orq_mask, nst::rook))
     {
       bishop_moves = 0ULL;
       if ((finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
+#ifdef PROCESS_DANGEROUS_EVAL
         finfo_[color].forkTreat_ = true;
+#endif
         score_mob -= EvalCoefficients::immobileAttackBonus_;
       }
     }
@@ -539,8 +506,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
       }
     }
 #endif // PROCESS_DANGEROUS_EVAL
-
-#endif // EVAL_MOB
   }
 
   BitMask rooks = fmgr.rook_mask(color);
@@ -548,7 +513,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   {
     auto n = clear_lsb(rooks);
 
-#ifdef EVAL_KING_PR
     auto const& rook_attacks = magic_ns::rook_moves(n, mask_xray_r);
     auto direct_attacks = rook_attacks & finfo_[color].rookDirectAttacks_;
     auto xray_attacks = rook_attacks & ~finfo_[color].rookDirectAttacks_;
@@ -559,17 +523,17 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     score_king += pop_count(r_attacks_d) * EvalCoefficients::rookKingAttack_;
     score_king += (pop_count(r_attacks_x) * EvalCoefficients::rookKingAttack_) >> 2;
     score_king += (pop_count(r_attacks_p) * EvalCoefficients::rookKingAttack_) >> 2;
-#endif // EVAL_KING_PR
 
     // mobility
-#ifdef EVAL_MOB
     auto rook_moves = magic_ns::rook_moves(n, mask_all_);
     if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) ||
         isPinned(n, ocolor, q_targets, obq_mask, nst::bishop))
     {
       rook_moves = 0ULL;
       if ((finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
+#ifdef PROCESS_DANGEROUS_EVAL
         finfo_[color].forkTreat_ = true;
+#endif
         score_mob -= EvalCoefficients::immobileAttackBonus_;
       }
     }
@@ -601,8 +565,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
       }
     }
 #endif // PROCESS_DANGEROUS_EVAL
-
-#endif // EVAL_MOB
   }
 
   BitMask queens = fmgr.queen_mask(color);
@@ -610,7 +572,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   {
     auto n = clear_lsb(queens);
 
-#ifdef EVAL_KING_PR
     auto const queen_attacks = magic_ns::bishop_moves(n, mask_xray_b) | magic_ns::rook_moves(n, mask_xray_r);
     auto direct_attacks = queen_attacks & finfo_[color].queenDirectAttacks_;
     auto xray_attacks = queen_attacks & ~finfo_[color].queenDirectAttacks_;
@@ -621,17 +582,17 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     score_king += pop_count(q_attacks_d) * EvalCoefficients::queenKingAttack_;
     score_king += (pop_count(q_attacks_x) * EvalCoefficients::queenKingAttack_) >> 2;
     score_king += (pop_count(q_attacks_p) * EvalCoefficients::queenKingAttack_) >> 2;
-#endif // EVAL_KING_PR
 
     // mobility
-#ifdef EVAL_MOB
     auto queen_moves = magic_ns::queen_moves(n, mask_all_);
     if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)))
     {
       auto from_mask = betweenMasks().from(board_->kingPos(color), n);
       queen_moves &= from_mask;
       if ((queen_moves == 0ULL) && ((finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL)) {
+#ifdef PROCESS_DANGEROUS_EVAL
         finfo_[color].forkTreat_ = true;
+#endif
         score_mob -= EvalCoefficients::immobileAttackBonus_;
       }
     }
@@ -653,8 +614,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
       }
     }
 #endif // PROCESS_DANGEROUS_EVAL
-
-#endif // EVAL_MOB
   }
 
   auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
@@ -703,9 +662,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   }
 #endif // PROCESS_DANGEROUS_EVAL
 
-
-#ifdef EVAL_KING_PR
-
   if (fmgr.rooks(color) > 1 || fmgr.queens(color) > 0 || (fmgr.bishops(color) + fmgr.knights(color) + fmgr.rooks(color) > 2))
   {
     int check_score = (kn_check != 0) * EvalCoefficients::knightChecking_ +
@@ -738,16 +694,10 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 
     score_king += general_score;
   }
-#endif // EVAL_KING_PR
 
   FullScore score;
-#ifdef EVAL_MOB
   score.common_ = score_mob;
-#endif
-#ifdef EVAL_KING_PR
   score.opening_ = score_king;
-#endif // EVAL_KING_PR
-  
   score.opening_ += score_opening;
 
   return score;

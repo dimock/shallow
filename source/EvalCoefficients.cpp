@@ -29,14 +29,6 @@ namespace NEngine
   int EvalCoefficients::multiAttackBonus_{ 15 };
   int EvalCoefficients::immobileAttackBonus_{ 20 };
 
-#ifdef EVALUATE_DANGEROUS_ATTACKS
-  int EvalCoefficients::dangerousAttacksOnPawn_{6};
-  int EvalCoefficients::dangerousAttacksOnKnight_{11};
-  int EvalCoefficients::dangerousAttacksOnBishop_{10};
-  int EvalCoefficients::dangerousAttacksOnRook_{15};
-  int EvalCoefficients::dangerousAttacksOnQueen_{23};
-#endif // EVALUATE_DANGEROUS_ATTACKS
-
   // king
   int EvalCoefficients::fakeCastle_{ -20 };
   int EvalCoefficients::kingIsUnsafe_{ -25 };
