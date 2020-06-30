@@ -27,7 +27,7 @@ namespace NEngine
   int EvalCoefficients::doublePawnAttack_{ 50 };
   int EvalCoefficients::queenUnderRookAttackBonus_{ 8 };
   int EvalCoefficients::multiAttackBonus_{ 15 };
-  int EvalCoefficients::immobileAttackBonus_{ 15 };
+  int EvalCoefficients::immobileAttackBonus_{ 20 };
 
 #ifdef EVALUATE_DANGEROUS_ATTACKS
   int EvalCoefficients::dangerousAttacksOnPawn_{6};
@@ -42,7 +42,7 @@ namespace NEngine
   int EvalCoefficients::kingIsUnsafe_{ -25 };
   int EvalCoefficients::pawnPenaltyA_{ -14 };
   int EvalCoefficients::pawnPenaltyB_{ -16 };
-  int EvalCoefficients::pawnPenaltyC_{ -6 };
+  int EvalCoefficients::pawnPenaltyC_{ -5 };
 
   // blocked figure
   int EvalCoefficients::knightBlocked_{ 80 };
@@ -51,19 +51,19 @@ namespace NEngine
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 3 };
-  int EvalCoefficients::knightKingAttack_{ 20 };
-  int EvalCoefficients::bishopKingAttack_{ 20 };
-  int EvalCoefficients::rookKingAttack_{ 20 };
-  int EvalCoefficients::queenKingAttack_{ 20 };
+  int EvalCoefficients::knightKingAttack_{ 15 };
+  int EvalCoefficients::bishopKingAttack_{ 15 };
+  int EvalCoefficients::rookKingAttack_{ 15 };
+  int EvalCoefficients::queenKingAttack_{ 15 };
 
   int EvalCoefficients::generalKingPressure_{ 4 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
-  int EvalCoefficients::knightChecking_{ 40 };
+  int EvalCoefficients::knightChecking_{ 45 };
   int EvalCoefficients::bishopChecking_{ 40 };
-  int EvalCoefficients::rookChecking_{ 50 };
-  int EvalCoefficients::queenChecking_{ 50 };
+  int EvalCoefficients::rookChecking_{ 55 };
+  int EvalCoefficients::queenChecking_{ 65 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -72,18 +72,18 @@ namespace NEngine
   int EvalCoefficients::figureToKingDistanceMulti_{ 2 };
 
   // arrays
-  int EvalCoefficients::doubledPawn_[2] = { -10, -8 };
-  int EvalCoefficients::isolatedPawn_[2] = { -13, -12 };
-  int EvalCoefficients::backwardPawn_[2] = { -9, -7 };
+  int EvalCoefficients::doubledPawn_[2] = { -12, -8 };
+  int EvalCoefficients::isolatedPawn_[2] = { -15, -12 };
+  int EvalCoefficients::backwardPawn_[2] = { -10, -8 };
   int EvalCoefficients::unguardedPawn_[2] = {-8, -7 };
   int EvalCoefficients::protectedPawn_[2] = { 5, 4};
-  int EvalCoefficients::hasneighborPawn_[2] = { 3, 2};
+  int EvalCoefficients::hasneighborPawn_[2] = { 4, 3};
   
-  int EvalCoefficients::opponentPawnPressure_[8] = { 15, 15, 10, 5, 1, 0, 0, 0 };
+  int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {14, 10};
-  int EvalCoefficients::pawnShieldB_[2] = {14, 10};
-  int EvalCoefficients::pawnShieldC_[2] = { 6, 4};
+  int EvalCoefficients::pawnShieldA_[2] = {15, 10};
+  int EvalCoefficients::pawnShieldB_[2] = {15, 10};
+  int EvalCoefficients::pawnShieldC_[2] = { 8, 5};
 
   // rook on open column
   int EvalCoefficients::openRook_[4] = { 0, 7, 30, 30};
@@ -109,11 +109,11 @@ namespace NEngine
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 
   // mobility
-  int EvalCoefficients::knightMobility_[16] = { -35, -18, 0, 6, 10, 14, 18, 22, 26 };
-  int EvalCoefficients::bishopMobility_[16] = { -35, -18, 0, 6, 10, 14, 18, 22, 26, 27, 29, 30, 30, 30, 30, 30 };
-  int EvalCoefficients::rookMobility_[16]   = { -35, -18, 0, 6, 10, 14, 18, 22, 26, 27, 29, 30, 30, 30, 30, 30 };
-  int EvalCoefficients::queenMobility_[32]  = { -60, -30, 0, 9, 13, 17, 20, 26, 29, 32, 36, 37, 38, 39, 40, 40, 40,
-                                                 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40 };
+  int EvalCoefficients::knightMobility_[16] = { -30, -12,  0,  3,  6,  9, 12, 15, 18 };
+  int EvalCoefficients::bishopMobility_[16] = { -30, -12,  0,  3,  6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39 };
+  int EvalCoefficients::rookMobility_[16]   = { -30, -12,  0,  3,  6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39 };
+  int EvalCoefficients::queenMobility_[32]  = { -50, -20,  0,  3,  6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39,
+                                                 42,  45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87 };
 
   // king position eval for BN-mat
   int EvalCoefficients::bishopKnightMat_[64] =
@@ -204,14 +204,14 @@ namespace NEngine
         -10,  -7,  -6,  -5,  -5,  -6,  -7, -10
       },
       {
-        -39, -39, -39, -39, -39, -39, -39, -39,
-        -33, -33, -33, -33, -33, -33, -33, -33,
-        -31, -31, -31, -31, -31, -31, -31, -31,
-        -28, -28, -28, -28, -28, -28, -28, -26,
-        -20, -23, -26, -28, -28, -23, -20, -18,
-         -9, -13, -19, -26, -26, -15, -10,  -9,
-          7,   7,  -5, -23, -23,  -2,  10,  10,
-         16,  22,  11, -16, -16,  15,  26,  20
+        -48, -48, -48, -48, -48, -48, -48, -48,
+        -41, -41, -41, -41, -41, -41, -41, -41,
+        -38, -38, -38, -38, -38, -38, -38, -38,
+        -35, -35, -35, -35, -35, -35, -35, -35,
+        -25, -28, -32, -35, -35, -32, -28, -25,
+        -11, -16, -24, -32, -32, -24, -16, -11,
+          0,   0,  -8, -28, -28,  -8,   0,   0,
+         24,  32,   9, -20, -20,  14,  40,  32
       },
       {
           0,   0,   0,   0,   0,   0,   0,   0,
