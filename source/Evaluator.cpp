@@ -72,13 +72,15 @@ void Evaluator::prepare()
   mask_all_ = board_->fmgr().mask(Figure::ColorWhite) | board_->fmgr().mask(Figure::ColorBlack);
   inv_mask_all_ = ~mask_all_;
 
+  auto const& fmgr = board_->fmgr();
+
   finfo_[0] = FieldsInfo{};
   finfo_[1] = FieldsInfo{};
 
   // pawns attacks
   {
-    const BitMask & pawn_msk_w = board_->fmgr().pawn_mask(Figure::ColorWhite);
-    const BitMask & pawn_msk_b = board_->fmgr().pawn_mask(Figure::ColorBlack);
+    const BitMask & pawn_msk_w = fmgr.pawn_mask(Figure::ColorWhite);
+    const BitMask & pawn_msk_b = fmgr.pawn_mask(Figure::ColorBlack);
 
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
@@ -89,14 +91,44 @@ void Evaluator::prepare()
 
   // attacked fields near king
   {
-    finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
-    finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
+    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
+    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
 
     finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
     finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
 
     finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
     finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
+
+    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
+    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+
+    finfo_[0].ki_fields_prot_ = finfo_[0].ki_fields_ & finfo_[0].pawnAttacks_;
+    finfo_[1].ki_fields_prot_ = finfo_[1].ki_fields_ & finfo_[1].pawnAttacks_;
+
+    finfo_[0].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorBlack) | finfo_[0].pawnAttacks_);
+    finfo_[1].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorWhite) | finfo_[1].pawnAttacks_);
+  }
+  
+  // other mask
+  {
+    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
+    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.pawn_mask(Figure::ColorBlack) | kings_mask);
+    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.pawn_mask(Figure::ColorWhite) | kings_mask);
+
+    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+
+    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+
+    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+    finfo_[0].bq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+
+    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+    finfo_[1].bq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
   }
 }
 

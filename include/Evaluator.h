@@ -95,14 +95,10 @@ class Evaluator
 
   struct FieldsInfo
   {
-    int knightMobility_{};
-    int bishopMobility_{};
-    int rookMobility_{};
-    int queenMobility_{};
-    int knightPressure_{};
-    int bishopPressure_{};
-    int rookPressure_{};
-    int queenPressure_{};
+    int num_attackers_{};
+    int score_mob_{};
+    int score_king_{};
+    int score_opening_{};
     BitMask pawnAttacks_{};
     BitMask knightAttacks_{};
     BitMask bishopAttacks_{};
@@ -115,6 +111,16 @@ class Evaluator
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
     BitMask multiattack_mask_{};
+    BitMask cango_mask_{};
+    BitMask mask_xray_b_{};
+    BitMask mask_xray_r_{};
+    BitMask nb_attacked_{};
+    BitMask nbr_attacked_{};
+    BitMask ki_fields_{};
+    BitMask ki_fields_prot_{};
+    BitMask brq_mask_{};
+    BitMask bq_mask_{};
+    BitMask rq_mask_{};
 
 #ifdef PROCESS_DANGEROUS_EVAL
     int pawnsUnderAttack_{};
