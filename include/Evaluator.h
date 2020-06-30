@@ -91,8 +91,6 @@ class Evaluator
     FullScore score;
     BitMask   passers_[2] = {};
     bool      passers_observed_[2] = {};
-    int       most_passer_y{ 0 };
-    int       most_unstoppable_y{ 0 };
   };
 
   struct FieldsInfo
@@ -150,6 +148,7 @@ public:
   static const int colored_y_[2][8];
   static const int promo_y_[2];
   static const int delta_y_[2];
+  static const nst::dirs dir_behind_[2];
 
 private:
 

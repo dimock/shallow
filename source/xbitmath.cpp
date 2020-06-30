@@ -286,6 +286,10 @@ void print_bitmask(uint64 mask)
 
 // idea from CCRL
 // "color" belongs to pawn
+
+static const BitMask cut_le = ~0x0101010101010101;
+static const BitMask cut_ri = ~0x8080808080808080;
+
 bool couldIntercept(Board const& board,
                     BitMask const& inv_mask_all,
                     BitMask const& attack_mask_c,
@@ -295,9 +299,7 @@ bool couldIntercept(Board const& board,
                     int stepsLimit)
 {
   Figure::Color ocolor = Figure::otherColor(Figure::Color(color));
-  int oki_pos = board.kingPos(ocolor);
-
-  if(oki_pos == promo_pos)
+  if(board.kingPos(ocolor) == promo_pos)
   {
     X_ASSERT(attack_mask_c & set_mask_bit(promo_pos), "king is on attacked field");
     return true;
@@ -309,11 +311,8 @@ bool couldIntercept(Board const& board,
   if(target == 0ULL)
     return false;
 
-  BitMask from_mask = set_mask_bit(oki_pos);
+  BitMask from_mask = board.fmgr().king_mask(ocolor);
   BitMask path_mask = (inv_mask_all & ~attack_mask_c) | from_mask | target;
-
-  const BitMask cut_le = ~0x0101010101010101;
-  const BitMask cut_ri = ~0x8080808080808080;
 
   for(int i = 0; i < stepsLimit; ++i)
   {
