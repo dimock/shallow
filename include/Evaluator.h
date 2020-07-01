@@ -119,8 +119,10 @@ class Evaluator
     BitMask ki_fields_{};
     BitMask ki_fields_prot_{};
     BitMask brq_mask_{};
+    BitMask br_mask_{};
     BitMask bq_mask_{};
     BitMask rq_mask_{};
+    BitMask allowed_moves_nb_{};
 
 #ifdef PROCESS_DANGEROUS_EVAL
     int pawnsUnderAttack_{};
@@ -211,10 +213,10 @@ private:
 
   FullScore evaluateKnights();
   FullScore evaluateBishops();
-  FullScore evaluateRook(Figure::Color color);
-  FullScore evaluateQueens(Figure::Color color);
+  FullScore evaluateRook();
+  FullScore evaluateQueens();
   FullScore evaluateMobilityAndKingPressure(Figure::Color color);
-  bool isPinned(int pos, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
+  bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&);
   FullScore passerEvaluation(PasserInfo const&);

@@ -122,13 +122,18 @@ void Evaluator::prepare()
     finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
     finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
 
-    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+    finfo_[0].br_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack);
+    finfo_[0].brq_mask_ = finfo_[0].br_mask_  | fmgr.queen_mask(Figure::ColorBlack);
     finfo_[0].bq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
     finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
 
-    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+    finfo_[1].br_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite);
+    finfo_[1].brq_mask_ = finfo_[1].br_mask_ | fmgr.queen_mask(Figure::ColorWhite);
     finfo_[1].bq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
     finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+
+    finfo_[0].allowed_moves_nb_ = (finfo_[0].cango_mask_ & ~finfo_[1].pawnAttacks_) | finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
+    finfo_[1].allowed_moves_nb_ = (finfo_[1].cango_mask_ & ~finfo_[0].pawnAttacks_) | finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
   }
 }
 
@@ -227,12 +232,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   score += evaluateKnights();
   score += evaluateBishops();
-
-  score += evaluateRook(Figure::ColorWhite);
-  score -= evaluateRook(Figure::ColorBlack);
-
-  score += evaluateQueens(Figure::ColorWhite);
-  score -= evaluateQueens(Figure::ColorBlack);
+  score += evaluateRook();
+  score += evaluateQueens();
 
   auto scoreKing = evaluateMobilityAndKingPressure(Figure::ColorWhite);
   scoreKing -= evaluateMobilityAndKingPressure(Figure::ColorBlack);
