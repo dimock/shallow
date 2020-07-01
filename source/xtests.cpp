@@ -275,6 +275,7 @@ void analyzeFen(std::string const& fname)
       return;
     proc.setBoard(board);
     proc.clear();
+    proc.file2hash("D:\\Projects\\gitproj\\hash\\hash");
     proc.analyze();
   },
     [](std::string const& err_str)

@@ -391,7 +391,7 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   auto const & oki_fields_protected = finfo_[ocolor].ki_fields_prot_;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-  if (board_->color() == color) {
+  if (needDangerousDetect_ && board_->color() == color) {
     auto pw_under_attack = board_->fmgr().pawn_mask(color) & finfo_[ocolor].attack_mask_ & ~finfo_[color].attack_mask_;
     finfo_[color].pawnsUnderAttack_ = pop_count(pw_under_attack);
   }
@@ -431,7 +431,7 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     }
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if (board_->color() == color) {
+    if (needDangerousDetect_ && board_->color() == color) {
       if ((knight_moves & allowed_moves_nb) == 0ULL)
       {
         auto kn_mask = set_mask_bit(n);
@@ -482,7 +482,7 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     }
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if (board_->color() == color) {
+    if (needDangerousDetect_ && board_->color() == color) {
       if ((bishop_moves & allowed_moves_nb) == 0ULL)
       {
         auto bi_mask = set_mask_bit(n);
@@ -540,7 +540,7 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     }
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if (board_->color() == color) {
+    if (needDangerousDetect_ && board_->color() == color) {
       if ((rook_moves  & allowed_moves_r) == 0ULL)
       {
         auto r_mask = set_mask_bit(n);
@@ -588,7 +588,7 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     finfo_[color].score_mob_ += EvalCoefficients::queenMobility_[n_moves & 31];
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if (board_->color() == color) {
+    if (needDangerousDetect_ && board_->color() == color) {
       if ((queen_moves & allowed_moves_q) == 0ULL)
       {
         auto q_mask = set_mask_bit(n);
@@ -615,7 +615,7 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
   q_check &= finfo_[color].queenDirectAttacks_ & can_check_q;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-  if (board_->color() != color) {
+  if (needDangerousDetect_ && board_->color() != color) {
     if (kn_check != 0ULL || bi_check != 0ULL || r_check != 0ULL || q_check != 0ULL)
     {
       auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |

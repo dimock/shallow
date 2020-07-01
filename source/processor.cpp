@@ -322,20 +322,21 @@ ReplyStruct Processor::move(xCmd const& moveCmd)
 
 bool Processor::makeMove(std::string const& moveStr)
 {
-  if(moveStr.empty())
+  if (moveStr.empty())
     return false;
 
   NEngine::Board & board = engine_.getBoard();
 
   NEngine::Move move = NEngine::strToMove(moveStr, board);
-  if(!move)
+  if (!move)
     return false;
 
-  if(!board.validateMoveBruteforce(move))
+  if (!board.validateMoveBruteforce(move))
     return false;
 
-  //if(moveStr == "h5g3")
+  //if (moveStr == "e7f7") {
   //  hash2file("D:\\Projects\\gitproj\\hash\\hash");
+  //}
 
   board.makeMove(move);
   board.verifyState();
@@ -441,7 +442,7 @@ std::pair<bool, bool> Processor::fromFEN(xCmd const& cmd)
 bool Processor::fromFEN(std::string const& fen)
 {
   bool r = engine_.fromFEN(fen);
-  //file2hash("D:\\Projects\\gitproj\\hash\\hash");
+  file2hash("D:\\Projects\\gitproj\\hash\\hash");
   return r;
 }
 

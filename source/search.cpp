@@ -486,6 +486,10 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
 #ifdef RELEASEDEBUGINFO
   auto ff = (FIELD_NAME)move.from();
   auto ft = (FIELD_NAME)move.to();
+  if (findSequence(ictx, 0, true))
+  {
+    int t = 1;
+  }
 #endif
 
   if(!stopped(ictx))
@@ -932,7 +936,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   {
     // not initialized yet
     if (score0 == -ScoreMax)
-      score0 = eval(alpha, betta);
+      score0 = eval(alpha, betta, depth >= 0);
 
 #ifdef PROCESS_DANGEROUS_EVAL
     if(score0 > alpha)

@@ -133,24 +133,14 @@ void Evaluator::prepare()
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
+ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta, bool needDangerousDetect)
 {
 #ifdef PROCESS_DANGEROUS_EVAL
     dangerous_ = false;
+    needDangerousDetect_ = needDangerousDetect;
 #endif // PROCESS_DANGEROUS_EVAL
 
   X_ASSERT(!board_, "Evaluator wasn't properly initialized");
-
-#if 0
-
-  if(board_->matState())
-    return -Figure::MatScore;
-  else if(board_->drawState())
-    return Figure::DrawScore;
-
-  return considerColor(board_->fmgr().weight());
-
-#else
 
   if(!ehash_.empty())
     ehash_.prefetch(board_->fmgr().kpwnCode());
@@ -163,8 +153,6 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
   ScoreType score = evaluate(alpha, betta);
   X_ASSERT(score <= -ScoreMax || score >= ScoreMax, "invalid score");
   return score;
-
-#endif
 }
 
 ScoreType Evaluator::materialScore() const
@@ -263,7 +251,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score += scorePassers;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-  detectDangerous();
+  if (needDangerousDetect_) {
+    detectDangerous();
+  }
 #endif // PROCESS_DANGEROUS_EVAL
 
   auto result = considerColor(lipolScore(score, phaseInfo));
@@ -307,7 +297,7 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
   auto pw_unprotected = pw_mask ^ pw_protected;
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
-  score.common_ = pop_count(pw_protected & attackers) * EvalCoefficients::protectedPawnPressure_;
+  score.common_  = pop_count(pw_protected   & attackers) * EvalCoefficients::protectedPawnPressure_;
   score.common_ += pop_count(pw_unprotected & attackers) * EvalCoefficients::unprotectedPawnPressure_;
   // bishop treat
   if(fmgr.bishops(color) == 1)
@@ -315,8 +305,8 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
     auto bi_mask = (fmgr.bishop_mask(color) & FiguresCounter::s_whiteMask_)
       ?  FiguresCounter::s_whiteMask_
       : ~FiguresCounter::s_whiteMask_;
-    score.endGame_ += pop_count(pw_protected   & bi_mask) * EvalCoefficients::protectedPawnBishopTreat_;
-    score.endGame_ += pop_count(pw_unprotected & bi_mask) * EvalCoefficients::unprotectedPawnBishopTreat_;
+    score.endGame_ += pop_count((pw_protected   & bi_mask) & ~attackers) * EvalCoefficients::protectedPawnBishopTreat_;
+    score.endGame_ += pop_count((pw_unprotected & bi_mask) & ~attackers) * EvalCoefficients::unprotectedPawnBishopTreat_;
   }
   return score;
 }
@@ -513,9 +503,9 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
     auto const& protectMask = movesTable().pawnCaps(ocolor, n);
     bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
-    bool isProtected = ((protectMask & pmask) != 0ULL);    
-    auto nb_mask = pawnMasks().mask_neighbor(color, n);
-    bool hasNeighbor = !isProtected && ((nb_mask & pmask) != 0ULL);
+    bool isProtected = !backward && ((protectMask & pmask) != 0ULL);
+    bool hasNeighbor = !backward && !isProtected &&
+      ((pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL || (((fwd_field & (pmask|opmsk)) == 0ULL) && (pawnMasks().mask_neighbor(color, n1) & pmask) != 0ULL));
 
     info.score.opening_ += isolated * EvalCoefficients::isolatedPawn_[0];
     info.score.opening_ += backward * EvalCoefficients::backwardPawn_[0];
@@ -700,7 +690,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     pinfo.score += pwscore;
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    if (!halfpasser && (board_->color() != color) && (cy == 6)) {
+    if (needDangerousDetect_ && !halfpasser && (board_->color() != color) && (cy == 6)) {
       X_ASSERT(((y + dy)) > 7 || ((y + dy)) < 0, "pawn goes to invalid line");
       Index idx1{ x, y + dy };
       if (!board_->getField(idx1) && ((set_mask_bit(idx1) & blockers_mask) == 0ULL)) {

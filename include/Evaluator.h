@@ -140,14 +140,14 @@ public:
 
   void initialize(Board const* board);
 
-  ScoreType operator () (ScoreType alpha, ScoreType betta);
+  ScoreType operator () (ScoreType alpha, ScoreType betta, bool needDangerousDetect = false);
 
   ScoreType materialScore() const;
 
 #ifdef PROCESS_DANGEROUS_EVAL
   bool dangerous() const
   {
-    return dangerous_;
+    return dangerous_ && needDangerousDetect_;
   }
 #endif // PROCESS_DANGEROUS_EVAL
 
@@ -277,6 +277,7 @@ private:
 
 #ifdef PROCESS_DANGEROUS_EVAL
   bool dangerous_{ false };
+  bool needDangerousDetect_{ false };
 #endif // PROCESS_DANGEROUS_EVAL
 };
 
