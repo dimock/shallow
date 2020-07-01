@@ -473,6 +473,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
   uint8 x_visited{ 0 };
   uint8 x_passers{ 0 };
   int dy = delta_y_[color];
+  int py = promo_y_[color];
 
   BitMask pawn_mask = pmask;
   for(; pawn_mask;)
@@ -480,9 +481,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     int const n = clear_lsb(pawn_mask);
     Index idx(n);
 
-    int x  = idx.x();
-    int cy = colored_y_[color][idx.y()];
-    int py = promo_y_[color];
+    const int x = idx.x();
+    const int y = idx.y();
     auto n1 = n + (dy << 3);
     auto pw_field = set_mask_bit(n);
     auto fwd_field = set_mask_bit(n1);
@@ -519,10 +519,66 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     info.score.endGame_ += isProtected * EvalCoefficients::protectedPawn_[1];
     info.score.endGame_ += hasNeighbor * EvalCoefficients::hasneighborPawn_[1];
 
-    // stash passer pawn
-    if(!(pawnMasks().mask_forward(color, n) & opmsk)) {
-      // just save position for further usage
+    // passer pawn
+    const auto & halfpassmsk = pawnMasks().mask_forward(color, n);
+    if(!(halfpassmsk & opmsk))
+    {
+      // save position for further usage
       info.passers_[color] |= set_mask_bit(n);
+
+      const auto & passmsk = pawnMasks().mask_passed(color, n);
+      bool halfpasser = (opmsk & passmsk);
+      int cy = colored_y_[color][y];
+      Index pp(x, py);
+
+      FullScore pwscore;
+      if (halfpasser)
+      {
+        pwscore.common_ = EvalCoefficients::passerPawn_[cy] >> 1;
+        BitMask attackers = passmsk & opmsk;
+        int nguards = 0;
+        if (attackers) {
+          BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
+          if (guards) {
+            nguards = pop_count(guards);
+            while (guards) {
+              int g = clear_lsb(guards);
+              auto fwd = pawnMasks().mask_forward(color, g);
+              auto fwdo = fwd & opmsk;
+              if (fwdo) {
+                int o = color ? _lsb64(fwdo) : _msb64(fwdo);
+                fwd = betweenMasks().between(g, o);
+              }
+              nguards += !(fwd & finfo_[ocolor].pawnAttacks_);
+            }
+          }
+          if (nguards > 0 && nguards >= pop_count(attackers)) {
+            pwscore.common_ += EvalCoefficients::passerPawn_[cy];
+          }
+        }
+        else {
+          pwscore.common_ += EvalCoefficients::passerPawn_[cy];
+        }
+        pwscore >>= 1;
+      }
+      else
+      {
+        pwscore.common_ = EvalCoefficients::passerPawn_[cy];
+        int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
+        int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
+        pwscore.endGame_ += (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_;
+        if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
+          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+          while (guards) {
+            int g = clear_lsb(guards);
+            if (!(pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
+              pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+              break;
+            }
+          }
+        }
+      }
+      info.score += pwscore;
     }
   }
 
@@ -577,60 +633,14 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     if(opmsk & halfpassmsk)
       continue;
 
-    Index idx(n);
+    const Index idx(n);
     const int x = idx.x();
     const int y = idx.y();
     const int cy = colored_y_[color][y];
 
-    bool halfpasser = (opmsk & passmsk);
-    Index pp(x, py);
-
+    const bool halfpasser = (opmsk & passmsk);
+    const Index pp(x, py);
     FullScore pwscore;
-    if(halfpasser)
-    {
-      pwscore.common_ = EvalCoefficients::passerPawn_[cy] >> 1;
-      BitMask attackers = passmsk & opmsk;
-      int nguards = 0;
-      if (attackers) {
-        BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
-        if (guards) {
-          nguards = pop_count(guards);
-          while (guards) {
-            int g = clear_lsb(guards);
-            auto fwd = pawnMasks().mask_forward(color, g);
-            auto fwdo = fwd & opmsk;
-            if (fwdo) {
-              int o = color ? _lsb64(fwdo) : _msb64(fwdo);
-              fwd = betweenMasks().between(g, o);
-            }
-            nguards += !(fwd & finfo_[ocolor].pawnAttacks_);
-          }
-        }
-        if (nguards > 0 && nguards >= pop_count(attackers)) {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy];
-        }
-      }
-      else {
-        pwscore.common_ += EvalCoefficients::passerPawn_[cy];
-      }
-    }
-    else
-    {
-      pwscore.common_ = EvalCoefficients::passerPawn_[cy];
-      int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (board_->color() == ocolor);
-      int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
-      pwscore.endGame_ += (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_;
-      if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
-        pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
-        while (guards) {
-          int g = clear_lsb(guards);
-          if (!(pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
-            pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
-            break;
-          }
-        }
-      }
-    }
 
     auto attack_mask = finfo_[color].attack_mask_;
     auto multiattack_mask = finfo_[color].multiattack_mask_;
