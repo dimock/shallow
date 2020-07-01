@@ -100,14 +100,11 @@ class Evaluator
     int score_king_{};
     int score_opening_{};
     BitMask pawnAttacks_{};
-    BitMask knightAttacks_{};
-    BitMask bishopAttacks_{};
+    BitMask knightMoves_{};
+    BitMask bishopMoves_{};
+    BitMask rookMoves_{};
+    BitMask queenMoves_{};
     BitMask bishopTreatAttacks_{};
-    BitMask rookAttacks_{};
-    BitMask queenAttacks_{};
-    BitMask bishopDirectAttacks_{};
-    BitMask rookDirectAttacks_{};
-    BitMask queenDirectAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
     BitMask multiattack_mask_{};
@@ -119,9 +116,9 @@ class Evaluator
     BitMask ki_fields_{};
     BitMask ki_fields_prot_{};
     BitMask brq_mask_{};
-    BitMask br_mask_{};
-    BitMask bq_mask_{};
-    BitMask rq_mask_{};
+    //BitMask br_mask_{};
+    //BitMask bq_mask_{};
+    //BitMask rq_mask_{};
     BitMask allowed_moves_nb_{};
 
 #ifdef PROCESS_DANGEROUS_EVAL
