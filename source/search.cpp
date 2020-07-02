@@ -242,8 +242,9 @@ bool Engine::mainThreadSearch(int ictx)
     }
 
     if(!sdata.best_ ||
-       ((score >= sparams_.scoreLimit_-MaxPly || score <= MaxPly-sparams_.scoreLimit_) &&
-      !sparams_.analyze_mode_))
+       ( (score >= sparams_.scoreLimit_-MaxPly || score <= MaxPly-sparams_.scoreLimit_) &&
+         !sparams_.analyze_mode_ &&
+         sres.depth_ > NumUsualAfterHorizon+1))
     {
       break;
     }
@@ -322,8 +323,9 @@ bool Engine::threadSearch(int ictx)
     }
 
     if (!sdata.best_ ||
-      ((score >= sparams_.scoreLimit_ - MaxPly || score <= MaxPly - sparams_.scoreLimit_) &&
-        !sparams_.analyze_mode_))
+       ( (score >= sparams_.scoreLimit_ - MaxPly || score <= MaxPly - sparams_.scoreLimit_) &&
+         !sparams_.analyze_mode_ &&
+         sres.depth_ > NumUsualAfterHorizon + 1))
     {
       break;
     }
@@ -936,7 +938,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   {
     // not initialized yet
     if (score0 == -ScoreMax)
-      score0 = eval(alpha, betta, depth >= 0);
+      score0 = eval(alpha, betta, depth >= -NumUsualAfterHorizon * ONE_PLY);
 
 #ifdef PROCESS_DANGEROUS_EVAL
     if(score0 > alpha)
