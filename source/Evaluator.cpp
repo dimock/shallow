@@ -235,10 +235,12 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score += evaluateRook();
   score += evaluateQueens();
 
-  auto scoreKing = evaluateMobilityAndKingPressure(Figure::ColorWhite);
-  scoreKing -= evaluateMobilityAndKingPressure(Figure::ColorBlack);
-  score.common_ += scoreKing.common_;
-  score.opening_ += scoreKing.opening_;
+  int score_mob = finfo_[Figure::ColorWhite].score_mob_ - finfo_[Figure::ColorBlack].score_mob_;
+  score.common_ += score_mob;
+
+  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+  score += scoreKing;
 
   auto scoreForks = evaluateForks(Figure::ColorWhite);
   scoreForks -= evaluateForks(Figure::ColorBlack);
@@ -536,6 +538,9 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       if (halfpasser)
       {
         pwscore.common_ = EvalCoefficients::passerPawn_[cy] >> 1;
+        if (isProtected || hasNeighbor) {
+          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+        }
         BitMask attackers = passmsk & opmsk;
         int nguards = 0;
         if (attackers) {
@@ -565,6 +570,9 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore.common_ = EvalCoefficients::passerPawn_[cy];
+        if (isProtected || hasNeighbor) {
+          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+        }
         int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
         int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
         pwscore.endGame_ += (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_;

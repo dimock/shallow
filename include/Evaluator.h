@@ -212,7 +212,7 @@ private:
   FullScore evaluateBishops();
   FullScore evaluateRook();
   FullScore evaluateQueens();
-  FullScore evaluateMobilityAndKingPressure(Figure::Color color);
+  FullScore evaluateKingPressure(Figure::Color color);
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
   PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&);

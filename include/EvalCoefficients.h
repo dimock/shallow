@@ -66,6 +66,8 @@ struct EvalCoefficients
   static int rookChecking_;
   static int queenChecking_;
 
+  static int attackedNearKing_;
+
   // arrays
   static int doubledPawn_[2];
   static int isolatedPawn_[2];

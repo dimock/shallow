@@ -435,7 +435,7 @@ Evaluator::FullScore Evaluator::evaluateRook()
       int n_moves = pop_count(r_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[n_moves & 15];
 
-      if ((q_pinned || rook_moves == 0) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
+      if ((q_pinned || rook_moves == 0) && ((finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].nb_attacked_) & set_mask_bit(n)) != 0ULL) {
 #ifdef PROCESS_DANGEROUS_EVAL
         finfo_[color].forkTreat_ = true;
 #endif
@@ -509,7 +509,7 @@ Evaluator::FullScore Evaluator::evaluateQueens()
         finfo_[color].attack_mask_ |= queen_attacks;
         finfo_[color].queenMoves_ |= queen_moves;
       }
-      else if (((finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL)) {
+      else if ((((finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].nbr_attacked_) & set_mask_bit(n)) != 0ULL)) {
 #ifdef PROCESS_DANGEROUS_EVAL
         finfo_[color].forkTreat_ = true;
 #endif
@@ -536,16 +536,20 @@ Evaluator::FullScore Evaluator::evaluateQueens()
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
 }
 
-Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color color)
+Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
 {
   auto const& fmgr = board_->fmgr();
   auto ocolor = Figure::otherColor(color);
   const BitMask attacked_any_but_oking = finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[ocolor].kingAttacks_);
   const BitMask attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_;
 
+  auto onbrp_attacked = finfo_[ocolor].nbr_attacked_ | finfo_[ocolor].pawnAttacks_;
+  auto onbp_attacked  = finfo_[ocolor].nb_attacked_ | finfo_[ocolor].pawnAttacks_;
   const BitMask can_check_q = ~(fmgr.mask(color) | attacked_any_but_oking | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
-  const BitMask can_check_r = can_check_q | fmgr.queen_mask(ocolor);
-  const BitMask can_check_nb = can_check_r | fmgr.rook_mask(ocolor);
+  const BitMask can_check_r = ~(fmgr.mask(color) | onbrp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_)) |
+    fmgr.queen_mask(ocolor);
+  const BitMask can_check_nb = ~(fmgr.mask(color) | onbp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_)) |
+    fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
 
   auto const & oki_fields = finfo_[ocolor].ki_fields_;
 
@@ -607,7 +611,6 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
 #endif // PROCESS_DANGEROUS_EVAL
 
   FullScore score;
-  score.common_ = finfo_[color].score_mob_;
   score.opening_ = finfo_[color].score_opening_;
 
   int score_king = finfo_[color].score_king_;
@@ -624,6 +627,10 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     int num_attackers = std::min(finfo_[color].num_attackers_, 7);
     auto attack_coeff = attackers_coefficients[num_attackers];
 
+    auto near_oking = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_;
+    if (near_oking)
+      attack_coeff += pop_count(near_oking) * EvalCoefficients::attackedNearKing_;
+
     int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL);
     num_checkers = std::min(num_checkers, 4);
     auto check_coeff = checkers_coefficients[num_checkers] + attack_coeff/2;
@@ -639,10 +646,10 @@ Evaluator::FullScore Evaluator::evaluateMobilityAndKingPressure(Figure::Color co
     int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalOpponentPressure_;
     int general_score = general_king_attacks_score + general_opponent_pressure;
 
-    score.opening_ += general_score;
+    score_king += general_score;
   }
-  score.opening_ += score_king;
 
+  score.opening_ += score_king;
   return score;
 }
 
