@@ -169,6 +169,8 @@ public:
     eval32_ = 0;
   }
 
+  //static const Figure::Type FIGURE_TYPE = Figure::TypeKing;
+
   inline void incr(const Figure::Color c, const Figure::Type t, int p)
   {
     fcounter_[c].incr(c, t, p);
@@ -176,8 +178,12 @@ public:
     hashCode_ ^= uc;
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
-    eval_[0] += Figure::positionEvaluation(0, c, t, p);
-    eval_[1] += Figure::positionEvaluation(1, c, t, p);
+
+    //if (t == FIGURE_TYPE)
+    {
+      eval_[0] += Figure::positionEvaluation(0, c, t, p);
+      eval_[1] += Figure::positionEvaluation(1, c, t, p);
+    }
   }
 
   inline void decr(const Figure::Color c, const Figure::Type t, int p)
@@ -187,8 +193,11 @@ public:
     hashCode_ ^= uc;
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
-    eval_[0] -= Figure::positionEvaluation(0, c, t, p);
-    eval_[1] -= Figure::positionEvaluation(1, c, t, p);
+    //if (t == FIGURE_TYPE)
+    {
+      eval_[0] -= Figure::positionEvaluation(0, c, t, p);
+      eval_[1] -= Figure::positionEvaluation(1, c, t, p);
+    }
   }
 
   inline void move(const Figure::Color c, const Figure::Type t, int from, int to)
@@ -205,11 +214,15 @@ public:
       kpwnCode_ ^= uc0;
       kpwnCode_ ^= uc1;
     }
-    eval_[0] -= Figure::positionEvaluation(0, c, t, from);
-    eval_[0] += Figure::positionEvaluation(0, c, t, to);
 
-    eval_[1] -= Figure::positionEvaluation(1, c, t, from);
-    eval_[1] += Figure::positionEvaluation(1, c, t, to);
+    //if (t == FIGURE_TYPE)
+    {
+      eval_[0] -= Figure::positionEvaluation(0, c, t, from);
+      eval_[0] += Figure::positionEvaluation(0, c, t, to);
+
+      eval_[1] -= Figure::positionEvaluation(1, c, t, from);
+      eval_[1] += Figure::positionEvaluation(1, c, t, to);
+    }
 
     X_ASSERT(fcounter_[c].mask_all() & set_mask_bit(from), "invalid figures mask");
   }

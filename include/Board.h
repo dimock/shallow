@@ -747,6 +747,11 @@ private:
 
 protected:
   UndoInfo* g_undoStack{};
+
+#ifdef RELEASEDEBUGINFO
+public:
+  std::vector<std::string> stestMoves_;
+#endif
 };
 
 #pragma pack (pop)

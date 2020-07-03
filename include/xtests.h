@@ -59,6 +59,9 @@ using xDoOptimize_Callback = std::function<bool(int)>;
 template <typename B, typename M, typename U>
 inline void appendMove(xEPD<B, M, U>& epd, std::string const& smove)
 {
+#ifdef RELEASEDEBUGINFO
+  epd.board_.stestMoves_.push_back(smove == "_" ? "" : smove);
+#endif
   if(Move move = strToMove(smove, epd.board_))
   {
     epd.moves_.push_back(move);
@@ -72,7 +75,7 @@ class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 public:
   FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
   {
-    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnrqkPNBRQKOx+=!\\s\\-]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
+    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnrqkPNBRQKOx+=!_\\s\\-]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
     ::std::ifstream ifs(ffname);
     for(; ifs;)
     {

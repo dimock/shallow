@@ -168,13 +168,13 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
-  auto spec = specialCases().eval(*board_);
-  if (spec.first)
-  {
-    ScoreType score = spec.second;
-    score = considerColor(score);
-    return score;
-  }
+  //auto spec = specialCases().eval(*board_);
+  //if (spec.first)
+  //{
+  //  ScoreType score = spec.second;
+  //  score = considerColor(score);
+  //  return score;
+  //}
 
   // prepare lazy evaluation
   if(alpha > -Figure::MatScore)
@@ -207,52 +207,52 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   // evaluate figures weight
   score.common_ = fmgr.weight();
-  score += evaluateMaterialDiff();
+  //score += evaluateMaterialDiff();
 
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);
 
-  /// use lazy evaluation level 0
-  {
-    auto score0 = considerColor(lipolScore(score, phaseInfo));
-    if(score0 < alpha0_ || score0 > betta0_)
-      return score0;
-  }
-
-  prepare();
-
-  // take pawns eval from hash if possible
-  auto hashedScore = hashedEvaluation();
-  score += hashedScore.score;
-
-  score += evaluateKnights();
-  score += evaluateBishops();
-  score += evaluateRook();
-  score += evaluateQueens();
-
-  int score_mob = finfo_[Figure::ColorWhite].score_mob_ - finfo_[Figure::ColorBlack].score_mob_;
-  score.common_ += score_mob;
-
-  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-  score += scoreKing;
-
-  auto scoreForks = evaluateForks(Figure::ColorWhite);
-  scoreForks -= evaluateForks(Figure::ColorBlack);
-  score.common_ += scoreForks;
-
-  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-  score += scorePP;
-
-  auto scorePassers = passerEvaluation(hashedScore);
-  score += scorePassers;
-
-#ifdef PROCESS_DANGEROUS_EVAL
-  if (needDangerousDetect_) {
-    detectDangerous();
-  }
-#endif // PROCESS_DANGEROUS_EVAL
+//  /// use lazy evaluation level 0
+//  {
+//    auto score0 = considerColor(lipolScore(score, phaseInfo));
+//    if(score0 < alpha0_ || score0 > betta0_)
+//      return score0;
+//  }
+//
+//  prepare();
+//
+//  // take pawns eval from hash if possible
+//  auto hashedScore = hashedEvaluation();
+//  score += hashedScore.score;
+//
+//  score += evaluateKnights();
+//  score += evaluateBishops();
+//  score += evaluateRook();
+//  score += evaluateQueens();
+//
+//  int score_mob = finfo_[Figure::ColorWhite].score_mob_ - finfo_[Figure::ColorBlack].score_mob_;
+//  score.common_ += score_mob;
+//
+//  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+//  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+//  score += scoreKing;
+//
+//  auto scoreForks = evaluateForks(Figure::ColorWhite);
+//  scoreForks -= evaluateForks(Figure::ColorBlack);
+//  score.common_ += scoreForks;
+//
+//  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+//  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+//  score += scorePP;
+//
+//  auto scorePassers = passerEvaluation(hashedScore);
+//  score += scorePassers;
+//
+//#ifdef PROCESS_DANGEROUS_EVAL
+//  if (needDangerousDetect_) {
+//    detectDangerous();
+//  }
+//#endif // PROCESS_DANGEROUS_EVAL
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;

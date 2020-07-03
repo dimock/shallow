@@ -442,7 +442,7 @@ std::pair<bool, bool> Processor::fromFEN(xCmd const& cmd)
 bool Processor::fromFEN(std::string const& fen)
 {
   bool r = engine_.fromFEN(fen);
-  file2hash("D:\\Projects\\gitproj\\hash\\hash");
+  //file2hash("D:\\Projects\\gitproj\\hash\\hash");
   return r;
 }
 

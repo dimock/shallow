@@ -128,7 +128,6 @@ void Engine::logMovies(int ictx)
 
 static int TEST_DEPTH_MIN = 9;
 static int TEST_DEPTH_MAX = 10;
-static std::vector<std::string> sequence({ "d7b6", "a4b6", "a7b6", "e2e4", "c6c5", "d4c5", "b6c5", "e4g4", "e8f8", "a1c1" });
 
 bool compare_depth(int depth)
 {
@@ -144,6 +143,7 @@ bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
   if (!compare_depth(depth))
     return false;
 
+  const auto& sequence = board.stestMoves_;
   if((ply < sequence.size() && !exactMatch) || (ply == sequence.size()-1 && exactMatch))
   {
     for(int i = ply; i >= 0; --i)

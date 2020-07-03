@@ -112,8 +112,8 @@ namespace nst
 #define SINGULAR_EXT
 #undef LMR_REDUCE_MORE
 
-#define GEN_USUAL_AFETER_HORIZON
-#define PROCESS_DANGEROUS_EVAL
+#undef GEN_USUAL_AFETER_HORIZON
+#undef PROCESS_DANGEROUS_EVAL
 #define GENERATE_MAT_CHECK_AFTER_HORIZON
 
 #undef SYNCHRONIZE_LAST_ITER
@@ -130,8 +130,8 @@ static const int NullMove_DepthMin = 2 * ONE_PLY;
 static const int NullMove_PlyReduce = 4 * ONE_PLY;
 static const int Probcut_Depth = 7 * ONE_PLY;
 static const int Probcut_PlyReduce = 4 * ONE_PLY;
-static const int Position_GainFP = 250;
-static const int Position_GainThr = 150;
+static const int Position_GainFP = 200;
+static const int Position_GainThr = 130;
 static const int AlphaProbCutThreshold = 200;
 
 static const size_t N_THREADS_MAX = 8;

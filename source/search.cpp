@@ -345,17 +345,15 @@ bool Engine::threadSearch(int ictx)
 int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) const
 {
   auto& board = scontexts_.at(ictx).board_;
-  
-  int depthInc = 0;
 
   if(board.underCheck())
-    depthInc += ONE_PLY;
+    return ONE_PLY;
 
   if(!pv || !move.see_ok())
-    return depthInc;
+    return 0;
 
   if(move.new_type() || singular)
-    return depthInc + ONE_PLY;
+    return ONE_PLY;
 
   // recapture
   if(board.halfmovesCount() > 1)
@@ -365,11 +363,11 @@ int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) 
 
     if(prev.move_.to() == curr.move_.to() && prev.eaten_type_ > 0)
     {
-      return depthInc + ONE_PLY;
+      return ONE_PLY;
     }
   }
 
-  return depthInc;
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -580,7 +578,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef RELEASEDEBUGINFO
-  if (14995672985372787111 == board.fmgr().hashCode())
+  if (5435081972929332263 == board.fmgr().hashCode())
   {
     int x = 0;
   }
@@ -719,7 +717,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     if (!counter)
     {
-      depthInc = depthIncrement(ictx, move, pv, singular);
+      depthInc = depthIncrement(ictx, move, true, singular);
       score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm);
     }
     else
