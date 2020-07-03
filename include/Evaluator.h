@@ -105,6 +105,7 @@ class Evaluator
     BitMask rookMoves_{};
     BitMask queenMoves_{};
     BitMask bishopTreatAttacks_{};
+    BitMask rookTreatAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
     BitMask multiattack_mask_{};
@@ -116,20 +117,14 @@ class Evaluator
     BitMask ki_fields_{};
     BitMask ki_fields_prot_{};
     BitMask brq_mask_{};
-    //BitMask br_mask_{};
-    //BitMask bq_mask_{};
-    //BitMask rq_mask_{};
-    BitMask allowed_moves_nb_{};
+    BitMask nbrq_mask_{};
+    BitMask rq_mask_{};
 
 #ifdef PROCESS_DANGEROUS_EVAL
-    int pawnsUnderAttack_{};
-    int knightsUnderAttack_{};
-    int bishopsUnderAttack_{};
-    int rooksUnderAttack_{};
-    int queensUnderAttack_{};
     bool matThreat_{};
-    bool pawnPromotion_{};
+    bool promotionTreat_{};
     bool forkTreat_{};
+    int attackedPawnsCount_{};
 #endif // PROCESS_DANGEROUS_EVAL
   } finfo_[2];
 

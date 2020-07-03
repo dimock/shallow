@@ -113,8 +113,8 @@ void Evaluator::prepare()
   // other mask
   {
     auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
-    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.pawn_mask(Figure::ColorBlack) | kings_mask);
-    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.pawn_mask(Figure::ColorWhite) | kings_mask);
+    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
+    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
 
     finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
     finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
@@ -123,17 +123,12 @@ void Evaluator::prepare()
     finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
 
     finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-    //finfo_[0].br_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack);
-    //finfo_[0].bq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-    //finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
+    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
 
     finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-    //finfo_[1].br_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite);
-    //finfo_[1].bq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-    //finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-
-    finfo_[0].allowed_moves_nb_ = (finfo_[0].cango_mask_ & ~finfo_[1].pawnAttacks_) | finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
-    finfo_[1].allowed_moves_nb_ = (finfo_[1].cango_mask_ & ~finfo_[0].pawnAttacks_) | finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
+    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
+    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
   }
 }
 
@@ -713,7 +708,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       X_ASSERT(((y + dy)) > 7 || ((y + dy)) < 0, "pawn goes to invalid line");
       Index idx1{ x, y + dy };
       if (!board_->getField(idx1) && ((set_mask_bit(idx1) & blockers_mask) == 0ULL)) {
-        finfo_[color].pawnPromotion_ = true;
+        finfo_[ocolor].promotionTreat_ = true;
       }
     }
 #endif // PROCESS_DANGEROUS_EVAL
@@ -1080,7 +1075,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   else if(pawnsN == 1) {
     forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
     if(color == board_->color())
-      forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
   }
   BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;
   int knightsN = pop_count(kn_fork);
@@ -1089,11 +1084,11 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     finfo_[ocolor].forkTreat_ = true;
 #endif
     forkScore += EvalCoefficients::knightForkBonus_;
-    if (color == board_->color())
-      forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
   }
-  else if (knightsN == 1) {
+  else if(knightsN == 1) {
     forkScore += EvalCoefficients::knightForkBonus_ >> 3;
+    if (color == board_->color())
+      forkScore += EvalCoefficients::knightForkBonus_ >> 2;
   }
   BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
   int bishopsN = pop_count(bi_treat);
@@ -1105,21 +1100,19 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   }
   else if (bishopsN == 1) {
     forkScore += EvalCoefficients::bishopsAttackBonus_ >> 3;
+    if (color == board_->color())
+      forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
   }
   bool queensTreat = (board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_) != 0ULL;
-  if (queensTreat) {
+  if (queensTreat && color == board_->color()) {
     forkScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
-#ifdef PROCESS_DANGEROUS_EVAL
-  if (!finfo_[ocolor].forkTreat_ && (pawnsN + knightsN + bishopsN + queensTreat > 1)) {
-    finfo_[ocolor].forkTreat_ = true;
-    forkScore += EvalCoefficients::multiAttackBonus_;
-  }
-#else
   if (pawnsN + knightsN + bishopsN + queensTreat > 1) {
+#ifdef PROCESS_DANGEROUS_EVAL
+    finfo_[ocolor].forkTreat_ = true;
+#endif
     forkScore += EvalCoefficients::multiAttackBonus_;
   }
-#endif
   return forkScore;
 }
 
@@ -1128,11 +1121,7 @@ void Evaluator::detectDangerous()
 {
   auto color = board_->color();
   auto ocolor = Figure::otherColor(board_->color());
-  dangerous_ = (finfo_[color].pawnsUnderAttack_ + finfo_[color].knightsUnderAttack_ + finfo_[color].bishopsUnderAttack_
-    + finfo_[color].rooksUnderAttack_ + finfo_[color].queensUnderAttack_ > 1) ||
-    finfo_[ocolor].pawnPromotion_ ||
-    finfo_[color].matThreat_ ||
-    finfo_[ocolor].forkTreat_;
+  dangerous_ = finfo_[color].promotionTreat_ || finfo_[color].matThreat_ || finfo_[color].forkTreat_ || (finfo_[color].attackedPawnsCount_ > 1);
 }
 #endif // PROCESS_DANGEROUS_EVAL
 
