@@ -603,6 +603,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     // do null-move
     board.makeNullMove();
+#ifdef RELEASEDEBUGINFO
+    if (findSequence(ictx, ply, true))
+    {
+      null_depth = null_depth;
+    }
+#endif // RELEASEDEBUGINFO
     ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false, false);
     board.unmakeNullMove();
 
@@ -949,7 +955,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     ScoreType mscore = eval.materialScore();
     if (score0 > mscore)
       mscore = score0;
-    threshold = std::max((int)alpha - (int)mscore - Position_GainThr, 0);
+    threshold = (int)alpha - (int)mscore - Position_GainThr;
     if(threshold > Figure::figureWeight_[Figure::TypePawn] && board.isWinnerLoser())
       threshold = Figure::figureWeight_[Figure::TypePawn];
     
@@ -973,7 +979,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   Board board0{ board };
 #endif
 
-  int thr = 0;
+  int thr = std::min(threshold, 0);
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
   {

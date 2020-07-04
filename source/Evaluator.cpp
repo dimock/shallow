@@ -168,13 +168,13 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
-  //auto spec = specialCases().eval(*board_);
-  //if (spec.first)
-  //{
-  //  ScoreType score = spec.second;
-  //  score = considerColor(score);
-  //  return score;
-  //}
+  auto spec = specialCases().eval(*board_);
+  if (spec.first)
+  {
+    ScoreType score = spec.second;
+    score = considerColor(score);
+    return score;
+  }
 
   // prepare lazy evaluation
   if(alpha > -Figure::MatScore)
@@ -207,7 +207,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   // evaluate figures weight
   score.common_ = fmgr.weight();
-  //score += evaluateMaterialDiff();
+  score += evaluateMaterialDiff();
 
   score.opening_ += fmgr.eval(0);
   score.endGame_ += fmgr.eval(1);

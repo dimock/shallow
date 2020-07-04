@@ -75,7 +75,7 @@ class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 public:
   FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
   {
-    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnrqkPNBRQKOx+=!_\\s\\-]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
+    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnullrqkPNBRQKOx+=!_\\s\\-]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
     ::std::ifstream ifs(ffname);
     for(; ifs;)
     {
