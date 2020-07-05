@@ -345,11 +345,13 @@ bool Engine::threadSearch(int ictx)
 int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) const
 {
   auto& board = scontexts_.at(ictx).board_;
+  if (!move.see_ok())
+    return 0;
 
   if(board.underCheck())
     return ONE_PLY;
 
-  if(!pv || !move.see_ok())
+  if(!pv)
     return 0;
 
   if(move.new_type() || singular)
@@ -567,8 +569,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       return capResult.score;
   }
 
-#ifdef USE_HASH
   ScoreType hscore = -ScoreMax;
+
+#ifdef USE_HASH
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
   if (flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
@@ -588,18 +591,23 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool nm_threat{false};
   auto const& prev = board.lastUndo();
 
+  if (hscore == -ScoreMax) {
+    hscore = scontexts_.at(ictx).eval_(alpha, betta);
+  }
+
 #ifdef USE_NULL_MOVE
   if(
     !board.underCheck()
     && !pv
     && allow_nm
     && board.allowNullMove()
-    && depth > board.nullMoveDepthMin()
+    //&& depth > board.nullMoveDepthMin()
     && std::abs(betta) < Figure::MatScore+MaxPly
     && !board.isWinnerLoser()
+    && hscore >= betta
     )
   {
-    int null_depth = board.nullMoveDepth(depth, betta);
+    int null_depth = board.nullMoveDepth(depth, betta, hscore);
 
     // do null-move
     board.makeNullMove();
