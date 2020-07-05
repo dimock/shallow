@@ -578,7 +578,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef RELEASEDEBUGINFO
-  if (5435081972929332263 == board.fmgr().hashCode())
+  if (14342053282654906705 == board.fmgr().hashCode())
   {
     int x = 0;
   }
@@ -729,6 +729,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     else
     {
       depthInc = depthIncrement(ictx, move, false, false);
+      auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
 
       int R = 0;
 #ifdef USE_LMR
@@ -743,7 +744,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         R = ONE_PLY;
 
 #ifdef LMR_REDUCE_MORE
-        auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
         if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
         {
           R += ONE_PLY;

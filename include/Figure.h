@@ -19,7 +19,7 @@ namespace Figure
   extern const BitMask pawnCutoffMasks_[2];
   
   // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
-  constexpr ScoreType figureWeight_[7] = { 0, 95, 355, 355, 545, 1090, 0 };
+  constexpr ScoreType figureWeight_[7] = { 0, 90, 355, 355, 545, 1090, 0 };
 
   extern const uint8     mirrorIndex_[64];
   // color, castle (K = 0, Q = 1)
