@@ -345,13 +345,14 @@ bool Engine::threadSearch(int ictx)
 int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) const
 {
   auto& board = scontexts_.at(ictx).board_;
-  if (!move.see_ok())
-    return 0;
 
   if(board.underCheck())
     return ONE_PLY;
 
   if(!pv)
+    return 0;
+
+  if (!move.see_ok())
     return 0;
 
   if(move.new_type() || singular)
@@ -601,13 +602,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && !pv
     && allow_nm
     && board.allowNullMove()
-    //&& depth > board.nullMoveDepthMin()
+    && depth > ONE_PLY
     && std::abs(betta) < Figure::MatScore+MaxPly
     && !board.isWinnerLoser()
     && hscore >= betta
     )
   {
-    int null_depth = board.nullMoveDepth(depth, betta, hscore);
+    int ScoreReduce = ONE_PLY * (hscore - betta) / 200;
+    int null_depth = std::max(ONE_PLY, depth - NullMove_PlyReduce - ScoreReduce);
 
     // do null-move
     board.makeNullMove();
@@ -741,36 +743,19 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
       int R = 0;
 #ifdef USE_LMR
-      if (!check_escape &&
-        !danger_pawn &&
+      if (
+        //!check_escape &&
+        //!danger_pawn &&
         sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
         depth >= LMR_DepthLimit &&
         alpha > -Figure::MatScore - MaxPly &&
         board.canBeReduced(move) &&
-        !board.isWinnerLoser())
+        !board.isWinnerLoser()
+        )
       {
         R = ONE_PLY;
-
-#ifdef LMR_REDUCE_MORE
-        if(depth > LMR_DepthLimit && (!move.see_ok() || hist.good()*20 < hist.bad()))
-        {
-          R += ONE_PLY;
-          if(depth > LMR_DepthLimit+ONE_PLY && counter > 10)
-            R += ONE_PLY;
-        }
-        curr.mflags_ |= UndoInfo::Reduced;
-      }
-      else if(!check_escape &&
-              counter > 10 &&
-              sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-              depth > LMR_DepthLimit &&
-              alpha > -Figure::MatScore-MaxPly &&
-              !move.see_ok() &&
-              !curr.castle() &&
-              !board.underCheck())
-      {
-        R = ONE_PLY;
-#endif // LMR_REDUCE_MORE
+        if (!move.see_ok() || counter > 10)
+          R += ONE_PLY * counter / 20;
         curr.mflags_ |= UndoInfo::Reduced;
       }
 #endif //USE_LMR

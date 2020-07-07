@@ -459,12 +459,13 @@ struct Board
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
     auto const& undo = lastUndo();
-    return  ((hist.good()<<2) <= hist.bad()) &&
-      !(lastUndo().capture() || move.new_type() > 0
+    return
+      //((hist.good()<<4) <= hist.bad()) &&
+      !((undo.capture() || move.new_type() > 0 || underCheck()) && move.see_ok()
 #ifdef VERIFY_LMR
       || undo.threat()
 #endif
-      || undo.castle() || underCheck());
+      || undo.castle());
   }
 
   inline bool allowNullMove() const
@@ -480,13 +481,6 @@ struct Board
       return NullMove_DepthMin;
     else
       return NullMove_DepthMin + ONE_PLY;
-  }
-
-
-  inline int nullMoveDepth(int depth, ScoreType betta, ScoreType score) const
-  {
-    int ScoreReduce = ONE_PLY * (score - betta) / Figure::figureWeight_[Figure::TypePawn];
-    return std::max(0, depth - NullMove_PlyReduce - ScoreReduce);
   }
 
   inline void setNoMoves()
