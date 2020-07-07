@@ -18,12 +18,12 @@ namespace NEngine
 //////////////////////////////////////////////////////////////////////////
 bool Engine::generateStartposMoves(int ictx)
 {
-  if (scontexts_.size() <= ictx)
-    return false;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
 
-  auto& sres = scontexts_.at(ictx).sres_;
-  auto& board = scontexts_.at(ictx).board_;
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  auto& sres =  sctx.sres_;
+  auto& board = sctx.board_;
+  auto& sdata = sctx.sdata_;
   
   // generate moves from startpos
   auto moves = generate<Board, SMove>(board);
@@ -44,15 +44,15 @@ bool Engine::generateStartposMoves(int ictx)
     else
     {
       board.makeMove(move);
-      move.sort_value = scontexts_.at(ictx).eval_(-ScoreMax, +ScoreMax);
+      move.sort_value = sctx.eval_(-ScoreMax, +ScoreMax);
       if (!move.see_ok())
         move.sort_value -= 10000;
       board.unmakeMove(move);
     }
-    scontexts_.at(ictx).moves_[sdata.numOfMoves_++] = move;
+    sctx.moves_[sdata.numOfMoves_++] = move;
   }
-  scontexts_.at(ictx).moves_[sdata.numOfMoves_] = SMove{ true };
-  auto* b = scontexts_.at(ictx).moves_.data();
+  sctx.moves_[sdata.numOfMoves_] = SMove{ true };
+  auto* b = sctx.moves_.data();
   auto* e = b + sdata.numOfMoves_;
   std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
   auto const* hitem = hash_.find(board.fmgr().hashCode());
@@ -70,7 +70,8 @@ bool Engine::generateStartposMoves(int ictx)
 
 SearchResult const& Engine::result() const
 {
-  return scontexts_.at(0).sres_;
+  auto const& sctx0 = scontexts_.at(0);
+  return sctx0.sres_;
 }
 
 bool Engine::search()
@@ -89,7 +90,7 @@ bool Engine::search()
 
   for (size_t ictx = 1; ictx < scontexts_.size(); ++ictx)
   {
-    scontexts_.at(ictx) = scontexts_.at(0);
+    scontexts_[ictx] = scontexts_[0];
   }
 
   // start threads
@@ -115,17 +116,20 @@ bool Engine::search()
 
 bool Engine::mainThreadSearch(int ictx)
 {
-  auto& sres = scontexts_.at(ictx).sres_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+
+  auto& sres = sctx.sres_;
   // stash board to correctly print status later
-  sres.board_ = scontexts_.at(ictx).board_;
-  auto& board = scontexts_.at(ictx).board_;
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  sres.board_ = sctx.board_;
+  auto& board = sctx.board_;
+  auto& sdata = sctx.sdata_;
   // copy to print stats later
   sdata.board_ = board;
 
   for(sdata.depth_ = depth0_; !stopped(ictx) && sdata.depth_ <= sparams_.depthMax_; ++sdata.depth_)
   {
-    scontexts_.at(ictx).plystack_[0].clearPV(sparams_.depthMax_);
+    sctx.plystack_[0].clearPV(sparams_.depthMax_);
 
     sdata.restart();
 
@@ -141,7 +145,7 @@ bool Engine::mainThreadSearch(int ictx)
         auto t_add = (callbacks_.giveTime_)();
         if(NTime::milli_seconds<int>(t_add) > 0)
         {
-          scontexts_.at(ictx).stop_ = false;
+          sctx.stop_ = false;
           sparams_.timeLimit_ += t_add;
           if(sdata.counter_ < sdata.numOfMoves_)
             sdata.depth_--;
@@ -165,7 +169,7 @@ bool Engine::mainThreadSearch(int ictx)
       for(int i = 0; i < MaxPly; ++i)
       {
         sres.depthMax_ = i;
-        sres.pv_[i] = scontexts_.at(ictx).plystack_[0].pv_[i];
+        sres.pv_[i] = sctx.plystack_[0].pv_[i];
         if(!sres.pv_[i])
           break;
       }
@@ -188,7 +192,7 @@ bool Engine::mainThreadSearch(int ictx)
         auto t_add = (callbacks_.giveTime_)();
         if(t_add > NTime::duration(0))
         {
-          scontexts_.at(ictx).stop_ = false;
+          sctx.stop_ = false;
           sparams_.timeLimit_ += t_add;
           sdata.depth_--;
           continue;
@@ -234,7 +238,7 @@ bool Engine::mainThreadSearch(int ictx)
         if (ictx == 0 && callbacks_.sendOutput_)
         {
           for (size_t j = 1; j < scontexts_.size(); ++j)
-            sres.totalNodes_ += scontexts_.at(j).sdata_.totalNodes_;
+            sres.totalNodes_ += scontexts_[j].sdata_.totalNodes_;
           (callbacks_.sendOutput_)(sres);
         }
       }
@@ -271,11 +275,14 @@ bool Engine::mainThreadSearch(int ictx)
 
 bool Engine::threadSearch(int ictx)
 {
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+
   // stash board to correctly print status later
-  auto& sres  = scontexts_.at(ictx).sres_;
-  sres.board_ = scontexts_.at(ictx).board_;
-  auto& board = scontexts_.at(ictx).board_;
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  auto& sres  = sctx.sres_;
+  sres.board_ = sctx.board_;
+  auto& board = sctx.board_;
+  auto& sdata = sctx.sdata_;
   // copy to print stats later
   sdata.board_ = board;
 
@@ -285,7 +292,7 @@ bool Engine::threadSearch(int ictx)
   depth0++;
   for (sdata.depth_ = depth0; !stopped(ictx) && sdata.depth_ <= sparams_.depthMax_;)
   {
-    scontexts_.at(ictx).plystack_[0].clearPV(sparams_.depthMax_);
+    sctx.plystack_[0].clearPV(sparams_.depthMax_);
 
     sdata.restart();
 
@@ -312,7 +319,7 @@ bool Engine::threadSearch(int ictx)
         for (int i = 0; i < MaxPly; ++i)
         {
           sres.depthMax_ = i;
-          sres.pv_[i] = scontexts_.at(ictx).plystack_[0].pv_[i];
+          sres.pv_[i] = sctx.plystack_[0].pv_[i];
           if (!sres.pv_[i])
             break;
         }
@@ -344,19 +351,20 @@ bool Engine::threadSearch(int ictx)
 //////////////////////////////////////////////////////////////////////////
 int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) const
 {
-  auto& board = scontexts_.at(ictx).board_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+
+  auto& sctx = scontexts_[ictx];
+  auto& board = sctx.board_;
+  int depthInc = 0;
 
   if(board.underCheck())
-    return ONE_PLY;
+    depthInc += ONE_PLY;
 
-  if(!pv)
-    return 0;
-
-  if (!move.see_ok())
-    return 0;
+  if(!pv || !move.see_ok())
+    return depthInc;
 
   if(move.new_type() || singular)
-    return ONE_PLY;
+    return depthInc + ONE_PLY;
 
   // recapture
   if(board.halfmovesCount() > 1)
@@ -366,27 +374,30 @@ int Engine::depthIncrement(int ictx, Move const & move, bool pv, bool singular) 
 
     if(prev.move_.to() == curr.move_.to() && prev.eaten_type_ > 0)
     {
-      return ONE_PLY;
+      return depthInc + ONE_PLY;
     }
   }
 
-  return 0;
+  return depthInc;
 }
 
 //////////////////////////////////////////////////////////////////////////
 ScoreType Engine::alphaBetta0(int ictx)
 {
-  if(stopped(ictx))
-    return scontexts_.at(ictx).eval_(-ScoreMax, +ScoreMax);
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
 
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  if(stopped(ictx))
+    return sctx.eval_(-ScoreMax, +ScoreMax);
+
+  auto& sdata = sctx.sdata_;
   X_ASSERT(sdata.numOfMoves_ == 0, "no moves");
 
-  auto& board = scontexts_.at(ictx).board_;
+  auto& board = sctx.board_;
   if(sdata.numOfMoves_ == 0)
   {
     board.setNoMoves();
-    ScoreType score = scontexts_.at(ictx).eval_(-ScoreMax, +ScoreMax);
+    ScoreType score = sctx.eval_(-ScoreMax, +ScoreMax);
     return score;
   }
 
@@ -402,7 +413,7 @@ ScoreType Engine::alphaBetta0(int ictx)
     if(checkForStop(ictx))
       break;
 
-    auto& move = scontexts_.at(ictx).moves_[sdata.counter_];
+    auto& move = sctx.moves_[sdata.counter_];
     ScoreType score = processMove0(ictx, move, alpha, betta, !sdata.counter_);
     X_ASSERT(board != board0, "board undo error");
 
@@ -424,7 +435,7 @@ ScoreType Engine::alphaBetta0(int ictx)
     {
       SearchData sdataTotal = sdata;
       for (size_t j = 1; j < scontexts_.size(); ++j)
-        sdataTotal.nodesCount_ += scontexts_.at(j).sdata_.nodesCount_;
+        sdataTotal.nodesCount_ += scontexts_[j].sdata_.nodesCount_;
       (callbacks_.sendStats_)(sdataTotal);
     }
   } // end of for loop
@@ -449,9 +460,12 @@ ScoreType Engine::alphaBetta0(int ictx)
 
 void Engine::sortMoves0(int ictx)
 {
-  auto& sdata = scontexts_.at(ictx).sdata_;
-  auto& moves = scontexts_.at(ictx).moves_;
-  auto& board = scontexts_.at(ictx).board_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+
+  auto& sdata = sctx.sdata_;
+  auto& moves = sctx.moves_;
+  auto& board = sctx.board_;
 
   bring_to_front(moves.data(), moves.data() + sdata.numOfMoves_, sdata.best_);
   
@@ -473,15 +487,14 @@ void Engine::sortMoves0(int ictx)
 
 ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv)
 {
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+
   ScoreType score = -ScoreMax;
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  auto& sdata = sctx.sdata_;
   const int depth = sdata.depth_ * ONE_PLY;
 
-  auto& board = scontexts_.at(ictx).board_;
-
-#ifdef USE_LMR0
-  bool check_escape = board.underCheck();
-#endif
+  auto& board = sctx.board_;
 
   board.makeMove(move);
   sdata.inc_nc();
@@ -506,20 +519,7 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
     {
       int depthInc = depthIncrement(ictx, move, false, false);
 
-      int R = 0;
-  #ifdef USE_LMR0
-      if(!check_escape &&
-         sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-         depth >= LMR_DepthLimit &&
-         alpha > -Figure::MatScore+MaxPly &&
-         board.canBeReduced(move))
-      {
-        R = ONE_PLY;
-      }
-  #endif
-      score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, 1, -alpha-1, -alpha, false, true);
-      if(!stopped(ictx) && score > alpha && R > 0)
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -alpha - 1, -alpha, false, true);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -alpha-1, -alpha, false, true);
 
       if(!stopped(ictx) && score > alpha)
       {
@@ -541,20 +541,22 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(alpha >= Figure::MatScore-ply)
     return alpha;
 
-  auto& board = scontexts_.at(ictx).board_;
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+  auto& board = sctx.board_;
+  auto& sdata = sctx.sdata_;
 
   if(ply < MaxPly-1)
   {
-    scontexts_.at(ictx).plystack_[ply].clear(ply);
-    scontexts_.at(ictx).plystack_[ply+1].clearKiller();
+    sctx.plystack_[ply].clear(ply);
+    sctx.plystack_[ply+1].clearKiller();
   }
 
   if(board.drawState() || board.hasReps())
     return Figure::DrawScore;
 
   if(stopped(ictx) || ply >= MaxPly)
-    return scontexts_.at(ictx).eval_(alpha, betta);
+    return sctx.eval_(alpha, betta);
 
   ScoreType const alpha0 = alpha;
   SMove hmove{true};
@@ -592,25 +594,23 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool nm_threat{false};
   auto const& prev = board.lastUndo();
 
-  if (hscore == -ScoreMax) {
-    hscore = scontexts_.at(ictx).eval_(alpha, betta);
-  }
-
 #ifdef USE_NULL_MOVE
   if(
     !board.underCheck()
     && !pv
     && allow_nm
     && board.allowNullMove()
-    && depth > ONE_PLY
+    && depth > board.nullMoveDepthMin()
     && std::abs(betta) < Figure::MatScore-MaxPly
     && !board.isWinnerLoser()
-    && hscore >= betta
     )
   {
-    int ScoreReduce = ONE_PLY * (hscore - betta) / 200;
-    int null_depth = std::max(ONE_PLY, depth - NullMove_PlyReduce - ScoreReduce);
-
+    //if (hscore == -ScoreMax) {
+    //  hscore = sctx.eval_(alpha, betta);
+    //}
+    //int ScoreReduce = ONE_PLY * (hscore - betta) / 200;
+    //int null_depth = std::max(ONE_PLY, depth - NullMove_PlyReduce -ScoreReduce);
+    int null_depth = board.nullMoveDepth(depth, betta);
     // do null-move
     board.makeNullMove();
 #ifdef RELEASEDEBUGINFO
@@ -619,11 +619,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       null_depth = null_depth;
     }
 #endif // RELEASEDEBUGINFO
-    ScoreType nullScore = -alphaBetta(ictx, null_depth, ply+1, -betta, -(betta-1), false, false);
+    ScoreType nullScore = -alphaBetta(ictx, null_depth, ply + 1, -betta, -(betta - 1), false, false);
     board.unmakeNullMove();
 
     // verify null-move with shortened depth
-    if(nullScore >= betta)
+    if (nullScore >= betta)
     {
       depth = null_depth;
       if (depth <= 0)
@@ -633,14 +633,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     }
     else // may be we are in danger?
     {
-      if(nullScore <= -Figure::MatScore+MaxPly) // mat threat?
+      if (nullScore <= -Figure::MatScore + MaxPly) // mat threat?
       {
-        if(prev.is_reduced())
-          return betta-1;
+        if (prev.is_reduced())
+          return betta - 1;
         else
           mat_threat = true;
       }
-    
+
       nm_threat = true;
     }
   }
@@ -659,8 +659,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn],
       Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook] };
 
-    ScoreType mscore = scontexts_.at(ictx).eval_.materialScore();
-    ScoreType score0 = scontexts_.at(ictx).eval_(alpha, betta);
+    ScoreType mscore = sctx.eval_.materialScore();
+    ScoreType score0 = sctx.eval_(alpha, betta);
     if (score0 > mscore)
       mscore = score0;
     int threshold = (int)alpha - (int)mscore - Position_GainFP;
@@ -698,7 +698,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
   
   bool check_escape = board.underCheck();
-  FastGenerator<Board, SMove> fg(board, hmove, scontexts_.at(ictx).plystack_[ply].killer_);
+  FastGenerator<Board, SMove> fg(board, hmove, sctx.plystack_[ply].killer_);
   for (; alpha < betta && !checkForStop(ictx);)
   {
     auto* pmove = fg.next();
@@ -733,7 +733,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     if (!counter)
     {
-      depthInc = depthIncrement(ictx, move, true, singular);
+      depthInc = depthIncrement(ictx, move, pv, singular);
       score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm);
     }
     else
@@ -743,22 +743,38 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
       int R = 0;
 #ifdef USE_LMR
-      if (
-        //!check_escape &&
-        //!danger_pawn &&
-        sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
-        depth >= LMR_DepthLimit &&
-        alpha > -Figure::MatScore+MaxPly &&
-        board.canBeReduced(move) &&
-        !board.isWinnerLoser()
-        )
+      if(!check_escape &&         
+         !danger_pawn &&
+          sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+          depth >= LMR_DepthLimit &&
+          alpha > -Figure::MatScore-MaxPly &&
+          scontexts_[ictx].board_.canBeReduced(move))
+        {
+          R = ONE_PLY;
+#ifdef LMR_REDUCE_MORE
+        auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
+          if (depth > LMR_DepthLimit && (!move.see_ok() || hist.good() * 20 < hist.bad()))
+          {
+            R += ONE_PLY;
+            if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
+              R += ONE_PLY;
+          }
+        curr.mflags_ |= UndoInfo::Reduced;
+        }
+      else if(!check_escape &&
+              counter > 10 &&
+              sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+              depth > LMR_DepthLimit &&
+              alpha > -Figure::MatScore-MaxPly &&
+              !move.see_ok() &&
+              !curr.castle() &&
+              !board.underCheck())
       {
-        R = ONE_PLY;
-        if (!move.see_ok() || counter > 10)
-          R += ONE_PLY * counter / 20;
+          R = ONE_PLY;
+#endif // LMR_REDUCE_MORE
         curr.mflags_ |= UndoInfo::Reduced;
       }
-#endif //USE_LMR
+#endif
 
       score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
       curr.mflags_ &= ~UndoInfo::Reduced;
@@ -805,7 +821,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           bool capture = move.new_type() || board.getField(move.to())
             || (move.to() > 0 && board.enpassant() == move.to() && board.getField(move.from()).type() == Figure::TypePawn);
           if(!capture)
-            scontexts_.at(ictx).plystack_[ply].killer_ = move;
+            sctx.plystack_[ply].killer_ = move;
           alpha = score;
           if(pv)
             assemblePV(ictx, move, board.underCheck(), ply);
@@ -824,7 +840,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(!counter)
   {
     board.setNoMoves();
-    scoreBest = scontexts_.at(ictx).eval_(alpha, betta);
+    scoreBest = sctx.eval_(alpha, betta);
     if(board.matState())
     {
       scoreBest += ply;
@@ -903,12 +919,15 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 //////////////////////////////////////////////////////////////////////////
 Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0)
 {
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+
   if (alpha >= Figure::MatScore - ply)
     return { alpha, false };
 
-  auto& board = scontexts_.at(ictx).board_;
-  auto& sdata = scontexts_.at(ictx).sdata_;
-  auto& eval = scontexts_.at(ictx).eval_;
+  auto& board = sctx.board_;
+  auto& sdata = sctx.sdata_;
+  auto& eval =  sctx.eval_;
 
   if (board.drawState() || board.hasReps() || stopped(ictx) || ply >= MaxPly)
     return { Figure::DrawScore, false };
@@ -1061,12 +1080,17 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
 #ifdef USE_HASH
 void Engine::prefetchHash(int ictx)
 {
-  hash_.prefetch(scontexts_.at(ictx).board_.fmgr().hashCode());
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+  hash_.prefetch(sctx.board_.fmgr().hashCode());
 }
 
 GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular)
 {
-  auto& board = scontexts_.at(ictx).board_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+
+  auto& board = sctx.board_;
   auto const* pitem = hash_.find(board.fmgr().hashCode());
   if(!pitem)
     return GHashTable::NoFlag;
@@ -1094,7 +1118,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
   {
     if(GHashTable::Alpha == hitem.flag_ && hscore <= alpha)
     {
-      X_ASSERT(!scontexts_.at(ictx).stop_ && alpha < -32760, "invalid hscore");
+      X_ASSERT(!sctx.stop_ && alpha < -32760, "invalid hscore");
       return GHashTable::Alpha;
     }
 
@@ -1126,7 +1150,10 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 /// insert data to hash table
 void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular, bool pv)
 {
-  auto& board = scontexts_.at(ictx).board_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+
+  auto& board = sctx.board_;
   if (board.hasReps())
     return;
 
@@ -1149,7 +1176,9 @@ void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType bet
 
 void Engine::putCaptureHash(int ictx, const Move & move, bool pv)
 {
-  auto& board = scontexts_.at(ictx).board_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+  auto& board = sctx.board_;
   if(!move || board.hasReps())
     return;
   hash_.push(board.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false, false, pv);
@@ -1164,7 +1193,9 @@ void Engine::putCaptureHash(int ictx, const Move & move, bool pv)
 //////////////////////////////////////////////////////////////////////////
 bool Engine::isRealThreat(int ictx, const Move & move)
 {
-  auto const& board = scontexts_.at(ictx).board_;
+  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+  auto& sctx = scontexts_[ictx];
+  auto const& board = sctx.board_;
 
   auto const& prev = board.lastUndo();
   if(prev.is_nullmove())
