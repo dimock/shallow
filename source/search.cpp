@@ -511,7 +511,7 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
       if(!check_escape &&
          sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
          depth >= LMR_DepthLimit &&
-         alpha > -Figure::MatScore-MaxPly &&
+         alpha > -Figure::MatScore+MaxPly &&
          board.canBeReduced(move))
       {
         R = ONE_PLY;
@@ -603,7 +603,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && allow_nm
     && board.allowNullMove()
     && depth > ONE_PLY
-    && std::abs(betta) < Figure::MatScore+MaxPly
+    && std::abs(betta) < Figure::MatScore-MaxPly
     && !board.isWinnerLoser()
     && hscore >= betta
     )
@@ -748,7 +748,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         //!danger_pawn &&
         sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
         depth >= LMR_DepthLimit &&
-        alpha > -Figure::MatScore - MaxPly &&
+        alpha > -Figure::MatScore+MaxPly &&
         board.canBeReduced(move) &&
         !board.isWinnerLoser()
         )
