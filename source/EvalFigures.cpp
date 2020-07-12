@@ -521,6 +521,7 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
     fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
 
   auto const & oki_fields = finfo_[ocolor].ki_fields_;
+  auto const near_oking = finfo_[ocolor].ki_fields_ & finfo_[ocolor].kingAttacks_;
 
 #ifdef PROCESS_DANGEROUS_EVAL
   if (needDangerousDetect_ && board_->color() == color) {
@@ -529,9 +530,9 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
   }
 #endif // PROCESS_DANGEROUS_EVAL
 
-  finfo_[color].num_attackers_ += (finfo_[color].pawnAttacks_ & oki_fields) != 0ULL;
-  finfo_[color].score_king_ += pop_count(finfo_[color].pawnAttacks_ & oki_fields) * EvalCoefficients::pawnKingAttack_;
-  finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & oki_fields) != 0ULL;
+  finfo_[color].num_attackers_ += (finfo_[color].pawnAttacks_ & near_oking) != 0ULL;
+  finfo_[color].score_king_ += pop_count(finfo_[color].pawnAttacks_ & near_oking) * EvalCoefficients::pawnKingAttack_;
+  finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
 
   auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor));
   auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
@@ -602,9 +603,9 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
 
     int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL);
     num_checkers = std::min(num_checkers, 4);
-    auto check_coeff = checkers_coefficients[num_checkers] + attack_coeff/2;
+    auto check_coeff = checkers_coefficients[num_checkers];// +attack_coeff;
 
-    score_king = ((score_king * attack_coeff + check_score * check_coeff) >> 5);
+    score_king = (((score_king + check_score) * (check_coeff + attack_coeff)) >> 5);
 
     auto king_left = (board_->kingPos(ocolor) & 7) < 4;
     auto general_pressure_mask = ((finfo_[color].attack_mask_ & ~attacked_any_but_oking) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_;

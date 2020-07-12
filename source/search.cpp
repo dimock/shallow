@@ -626,6 +626,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     if (nullScore >= betta)
     {
       depth = null_depth;
+      allow_nm = false;
       if (depth <= 0)
       {
         return captures(ictx, depth, ply, alpha, betta, pv).score;
@@ -944,6 +945,7 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   }
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
 #endif
+
 
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
