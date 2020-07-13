@@ -418,43 +418,6 @@ struct Board
   bool moveExists(const Move& move) const;
   bool hasMove() const;
 
-  bool isWinnerLoser() const
-  {
-    bool winners[2] = { false, false };
-    for (auto color : { Figure::ColorBlack , Figure::ColorWhite })
-    {
-      if (fmgr_.pawns(color) != 0 || fmgr_.rooks(color) != 0 || fmgr_.queens(color) != 0)
-      {
-        winners[color] = true;
-        continue;
-      }
-      if((fmgr_.bishops(color) > 0 && fmgr_.knights(color) > 0) || (fmgr_.bishops(color) > 1))
-      {
-        winners[color] = true;
-        continue;
-      }
-    }
-    return winners[0] != winners[1];
-  }
-
-  bool hashValueForbidden() const
-  {
-    if (isWinnerLoser())
-      return true;
-
-    if (fmgr_.pawns(Figure::ColorBlack) > 0 || fmgr_.pawns(Figure::ColorWhite) > 0)
-      return false;
-
-    if (fmgr_.allFigures(Figure::ColorBlack) != 1 || fmgr_.allFigures(Figure::ColorWhite) != 1)
-      return false;
-
-    if ((fmgr_.rooks(Figure::ColorBlack) == 1 && fmgr_.queens(Figure::ColorWhite) == 1) ||
-        (fmgr_.rooks(Figure::ColorWhite) == 1 && fmgr_.queens(Figure::ColorBlack) == 1))
-      return true;
-
-    return false;
-  }
-
   bool canBeReduced(Move const& move) const
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());

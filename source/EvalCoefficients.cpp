@@ -52,10 +52,10 @@ namespace NEngine
   int EvalCoefficients::generalOpponentPressure_{ 1 };
 
   // king threat
-  int EvalCoefficients::knightChecking_{ 50 };
-  int EvalCoefficients::bishopChecking_{ 50 };
-  int EvalCoefficients::rookChecking_{ 60 };
-  int EvalCoefficients::queenChecking_{ 70 };
+  int EvalCoefficients::knightChecking_{ 45 };
+  int EvalCoefficients::bishopChecking_{ 40 };
+  int EvalCoefficients::rookChecking_{ 55 };
+  int EvalCoefficients::queenChecking_{ 65 };
 
   int EvalCoefficients::attackedNearKing_{8};
 
@@ -84,10 +84,10 @@ namespace NEngine
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::doubleBishopBonus_[2][2] = { {15, 25}, {5, 15} };
+  int EvalCoefficients::doubleBishopBonus_[2][2] = { {25, 45}, {15, 35} };
   int EvalCoefficients::twoKnightsBonus_[2][2] = { {0, 15}, {0, 5} };
   int EvalCoefficients::oneBishopBonus_[2][2] = { {5, 10}, {5, 10} };
-  int EvalCoefficients::twoBishopsBonus_[2][2] = { {10, 60}, {5, 35} };
+  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 50}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 50}, {10, 40} };
   int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {15, 35}, {0, 20} };
@@ -95,7 +95,7 @@ namespace NEngine
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 
   // arrays
-  int EvalCoefficients::passerPawn_[8] = { 0, 5, 9, 19, 37, 63, 95, 0 };
+  int EvalCoefficients::passerPawn_[8] = { 0, 5, 8, 18, 35, 60, 90, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 3, 5, 10, 18, 30, 45, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 7, 11, 23, 44, 73, 110, 0 };

@@ -565,11 +565,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   if (depth <= 0)
   {
-    auto capResult = captures(ictx, depth, ply, alpha, betta, pv);
+    auto score = captures(ictx, depth, ply, alpha, betta, pv);
 #ifdef PROCESS_DANGEROUS_EVAL
-    if (!capResult.dangerous || depth < 0 || capResult.score <= alpha)
+    if (!score.dangerous || depth < 0 || score.score <= alpha)
+      return score.score;
 #endif // #ifdef PROCESS_DANGEROUS_EVAL
-      return capResult.score;
+    return score;
   }
 
   ScoreType hscore = -ScoreMax;
@@ -596,13 +597,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
 #ifdef USE_NULL_MOVE
   if(
-    !board.underCheck()
-    && !pv
+    !pv
+    && !board.underCheck()
     && allow_nm
-    && board.allowNullMove()
+    && std::abs(betta) < Figure::MatScore - MaxPly
     && depth > board.nullMoveDepthMin()
-    && std::abs(betta) < Figure::MatScore-MaxPly
-    && !board.isWinnerLoser()
+    && board.allowNullMove()
     )
   {
     //if (hscore == -ScoreMax) {
@@ -628,7 +628,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       depth = null_depth;
       if (depth <= 0)
       {
+#ifdef PROCESS_DANGEROUS_EVAL
         return captures(ictx, depth, ply, alpha, betta, pv).score;
+#else
+        return captures(ictx, depth, ply, alpha, betta, pv);
+#endif
       }
     }
     else // may be we are in danger?
@@ -651,8 +655,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       && !board.underCheck()
       && alpha > -Figure::MatScore+MaxPly
       && alpha < Figure::MatScore-MaxPly
-      && depth > 0 && depth <= ONE_PLY && ply > 1
-      && !board.isWinnerLoser())
+      && depth > 0 && depth <= ONE_PLY && ply > 1)
   {
     static const int thresholds_[4] = { 0,
       0,
@@ -665,7 +668,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       mscore = score0;
     int threshold = (int)alpha - (int)mscore - Position_GainFP;
     if (threshold > thresholds_[(depth / ONE_PLY) & 3])
+#ifdef PROCESS_DANGEROUS_EVAL
       return captures(ictx, depth, ply, alpha, betta, pv, score0).score;
+#else
+      return captures(ictx, depth, ply, alpha, betta, pv, score0);
+#endif
   }
 #endif // futility pruning
 
@@ -917,20 +924,35 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 }
 
 //////////////////////////////////////////////////////////////////////////
-Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0)
+#ifdef PROCESS_DANGEROUS_EVAL
+Engine::CapturesResult
+#else 
+ScoreType
+#endif
+Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0)
 {
   X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
   auto& sctx = scontexts_[ictx];
 
   if (alpha >= Figure::MatScore - ply)
-    return { alpha, false };
+    return
+#ifdef PROCESS_DANGEROUS_EVAL
+  { alpha, false };
+#else 
+    alpha;
+#endif
 
   auto& board = sctx.board_;
   auto& sdata = sctx.sdata_;
   auto& eval =  sctx.eval_;
 
   if (board.drawState() || board.hasReps() || stopped(ictx) || ply >= MaxPly)
-    return { Figure::DrawScore, false };
+    return 
+#ifdef PROCESS_DANGEROUS_EVAL
+  { Figure::DrawScore, false };
+#else 
+    Figure::DrawScore;
+#endif  
 
   SMove hmove{ true };
 
@@ -940,7 +962,12 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
   if (flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
-    return { hscore, false };
+    return
+#ifdef PROCESS_DANGEROUS_EVAL
+    { hscore, false };
+#else 
+      hscore;
+#endif  
   }
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
 #endif
@@ -962,14 +989,19 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
       dangerous = eval.dangerous();
 #endif // PROCESS_DANGEROUS_EVAL
 
-    if(score0 >= betta && (depth >= 0 || !dangerous))
-      return { score0, dangerous };
+    if (score0 >= betta && (depth >= 0 || !dangerous))
+      return
+#ifdef PROCESS_DANGEROUS_EVAL
+    { score0, dangerous };
+#else 
+      score0;
+#endif  
 
     ScoreType mscore = eval.materialScore();
     if (score0 > mscore)
       mscore = score0;
     threshold = (int)alpha - (int)mscore - Position_GainThr;
-    if(threshold > Figure::figureWeight_[Figure::TypePawn] && board.isWinnerLoser())
+    if(threshold > Figure::figureWeight_[Figure::TypePawn] && !board.allowNullMove())
       threshold = Figure::figureWeight_[Figure::TypePawn];
     
     if (!dangerous)
@@ -1025,7 +1057,11 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
 #endif // RELEASEDEBUGINFO
 
     int depthInc = board.underCheck() ? ONE_PLY : 0;
+#ifdef PROCESS_DANGEROUS_EVAL
     score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv).score;
+#else
+    score = -captures(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv);
+#endif
 
 #ifdef RELEASEDEBUGINFO
     if (findSequence(ictx, ply, true) && score > alpha)
@@ -1054,8 +1090,13 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
     counter++;
   }
 
-  if(stopped(ictx))
-    return { scoreBest, dangerous };
+  if (stopped(ictx))
+    return
+#ifdef PROCESS_DANGEROUS_EVAL
+    { scoreBest, dangerous };
+#else
+    scoreBest;
+#endif
 
   if(!counter)
   {
@@ -1073,7 +1114,12 @@ Engine::CapturesResult Engine::captures(int ictx, int depth, int ply, ScoreType 
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
-  return { scoreBest, dangerous };
+  return
+#ifdef PROCESS_DANGEROUS_EVAL
+  { scoreBest, dangerous };
+#else 
+  scoreBest;
+#endif  
 }
 
 
@@ -1102,7 +1148,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   singular = hitem.singular_;
   hmove = hitem.move_;
-  if(pv || board.hashValueForbidden())
+  if(pv)
     return GHashTable::AlphaBetta;
 
   depth = (depth + ONE_PLY - 1) / ONE_PLY;
