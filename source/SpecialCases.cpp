@@ -125,7 +125,7 @@ namespace
     return NEngine::couldIntercept(board, inv_mask_all, attack_mask, pawnColor, pawnPos, promo_pos, stepsMax);
   }
 
-  ScoreType pawnAndHeavy(Board const& board, Figure::Color pawnColor)
+  std::pair<bool, ScoreType> pawnAndHeavy(Board const& board, Figure::Color pawnColor)
   {
     ScoreType score{ 0 };
     if (board.fmgr().rooks(pawnColor))
@@ -156,10 +156,10 @@ namespace
     }
     if(pawnColor == Figure::ColorBlack)
       score = -score;
-    return score;
+    return { true, score };
   }
 
-  ScoreType queenAndFigure(Board const& board, Figure::Color winnerColor)
+  std::pair<bool, ScoreType> queenAndFigure(Board const& board, Figure::Color winnerColor)
   {
     ScoreType score = Figure::figureWeight_[Figure::TypeKnight] / 3;
     auto ocolor = Figure::otherColor(winnerColor);
@@ -189,10 +189,10 @@ namespace
     }
     if (winnerColor == Figure::ColorBlack)
       score = -score;
-    return score;
+    return { true, score };
   }
 
-  ScoreType queenAgainstRook(Board const& board, Figure::Color winnerColor)
+  std::pair<bool, ScoreType> queenAgainstRook(Board const& board, Figure::Color winnerColor)
   {
     auto ocolor = Figure::otherColor(winnerColor);
     ScoreType score = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypeRook];
@@ -207,45 +207,39 @@ namespace
     score -= board.fiftyMovesCount();
     if (winnerColor == Figure::ColorBlack)
       score = -score;
-    return score;
+    return { true, score };
   }
 
-  ScoreType queenAgainstRookVsPawn(Board const& board, Figure::Color winnerColor)
+  std::pair<bool, ScoreType> queenAgainstRookVsPawn(Board const& board, Figure::Color winnerColor)
   {
     auto ocolor = Figure::otherColor(winnerColor);
-    ScoreType score = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypeRook]
-      - board.fmgr().pawns(ocolor)*Figure::figureWeight_[Figure::TypePawn] - EvalCoefficients::queenRookVsPwPenalty_;
     Index kingW(board.kingPos(winnerColor));
     Index kingL(board.kingPos(ocolor));
     int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
-    int rookL = _lsb64(board.fmgr().rook_mask(ocolor));    
-    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kingL];
-    score -= distanceCounter().getDistance(kingW, kingL) * 2;
-    score -= distanceCounter().getDistance(queenW, kingL) * 2;
-    score += distanceCounter().getDistance(rookL, kingL) * 2;
-
-    bool noIsept = false;
-    bool closeTo = false;
-    bool farFrom = false;
+    Index rookL(_lsb64(board.fmgr().rook_mask(ocolor)));
+    bool fortress = (pawn_colored_y_[ocolor][rookL.y()] == 2) && (pawn_colored_y_[ocolor][kingW.y()] > 2) && (pawn_colored_y_[ocolor][kingL.y()] < 2);
+    if (!fortress)
+      return {false, 0};
     auto pw_mask = board.fmgr().pawn_mask(ocolor);
+    ScoreType score = 10;
+    fortress = false;
     while (pw_mask)
     {
       int n = clear_lsb(pw_mask);
       Index pawn{n};
-      if (!closeTo && distanceCounter().getDistance(pawn, kingL) < 2)
-        closeTo = true;
-      if (!farFrom && distanceCounter().getDistance(pawn, kingW) > 1)
-        farFrom = true;
-      if (!couldIntercept(board, ocolor, pawn))
-        noIsept = true;
-      int pcy = pawn_colored_y_[ocolor][pawn.y()];
-      score -= EvalCoefficients::passerPawn_[pcy];
+      if (pawn.x() == 7 || pawn.x() == 0 && pawn_colored_y_[ocolor][pawn.y()] != 1)
+        continue;
+      if (movesTable().pawnCaps(ocolor, n) & board.fmgr().rook_mask(ocolor) && distanceCounter().getDistance(kingL, n) == 1)
+      {
+        fortress = true;
+        break;
+      }
     }
-    score -= closeTo * EvalCoefficients::queenRookVsPwPenalty_ + noIsept * EvalCoefficients::queenRookVsPwPenalty_;
-
+    if (!fortress)
+      return { false, 0 };
     if (winnerColor == Figure::ColorBlack)
       score = -score;
-    return score;
+    return { true, score };
   }
 
 } // namespace {}
@@ -479,224 +473,224 @@ void SpecialCasesDetector::initUsual()
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
     { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -15 + eval_king(board, Figure::ColorBlack);
+    return { true, -15 + eval_king(board, Figure::ColorBlack) };
   };
   scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
     { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -15 + eval_king(board, Figure::ColorBlack);
+    return { true, -15 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
     { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +15 + eval_king(board, Figure::ColorWhite);
+    return { true, +15 + eval_king(board, Figure::ColorWhite) };
   };
   scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
     { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +15 + eval_king(board, Figure::ColorWhite);
+    return { true, +15 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +20 + eval_king(board, Figure::ColorWhite);
+    return { true, +20 + eval_king(board, Figure::ColorWhite) };
   };
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +20 + eval_king(board, Figure::ColorWhite);
+    return { true, +20 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -20 + eval_king(board, Figure::ColorBlack);
+    return { true, -20 + eval_king(board, Figure::ColorBlack) };
   };
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -20 + eval_king(board, Figure::ColorBlack);
+    return { true, -20 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorWhite, 2 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -15 + eval_king(board, Figure::ColorBlack);
+    return { true, -15 + eval_king(board, Figure::ColorBlack) };
   };
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +40 + eval_king(board, Figure::ColorWhite);
+    return { true, +40 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-  { Figure::TypeKnight, Figure::ColorBlack, 2 } })] = [eval_king](Board const& board)
+  { Figure::TypeKnight, Figure::ColorBlack, 2 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +15 + eval_king(board, Figure::ColorWhite);
+    return { true, +15 + eval_king(board, Figure::ColorWhite) };
   };
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-  { Figure::TypeBishop, Figure::ColorBlack, 2 } })] = [eval_king](Board const& board)
+  { Figure::TypeBishop, Figure::ColorBlack, 2 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -40 + eval_king(board, Figure::ColorBlack);
+    return { true, -40 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
     { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +25 + eval_king(board, Figure::ColorWhite);
+    return { true, +25 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -25 + eval_king(board, Figure::ColorBlack);
+    return { true, -25 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -40 + eval_king(board, Figure::ColorBlack);
+    return { true, -40 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -50 + eval_king(board, Figure::ColorBlack);
+    return { true, -50 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
     { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +40 + eval_king(board, Figure::ColorWhite);
+    return { true, +40 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
     { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +50 + eval_king(board, Figure::ColorWhite);
+    return { true, +50 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -35 + eval_king(board, Figure::ColorBlack);
+    return { true, -35 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 2 },
-  { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+  { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +35 + eval_king(board, Figure::ColorWhite);
+    return { true, +35 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
-  { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+  { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -15 + eval_king(board, Figure::ColorBlack);
+    return { true, -15 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +15 + eval_king(board, Figure::ColorWhite);
+    return { true, +15 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -15 + eval_king(board, Figure::ColorBlack);
+    return { true, -15 + eval_king(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board)
+    { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [eval_king](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +15 + eval_king(board, Figure::ColorWhite);
+    return { true, +15 + eval_king(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
     { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return 50 + evalKings1Pawn(board, Figure::ColorBlack);
+    return { true, 50 + evalKings1Pawn(board, Figure::ColorBlack) };
   }; 
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -50 + evalKings1Pawn(board, Figure::ColorWhite);
+    return { true, -50 + evalKings1Pawn(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
     { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return 50 + evalKings1Pawn(board, Figure::ColorBlack);
+    return { true, 50 + evalKings1Pawn(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -50 + evalKings1Pawn(board, Figure::ColorWhite);
+    return { true, -50 + evalKings1Pawn(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
     { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+    return { true, -10 + evalKings1Pawn(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
     { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return -10 + evalKings1Pawn(board, Figure::ColorBlack);
+    return { true, -10 + evalKings1Pawn(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
     { Figure::TypeRook, Figure::ColorBlack, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+    return { true, +10 + evalKings1Pawn(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
     { Figure::TypeRook, Figure::ColorBlack, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<bool, ScoreType>
   {
-    return +10 + evalKings1Pawn(board, Figure::ColorWhite);
+    return { true, +10 + evalKings1Pawn(board, Figure::ColorWhite) };
   };
 
-  auto bishops_vs_knight = [](Board const& board, Figure::Color winnerColor)
+  auto bishops_vs_knight = [](Board const& board, Figure::Color winnerColor) -> std::pair<bool, ScoreType>
   {
     auto loserColor = Figure::otherColor(winnerColor);
     auto kw = board.kingPos(winnerColor);
     auto kl = board.kingPos(loserColor);
     int npos = _lsb64(board.fmgr().knight_mask(loserColor));
-    auto score = 70 + (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
+    ScoreType score = 70 + (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
     score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kl];
     score += distanceCounter().getDistance(npos, kl) * EvalCoefficients::figureToKingDistanceMulti_;
     if(winnerColor == Figure::ColorBlack)
       score = -score;
-    return score;
+    return { true, score };
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
@@ -779,7 +773,7 @@ void SpecialCasesDetector::initUsual()
     return queenAgainstRook(board, Figure::ColorWhite);
   };
 
-  for (char i = 1; i <= 3; ++i)
+  for (char i = 1; i < 3; ++i)
   {
     scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
       { Figure::TypeRook, Figure::ColorWhite, 1 },
@@ -1181,7 +1175,7 @@ std::pair<bool, ScoreType> SpecialCasesDetector::eval(Board const& board) const
   {
     auto iter = scases_.find(sc);
     if(iter != scases_.end())
-      return { true, (iter->second)(board) };
+      return (iter->second)(board);
   }
   {
     auto iter = winnerLoser_.find(sc);
