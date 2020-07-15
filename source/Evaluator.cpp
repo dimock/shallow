@@ -544,19 +544,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         int nguards = 0;
         if (attackers) {
           BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
-          if (guards) {
-            nguards = pop_count(guards);
-            while (guards) {
-              int g = clear_lsb(guards);
-              auto fwd = pawnMasks().mask_forward(color, g);
-              auto fwdo = fwd & opmsk;
-              if (fwdo) {
-                int o = color ? _lsb64(fwdo) : _msb64(fwdo);
-                fwd = betweenMasks().between(g, o);
-              }
-              nguards += !(fwd & finfo_[ocolor].pawnAttacks_);
-            }
-          }
+          nguards = pop_count(guards);
           if (nguards > 0 && nguards >= pop_count(attackers)) {
             pwscore.common_ += EvalCoefficients::passerPawn_[cy];
           }
@@ -1077,9 +1065,9 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::doublePawnAttack_;
   }
   else if(pawnsN == 1) {
-    forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
+    forkScore += EvalCoefficients::doublePawnAttack_ / 5;
     if(color == board_->color())
-      forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
   }
   BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;
   int knightsN = pop_count(kn_fork);
@@ -1090,9 +1078,9 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::knightForkBonus_;
   }
   else if(knightsN == 1) {
-    forkScore += EvalCoefficients::knightForkBonus_ >> 3;
+    forkScore += EvalCoefficients::knightForkBonus_ / 5;
     if (color == board_->color())
-      forkScore += EvalCoefficients::knightForkBonus_ >> 2;
+      forkScore += EvalCoefficients::knightForkBonus_ >> 1;
   }
   BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
   int bishopsN = pop_count(bi_treat);
@@ -1103,9 +1091,9 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::bishopsAttackBonus_;
   }
   else if (bishopsN == 1) {
-    forkScore += EvalCoefficients::bishopsAttackBonus_ >> 3;
+    forkScore += EvalCoefficients::bishopsAttackBonus_ / 5;
     if (color == board_->color())
-      forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
+      forkScore += EvalCoefficients::bishopsAttackBonus_ >> 1;
   }
   bool queensTreat = (board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_) != 0ULL;
   if (queensTreat && color == board_->color()) {

@@ -22,11 +22,11 @@ namespace NEngine
   int EvalCoefficients::kingToPasserDistanceBonus_{ 2 };
 
   // forks
-  int EvalCoefficients::bishopsAttackBonus_{ 50 };
-  int EvalCoefficients::knightForkBonus_{ 50 };
-  int EvalCoefficients::doublePawnAttack_{ 50 };
+  int EvalCoefficients::bishopsAttackBonus_{ 60 };
+  int EvalCoefficients::knightForkBonus_{ 60 };
+  int EvalCoefficients::doublePawnAttack_{ 60 };
   int EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
-  int EvalCoefficients::multiAttackBonus_{ 10 };
+  int EvalCoefficients::multiAttackBonus_{ 15 };
   int EvalCoefficients::immobileAttackBonus_{ 30 };
 
   // king
@@ -53,7 +53,7 @@ namespace NEngine
 
   // king threat
   int EvalCoefficients::knightChecking_{ 45 };
-  int EvalCoefficients::bishopChecking_{ 40 };
+  int EvalCoefficients::bishopChecking_{ 45 };
   int EvalCoefficients::rookChecking_{ 55 };
   int EvalCoefficients::queenChecking_{ 65 };
 
@@ -80,14 +80,14 @@ namespace NEngine
   int EvalCoefficients::pawnShieldC_[2] = { 8, 5};
 
   // rook on open column
-  int EvalCoefficients::openRook_[4] = { 0, 7, 25, 25};
+  int EvalCoefficients::openRook_[2][2] = { {20, 8}, {8, 3} };
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::doubleBishopBonus_[2][2] = { {25, 45}, {15, 35} };
+  int EvalCoefficients::doubleBishopBonus_[2][2] = { {15, 25}, {5, 15} };
   int EvalCoefficients::twoKnightsBonus_[2][2] = { {0, 15}, {0, 5} };
   int EvalCoefficients::oneBishopBonus_[2][2] = { {5, 10}, {5, 10} };
-  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 50}, {15, 40} };
+  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 65}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 50}, {10, 40} };
   int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {15, 35}, {0, 20} };
@@ -95,7 +95,7 @@ namespace NEngine
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 
   // arrays
-  int EvalCoefficients::passerPawn_[8] = { 0, 5, 8, 18, 35, 60, 90, 0 };
+  int EvalCoefficients::passerPawn_[8] = { 0, 5, 9, 19, 37, 63, 95, 0 };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 3, 5, 10, 18, 30, 45, 0 };
   int EvalCoefficients::canpromotePawn_[8] = { 0, 7, 11, 23, 44, 73, 110, 0 };

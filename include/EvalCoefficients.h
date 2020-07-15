@@ -79,7 +79,7 @@ struct EvalCoefficients
   static int opponentPawnPressure_[8];
 
   // rook on open column
-  static int openRook_[4];
+  static int openRook_[2][2];
 
   // material diff
   static int doubleBishopBonus_[2][2];
