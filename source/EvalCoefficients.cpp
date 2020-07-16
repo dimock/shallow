@@ -19,7 +19,7 @@ namespace NEngine
   int EvalCoefficients::unprotectedPawnPressure_{ 3 };
   int EvalCoefficients::protectedPawnBishopTreat_{ 1 };
   int EvalCoefficients::unprotectedPawnBishopTreat_{ 3 };
-  int EvalCoefficients::kingToPasserDistanceBonus_{ 2 };
+  int EvalCoefficients::kingToPasserDistanceBonus_{ 4 };
 
   // forks
   int EvalCoefficients::bishopsAttackBonus_{ 60 };

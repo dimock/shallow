@@ -35,6 +35,9 @@ namespace
 
   const int delta_y_[2] = { -8, 8 };
 
+  const BitMask FORTRESS_PAWNS[2] = { 35538699416403456ULL, 35604670110137856ULL };
+
+
   ScoreType evalKings1Pawn(Board const& board, Figure::Color pawnColor)
   {
     Figure::Color ocolor = Figure::otherColor(pawnColor);
@@ -217,29 +220,28 @@ namespace
     Index kingL(board.kingPos(ocolor));
     int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
     Index rookL(_lsb64(board.fmgr().rook_mask(ocolor)));
-    bool fortress = (pawn_colored_y_[ocolor][rookL.y()] == 2) && (pawn_colored_y_[ocolor][kingW.y()] > 2) && (pawn_colored_y_[ocolor][kingL.y()] < 2);
-    if (!fortress)
-      return {false, 0};
-    auto pw_mask = board.fmgr().pawn_mask(ocolor);
-    ScoreType score = 10;
-    fortress = false;
-    while (pw_mask)
+    bool fortress = false;
+    auto pw_mask = board.fmgr().pawn_mask(ocolor) & FORTRESS_PAWNS[ocolor];
+    while (pw_mask && !fortress)
     {
       int n = clear_lsb(pw_mask);
       Index pawn{n};
-      if (pawn.x() == 7 || pawn.x() == 0 && pawn_colored_y_[ocolor][pawn.y()] != 1)
-        continue;
-      if (movesTable().pawnCaps(ocolor, n) & board.fmgr().rook_mask(ocolor) && distanceCounter().getDistance(kingL, n) == 1)
+      int py = pawn_colored_y_[ocolor][pawn.y()];
+      if ((movesTable().pawnCaps(ocolor, n) & board.fmgr().rook_mask(ocolor)) &&
+          distanceCounter().getDistance(kingL, n) == 1)
       {
-        fortress = true;
-        break;
+        fortress =
+          ( (pawn_colored_y_[ocolor][rookL.y()] == 2) &&
+            (pawn_colored_y_[ocolor][kingW.y()] > pawn_colored_y_[ocolor][rookL.y()]) &&
+            (pawn_colored_y_[ocolor][kingL.y()] < pawn_colored_y_[ocolor][rookL.y()]) &&
+            (py == 1)) ||
+          (pawn.x() == 1 && rookL.x() == 2 && kingL.x() < rookL.x() && kingW.x() > rookL.x()) ||
+          (pawn.x() == 6 && rookL.x() == 5 && kingL.x() > rookL.x() && kingW.x() < rookL.x()) ||
+          ((py == 5 || py == 6) && ((kingW.x()-rookL.x())*(pawn.x()-rookL.x()) < 0));
       }
     }
-    if (!fortress)
-      return { false, 0 };
-    if (winnerColor == Figure::ColorBlack)
-      score = -score;
-    return { true, score };
+    ScoreType score = winnerColor ? 10 : -10;
+    return { fortress, score };
   }
 
 } // namespace {}
