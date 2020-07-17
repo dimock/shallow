@@ -500,26 +500,27 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       info.score.endGame_ += (num_dbl - 1) * EvalCoefficients::doubledPawn_[1];
     }
 
+    auto const& protectMask = movesTable().pawnCaps(ocolor, n);
+    bool pprotected = (protectMask & pmask) != 0ULL;
+
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
-    auto const& protectMask = movesTable().pawnCaps(ocolor, n);
     bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
-    bool isProtected = !backward && ((protectMask & pmask) != 0ULL);
-    bool hasNeighbor = !backward && !isProtected &&
-      ((pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL || (((fwd_field & (pmask|opmsk)) == 0ULL) && (pawnMasks().mask_neighbor(color, n1) & pmask) != 0ULL));
+    bool unprotected = !unguarded && !isolated && !backward && !pprotected;
+    bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
 
     info.score.opening_ += isolated * EvalCoefficients::isolatedPawn_[0];
     info.score.opening_ += backward * EvalCoefficients::backwardPawn_[0];
     info.score.opening_ += unguarded * EvalCoefficients::unguardedPawn_[0];
-    info.score.opening_ += isProtected * EvalCoefficients::protectedPawn_[0];
-    info.score.opening_ += hasNeighbor * EvalCoefficients::hasneighborPawn_[0];
+    info.score.opening_ += unprotected * EvalCoefficients::unprotectedPawn_[0];
+    info.score.opening_ += neighbors * EvalCoefficients::hasneighborPawn_[0];
 
     info.score.endGame_ += isolated * EvalCoefficients::isolatedPawn_[1];
     info.score.endGame_ += backward * EvalCoefficients::backwardPawn_[1];
     info.score.endGame_ += unguarded * EvalCoefficients::unguardedPawn_[1];
-    info.score.endGame_ += isProtected * EvalCoefficients::protectedPawn_[1];
-    info.score.endGame_ += hasNeighbor * EvalCoefficients::hasneighborPawn_[1];
+    info.score.endGame_ += unprotected * EvalCoefficients::unprotectedPawn_[1];
+    info.score.endGame_ += neighbors * EvalCoefficients::hasneighborPawn_[1];
 
     // passer pawn
     const auto & halfpassmsk = pawnMasks().mask_forward(color, n);
@@ -537,7 +538,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       if (halfpasser)
       {
         pwscore.common_ = EvalCoefficients::passerPawn_[cy] >> 1;
-        if (isProtected || hasNeighbor) {
+        if (pprotected || neighbors) {
           pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
         }
         BitMask attackers = passmsk & opmsk;
@@ -557,7 +558,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore.common_ = EvalCoefficients::passerPawn_[cy];
-        if (isProtected || hasNeighbor) {
+        if (pprotected || neighbors) {
           pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
         }
         int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);

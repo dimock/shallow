@@ -73,7 +73,7 @@ struct EvalCoefficients
   static int isolatedPawn_[2];
   static int backwardPawn_[2];
   static int unguardedPawn_[2];
-  static int protectedPawn_[2];
+  static int unprotectedPawn_[2];
   static int hasneighborPawn_[2];
   
   static int opponentPawnPressure_[8];
