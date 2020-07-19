@@ -61,7 +61,6 @@ struct EvalCoefficients
   static int figureToKingDistanceMulti_;
 
   // king threat
-  static int possibleChecking_;
   static int knightChecking_;
   static int bishopChecking_;
   static int rookChecking_;
