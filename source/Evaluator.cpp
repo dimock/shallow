@@ -1066,7 +1066,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::doublePawnAttack_;
   }
   else if(pawnsN == 1) {
-    forkScore += EvalCoefficients::doublePawnAttack_ / 5;
+    forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
     if(color == board_->color())
       forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
   }
@@ -1079,7 +1079,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::knightForkBonus_;
   }
   else if(knightsN == 1) {
-    forkScore += EvalCoefficients::knightForkBonus_ / 5;
+    forkScore += EvalCoefficients::knightForkBonus_ >> 2;
     if (color == board_->color())
       forkScore += EvalCoefficients::knightForkBonus_ >> 1;
   }
@@ -1092,7 +1092,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::bishopsAttackBonus_;
   }
   else if (bishopsN == 1) {
-    forkScore += EvalCoefficients::bishopsAttackBonus_ / 5;
+    forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
     if (color == board_->color())
       forkScore += EvalCoefficients::bishopsAttackBonus_ >> 1;
   }
