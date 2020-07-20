@@ -272,7 +272,7 @@ Evaluator::FullScore Evaluator::evaluateKnights()
       }
       else if (isPinned(n, color, ocolor, board_->fmgr().queen_mask(color), finfo_[ocolor].brq_mask_, nst::none)) {
         qpinned = true;
-        finfo_[color].score_mob_ -= EvalCoefficients::knightMobility_[0] >> 1;
+        finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[0] >> 1;
       }
       
       if (knight_moves) {
@@ -335,7 +335,7 @@ Evaluator::FullScore Evaluator::evaluateBishops()
       }
       else if(isPinned(n, color, ocolor, board_->fmgr().queen_mask(color), board_->fmgr().rook_mask(ocolor), nst::rook)) {
         q_pinned = true;
-        finfo_[color].score_mob_ -= EvalCoefficients::bishopMobility_[0] >> 1;
+        finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[0] >> 1;
       }
 
       // mobility
@@ -412,7 +412,7 @@ Evaluator::FullScore Evaluator::evaluateRook()
       }
       else if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.bishop_mask(ocolor), nst::bishop)) {
         q_pinned = true;
-        finfo_[color].score_mob_ -= EvalCoefficients::rookMobility_[0] >> 1;
+        finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[0] >> 1;
       }
 
       if (rook_moves) {
@@ -543,7 +543,7 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
   bi_check &= finfo_[color].bishopMoves_;
   r_check &= finfo_[color].rookMoves_;
 
-  auto check_possible_mask = finfo_[color].multiattack_mask_ | ~finfo_[ocolor].kingAttacks_;
+  auto check_possible_mask = (finfo_[color].multiattack_mask_ | ~finfo_[ocolor].kingAttacks_) & ~finfo_[ocolor].pawnAttacks_ & ~fmgr.pawn_mask(color);
   bool qcheck_possible = q_check & check_possible_mask;
   bool rcheck_possible = r_check & check_possible_mask;
   bool bicheck_possible = bi_check & check_possible_mask;
@@ -631,6 +631,8 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
 
     num_checkers = std::min(num_checkers, 4);
     auto check_coeff = checkers_coefficients[num_checkers] + attack_coeff/2 + checkers_coefficients[could_be_check];
+    if (num_attackers == 0)
+      check_coeff >>= 3;
 
     score_king = ((score_king * attack_coeff + check_score * check_coeff) >> 5);
 

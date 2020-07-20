@@ -238,9 +238,10 @@ private:
   FullScore evaluatePawnsPressure(Figure::Color color);
 
   // sum of weights of all figures
-  const int openingWeight_ = 2*(Figure::figureWeight_[Figure::TypeQueen]
+  const int openingWeight_ = 2*(    Figure::figureWeight_[Figure::TypeQueen]
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
-                                + 4*Figure::figureWeight_[Figure::TypeKnight]);
+                                + 2*Figure::figureWeight_[Figure::TypeBishop]
+                                +   Figure::figureWeight_[Figure::TypeKnight]);
 
   const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeKnight] + Figure::figureWeight_[Figure::TypeRook]);
 
