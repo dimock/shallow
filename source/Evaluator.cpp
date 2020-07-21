@@ -524,7 +524,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
     // passer pawn
     const auto & halfpassmsk = pawnMasks().mask_forward(color, n);
-    if(!(halfpassmsk & opmsk))
+    if(!(halfpassmsk & (opmsk|pmask)))
     {
       // save position for further usage
       info.passers_[color] |= set_mask_bit(n);
@@ -627,7 +627,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     const int n = clear_lsb(pawn_mask);
     const auto & passmsk = pawnMasks().mask_passed(color, n);
     const auto& halfpassmsk = pawnMasks().mask_forward(color, n);
-    if(opmsk & halfpassmsk)
+    if((opmsk|pmask) & halfpassmsk)
       continue;
 
     const Index idx(n);
@@ -667,7 +667,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         o_attack_mask |= or_attacks;
       }
     }
-    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor)) & ~finfo_[color].pawnAttacks_;
+    auto blockers_mask = (o_attack_mask | fmgr.mask(ocolor)) & ~finfo_[color].pawnAttacks_;
 
     // ahead fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
@@ -1068,7 +1068,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   else if(pawnsN == 1) {
     forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
     if(color == board_->color())
-      forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
   }
   BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;
   int knightsN = pop_count(kn_fork);
@@ -1081,7 +1081,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   else if(knightsN == 1) {
     forkScore += EvalCoefficients::knightForkBonus_ >> 2;
     if (color == board_->color())
-      forkScore += EvalCoefficients::knightForkBonus_ >> 1;
+      forkScore += EvalCoefficients::knightForkBonus_ >> 2;
   }
   BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
   int bishopsN = pop_count(bi_treat);
@@ -1094,11 +1094,13 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   else if (bishopsN == 1) {
     forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
     if (color == board_->color())
-      forkScore += EvalCoefficients::bishopsAttackBonus_ >> 1;
+      forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
   }
   bool queensTreat = (board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_) != 0ULL;
-  if (queensTreat && color == board_->color()) {
-    forkScore += EvalCoefficients::queenUnderRookAttackBonus_;
+  if (queensTreat) {
+    forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 2;
+    if(color == board_->color())
+      forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 2;
   }
   if (pawnsN + knightsN + bishopsN + queensTreat > 1) {
 #ifdef PROCESS_DANGEROUS_EVAL

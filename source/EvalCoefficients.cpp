@@ -13,7 +13,7 @@ namespace NEngine
   int EvalCoefficients::additionalMatBonus_{ 150 };
   int EvalCoefficients::queenRookVsPwPenalty_{ 80 };
   // pawns
-  int EvalCoefficients::pawnEndgameBonus_{ 15 };
+  int EvalCoefficients::pawnEndgameBonus_{ 20 };
   int EvalCoefficients::rookBehindBonus_{ 5 };
   int EvalCoefficients::protectedPawnPressure_{ 1 };
   int EvalCoefficients::unprotectedPawnPressure_{ 3 };
@@ -22,10 +22,10 @@ namespace NEngine
   int EvalCoefficients::kingToPasserDistanceBonus_{ 3 };
 
   // forks
-  int EvalCoefficients::bishopsAttackBonus_{ 60 };
-  int EvalCoefficients::knightForkBonus_{ 60 };
-  int EvalCoefficients::doublePawnAttack_{ 60 };
-  int EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
+  int EvalCoefficients::bishopsAttackBonus_{ 70 };
+  int EvalCoefficients::knightForkBonus_{ 70 };
+  int EvalCoefficients::doublePawnAttack_{ 70 };
+  int EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
   int EvalCoefficients::multiAttackBonus_{ 15 };
   int EvalCoefficients::immobileAttackBonus_{ 30 };
 
@@ -54,8 +54,9 @@ namespace NEngine
   // king threat
   int EvalCoefficients::knightChecking_{ 45 };
   int EvalCoefficients::bishopChecking_{ 45 };
-  int EvalCoefficients::rookChecking_{ 60 };
-  int EvalCoefficients::queenChecking_{ 70 };
+  int EvalCoefficients::rookChecking_{ 55 };
+  int EvalCoefficients::queenChecking_{ 65 };
+  int EvalCoefficients::matTreatBonus_{ 50 };
 
   int EvalCoefficients::attackedNearKing_{8};
 
@@ -84,13 +85,13 @@ namespace NEngine
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::doubleBishopBonus_[2][2] = { {15, 27}, {7, 17} };
+  int EvalCoefficients::doubleBishopBonus_[2][2] = { {15, 25}, {7, 15} };
   int EvalCoefficients::twoKnightsBonus_[2][2] = { {0, 15}, {0, 5} };
-  int EvalCoefficients::oneBishopBonus_[2][2] = { {5, 10}, {5, 10} };
-  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 65}, {15, 40} };
+  int EvalCoefficients::oneBishopBonus_[2][2] = { {5, 10}, {0, 5} };
+  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 60}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
-  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {25, 50}, {10, 40} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {15, 35}, {0, 20} };
+  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {20, 45}, {0, 20} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {0, 0} };
   int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 50}, {0, 30} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 

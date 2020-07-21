@@ -55,7 +55,7 @@ struct SeeCalc
         discovered_attack_ = discovered_check(move_.from(), color_, queenPos);
     }
     all_mask_ ^= set_mask_bit(move_.from());
-    promotion_ = (move_.to() >> 3) == 0 || (move_.to() >> 3) == 7;
+    promotion_ = (board.getField(move.from()).type() == Figure::TypePawn) && ((move_.to() >> 3) == 0 || (move_.to() >> 3) == 7);
   }
 
   inline bool next(Figure::Color color, int& from, int& score)

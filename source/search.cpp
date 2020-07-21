@@ -585,7 +585,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef RELEASEDEBUGINFO
-  if (11826056823992078229 == board.fmgr().hashCode())
+  if (15339566419819060163 == board.fmgr().hashCode())
   {
     int x = 0;
   }

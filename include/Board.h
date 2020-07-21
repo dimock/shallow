@@ -480,7 +480,7 @@ struct Board
       return CaptureRecentlyBonus;
     }
     // MVV LVA
-    SortValueType sort_value = (Figure::figureWeight_[fto.type()] * 3) - Figure::figureWeight_[ffrom.type()];
+    SortValueType sort_value = Figure::figureWeight_[fto.type()] - Figure::figureWeight_[ffrom.type()];
     // + promotion
     if(new_type)
       sort_value += Figure::figureWeight_[new_type] << 1;

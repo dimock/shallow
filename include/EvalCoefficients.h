@@ -65,6 +65,7 @@ struct EvalCoefficients
   static int bishopChecking_;
   static int rookChecking_;
   static int queenChecking_;
+  static int matTreatBonus_;
 
   static int attackedNearKing_;
 

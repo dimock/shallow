@@ -126,8 +126,8 @@ void Engine::logMovies(int ictx)
 
 #ifdef RELEASEDEBUGINFO
 
-static int TEST_DEPTH_MIN = 6;
-static int TEST_DEPTH_MAX = 10;
+static int TEST_DEPTH_MIN = 9;
+static int TEST_DEPTH_MAX = 12;
 
 bool compare_depth(int depth)
 {
