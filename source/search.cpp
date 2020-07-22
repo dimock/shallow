@@ -747,8 +747,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           if (depth > LMR_DepthLimit && (!move.see_ok() || hist.good() * 20 < hist.bad()))
           {
             R += ONE_PLY;
-            //if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
-            //  R += ONE_PLY;
+            if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
+              R += ONE_PLY;
           }
         curr.mflags_ |= UndoInfo::Reduced;
         }
@@ -940,7 +940,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
   int threshold = 0;
-  bool matTreat = false;
 
   if(!board.underCheck())
   {
@@ -948,10 +947,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if (score0 == -ScoreMax)
       score0 = eval(alpha, betta);
 
-    if(score0 > alpha)
-      matTreat = eval.isMatTreat();
-
-    if (score0 >= betta && !matTreat)
+    if (score0 >= betta)
       return score0;
 
     ScoreType mscore = eval.materialScore();
@@ -961,7 +957,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if(threshold > Figure::figureWeight_[Figure::TypePawn] && !board.allowNullMove())
       threshold = Figure::figureWeight_[Figure::TypePawn];
     
-    if (!matTreat)
     {
       if (score0 > alpha)
         alpha = score0;

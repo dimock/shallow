@@ -56,6 +56,7 @@ namespace NEngine
   int EvalCoefficients::bishopChecking_{ 45 };
   int EvalCoefficients::rookChecking_{ 60 };
   int EvalCoefficients::queenChecking_{ 70 };
+  int EvalCoefficients::matTreatBonus_{ 100 };
 
   int EvalCoefficients::attackedNearKing_{16};
 

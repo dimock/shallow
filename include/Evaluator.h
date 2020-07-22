@@ -115,10 +115,10 @@ class Evaluator
     BitMask nb_attacked_{};
     BitMask nbr_attacked_{};
     BitMask ki_fields_{};
+    //BitMask ki_fields_prot_{};
     BitMask brq_mask_{};
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
-    bool matThreat_{};
   } finfo_[2];
 
 public:
@@ -129,8 +129,6 @@ public:
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
   ScoreType materialScore() const;
-
-  bool isMatTreat() const;
 
   static const int colored_y_[2][8];
   static const int promo_y_[2];

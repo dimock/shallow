@@ -118,7 +118,6 @@ namespace nst
 static const SortValueType CaptureRecentlyBonus = 10;
 
 static const int NumUsualAfterHorizon = 3;
-static const int MinimumDepthForUsualAfterHorizon = 3;
 static const int ONE_PLY = 20;
 static const int MaxPly = 64;
 static const int LMR_DepthLimit = 3 * ONE_PLY;

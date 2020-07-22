@@ -534,43 +534,10 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
     could_be_check = false;
   }
 
-  if (num_checkers)
-  {
-    could_be_check = false;
-    auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |
-      board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
-    BitMask checking_attacked = 0ULL;
-    BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
-    if (kn_check != 0) {
-      int n = _lsb64(kn_check);
-      checking_attacked |= movesTable().caps(Figure::TypeKnight, n);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
-    }
-    if (!finfo_[ocolor].matThreat_ && bi_check != 0) {
-      int n = _lsb64(bi_check);
-      checking_attacked |= magic_ns::bishop_moves(n, mask_all_);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
-    }
-    if (!finfo_[ocolor].matThreat_ && r_check != 0) {
-      int n = _lsb64(r_check);
-      checking_attacked |= magic_ns::rook_moves(n, mask_all_);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
-    }
-    if (!finfo_[ocolor].matThreat_ && q_check != 0) {
-      int n = _lsb64(q_check);
-      checking_attacked |= magic_ns::queen_moves(n, mask_all_);
-      if ((oking_moves & ~checking_attacked) == 0ULL)
-        finfo_[ocolor].matThreat_ = true;
-    }
-  }
-
   FullScore score;
   score.opening_ = finfo_[color].score_opening_;
-
   int score_king = finfo_[color].score_king_;
+
   if (fmgr.rooks(color) > 1 || fmgr.queens(color) > 0 || (fmgr.bishops(color) + fmgr.knights(color) + fmgr.rooks(color) > 2))
   {
     int check_score = (kn_check != 0) * EvalCoefficients::knightChecking_ +
@@ -584,6 +551,40 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
                       rcheck_possible * EvalCoefficients::rookChecking_ +
                       qcheck_possible * EvalCoefficients::queenChecking_ ) >> 2;
     }
+
+    if (num_checkers)
+    {
+      auto ofgmask = board_->fmgr().pawn_mask(ocolor) | board_->fmgr().knight_mask(ocolor) |
+        board_->fmgr().bishop_mask(ocolor) | board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
+      BitMask checking_attacked = 0ULL;
+      BitMask oking_moves = movesTable().caps(Figure::TypeKing, board_->kingPos(ocolor)) & ~ofgmask & ~finfo_[color].attack_mask_;
+      bool matTreat = false;
+      if (!matTreat && q_check != 0) {
+        int n = _lsb64(q_check);
+        checking_attacked |= magic_ns::queen_moves(n, mask_all_);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          check_score += EvalCoefficients::matTreatBonus_;
+      }
+      if (!matTreat && r_check != 0) {
+        int n = _lsb64(r_check);
+        checking_attacked |= magic_ns::rook_moves(n, mask_all_);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          check_score += EvalCoefficients::matTreatBonus_;
+      }
+      if (!matTreat && kn_check != 0) {
+        int n = _lsb64(kn_check);
+        checking_attacked |= movesTable().caps(Figure::TypeKnight, n);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          check_score += EvalCoefficients::matTreatBonus_;
+      }
+      if (!matTreat && bi_check != 0) {
+        int n = _lsb64(bi_check);
+        checking_attacked |= magic_ns::bishop_moves(n, mask_all_);
+        if ((oking_moves & ~checking_attacked) == 0ULL)
+          check_score += EvalCoefficients::matTreatBonus_;
+      }
+    }
+
 
     static const int checkers_coefficients[8] = { 0, 32, 64, 64, 64 };
     static const int attackers_coefficients[8] = { 0, 16, 32, 64, 80, 96, 96, 96 };

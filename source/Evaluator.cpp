@@ -1081,9 +1081,4 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   return forkScore;
 }
 
-bool Evaluator::isMatTreat() const
-{
-  return finfo_[board_->color()].matThreat_;
-}
-
 } //NEngine
