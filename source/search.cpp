@@ -563,14 +563,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool singular = false;
 
 
-  if (depth <= 0)
-  {
-    auto score = captures(ictx, depth, ply, alpha, betta, pv);
-#ifdef PROCESS_DANGEROUS_EVAL
-    if (!score.dangerous || depth < 0 || score.score <= alpha)
-      return score.score;
-#endif // #ifdef PROCESS_DANGEROUS_EVAL
-    return score;
+  if (depth <= 0) {
+    return captures(ictx, depth, ply, alpha, betta, pv);
   }
 
   ScoreType hscore = -ScoreMax;
@@ -627,13 +621,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     {
       depth = null_depth;
       if (depth <= 0)
-      {
-#ifdef PROCESS_DANGEROUS_EVAL
-        return captures(ictx, depth, ply, alpha, betta, pv).score;
-#else
         return captures(ictx, depth, ply, alpha, betta, pv);
-#endif
-      }
     }
     else // may be we are in danger?
     {
@@ -668,11 +656,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       mscore = score0;
     int threshold = (int)alpha - (int)mscore - Position_GainFP;
     if (threshold > thresholds_[(depth / ONE_PLY) & 3])
-#ifdef PROCESS_DANGEROUS_EVAL
-      return captures(ictx, depth, ply, alpha, betta, pv, score0).score;
-#else
       return captures(ictx, depth, ply, alpha, betta, pv, score0);
-#endif
   }
 #endif // futility pruning
 
@@ -763,8 +747,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           if (depth > LMR_DepthLimit && (!move.see_ok() || hist.good() * 20 < hist.bad()))
           {
             R += ONE_PLY;
-            if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
-              R += ONE_PLY;
+            //if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
+            //  R += ONE_PLY;
           }
         curr.mflags_ |= UndoInfo::Reduced;
         }
@@ -924,35 +908,20 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 }
 
 //////////////////////////////////////////////////////////////////////////
-#ifdef PROCESS_DANGEROUS_EVAL
-Engine::CapturesResult
-#else 
-ScoreType
-#endif
-Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0)
+ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0)
 {
   X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
   auto& sctx = scontexts_[ictx];
 
   if (alpha >= Figure::MatScore - ply)
-    return
-#ifdef PROCESS_DANGEROUS_EVAL
-  { alpha, false };
-#else 
-    alpha;
-#endif
+    return alpha;
 
   auto& board = sctx.board_;
   auto& sdata = sctx.sdata_;
   auto& eval =  sctx.eval_;
 
   if (board.drawState() || board.hasReps() || stopped(ictx) || ply >= MaxPly)
-    return 
-#ifdef PROCESS_DANGEROUS_EVAL
-  { Figure::DrawScore, false };
-#else 
-    Figure::DrawScore;
-#endif  
+    return Figure::DrawScore;
 
   SMove hmove{ true };
 
@@ -962,12 +931,7 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
   GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
   if (flag == GHashTable::Alpha || flag == GHashTable::Betta)
   {
-    return
-#ifdef PROCESS_DANGEROUS_EVAL
-    { hscore, false };
-#else 
-      hscore;
-#endif  
+    return hscore;
   }
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
 #endif
@@ -976,26 +940,19 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
   int threshold = 0;
-  bool dangerous = false;
+  bool matTreat = false;
 
   if(!board.underCheck())
   {
     // not initialized yet
     if (score0 == -ScoreMax)
-      score0 = eval(alpha, betta, depth >= -NumUsualAfterHorizon * ONE_PLY);
+      score0 = eval(alpha, betta);
 
-#ifdef PROCESS_DANGEROUS_EVAL
     if(score0 > alpha)
-      dangerous = eval.dangerous();
-#endif // PROCESS_DANGEROUS_EVAL
+      matTreat = eval.isMatTreat();
 
-    if (score0 >= betta && (depth >= 0 || !dangerous))
-      return
-#ifdef PROCESS_DANGEROUS_EVAL
-    { score0, dangerous };
-#else 
-      score0;
-#endif  
+    if (score0 >= betta && !matTreat)
+      return score0;
 
     ScoreType mscore = eval.materialScore();
     if (score0 > mscore)
@@ -1004,7 +961,7 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
     if(threshold > Figure::figureWeight_[Figure::TypePawn] && !board.allowNullMove())
       threshold = Figure::figureWeight_[Figure::TypePawn];
     
-    if (!dangerous)
+    if (!matTreat)
     {
       if (score0 > alpha)
         alpha = score0;
@@ -1028,7 +985,7 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(dangerous, thr, counter == 0);
+    auto* pmove = tg.next(thr, counter == 0);
     if(!pmove)
       break;
 
@@ -1057,11 +1014,7 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
 #endif // RELEASEDEBUGINFO
 
     int depthInc = board.underCheck() ? ONE_PLY : 0;
-#ifdef PROCESS_DANGEROUS_EVAL
-    score = -captures(ictx, depth + depthInc - ONE_PLY, ply+1, -betta, -alpha, pv).score;
-#else
     score = -captures(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv);
-#endif
 
 #ifdef RELEASEDEBUGINFO
     if (findSequence(ictx, ply, true) && score > alpha)
@@ -1074,7 +1027,6 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
     X_ASSERT(board != board0, "board undo error");
 
     if (score > -Figure::MatScore + MaxPly) {
-      dangerous = false;
       thr = threshold;
     }
 
@@ -1091,12 +1043,7 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
   }
 
   if (stopped(ictx))
-    return
-#ifdef PROCESS_DANGEROUS_EVAL
-    { scoreBest, dangerous };
-#else
-    scoreBest;
-#endif
+    return scoreBest;
 
   if(!counter)
   {
@@ -1114,12 +1061,7 @@ Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
-  return
-#ifdef PROCESS_DANGEROUS_EVAL
-  { scoreBest, dangerous };
-#else 
-  scoreBest;
-#endif  
+  return scoreBest;
 }
 
 

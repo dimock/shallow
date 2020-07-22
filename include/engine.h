@@ -117,11 +117,7 @@ private:
   ScoreType processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm);
 
-#ifdef PROCESS_DANGEROUS_EVAL
-  CapturesResult captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
-#else
   ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
-#endif
 
   int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;
   void assemblePV(int ictx, Move const & move, bool checking, int ply);

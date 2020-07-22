@@ -103,11 +103,11 @@ void Evaluator::prepare()
     finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
     finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
 
-    finfo_[0].ki_fields_prot_ = finfo_[0].ki_fields_ & finfo_[0].pawnAttacks_;
-    finfo_[1].ki_fields_prot_ = finfo_[1].ki_fields_ & finfo_[1].pawnAttacks_;
+    //finfo_[0].ki_fields_prot_ = finfo_[0].ki_fields_ & finfo_[0].pawnAttacks_;
+    //finfo_[1].ki_fields_prot_ = finfo_[1].ki_fields_ & finfo_[1].pawnAttacks_;
 
-    finfo_[0].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorBlack) | finfo_[0].pawnAttacks_);
-    finfo_[1].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorWhite) | finfo_[1].pawnAttacks_);
+    //finfo_[0].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorBlack) | finfo_[0].pawnAttacks_);
+    //finfo_[1].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorWhite) | finfo_[1].pawnAttacks_);
   }
   
   // other mask
@@ -133,13 +133,8 @@ void Evaluator::prepare()
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta, bool needDangerousDetect)
+ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 {
-#ifdef PROCESS_DANGEROUS_EVAL
-    dangerous_ = false;
-    needDangerousDetect_ = needDangerousDetect;
-#endif // PROCESS_DANGEROUS_EVAL
-
   X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
   if(!ehash_.empty())
@@ -247,12 +242,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   auto scorePassers = passerEvaluation(hashedScore);
   score += scorePassers;
-
-#ifdef PROCESS_DANGEROUS_EVAL
-  if (needDangerousDetect_) {
-    detectDangerous();
-  }
-#endif // PROCESS_DANGEROUS_EVAL
 
   auto result = considerColor(lipolScore(score, phaseInfo));
   return result;
@@ -671,8 +660,10 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
     // ahead fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
-    if(!fwd_mask)
+    if (!fwd_mask) {
       pwscore.common_ += EvalCoefficients::canpromotePawn_[cy];
+      pwscore.endGame_ += EvalCoefficients::canpromotePawn_[cy];
+    }
     else {
       int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
       int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
@@ -682,6 +673,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
         int prmBonus = (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
         pwscore.common_ += prmBonus;
+        pwscore.endGame_ += prmBonus;
       }
     }    
 
@@ -695,16 +687,6 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     if (halfpasser)
       pwscore >>= 1;
     pinfo.score += pwscore;
-
-#ifdef PROCESS_DANGEROUS_EVAL
-    if (needDangerousDetect_ && !halfpasser && (board_->color() != color) && (cy == 6)) {
-      X_ASSERT(((y + dy)) > 7 || ((y + dy)) < 0, "pawn goes to invalid line");
-      Index idx1{ x, y + dy };
-      if (!board_->getField(idx1) && ((set_mask_bit(idx1) & blockers_mask) == 0ULL)) {
-        finfo_[ocolor].promotionTreat_ = true;
-      }
-    }
-#endif // PROCESS_DANGEROUS_EVAL
   }
   
   return pinfo;
@@ -1060,9 +1042,6 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   int pawnsN = pop_count(pawn_fork);
   ScoreType forkScore = 0;
   if (pawnsN > 1) {
-#ifdef PROCESS_DANGEROUS_EVAL
-    finfo_[ocolor].forkTreat_ = true;
-#endif
     forkScore += EvalCoefficients::doublePawnAttack_;
   }
   else if(pawnsN == 1) {
@@ -1073,9 +1052,6 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;
   int knightsN = pop_count(kn_fork);
   if (knightsN > 1) {
-#ifdef PROCESS_DANGEROUS_EVAL
-    finfo_[ocolor].forkTreat_ = true;
-#endif
     forkScore += EvalCoefficients::knightForkBonus_;
   }
   else if(knightsN == 1) {
@@ -1086,9 +1062,6 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
   int bishopsN = pop_count(bi_treat);
   if (bishopsN > 1) {
-#ifdef PROCESS_DANGEROUS_EVAL
-    finfo_[ocolor].forkTreat_ = true;
-#endif
     forkScore += EvalCoefficients::bishopsAttackBonus_;
   }
   else if (bishopsN == 1) {
@@ -1103,21 +1076,14 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
       forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 2;
   }
   if (pawnsN + knightsN + bishopsN + queensTreat > 1) {
-#ifdef PROCESS_DANGEROUS_EVAL
-    finfo_[ocolor].forkTreat_ = true;
-#endif
     forkScore += EvalCoefficients::multiAttackBonus_;
   }
   return forkScore;
 }
 
-#ifdef PROCESS_DANGEROUS_EVAL
-void Evaluator::detectDangerous()
+bool Evaluator::isMatTreat() const
 {
-  auto color = board_->color();
-  auto ocolor = Figure::otherColor(board_->color());
-  dangerous_ = finfo_[color].promotionTreat_ || finfo_[color].matThreat_ || finfo_[color].forkTreat_ || (finfo_[color].attackedPawnsCount_ > 1);
+  return finfo_[board_->color()].matThreat_;
 }
-#endif // PROCESS_DANGEROUS_EVAL
 
 } //NEngine

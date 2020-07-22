@@ -54,11 +54,10 @@ namespace NEngine
   // king threat
   int EvalCoefficients::knightChecking_{ 45 };
   int EvalCoefficients::bishopChecking_{ 45 };
-  int EvalCoefficients::rookChecking_{ 55 };
-  int EvalCoefficients::queenChecking_{ 65 };
-  int EvalCoefficients::matTreatBonus_{ 50 };
+  int EvalCoefficients::rookChecking_{ 60 };
+  int EvalCoefficients::queenChecking_{ 70 };
 
-  int EvalCoefficients::attackedNearKing_{8};
+  int EvalCoefficients::attackedNearKing_{16};
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -91,7 +90,7 @@ namespace NEngine
   int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 60}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {20, 45}, {0, 20} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {0, 0} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {-20, -10} };
   int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 50}, {0, 30} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 

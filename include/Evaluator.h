@@ -115,17 +115,10 @@ class Evaluator
     BitMask nb_attacked_{};
     BitMask nbr_attacked_{};
     BitMask ki_fields_{};
-    BitMask ki_fields_prot_{};
     BitMask brq_mask_{};
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
-
-#ifdef PROCESS_DANGEROUS_EVAL
     bool matThreat_{};
-    bool promotionTreat_{};
-    bool forkTreat_{};
-    int attackedPawnsCount_{};
-#endif // PROCESS_DANGEROUS_EVAL
   } finfo_[2];
 
 public:
@@ -134,16 +127,10 @@ public:
 
   void initialize(Board const* board);
 
-  ScoreType operator () (ScoreType alpha, ScoreType betta, bool needDangerousDetect = false);
-
+  ScoreType operator () (ScoreType alpha, ScoreType betta);
   ScoreType materialScore() const;
 
-#ifdef PROCESS_DANGEROUS_EVAL
-  bool dangerous() const
-  {
-    return dangerous_ && needDangerousDetect_;
-  }
-#endif // PROCESS_DANGEROUS_EVAL
+  bool isMatTreat() const;
 
   static const int colored_y_[2][8];
   static const int promo_y_[2];
@@ -153,10 +140,6 @@ public:
 private:
 
   void prepare();
-
-#ifdef PROCESS_DANGEROUS_EVAL
-  void detectDangerous();
-#endif
 
   // linear interpolation between opening & endgame
   ScoreType lipolScore(FullScore const& score, PhaseInfo const& phase) const
@@ -269,11 +252,6 @@ private:
     2 * Figure::figureWeight_[Figure::TypeBishop] +
     2 * Figure::figureWeight_[Figure::TypeRook] +
     Figure::figureWeight_[Figure::TypeQueen];
-
-#ifdef PROCESS_DANGEROUS_EVAL
-  bool dangerous_{ false };
-  bool needDangerousDetect_{ false };
-#endif // PROCESS_DANGEROUS_EVAL
 };
 
 } // NEngine

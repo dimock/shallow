@@ -304,27 +304,18 @@ struct TacticalGenerator
 {
   using MovesList = xlist<MOVE, BOARD::MovesMax>;
 
-  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks
-#ifdef GEN_USUAL_AFETER_HORIZON
-    , oGenUsual, oUsual
-#endif // GEN_USUAL_AFETER_HORIZON
-    , oStop }
+  enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks, oStop }
   order_{ oEscape };
 
   TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
     board_(board),
-    cg_(board), ckg_(board), eg_(board, hmove)
-#ifdef GEN_USUAL_AFETER_HORIZON
-    , ug_(board)
-#endif // GEN_USUAL_AFETER_HORIZON
-    ,hmove_(hmove),
-    depth_(depth)
+    cg_(board), ckg_(board), eg_(board, hmove) ,hmove_(hmove), depth_(depth)
   {
     if(!board.underCheck())
       order_ = oHash;
   }
 
-  MOVE* next(bool dangerous, int threshold, bool atLeast)
+  MOVE* next(int threshold, bool atLeast)
   {
     if (order_ == oEscape)
     {
@@ -377,28 +368,6 @@ struct TacticalGenerator
           continue;
         return move;
       }
-
-#ifdef GEN_USUAL_AFETER_HORIZON
-      if (dangerous && depth_ < 0 && depth_ >= -NumUsualAfterHorizon * ONE_PLY)
-        order_ = oGenUsual;
-    }
-    if (order_ == oGenUsual)
-    {
-      ug_.generate();
-      order_ = oUsual;
-    }
-    if (order_ == oUsual)
-    {
-      while (auto* move = ug_.next())
-      {
-        if (*move == hmove_ || ckg_.find(*move) || !board_.see(*move, 0))
-          continue;
-        move->set_ok();
-        order_ = oStop;
-        return move;
-      }
-#endif
-
     }
     return nullptr;
   }
@@ -406,9 +375,6 @@ struct TacticalGenerator
   CapsGenerator<BOARD, MOVE> cg_;
   ChecksGenerator<BOARD, MOVE> ckg_;
   EscapeGenerator<BOARD, MOVE> eg_;
-#ifdef GEN_USUAL_AFETER_HORIZON
-  UsualGenerator<BOARD, MOVE> ug_;
-#endif
   BOARD const& board_;
   MOVE hmove_;
   int depth_{};
