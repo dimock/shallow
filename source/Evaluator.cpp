@@ -725,12 +725,12 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   int score = 0;
   if (ctype == 0) // king side
   {
-    Index kingPosK{ 6, ky };
+    Index kingPosK{ kingPos.x(), ky };
     score = evaluateKingSafety(color, kingPosK);
   }
   else if (ctype == 1) // queen side
   {
-    Index kingPosQ{ 1, ky };
+    Index kingPosQ{ kingPos.x(), ky };
     score = evaluateKingSafety(color, kingPosQ);
   }
   else
