@@ -601,7 +601,7 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
 
 
     static const int checkers_coefficients[8] = { 0, 32, 64, 64, 64 };
-    static const int attackers_coefficients[8] = { 0, 0, 8, 24, 48, 64, 64, 64 };
+    static const int attackers_coefficients[8] = { 0, 0, 8, 28, 48, 64, 64, 64 };
 
     int num_attackers = std::min(finfo_[color].num_attackers_, 7);
     auto attack_coeff = attackers_coefficients[num_attackers];

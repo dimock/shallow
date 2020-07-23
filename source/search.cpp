@@ -579,7 +579,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef RELEASEDEBUGINFO
-  if (15468688162419269346 == board.fmgr().hashCode())
+  if (4032159786953923490 == board.fmgr().hashCode())
   {
     int x = 0;
   }
@@ -935,7 +935,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   }
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
 #endif
-
 
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;

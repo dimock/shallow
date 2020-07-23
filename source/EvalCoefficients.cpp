@@ -43,10 +43,10 @@ namespace NEngine
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 3 };
-  int EvalCoefficients::knightKingAttack_{ 10 };
-  int EvalCoefficients::bishopKingAttack_{ 10 };
-  int EvalCoefficients::rookKingAttack_{ 10 };
-  int EvalCoefficients::queenKingAttack_{ 10 };
+  int EvalCoefficients::knightKingAttack_{ 12 };
+  int EvalCoefficients::bishopKingAttack_{ 12 };
+  int EvalCoefficients::rookKingAttack_{ 12 };
+  int EvalCoefficients::queenKingAttack_{ 12 };
 
   int EvalCoefficients::generalKingPressure_{ 3 };
   int EvalCoefficients::generalOpponentPressure_{ 1 };
@@ -54,8 +54,8 @@ namespace NEngine
   // king threat
   int EvalCoefficients::knightChecking_{ 45 };
   int EvalCoefficients::bishopChecking_{ 45 };
-  int EvalCoefficients::rookChecking_{ 60 };
-  int EvalCoefficients::queenChecking_{ 80 };
+  int EvalCoefficients::rookChecking_{ 65 };
+  int EvalCoefficients::queenChecking_{ 85 };
 
   int EvalCoefficients::attackedNearKing_{24};
 
@@ -75,8 +75,8 @@ namespace NEngine
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {20, 17};
-  int EvalCoefficients::pawnShieldB_[2] = {20, 17};
+  int EvalCoefficients::pawnShieldA_[2] = {20, 15};
+  int EvalCoefficients::pawnShieldB_[2] = {20, 12};
   int EvalCoefficients::pawnShieldC_[2] = { 8, 5};
 
   // rook on open column
@@ -90,7 +90,7 @@ namespace NEngine
   int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 65}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {20, 45}, {0, 20} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {-20, -10} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {0, 0} };
   int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {10, 30}, {0, 20} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 

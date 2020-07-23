@@ -558,13 +558,13 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore.common_ = EvalCoefficients::passerPawn_[cy];
-        if (pprotected || neighbors) {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
-        }
         int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
         int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
         pwscore.endGame_ += (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_;
-        if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
+        if (pprotected || neighbors) {
+          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+        }
+        else if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
           pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
           while (guards) {
             int g = clear_lsb(guards);
@@ -667,12 +667,17 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         o_attack_mask |= or_attacks;
       }
     }
-    auto blockers_mask = (o_attack_mask | fmgr.mask(ocolor)) & ~finfo_[color].pawnAttacks_;
+    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor)) & ~finfo_[color].pawnAttacks_;
 
     // ahead fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
     if (!fwd_mask) {
       pwscore.common_ += EvalCoefficients::canpromotePawn_[cy];
+      // could promote on the next move and not attacked or it's turn
+      if ( cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
+          !((o_attack_mask | fmgr.mask(ocolor)) & pawnMasks().mask_forward(color, n)) ) {
+        pwscore.common_  += EvalCoefficients::canpromotePawn_[cy];
+      }
     }
     else {
       int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
@@ -686,12 +691,12 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       }
     }    
 
-    // opponent king could not go to my pawns promotion path
-    if(!couldIntercept(color, n, pp, std::abs(py - y) +1))
-    {
-      auto icpBonus = EvalCoefficients::farKingPawn_[cy];
-      pwscore.endGame_ += icpBonus;
-    }
+    //// opponent king could not go to my pawns promotion path
+    //if(couldIntercept(color, n, pp, std::abs(py - y) +1))
+    //{
+    //  auto icpBonus = EvalCoefficients::farKingPawn_[cy];
+    //  pwscore.endGame_ -= icpBonus;
+    //}
 
     if (halfpasser)
       pwscore >>= 1;
