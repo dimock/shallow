@@ -99,6 +99,7 @@ class Evaluator
     int score_mob_{};
     int score_king_{};
     int score_opening_{};
+    bool discoveredCheck_{};
     BitMask pawnAttacks_{};
     BitMask knightMoves_{};
     BitMask bishopMoves_{};

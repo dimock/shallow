@@ -271,9 +271,15 @@ Evaluator::FullScore Evaluator::evaluateKnights()
       if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
         knight_moves = 0ULL;
       }
-      else if (isPinned(n, color, ocolor, board_->fmgr().queen_mask(color), finfo_[ocolor].brq_mask_, nst::none)) {
-        qpinned = true;
-        finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[0] >> 1;
+      else
+      {
+        if (isPinned(n, color, ocolor, board_->fmgr().queen_mask(color), finfo_[ocolor].brq_mask_, nst::none)) {
+          qpinned = true;
+          finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[0] >> 1;
+        }
+        if (board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+          finfo_[color].discoveredCheck_ = true;
+        }
       }
       
       if (knight_moves) {
@@ -329,9 +335,15 @@ Evaluator::FullScore Evaluator::evaluateBishops()
       if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
         bishop_moves = 0ULL;
       }
-      else if(isPinned(n, color, ocolor, board_->fmgr().queen_mask(color), board_->fmgr().rook_mask(ocolor), nst::rook)) {
-        q_pinned = true;
-        finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[0] >> 1;
+      else
+      {
+        if (isPinned(n, color, ocolor, board_->fmgr().queen_mask(color), board_->fmgr().rook_mask(ocolor), nst::rook)) {
+          q_pinned = true;
+          finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[0] >> 1;
+        }
+        if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+          finfo_[color].discoveredCheck_ = true;
+        }
       }
 
       // mobility
@@ -401,9 +413,15 @@ Evaluator::FullScore Evaluator::evaluateRook()
       if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
         rook_moves = 0ULL;
       }
-      else if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.bishop_mask(ocolor), nst::bishop)) {
-        q_pinned = true;
-        finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[0] >> 1;
+      else
+      {
+        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.bishop_mask(ocolor), nst::bishop)) {
+          q_pinned = true;
+          finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[0] >> 1;
+        }
+        if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+          finfo_[color].discoveredCheck_ = true;
+        }
       }
 
       if (rook_moves) {
@@ -532,7 +550,7 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
   bi_check &= can_check_nb;
   r_check &= can_check_r;
   q_check &= can_check_q;
-  int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL);
+  int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL) + finfo_[color].discoveredCheck_;
   
   if (num_checkers) {
     could_be_check = false;
@@ -547,7 +565,8 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
     int check_score = (kn_check != 0) * EvalCoefficients::knightChecking_ +
                       (bi_check != 0) * EvalCoefficients::bishopChecking_ +
                       (r_check != 0) * EvalCoefficients::rookChecking_ +
-                      (q_check != 0) * EvalCoefficients::queenChecking_;
+                      (q_check != 0) * EvalCoefficients::queenChecking_ +
+                      finfo_[color].discoveredCheck_* EvalCoefficients::knightChecking_;
 
     if (could_be_check) {
       check_score = ( kncheck_possible * EvalCoefficients::knightChecking_ +
