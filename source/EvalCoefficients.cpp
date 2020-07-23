@@ -32,8 +32,8 @@ namespace NEngine
   // king
   int EvalCoefficients::fakeCastle_{ -15 };
   int EvalCoefficients::kingIsUnsafe_{ -25 };
-  int EvalCoefficients::pawnPenaltyA_{ -14 };
-  int EvalCoefficients::pawnPenaltyB_{ -16 };
+  int EvalCoefficients::pawnPenaltyA_{ -17 };
+  int EvalCoefficients::pawnPenaltyB_{ -20 };
   int EvalCoefficients::pawnPenaltyC_{ -5 };
 
   // blocked figure
@@ -43,10 +43,10 @@ namespace NEngine
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 3 };
-  int EvalCoefficients::knightKingAttack_{ 15 };
-  int EvalCoefficients::bishopKingAttack_{ 15 };
-  int EvalCoefficients::rookKingAttack_{ 15 };
-  int EvalCoefficients::queenKingAttack_{ 15 };
+  int EvalCoefficients::knightKingAttack_{ 10 };
+  int EvalCoefficients::bishopKingAttack_{ 10 };
+  int EvalCoefficients::rookKingAttack_{ 10 };
+  int EvalCoefficients::queenKingAttack_{ 10 };
 
   int EvalCoefficients::generalKingPressure_{ 3 };
   int EvalCoefficients::generalOpponentPressure_{ 1 };
@@ -55,10 +55,9 @@ namespace NEngine
   int EvalCoefficients::knightChecking_{ 45 };
   int EvalCoefficients::bishopChecking_{ 45 };
   int EvalCoefficients::rookChecking_{ 60 };
-  int EvalCoefficients::queenChecking_{ 70 };
-  int EvalCoefficients::matTreatBonus_{ 100 };
+  int EvalCoefficients::queenChecking_{ 80 };
 
-  int EvalCoefficients::attackedNearKing_{16};
+  int EvalCoefficients::attackedNearKing_{24};
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -76,8 +75,8 @@ namespace NEngine
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {15, 10};
-  int EvalCoefficients::pawnShieldB_[2] = {15, 10};
+  int EvalCoefficients::pawnShieldA_[2] = {20, 17};
+  int EvalCoefficients::pawnShieldB_[2] = {20, 17};
   int EvalCoefficients::pawnShieldC_[2] = { 8, 5};
 
   // rook on open column
@@ -85,14 +84,14 @@ namespace NEngine
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::doubleBishopBonus_[2][2] = { {15, 25}, {7, 15} };
+  int EvalCoefficients::doubleBishopBonus_[2][2] = { {10, 15}, {7, 15} };
   int EvalCoefficients::twoKnightsBonus_[2][2] = { {0, 15}, {0, 5} };
   int EvalCoefficients::oneBishopBonus_[2][2] = { {5, 10}, {0, 5} };
-  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 60}, {15, 40} };
+  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 65}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {20, 45}, {0, 20} };
   int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {-20, -10} };
-  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {20, 50}, {0, 30} };
+  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {10, 30}, {0, 20} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 
   // arrays
@@ -104,10 +103,10 @@ namespace NEngine
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 
   // mobility
-  int EvalCoefficients::knightMobility_[16] = { -30, -12,  2,  5,  7,  8, 10, 12, 15 };
-  int EvalCoefficients::bishopMobility_[16] = { -30, -12,  2,  5,  7,  8, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33 };
-  int EvalCoefficients::rookMobility_[16]   = { -30, -12,  2,  5,  7,  8, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33 };
-  int EvalCoefficients::queenMobility_[32]  = { -60, -30,  2,  5,  7,  8, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33,
+  int EvalCoefficients::knightMobility_[16] = { -30, -10,  2,  5,  7,  8, 10, 12, 15 };
+  int EvalCoefficients::bishopMobility_[16] = { -30, -10,  2,  5,  7,  8, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33 };
+  int EvalCoefficients::rookMobility_[16]   = { -30, -10,  2,  5,  7,  8, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33 };
+  int EvalCoefficients::queenMobility_[32]  = { -60, -25,  2,  5,  7,  8, 10, 12, 15, 18, 20, 23, 25, 28, 30, 33,
                                                  36,  38, 41, 44, 46, 49, 52, 55, 57, 60, 63, 65, 68, 70, 73, 75 };
 
   // king position eval for BN-mat

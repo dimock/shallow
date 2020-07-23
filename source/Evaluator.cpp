@@ -534,13 +534,24 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         int nguards = 0;
         if (attackers) {
           BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
-          nguards = pop_count(guards);
+          nguards = 0;
+          while (guards) {
+            Index g{ clear_lsb(guards) };
+            if (g.y() == y)
+              nguards++;
+            else {
+              Index g1{ g.x(), g.y() + dy };
+              if (!(set_mask_bit(g1) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
+                nguards++;
+              }
+            }
+          }
           if (nguards > 0 && nguards >= pop_count(attackers)) {
-            pwscore.common_ += EvalCoefficients::passerPawn_[cy];
+            pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 1;
           }
         }
         else {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy];
+          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 1;
         }
         pwscore >>= 1;
       }
@@ -662,7 +673,6 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
     if (!fwd_mask) {
       pwscore.common_ += EvalCoefficients::canpromotePawn_[cy];
-      pwscore.endGame_ += EvalCoefficients::canpromotePawn_[cy];
     }
     else {
       int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
@@ -673,7 +683,6 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
         int prmBonus = (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
         pwscore.common_ += prmBonus;
-        pwscore.endGame_ += prmBonus;
       }
     }    
 
@@ -767,20 +776,16 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
   auto mright2 = (mabove2 << 1) & Figure::pawnCutoffMasks_[0];
   auto mright3 = (mabove3 << 1) & Figure::pawnCutoffMasks_[0];
 
-  auto full_column = pawnMasks().mask_column(kingPos.x());
-  auto left_column = (full_column >> 1) & Figure::pawnCutoffMasks_[1];
-  auto right_column = (full_column << 1) & Figure::pawnCutoffMasks_[0];
-
   int score = 0;
 
   if (mabove1 & pmask)
     score += EvalCoefficients::pawnShieldB_[0];
   else if (mabove2 & pmask)
     score += EvalCoefficients::pawnShieldB_[1];
-  else if ((mabove3 & pmask) == 0ULL)
+  else if (mabove3 & pmask)
     score += EvalCoefficients::pawnPenaltyB_ >> 1;
-  if((full_column & pmask) == 0ULL)
-    score += EvalCoefficients::pawnPenaltyB_ >> 1;
+  else
+    score += EvalCoefficients::pawnPenaltyB_;
 
   if (kingPos.x() > 3) // right side
   {
@@ -788,19 +793,19 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
       score += EvalCoefficients::pawnShieldC_[0];
     else if (mleft2 & pmask)
       score += EvalCoefficients::pawnShieldC_[1];
-    else if ((mleft3 & pmask) == 0ULL)
+    else if (mleft3 & pmask)
       score += EvalCoefficients::pawnPenaltyC_ >> 1;
-    if((left_column & pmask) == 0ULL)
-      score += EvalCoefficients::pawnPenaltyC_ >> 1;
+    else
+      score += EvalCoefficients::pawnPenaltyC_;
 
     if (mright1 & pmask)
       score += EvalCoefficients::pawnShieldA_[0];
     else if (mright2 & pmask)
       score += EvalCoefficients::pawnShieldA_[1];
-    else if ((mright3 & pmask) == 0ULL)
+    else if (mright3 & pmask)
       score += EvalCoefficients::pawnPenaltyA_ >> 1;
-    if((right_column & pmask) == 0ULL)
-      score += EvalCoefficients::pawnPenaltyA_ >> 1;
+    else
+      score += EvalCoefficients::pawnPenaltyA_;
   }
   else // left side
   {
@@ -808,19 +813,19 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
       score += EvalCoefficients::pawnShieldA_[0];
     else if (mleft2 & pmask)
       score += EvalCoefficients::pawnShieldA_[1];
-    else if ((mleft3 & pmask) == 0ULL)
+    else if (mleft3 & pmask)
       score += EvalCoefficients::pawnPenaltyA_ >> 1;
-    if((left_column & pmask) == 0ULL)
-      score += EvalCoefficients::pawnPenaltyA_ >> 1;
+    else
+      score += EvalCoefficients::pawnPenaltyA_;
 
     if (mright1 & pmask)
       score += EvalCoefficients::pawnShieldC_[0];
     else if (mright2 & pmask)
       score += EvalCoefficients::pawnShieldC_[1];
-    else if ((mright3 & pmask) == 0ULL)
+    else if (mright3 & pmask)
       score += EvalCoefficients::pawnPenaltyC_ >> 1;
-    if((right_column & pmask) == 0ULL)
-      score += EvalCoefficients::pawnPenaltyC_ >> 1;
+    else
+      score += EvalCoefficients::pawnPenaltyC_;
   }
 
   // opponents pawns pressure
