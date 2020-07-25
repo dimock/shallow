@@ -22,11 +22,11 @@ namespace NEngine
   int EvalCoefficients::kingToPasserDistanceBonus_{ 3 };
 
   // forks
-  int EvalCoefficients::bishopsAttackBonus_{ 70 };
-  int EvalCoefficients::knightForkBonus_{ 70 };
-  int EvalCoefficients::doublePawnAttack_{ 70 };
+  int EvalCoefficients::bishopsAttackBonus_{ 80 };
+  int EvalCoefficients::knightForkBonus_{ 80 };
+  int EvalCoefficients::doublePawnAttack_{ 80 };
+  int EvalCoefficients::generalAttackBonus_{ 15 };
   int EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
-  int EvalCoefficients::multiAttackBonus_{ 15 };
   int EvalCoefficients::immobileAttackBonus_{ 30 };
 
   // king
@@ -43,10 +43,11 @@ namespace NEngine
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 3 };
-  int EvalCoefficients::knightKingAttack_{ 12 };
-  int EvalCoefficients::bishopKingAttack_{ 12 };
-  int EvalCoefficients::rookKingAttack_{ 12 };
-  int EvalCoefficients::queenKingAttack_{ 12 };
+  int EvalCoefficients::knightKingAttack_{ 10 };
+  int EvalCoefficients::bishopKingAttack_{ 10 };
+  int EvalCoefficients::rookKingAttack_{ 10 };
+  int EvalCoefficients::queenKingAttack_{ 20 };
+  int EvalCoefficients::basicAttack_{ 6 };
 
   int EvalCoefficients::generalKingPressure_{ 3 };
   int EvalCoefficients::generalOpponentPressure_{ 1 };
@@ -56,7 +57,7 @@ namespace NEngine
   int EvalCoefficients::bishopChecking_{ 45 };
   int EvalCoefficients::rookChecking_{ 65 };
   int EvalCoefficients::queenChecking_{ 85 };
-
+  int EvalCoefficients::checkedFieldBonus_{ 16 };
   int EvalCoefficients::attackedNearKing_{24};
 
   // for special cases
@@ -90,7 +91,7 @@ namespace NEngine
   int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 65}, {15, 40} };
   int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
   int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {20, 45}, {0, 20} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {0, 0} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {10, 20}, {0, 10} };
   int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {10, 30}, {0, 20} };
   int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
 
@@ -104,10 +105,10 @@ namespace NEngine
 
   // mobility
   int EvalCoefficients::knightMobility_[16] = { -30, -15,  3,  5,  7,  8, 10, 12, 14 };
-  int EvalCoefficients::bishopMobility_[16] = { -30, -15,  3,  5,  7,  8, 10, 12, 14, 18, 20, 23, 25, 28, 30, 33 };
-  int EvalCoefficients::rookMobility_[16]   = { -30, -15,  3,  5,  7,  8, 10, 12, 14, 18, 20, 23, 25, 28, 30, 33 };
-  int EvalCoefficients::queenMobility_[32]  = { -60, -30,  3,  5,  7,  8, 10, 12, 14, 18, 20, 23, 25, 28, 30, 33,
-                                                 36,  38, 41, 44, 46, 49, 52, 55, 57, 60, 63, 65, 68, 70, 73, 75 };
+  int EvalCoefficients::bishopMobility_[16] = { -30, -15,  3,  5,  7,  9, 12, 13, 14, 16, 20, 22, 23, 24, 25, 26 };
+  int EvalCoefficients::rookMobility_[16]   = { -30, -15,  5,  8,  12,  16, 21, 25, 27, 29, 30, 31, 32, 33, 34, 35 };
+  int EvalCoefficients::queenMobility_[32]  = { -60, -30,  6,  10, 13,  18, 23, 27, 30, 33, 36, 40, 43, 45, 47, 48,
+                                                 49,  50, 51,  52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64 };
 
   // king position eval for BN-mat
   int EvalCoefficients::bishopKnightMat_[64] =

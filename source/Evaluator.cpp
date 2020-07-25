@@ -1085,9 +1085,12 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     if(color == board_->color())
       forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 2;
   }
-  if (pawnsN + knightsN + bishopsN + queensTreat > 1) {
-    forkScore += EvalCoefficients::multiAttackBonus_;
+  auto treat_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
+  auto generalScore = pop_count(treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_;
+  if (generalScore > 0 && color == board_->color()) {
+    generalScore <<= 1;
   }
+  forkScore += generalScore;
   return forkScore;
 }
 

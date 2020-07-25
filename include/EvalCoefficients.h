@@ -29,7 +29,7 @@ struct EvalCoefficients
   static int knightForkBonus_;
   static int doublePawnAttack_;
   static int queenUnderRookAttackBonus_;
-  static int multiAttackBonus_;
+  static int generalAttackBonus_;
   static int immobileAttackBonus_;
 
   // king
@@ -50,6 +50,7 @@ struct EvalCoefficients
   static int bishopKingAttack_;
   static int rookKingAttack_;
   static int queenKingAttack_;
+  static int basicAttack_;
 
   static int generalKingPressure_;
   static int generalOpponentPressure_;
@@ -65,6 +66,7 @@ struct EvalCoefficients
   static int bishopChecking_;
   static int rookChecking_;
   static int queenChecking_;
+  static int checkedFieldBonus_;
 
   static int attackedNearKing_;
 
