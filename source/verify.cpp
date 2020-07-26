@@ -126,12 +126,14 @@ void Engine::logMovies(int ictx)
 
 #ifdef RELEASEDEBUGINFO
 
-static int TEST_DEPTH_MIN = 8;
+static int TEST_DEPTH_MIN = 7;
 static int TEST_DEPTH_MAX = 12;
 
-bool compare_depth(int depth)
+bool compare_depth(int depth, int depthMin, int depthMax)
 {
-  return depth >= TEST_DEPTH_MIN && depth <= TEST_DEPTH_MAX;
+  depthMin = (depthMin != 0) ? depthMin : TEST_DEPTH_MIN;
+  depthMax = (depthMax != 0) ? depthMax : TEST_DEPTH_MAX;
+  return depth >= depthMin && depth <= depthMax;
 }
 
 bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
@@ -140,7 +142,7 @@ bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
   auto& board = scontexts_.at(ictx).board_;
   int depth = scontexts_.at(ictx).sdata_.depth_;
 
-  if (!compare_depth(depth))
+  if (!compare_depth(depth, board.stestDepthMin_, board.stestDepthMax_))
     return false;
 
   const auto& sequence = board.stestMoves_;

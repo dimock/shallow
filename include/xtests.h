@@ -75,7 +75,7 @@ class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 public:
   FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
   {
-    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnullrqkPNBRQKOx+=!_\\s\\-]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
+    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnullrqkPNBRQKOx+=!_\\s\\-]+)?([\\s]*dmin[\\s]+)?([0-9]+)?([\\s]*dmax[\\s]*)?([0-9]+)?([\\s]+hash[\\s]+)?([0-9]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
     ::std::ifstream ifs(ffname);
     for(; ifs;)
     {
@@ -109,6 +109,17 @@ public:
           continue;
         appendMove(epd, smove);
       }
+#ifdef RELEASEDEBUGINFO
+      if (m.size() > 5 && ((std::string)m[4]).find("dmin") != std::string::npos) {
+        epd.board_.stestDepthMin_ = std::stoi(m[5]);
+      }
+      if (m.size() > 7 && ((std::string)m[6]).find("dmax") != std::string::npos) {
+        epd.board_.stestDepthMax_ = std::stoi(m[7]);
+      }
+      if (m.size() > 9 && ((std::string)m[8]).find("hash") != std::string::npos) {
+        epd.board_.stestHashKey_ = std::stoull(m[9]);
+      }
+#endif
       if(m.size() >= 6)
       {
         std::string sscore = m[5];

@@ -120,7 +120,6 @@ class Evaluator
     BitMask nb_attacked_{};
     BitMask nbr_attacked_{};
     BitMask ki_fields_{};
-    //BitMask ki_fields_prot_{};
     BitMask brq_mask_{};
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
@@ -221,6 +220,7 @@ private:
 
   int evaluateKingSafety(Figure::Color color) const;
   int evaluateKingSafety(Figure::Color color, Index const& kingPos) const;
+  int evaluateKingsPawn(Figure::Color color, Index const& kingPos) const;
 
   FullScore evaluatePawnsPressure(Figure::Color color);
 

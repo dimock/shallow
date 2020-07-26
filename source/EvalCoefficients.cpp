@@ -22,21 +22,22 @@ namespace NEngine
   int EvalCoefficients::kingToPasserDistanceBonus_{ 3 };
 
   // forks
-  int EvalCoefficients::bishopsAttackBonus_{ 80 };
-  int EvalCoefficients::knightForkBonus_{ 80 };
-  int EvalCoefficients::doublePawnAttack_{ 80 };
-  int EvalCoefficients::generalAttackBonus_{ 15 };
+  int EvalCoefficients::bishopsAttackBonus_{ 65 };
+  int EvalCoefficients::knightForkBonus_{ 65 };
+  int EvalCoefficients::doublePawnAttack_{ 65 };
+  int EvalCoefficients::generalAttackBonus_{ 12 };
   int EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
   int EvalCoefficients::immobileAttackBonus_{ 30 };
   int EvalCoefficients::discoveredCheckBonus_{ 20 };
+  int EvalCoefficients::possibleCheckBonus_{ 5 };
   int EvalCoefficients::matTreatBonus_{ 150 };
 
   // king
   int EvalCoefficients::fakeCastle_{ -15 };
   int EvalCoefficients::kingIsUnsafe_{ -25 };
-  int EvalCoefficients::pawnPenaltyA_{ -17 };
-  int EvalCoefficients::pawnPenaltyB_{ -20 };
-  int EvalCoefficients::pawnPenaltyC_{ -5 };
+  int EvalCoefficients::pawnPenaltyA_{ -13 };
+  int EvalCoefficients::pawnPenaltyB_{ -15 };
+  int EvalCoefficients::pawnPenaltyC_{ -3 };
 
   // blocked figure
   int EvalCoefficients::knightBlocked_{ 80 };
@@ -44,15 +45,15 @@ namespace NEngine
   int EvalCoefficients::rookBlocked_{ 80 };
 
   // king attacks
-  int EvalCoefficients::pawnKingAttack_{ 3 };
-  int EvalCoefficients::knightKingAttack_{ 10 };
-  int EvalCoefficients::bishopKingAttack_{ 10 };
-  int EvalCoefficients::rookKingAttack_{ 10 };
-  int EvalCoefficients::queenKingAttack_{ 20 };
-  int EvalCoefficients::basicAttack_{ 4 };
+  int EvalCoefficients::pawnKingAttack_{ 8 };
+  int EvalCoefficients::knightKingAttack_{ 8 };
+  int EvalCoefficients::bishopKingAttack_{ 8 };
+  int EvalCoefficients::rookKingAttack_{ 8 };
+  int EvalCoefficients::queenKingAttack_{ 10 };
+  int EvalCoefficients::basicAttack_{ 2 };
 
-  int EvalCoefficients::generalKingPressure_{ 3 };
-  int EvalCoefficients::generalOpponentPressure_{ 1 };
+  int EvalCoefficients::generalKingPressure_{ 5 };
+  int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
   int EvalCoefficients::knightChecking_{ 45 };
@@ -60,7 +61,7 @@ namespace NEngine
   int EvalCoefficients::rookChecking_{ 65 };
   int EvalCoefficients::queenChecking_{ 85 };
   int EvalCoefficients::checkedFieldBonus_{ 12 };
-  int EvalCoefficients::attackedNearKing_{24};
+  int EvalCoefficients::attackedNearKing_{20};
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -78,9 +79,9 @@ namespace NEngine
   
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[2] = {20, 15};
-  int EvalCoefficients::pawnShieldB_[2] = {20, 12};
-  int EvalCoefficients::pawnShieldC_[2] = { 8, 5};
+  int EvalCoefficients::pawnShieldA_[2] = {15, 12};
+  int EvalCoefficients::pawnShieldB_[2] = {15, 10};
+  int EvalCoefficients::pawnShieldC_[2] = { 6, 4};
 
   // rook on open column
   int EvalCoefficients::openRook_[2][2] = { {20, 8}, {8, 3} };
@@ -153,11 +154,11 @@ namespace NEngine
       {
           0,   0,   0,   0,   0,   0,   0,   0,
           5,   5,   5,   5,   5,   5,   5,   5,
-          3,   3,   5,   8,   8,   5,   3,   3,
+          3,   3,   5,  10,  10,   5,   3,   3,
           2,   2,   4,  12,  12,   4,   2,   2,
           0,   0,   3,  12,  12,   3,   0,   0,
-         -1,  -1,   2,   9,   9,   2,  -1,  -1,
-         -2,  -2,  -3,  -8,  -8,  -3,  -2,  -2,
+         -1,  -1,   0,  10,  10,   0,  -1,  -1,
+         -2,  -2,  -2,  -8,  -8,  -2,  -2,  -2,
           0,   0,   0,   0,   0,   0,   0,   0
       },
       {
@@ -173,11 +174,11 @@ namespace NEngine
       {
         -15,  -8,  -8,  -8,  -8,  -8,  -8, -15,
          -9,   5,   3,   0,   0,   3,   5,  -9,
-         -3,   7,   5,   5,   5,   5,   7,  -3,
-         -3,   6,   7,  10,  10,   7,   6,  -3,
-         -3,   6,   8,  10,  10,   8,   6,  -3,
-         -3,   9,  10,   8,   8,  10,   9,  -3,
-         -5,  10,   9,   6,   6,   9,  10,  -5,
+         -1,   7,   5,   5,   5,   5,   7,  -1,
+         -1,   6,   7,  10,  10,   7,   6,  -1,
+         -1,   6,   8,  10,  10,   8,   6,  -1,
+         -1,   9,  10,   8,   8,  10,   9,  -1,
+         -5,   2,   9,   6,   6,   9,   2,  -5,
         -15,  -6,  -8,  -6,  -6,  -8,  -6, -15
       },
       {
@@ -191,8 +192,8 @@ namespace NEngine
          -5,  -5,   3,   4,   4,   3,  -5,  -5
       },
       {
-         -5,  -2,  -1,   0,   0,  -1,  -2,  -5,
-         -2,  -1,   1,   1,   1,   1,  -1,  -2,
+         -5,  -2,   1,   3,   3,   1,  -2,  -5,
+         -2,   2,   2,   2,   2,   2,   2,  -2,
          -2,   2,   3,   3,   3,   3,   2,  -2,
          -2,   2,   5,   7,   7,   5,   2,  -2,
          -2,   2,   5,   7,   7,   5,   2,  -2,

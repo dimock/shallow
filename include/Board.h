@@ -712,6 +712,9 @@ protected:
 #ifdef RELEASEDEBUGINFO
 public:
   std::vector<std::string> stestMoves_;
+  int stestDepthMin_{};
+  int stestDepthMax_{};
+  uint64_t stestHashKey_{};
 #endif
 };
 

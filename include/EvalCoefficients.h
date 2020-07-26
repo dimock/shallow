@@ -32,6 +32,7 @@ struct EvalCoefficients
   static int generalAttackBonus_;
   static int immobileAttackBonus_;
   static int discoveredCheckBonus_;
+  static int possibleCheckBonus_;
   static int matTreatBonus_;
 
   // king

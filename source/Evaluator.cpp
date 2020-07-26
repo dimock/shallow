@@ -102,12 +102,6 @@ void Evaluator::prepare()
 
     finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
     finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
-
-    //finfo_[0].ki_fields_prot_ = finfo_[0].ki_fields_ & finfo_[0].pawnAttacks_;
-    //finfo_[1].ki_fields_prot_ = finfo_[1].ki_fields_ & finfo_[1].pawnAttacks_;
-
-    //finfo_[0].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorBlack) | finfo_[0].pawnAttacks_);
-    //finfo_[1].ki_fields_ &= ~(fmgr.king_mask(Figure::ColorWhite) | finfo_[1].pawnAttacks_);
   }
   
   // other mask
@@ -697,12 +691,12 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       }
     }    
 
-    // opponent king could not go to my pawns promotion path
-    if(couldIntercept(color, n, pp, std::abs(py - y) +1))
-    {
-      auto icpBonus = EvalCoefficients::farKingPawn_[cy];
-      pwscore.endGame_ -= icpBonus;
-    }
+    //// opponent king could not go to my pawns promotion path
+    //if(couldIntercept(color, n, pp, std::abs(py - y) +1))
+    //{
+    //  auto icpBonus = EvalCoefficients::farKingPawn_[cy];
+    //  pwscore.endGame_ -= icpBonus;
+    //}
 
     if (halfpasser)
       pwscore >>= 1;
@@ -736,23 +730,21 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   int score = 0;
   if (ctype == 0) // king side
   {
-    Index kingPosK{ kingPos.x(), ky };
-    score = evaluateKingSafety(color, kingPosK);
+    score = evaluateKingSafety(color, Index{6, ky}) + evaluateKingsPawn(color, kingPos);
   }
   else if (ctype == 1) // queen side
   {
-    Index kingPosQ{ kingPos.x(), ky };
-    score = evaluateKingSafety(color, kingPosQ);
+    score = evaluateKingSafety(color, Index{1, ky}) + evaluateKingsPawn(color, kingPos);
   }
   else
   {
-    score = evaluateKingSafety(color, kingPos);
+    score = evaluateKingSafety(color, kingPos) + (EvalCoefficients::kingIsUnsafe_>>1);
     if (board_->castling(color, 0)) {
-      int scoreK = evaluateKingSafety(color, Index{ 6, promo_y_[Figure::otherColor(color)] });
+      int scoreK = evaluateKingSafety(color, Index{6, promo_y_[Figure::otherColor(color)]});
       score = std::max(score, scoreK);
     }
     if (board_->castling(color, 1)) {
-      int scoreQ = evaluateKingSafety(color, Index{ 1, promo_y_[Figure::otherColor(color)] });
+      int scoreQ = evaluateKingSafety(color, Index{1, promo_y_[Figure::otherColor(color)]});
       score = std::max(score, scoreQ);
     }
   }
@@ -883,6 +875,38 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
   }
   score -= opponent_penalty;
 
+  return score;
+}
+
+int Evaluator::evaluateKingsPawn(Figure::Color color, Index const& kingPos) const
+{
+  static const int delta_y[2] = { -8, 8 };
+  const FiguresManager & fmgr = board_->fmgr();
+  auto const& pmask = fmgr.pawn_mask(color);
+  Figure::Color ocolor = Figure::otherColor(color);
+  auto const& opmask = fmgr.pawn_mask(ocolor);
+
+  auto king_cy = colored_y_[color][kingPos.y()];
+  if (king_cy > 5)
+    return EvalCoefficients::kingIsUnsafe_;
+
+  int above1 = (kingPos + delta_y[color]) & 63;
+  int above2 = (above1 + delta_y[color]) & 63;
+  BitMask mabove1{ set_mask_bit(above1) };
+  BitMask mabove2{ set_mask_bit(above2) };
+  BitMask mabove3{};
+  if (king_cy < 5)
+    mabove3 = set_mask_bit((above2 + delta_y[color]) & 63);
+  
+  int score = 0;
+  if (mabove1 & pmask)
+    score += EvalCoefficients::pawnShieldB_[0];
+  else if (mabove2 & pmask)
+    score += EvalCoefficients::pawnShieldB_[1];
+  else if (mabove3 & pmask)
+    score += EvalCoefficients::pawnPenaltyB_ >> 1;
+  else
+    score += EvalCoefficients::pawnPenaltyB_;
   return score;
 }
 
@@ -1069,7 +1093,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
       forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
   }
   
-  BitMask pfwd_attacks = finfo_[color].pawns_fwd_ & finfo_[color].attack_mask_;
+  BitMask pfwd_attacks = (finfo_[color].pawns_fwd_ & finfo_[color].attack_mask_) & ~finfo_[ocolor].pawnAttacks_;
   if(color)
     pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
   else
@@ -1107,14 +1131,16 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   }
   bool queensTreat = (board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_) != 0ULL;
   if (queensTreat) {
-    forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 2;
+    forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
     if(color == board_->color())
-      forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 2;
+      forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
   }
   auto treat_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
+  auto min_treat_mask = finfo_[color].attack_mask_ & ~treat_mask;
   auto generalScore = pop_count(treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_;
+  generalScore += (pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_) >> 1;
   if (generalScore > 0 && color == board_->color()) {
-    generalScore <<= 1;
+    generalScore += (generalScore >> 1);
   }
   forkScore += generalScore;
   return forkScore;
