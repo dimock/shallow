@@ -120,6 +120,8 @@ PawnMasks::PawnMasks()
       int x = i & 7;
       int y = i >> 3;
 
+      pmask_row_[i] = 255ULL << (8 * y);
+
       BitMask forward_msk{};
       BitMask backward_msk{};
       int deltay = color ? 1 : -1;

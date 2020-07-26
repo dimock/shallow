@@ -240,6 +240,12 @@ public:
     return pmask_column_[x];
   }
 
+  inline const BitMask & mask_row(int n) const
+  {
+    X_ASSERT((unsigned)n > 63, "invalid position");
+    return pmask_row_[n];
+  }
+
 private:
   BitMask pmasks_passed_[2][64] = {};
   BitMask pmasks_forward_[2][64] = {};
@@ -249,6 +255,7 @@ private:
   BitMask pmask_isolated_[8] = {};
   BitMask pmask_doubled_[8] = {};
   BitMask pmask_column_[8] = {};
+  BitMask pmask_row_[64] = {};
 };
 
 class BitsCounter

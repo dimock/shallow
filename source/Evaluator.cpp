@@ -69,10 +69,10 @@ void Evaluator::initialize(Board const* board)
 
 void Evaluator::prepare()
 {
-  mask_all_ = board_->fmgr().mask(Figure::ColorWhite) | board_->fmgr().mask(Figure::ColorBlack);
-  inv_mask_all_ = ~mask_all_;
-
   auto const& fmgr = board_->fmgr();
+
+  mask_all_ = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
+  inv_mask_all_ = ~mask_all_;
 
   finfo_[0] = FieldsInfo{};
   finfo_[1] = FieldsInfo{};
@@ -129,6 +129,12 @@ void Evaluator::prepare()
     finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
     finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
     finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+
+    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
+
+    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
   }
 }
 
@@ -691,12 +697,12 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       }
     }    
 
-    //// opponent king could not go to my pawns promotion path
-    //if(couldIntercept(color, n, pp, std::abs(py - y) +1))
-    //{
-    //  auto icpBonus = EvalCoefficients::farKingPawn_[cy];
-    //  pwscore.endGame_ -= icpBonus;
-    //}
+    // opponent king could not go to my pawns promotion path
+    if(couldIntercept(color, n, pp, std::abs(py - y) +1))
+    {
+      auto icpBonus = EvalCoefficients::farKingPawn_[cy];
+      pwscore.endGame_ -= icpBonus;
+    }
 
     if (halfpasser)
       pwscore >>= 1;
@@ -1012,16 +1018,18 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     int pawnsN = fmgr.pawns(fcolor) != 0;
-    score.opening_ += figuresDiff * EvalCoefficients::figureAgainstPawnBonus_[0][pawnsN];
-    score.endGame_ += figuresDiff * EvalCoefficients::figureAgainstPawnBonus_[1][pawnsN];
+    int k = sign(figuresDiff);
+    score.opening_ += k * EvalCoefficients::figureAgainstPawnBonus_[0][pawnsN];
+    score.endGame_ += k * EvalCoefficients::figureAgainstPawnBonus_[1][pawnsN];
   }
   // Rook vs. Pawns
   if(!figuresDiff && rooksDiff*pawnsDiff < 0)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     int pawnsN = fmgr.pawns(rcolor) != 0;
-    score.opening_ += rooksDiff * EvalCoefficients::rookAgainstPawnBonus_[0][pawnsN];
-    score.endGame_ += rooksDiff * EvalCoefficients::rookAgainstPawnBonus_[1][pawnsN];
+    int k = sign(rooksDiff);
+    score.opening_ += k * EvalCoefficients::rookAgainstPawnBonus_[0][pawnsN];
+    score.endGame_ += k * EvalCoefficients::rookAgainstPawnBonus_[1][pawnsN];
   }
   // Knight|Bishop+Pawns vs. Rook
   if(rooksDiff*figuresDiff == -1)
@@ -1036,8 +1044,9 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     int pawnsN = fmgr.pawns(fcolor) != 0;
-    score.opening_ -= rooksDiff * EvalCoefficients::figuresAgainstRookBonus_[0][pawnsN];
-    score.endGame_ -= rooksDiff * EvalCoefficients::figuresAgainstRookBonus_[1][pawnsN];
+    int k = sign(rooksDiff);
+    score.opening_ -= k * EvalCoefficients::figuresAgainstRookBonus_[0][pawnsN];
+    score.endGame_ -= k * EvalCoefficients::figuresAgainstRookBonus_[1][pawnsN];
   }
 
   return score;
@@ -1048,7 +1057,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   Figure::Color ocolor = Figure::otherColor(color);
   BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
   BitMask o_mask = board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | o_rq_mask;
-  BitMask pawn_fork = o_mask & finfo_[color].pawnAttacks_;
+  BitMask pawn_fork = o_mask & (finfo_[color].pawnAttacks_);
   int pawnsN = pop_count(pawn_fork);
   ScoreType forkScore = 0;
   if (pawnsN > 1) {
@@ -1059,6 +1068,23 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     if(color == board_->color())
       forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
   }
+  
+  BitMask pfwd_attacks = finfo_[color].pawns_fwd_ & finfo_[color].attack_mask_;
+  if(color)
+    pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
+  else
+    pfwd_attacks = (((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
+  pawn_fork = o_mask & pfwd_attacks;
+  pawnsN = pop_count(pawn_fork);
+  if (pawnsN > 1) {
+    forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
+  }
+  else if (pawnsN == 1) {
+    forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
+    if (color == board_->color())
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
+  }
+
   BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;
   int knightsN = pop_count(kn_fork);
   if (knightsN > 1) {

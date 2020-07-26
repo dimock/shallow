@@ -279,6 +279,7 @@ Evaluator::FullScore Evaluator::evaluateKnights()
           finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[0] >> 1;
         }
         if (board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+          finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
           finfo_[color].discoveredCheck_ = true;
         }
       }
@@ -329,7 +330,7 @@ Evaluator::FullScore Evaluator::evaluateBishops()
       if(bishop_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        auto n_attacks = pop_count(bishop_moves & finfo_[ocolor].kingAttacks_);
+        auto n_attacks = pop_count(bishop_attacks & finfo_[ocolor].kingAttacks_);
         finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * n_attacks + EvalCoefficients::basicAttack_;
       }
       
@@ -344,6 +345,7 @@ Evaluator::FullScore Evaluator::evaluateBishops()
           finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[0] >> 1;
         }
         if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+          finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
           finfo_[color].discoveredCheck_ = true;
         }
       }
@@ -408,7 +410,7 @@ Evaluator::FullScore Evaluator::evaluateRook()
       if (rook_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        auto n_attacks = pop_count(rook_moves & finfo_[ocolor].kingAttacks_);
+        auto n_attacks = pop_count(rook_attacks & finfo_[ocolor].kingAttacks_);
         finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * n_attacks + EvalCoefficients::basicAttack_;
       }
 
@@ -423,6 +425,7 @@ Evaluator::FullScore Evaluator::evaluateRook()
           finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[0] >> 1;
         }
         if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+          finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
           finfo_[color].discoveredCheck_ = true;
         }
       }
@@ -485,7 +488,7 @@ Evaluator::FullScore Evaluator::evaluateQueens()
       if (qx_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        auto n_attacks = pop_count(queen_moves & finfo_[ocolor].kingAttacks_);
+        auto n_attacks = pop_count(qx_attacks & finfo_[ocolor].kingAttacks_);
         finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * n_attacks + EvalCoefficients::basicAttack_;
       }
 
@@ -520,6 +523,7 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
 {
   auto const& fmgr = board_->fmgr();
   auto ocolor = Figure::otherColor(color);
+  auto const oki_pos = board_->kingPos(ocolor);
   const BitMask attacked_any_but_oking = finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[ocolor].kingAttacks_);
   const BitMask attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_;
 
@@ -537,9 +541,9 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
   finfo_[color].score_king_ += pop_count(finfo_[color].pawnAttacks_ & oki_fields) * EvalCoefficients::pawnKingAttack_;
   finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
 
-  auto kn_check = movesTable().caps(Figure::TypeKnight, board_->kingPos(ocolor)) & finfo_[color].knightMoves_;
-  auto bi_check = magic_ns::bishop_moves(board_->kingPos(ocolor), mask_all_);
-  auto r_check = magic_ns::rook_moves(board_->kingPos(ocolor), mask_all_);
+  auto kn_check = movesTable().caps(Figure::TypeKnight, oki_pos) & finfo_[color].knightMoves_;
+  auto bi_check = magic_ns::bishop_moves(oki_pos, mask_all_);
+  auto r_check = magic_ns::rook_moves(oki_pos, mask_all_);
   auto q_check = (bi_check | r_check) & finfo_[color].queenMoves_;
   bi_check &= finfo_[color].bishopMoves_;
   r_check &= finfo_[color].rookMoves_;
@@ -566,13 +570,41 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
   int score_king = finfo_[color].score_king_;
   int check_coeff = 0;
 
+  auto mask_ll_npw = mask_all_ & ~fmgr.pawn_mask(color);
+  auto bi_check_npw = magic_ns::bishop_moves(oki_pos, mask_ll_npw) & (fmgr.bishop_mask(color) | fmgr.queen_mask(color));
+  auto r_check_npw = magic_ns::rook_moves(oki_pos, mask_ll_npw) & (fmgr.rook_mask(color) | fmgr.queen_mask(color)) & pawnMasks().mask_row(oki_pos);
+  auto check_npw = bi_check_npw | r_check_npw;
+  while (check_npw) {
+    auto n = clear_lsb(check_npw);
+    auto const& btw_mask = betweenMasks().between(n, oki_pos);
+    auto mpawn = btw_mask & fmgr.pawn_mask(color);
+    if (!mpawn || !one_bit_set(mpawn))
+      continue;
+    BitMask mpattack{};
+    if (color) {
+      mpawn <<= 8;
+      mpattack = (((mpawn << 9) & Figure::pawnCutoffMasks_[0]) | ((mpawn << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
+    }
+    else {
+      mpawn >>= 8;
+      mpattack = (((mpawn >> 7) & Figure::pawnCutoffMasks_[0]) | ((mpawn >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
+    }
+    if (mpawn & mask_all_)
+      continue;
+    finfo_[color].discoveredCheck_ = true;
+    score.common_ += EvalCoefficients::discoveredCheckBonus_;
+    if(mpattack & finfo_[ocolor].nbrq_mask_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].kingAttacks_))
+      score.common_ += EvalCoefficients::discoveredCheckBonus_ << 2;
+    break;
+  }
+
   if (fmgr.rooks(color) > 1 || fmgr.queens(color) > 0 || (fmgr.bishops(color) + fmgr.knights(color) + fmgr.rooks(color) > 2))
   {
     int check_score = (kn_check != 0) * EvalCoefficients::knightChecking_ +
                       (bi_check != 0) * EvalCoefficients::bishopChecking_ +
                       (r_check != 0) * EvalCoefficients::rookChecking_ +
                       (q_check != 0) * EvalCoefficients::queenChecking_ +
-                      finfo_[color].discoveredCheck_* EvalCoefficients::knightChecking_;
+                      finfo_[color].discoveredCheck_* EvalCoefficients::discoveredCheckBonus_;
 
     if (could_be_check) {
       check_score = ( kncheck_possible * EvalCoefficients::knightChecking_ +
@@ -587,41 +619,60 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
       check_coeff += n_checked_fields * EvalCoefficients::checkedFieldBonus_;
       auto const& ofgmask = board_->fmgr().mask(ocolor);
       bool matTreat = false;
-      auto x_mask = mask_all_ & ~fmgr.king_mask(ocolor);
-      if (!matTreat && q_check != 0) {
-        int n = _lsb64(q_check);
-        auto oking_mv = (finfo_[color].queenMoves_ | ~finfo_[color].attack_mask_) & ~finfo_[color].multiattack_mask_ &
-          ~magic_ns::queen_moves(n, x_mask) & finfo_[ocolor].kingAttacks_ & ~ofgmask;
-        if (oking_mv == 0ULL) {
-          check_score += EvalCoefficients::queenChecking_ << 1;
-          matTreat = true;
-        }
-      }
-      if (!matTreat && r_check != 0) {
-        int n = _lsb64(r_check);
-        auto oking_mv = (finfo_[color].rookMoves_ | ~finfo_[color].attack_mask_) & ~finfo_[color].multiattack_mask_ &
-          ~magic_ns::rook_moves(n, x_mask) & finfo_[ocolor].kingAttacks_ & ~ofgmask;
-        if (oking_mv == 0ULL) {
-          check_score += EvalCoefficients::rookChecking_ << 1;
-          matTreat = true;
-        }
-      }
-      if (!matTreat && bi_check != 0) {
-        int n = _lsb64(bi_check);
-        auto oking_mv = (finfo_[color].bishopMoves_ | ~finfo_[color].attack_mask_) & ~finfo_[color].multiattack_mask_ &
-          ~magic_ns::bishop_moves(n, x_mask) & finfo_[ocolor].kingAttacks_ & ~ofgmask;
-        if (oking_mv == 0ULL) {
-          check_score += EvalCoefficients::bishopChecking_ << 1;
-          matTreat = true;
-        }
-      }
-      if (!matTreat && kn_check != 0) {
-        int n = _lsb64(kn_check);
+      while (!matTreat && kn_check) {
+        int n = clear_lsb(kn_check);
         auto oking_mv = (finfo_[color].knightMoves_ | ~finfo_[color].attack_mask_) & ~finfo_[color].multiattack_mask_ &
           ~movesTable().caps(Figure::TypeKnight, n) & finfo_[ocolor].kingAttacks_ & ~ofgmask;
-        if (oking_mv == 0ULL) {
-          check_score += EvalCoefficients::knightChecking_ << 1;
+        if (!oking_mv) {
+          check_score += EvalCoefficients::knightChecking_;
           matTreat = true;
+        }
+      }
+      if (!matTreat)
+      {
+        auto const o_protected_mask = finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].multiattack_mask_;
+        auto const o_nbr_protect_mask = ((finfo_[ocolor].pawns_fwd_ | finfo_[ocolor].nbr_attacked_) & o_protected_mask) | (finfo_[ocolor].pawns_fwd_ & finfo_[color].attack_mask_);
+        auto x_mask = mask_all_ & ~fmgr.king_mask(ocolor);
+        while (!matTreat && bi_check) {
+          int n = clear_lsb(bi_check);
+          auto oking_mv = (finfo_[color].bishopMoves_ | ~finfo_[color].attack_mask_) & ~finfo_[color].multiattack_mask_ &
+            ~magic_ns::bishop_moves(n, x_mask) & finfo_[ocolor].kingAttacks_ & ~ofgmask;
+          if (oking_mv != 0ULL)
+            continue;
+          auto const& btw_mask = betweenMasks().between(n, oki_pos);
+          if (!(btw_mask & o_nbr_protect_mask)) {
+            check_score += EvalCoefficients::matTreatBonus_;
+            matTreat = true;
+          }
+        }
+        while (!matTreat && r_check) {
+          int n = clear_lsb(r_check);
+          auto oking_mv = (finfo_[color].rookMoves_ | ~finfo_[color].attack_mask_) & ~finfo_[color].multiattack_mask_ &
+            ~magic_ns::rook_moves(n, x_mask) & finfo_[ocolor].kingAttacks_ & ~ofgmask;
+          if (oking_mv != 0ULL)
+            continue;
+          auto const& btw_mask = betweenMasks().between(n, oki_pos);
+          if (!(btw_mask & o_nbr_protect_mask)) {
+            check_score += EvalCoefficients::matTreatBonus_;
+            matTreat = true;
+          }
+        }
+        if (!matTreat)
+        {
+          auto const o_q_protect_mask = ((finfo_[ocolor].pawns_fwd_ | finfo_[ocolor].nbr_attacked_ | finfo_[ocolor].queenMoves_) & o_protected_mask) |
+            (finfo_[ocolor].pawns_fwd_ & finfo_[color].attack_mask_);
+          while (!matTreat && q_check) {
+            int n = clear_lsb(q_check);
+            auto oking_mv = (finfo_[color].queenMoves_ | ~finfo_[color].attack_mask_) & ~finfo_[color].multiattack_mask_ &
+              ~magic_ns::queen_moves(n, x_mask) & finfo_[ocolor].kingAttacks_ & ~ofgmask;
+            if (oking_mv != 0ULL)
+              continue;
+            auto const& btw_mask = betweenMasks().between(n, oki_pos);
+            if (!(btw_mask & o_q_protect_mask)) {
+              check_score += EvalCoefficients::matTreatBonus_;
+              matTreat = true;
+            }
+          }
         }
       }
     }
@@ -650,7 +701,7 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
 
     score_king = ((score_king * attack_coeff + check_score * check_coeff) >> 5);
 
-    auto king_left = (board_->kingPos(ocolor) & 7) < 4;
+    auto king_left = (oki_pos & 7) < 4;
     auto general_pressure_mask = ((finfo_[color].attack_mask_ & ~attacked_any_but_oking) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_;
     auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_left];
     int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;

@@ -124,6 +124,7 @@ class Evaluator
     BitMask brq_mask_{};
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
+    BitMask pawns_fwd_{};
   } finfo_[2];
 
 public:

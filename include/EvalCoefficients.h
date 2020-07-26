@@ -31,6 +31,8 @@ struct EvalCoefficients
   static int queenUnderRookAttackBonus_;
   static int generalAttackBonus_;
   static int immobileAttackBonus_;
+  static int discoveredCheckBonus_;
+  static int matTreatBonus_;
 
   // king
   static int fakeCastle_;
