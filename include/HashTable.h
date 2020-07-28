@@ -185,8 +185,9 @@ public:
     //  return;
     //}
 
-    if ((hitem->hkey_ != hkey) || (depth >= hitem->depth_) ||
-        (((AlphaBetta == flag && hitem->flag_ < AlphaBetta) || (pv && !hitem->pv_ && flag != NoFlag)) && depth >= hitem->depth_-2 && depth > 0))
+    int hdepth = (int)hitem->depth_ - (movesCount_ - hitem->movesCount_);
+    if ((hitem->hkey_ != hkey) || (depth >= hdepth) ||
+        (((AlphaBetta == flag && hitem->flag_ < AlphaBetta) || (pv && !hitem->pv_ && flag != NoFlag)) && depth >= hdepth-2 && depth > 0))
     {
       X_ASSERT(score > 32760, "write wrong value to the hash");
 
@@ -210,6 +211,11 @@ public:
     const HBucket & hb = this->operator [] (hkey);
     const HItem * hitem = hb.find(hkey);
     return hitem;
+  }
+
+  bool isExpired(HItem const& hitem) const
+  {
+    return movesCount_ - hitem.movesCount_ > 3;
   }
 };
 

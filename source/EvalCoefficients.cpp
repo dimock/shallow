@@ -16,7 +16,8 @@ namespace NEngine
   int EvalCoefficients::pawnEndgameBonus_{ 20 };
   int EvalCoefficients::rookBehindBonus_{ 5 };
   int EvalCoefficients::protectedPawnPressure_{ 1 };
-  int EvalCoefficients::unprotectedPawnPressure_{ 5 };
+  int EvalCoefficients::unprotectedPawnPressure_{ 6 };
+  int EvalCoefficients::semiprotectedPawnPressure_{ 2 };
   int EvalCoefficients::protectedPawnBishopTreat_{ 1 };
   int EvalCoefficients::unprotectedPawnBishopTreat_{ 3 };
   int EvalCoefficients::kingToPasserDistanceBonus_{ 3 };

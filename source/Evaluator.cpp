@@ -285,7 +285,8 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto pw_unprotected = pw_mask ^ pw_protected;
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
   score.common_  = pop_count(pw_protected   & attackers) * EvalCoefficients::protectedPawnPressure_;
-  score.common_ += pop_count(pw_unprotected & attackers) * EvalCoefficients::unprotectedPawnPressure_;
+  score.common_ += pop_count(pw_unprotected & attackers & ~finfo_[color].attack_mask_) * EvalCoefficients::unprotectedPawnPressure_;
+  score.common_ += pop_count(pw_unprotected & attackers & finfo_[color].attack_mask_) * EvalCoefficients::semiprotectedPawnPressure_;
   // bishop treat
   if(fmgr.bishops(color) == 1)
   {
@@ -527,31 +528,23 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       if (halfpasser)
       {
         pwscore.common_ = EvalCoefficients::passerPawn_[cy] >> 1;
-        if (pprotected || neighbors) {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
-        }
         BitMask attackers = passmsk & opmsk;
         int nguards = 0;
-        if (attackers) {
-          BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
-          nguards = 0;
-          while (guards) {
-            Index g{ clear_lsb(guards) };
-            if (g.y() == y)
+        BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
+        nguards = 0;
+        while (guards) {
+          Index g{ clear_lsb(guards) };
+          if (g.y() == y)
+            nguards++;
+          else {
+            Index g1{ g.x(), g.y() + dy };
+            if (!(set_mask_bit(g1) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
               nguards++;
-            else {
-              Index g1{ g.x(), g.y() + dy };
-              if (!(set_mask_bit(g1) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
-                nguards++;
-              }
             }
           }
-          if (nguards > 0 && nguards >= pop_count(attackers)) {
-            pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 1;
-          }
         }
-        else {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 1;
+        if (nguards > 0 && nguards >= pop_count(attackers)) {
+          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
         }
         pwscore >>= 1;
       }
@@ -561,11 +554,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
         int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
         pwscore.endGame_ += (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_;
-        if (pprotected || neighbors) {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
-        }
-        else if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+        if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
           while (guards) {
             int g = clear_lsb(guards);
             if (!(pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
@@ -667,12 +656,13 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         o_attack_mask |= or_attacks;
       }
     }
-    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor)) & ~finfo_[color].pawnAttacks_;
+    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor) | finfo_[ocolor].pawnAttacks_;
 
     // ahead fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
     if (!fwd_mask) {
       pwscore.common_ += EvalCoefficients::canpromotePawn_[cy];
+      pwscore.endGame_ += EvalCoefficients::canpromotePawn_[cy];
       // could promote on the next move and not attacked or it's turn
       if ( cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
           !((o_attack_mask | fmgr.mask(ocolor)) & pawnMasks().mask_forward(color, n)) ) {
@@ -687,15 +677,14 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         int steps_to_promotion = 7 - cy;
         X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
         int prmBonus = (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
-        pwscore.common_ += prmBonus;
+        pwscore.common_  += prmBonus;
+        pwscore.endGame_ += prmBonus;
       }
     }    
 
     //// opponent king could not go to my pawns promotion path
-    //if(couldIntercept(color, n, pp, std::abs(py - y) +1))
-    //{
-    //  auto icpBonus = EvalCoefficients::farKingPawn_[cy];
-    //  pwscore.endGame_ -= icpBonus;
+    //if(couldIntercept(color, n, pp, std::abs(py - y) +1)) {
+    //  pwscore.endGame_ -= EvalCoefficients::farKingPawn_[cy];
     //}
 
     if (halfpasser)
@@ -1084,6 +1073,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   BitMask pawn_fork = o_mask & (finfo_[color].pawnAttacks_);
   int pawnsN = pop_count(pawn_fork);
   ScoreType forkScore = 0;
+  BitMask counted_mask = pawn_fork;
   if (pawnsN > 1) {
     forkScore += EvalCoefficients::doublePawnAttack_;
   }
@@ -1093,12 +1083,13 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
       forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
   }
   
-  BitMask pfwd_attacks = (finfo_[color].pawns_fwd_ & finfo_[color].attack_mask_) & ~finfo_[ocolor].pawnAttacks_;
+  BitMask pfwd_attacks = (finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].attack_mask_)) & ~finfo_[ocolor].pawnAttacks_;
   if(color)
     pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
   else
-    pfwd_attacks = (((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
+    pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
   pawn_fork = o_mask & pfwd_attacks;
+  counted_mask |= pawn_fork;
   pawnsN = pop_count(pawn_fork);
   if (pawnsN > 1) {
     forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
@@ -1110,6 +1101,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   }
 
   BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;
+  counted_mask |= kn_fork;
   int knightsN = pop_count(kn_fork);
   if (knightsN > 1) {
     forkScore += EvalCoefficients::knightForkBonus_;
@@ -1120,6 +1112,7 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
       forkScore += EvalCoefficients::knightForkBonus_ >> 2;
   }
   BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
+  counted_mask |= bi_treat;
   int bishopsN = pop_count(bi_treat);
   if (bishopsN > 1) {
     forkScore += EvalCoefficients::bishopsAttackBonus_;
@@ -1129,16 +1122,18 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     if (color == board_->color())
       forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
   }
-  bool queensTreat = (board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_) != 0ULL;
-  if (queensTreat) {
+  auto r2q_treat = board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_;
+  counted_mask |= r2q_treat;
+  if (r2q_treat) {
     forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
     if(color == board_->color())
       forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
   }
   auto treat_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
-  auto min_treat_mask = finfo_[color].attack_mask_ & ~treat_mask;
+  treat_mask &= ~counted_mask;
+  auto min_treat_mask = (finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask;
   auto generalScore = pop_count(treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_;
-  generalScore += (pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_) >> 1;
+  generalScore += (pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_) >> 2;
   if (generalScore > 0 && color == board_->color()) {
     generalScore += (generalScore >> 1);
   }

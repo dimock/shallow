@@ -704,7 +704,8 @@ Evaluator::FullScore Evaluator::evaluateKingPressure(Figure::Color color)
     auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_left];
     int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
     auto attacks_opponent_other = general_pressure_mask & Figure::quaterBoard_[ocolor][!king_left];
-    int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalOpponentPressure_;
+    auto attacks_king_other = finfo_[color].attack_mask_ & Figure::quaterBoard_[ocolor][king_left] & ~attacks_king_side;
+    int general_opponent_pressure = pop_count(attacks_opponent_other | attacks_king_other) * EvalCoefficients::generalOpponentPressure_;
     int general_score = general_king_attacks_score + general_opponent_pressure;
 
     score_king += general_score;

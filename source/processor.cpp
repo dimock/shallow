@@ -342,6 +342,12 @@ bool Processor::makeMove(std::string const& moveStr)
   board.verifyState();
   updateTiming();
 
+  //static bool hash_saved = false;
+  //if (!board.fmgr().pawns() && !hash_saved) {
+  //  hash_saved = true;
+  //  hash2file("D:\\Projects\\gitproj\\hash\\hash");
+  //}
+
   return true;
 }
 
