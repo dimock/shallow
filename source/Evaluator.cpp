@@ -657,33 +657,29 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         o_attack_mask |= or_attacks;
       }
     }
+    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor) | finfo_[ocolor].pawnAttacks_;
 
-    // forward fields are not attacked by opponent
-    auto fwd_mask = pawnMasks().mask_forward(color, n) & o_attack_mask;
-    for (int i = 0; i < 2; ++i)
-    {
-      if (!fwd_mask) {
-        int bonus = EvalCoefficients::canpromotePawn_[cy] >> i;
-        pwscore.common_  += bonus;
-        pwscore.endGame_ += bonus;
-        break;
+    // ahead fields are not blocked by opponent
+    auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
+    if (!fwd_mask) {
+      pwscore.common_  += EvalCoefficients::passerPawn_[cy];
+      pwscore.endGame_ += EvalCoefficients::passerPawn_[cy];
+      // could promote on the next move and not attacked or it's turn
+      if (cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
+        !((o_attack_mask | fmgr.mask(ocolor)) & pawnMasks().mask_forward(color, n))) {
+        pwscore.common_ += EvalCoefficients::canpromotePawn_[cy];
       }
-      else {
-        int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
-        int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
-        int steps = last_cango - cy;
-        if (steps > 0) {
-          int steps_to_promotion = 7 - cy;
-          X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
-          int bonus = ((steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion) >> i;
-          pwscore.common_  += bonus;
-          pwscore.endGame_ += bonus;
-        }
-      }
-      if (i == 0) {
-        // forward fields are not blocked by opponent
-        auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor) | finfo_[ocolor].pawnAttacks_;
-        fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
+    }
+    else {
+      int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
+      int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
+      int steps = last_cango - cy;
+      if (steps > 0) {
+        int steps_to_promotion = 7 - cy;
+        X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
+        int prmBonus = (steps*EvalCoefficients::passerPawn_[cy]) / steps_to_promotion;
+        pwscore.common_  += prmBonus;
+        pwscore.endGame_ += prmBonus;
       }
     }
 

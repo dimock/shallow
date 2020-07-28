@@ -328,6 +328,9 @@ class BetweenMask
   // mask from 'to' field in direction 'from->to'. until border
   BitMask s_tail_[64][64];
 
+  // mask through fields 'from' and 'to' from border to border
+  BitMask s_line_[64][64];
+
 public:
 
   BetweenMask(DeltaPosCounter const&);
@@ -353,7 +356,14 @@ public:
     return s_tail_[from][to];
   }
 
-  // mask contains bits from square in dir direction  up to the border
+  // mask contains bits of whole line along from-to direction
+  inline const BitMask & line(int8 from, int8 to) const
+  {
+    X_ASSERT((uint8)from > 63 || (uint8)to > 63, "invalid positions given");
+    return s_line_[from][to];
+  }
+
+  // mask contains bits from square in dir direction until the border
   inline const BitMask & from_dir(int8 from, nst::dirs dir) const
   {
     X_ASSERT((uint8)from > 63 || (uint8)dir > 8 || dir == nst::dirs::no_dir, "invalid positions given");

@@ -675,13 +675,22 @@ struct ChecksGenerator
               {
                 int to = -1;
                 bool is_mat = false;
-                BitMask through_mask{};
-                if (oki_moves != 0ULL)
-                {
+                BitMask r_mat_mask{};
+                if (oki_moves != 0ULL) {
+                  /// cross the rook move and line from oking to it's unattacked field
                   auto ki_move = _lsb64(oki_moves);
-                  through_mask = betweenMasks().from(ki_move, oki_pos) | betweenMasks().from(oki_pos, ki_move);
+                  auto through_mask = betweenMasks().line(oki_pos, ki_move);
+                  r_mat_mask = magic_ns::rook_moves(oki_pos, mask_all) & through_mask;
                 }
-                auto r_mat_mask = magic_ns::rook_moves(oki_pos, mask_all) & through_mask;
+                else if(rki_blocked_from) {
+                  // move along the line going through field, attacked by this rook
+                  int rb = _lsb64(rki_blocked_from);
+                  r_mat_mask = betweenMasks().line(rb, from);
+                }
+                else {
+                  // oking has no moves and out rook doesn't block it. go anywhere
+                  r_mat_mask = to_mask;
+                }
                 if (to_mask & r_mat_mask)
                 {
                   is_mat = true;

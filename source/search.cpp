@@ -1097,8 +1097,7 @@ GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, 
 
   X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
 
-  int hdepth = (int)hitem.depth_ - (hash_.moveCount() - hitem.movesCount_);
-  if(hitem.flag_  != GHashTable::NoFlag && hdepth >= depth && ply > 0 && hscore != 0)
+  if(hitem.flag_  != GHashTable::NoFlag && (int)hitem.depth_ >= depth && ply > 0 && hscore != 0)
   {
     if(GHashTable::Alpha == hitem.flag_ && hscore <= alpha)
     {
