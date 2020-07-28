@@ -21,7 +21,6 @@ struct EvalCoefficients
   static int protectedPawnPressure_;
   static int unprotectedPawnPressure_;
   static int semiprotectedPawnPressure_;
-  static int protectedPawnBishopTreat_;
   static int unprotectedPawnBishopTreat_;
   static int kingToPasserDistanceBonus_;
 

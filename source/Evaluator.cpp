@@ -285,16 +285,17 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto pw_unprotected = pw_mask ^ pw_protected;
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
   score.common_  = pop_count(pw_protected   & attackers) * EvalCoefficients::protectedPawnPressure_;
-  score.common_ += pop_count(pw_unprotected & attackers & ~finfo_[color].attack_mask_) * EvalCoefficients::unprotectedPawnPressure_;
-  score.common_ += pop_count(pw_unprotected & attackers & finfo_[color].attack_mask_) * EvalCoefficients::semiprotectedPawnPressure_;
+  score.common_ += pop_count(pw_unprotected & attackers & ~finfo_[ocolor].attack_mask_) * EvalCoefficients::unprotectedPawnPressure_;
+  score.common_ += pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_) * EvalCoefficients::semiprotectedPawnPressure_;
   // bishop treat
-  if(fmgr.bishops(color) == 1)
+  if(fmgr.bishops(color))
   {
-    auto bi_mask = (fmgr.bishop_mask(color) & FiguresCounter::s_whiteMask_)
-      ?  FiguresCounter::s_whiteMask_
-      : ~FiguresCounter::s_whiteMask_;
-    score.endGame_ += pop_count((pw_protected   & bi_mask) & ~attackers) * EvalCoefficients::protectedPawnBishopTreat_;
-    score.endGame_ += pop_count((pw_unprotected & bi_mask) & ~attackers) * EvalCoefficients::unprotectedPawnBishopTreat_;
+    auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
+    auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
+    if(bi_mask_w)
+      score.endGame_ += pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers) * EvalCoefficients::unprotectedPawnBishopTreat_;
+    if(bi_mask_b)
+      score.endGame_ += pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers) * EvalCoefficients::unprotectedPawnBishopTreat_;
   }
   return score;
 }
@@ -656,31 +657,35 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         o_attack_mask |= or_attacks;
       }
     }
-    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor) | finfo_[ocolor].pawnAttacks_;
 
-    // ahead fields are not blocked by opponent
-    auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
-    if (!fwd_mask) {
-      pwscore.common_ += EvalCoefficients::canpromotePawn_[cy];
-      pwscore.endGame_ += EvalCoefficients::canpromotePawn_[cy];
-      // could promote on the next move and not attacked or it's turn
-      if ( cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
-          !((o_attack_mask | fmgr.mask(ocolor)) & pawnMasks().mask_forward(color, n)) ) {
-        pwscore.common_  += EvalCoefficients::canpromotePawn_[cy];
+    // forward fields are not attacked by opponent
+    auto fwd_mask = pawnMasks().mask_forward(color, n) & o_attack_mask;
+    for (int i = 0; i < 2; ++i)
+    {
+      if (!fwd_mask) {
+        int bonus = EvalCoefficients::canpromotePawn_[cy] >> i;
+        pwscore.common_  += bonus;
+        pwscore.endGame_ += bonus;
+        break;
+      }
+      else {
+        int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
+        int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
+        int steps = last_cango - cy;
+        if (steps > 0) {
+          int steps_to_promotion = 7 - cy;
+          X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
+          int bonus = ((steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion) >> i;
+          pwscore.common_  += bonus;
+          pwscore.endGame_ += bonus;
+        }
+      }
+      if (i == 0) {
+        // forward fields are not blocked by opponent
+        auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor) | finfo_[ocolor].pawnAttacks_;
+        fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
       }
     }
-    else {
-      int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
-      int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
-      int steps = last_cango - cy;
-      if (steps > 0) {
-        int steps_to_promotion = 7 - cy;
-        X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
-        int prmBonus = (steps*EvalCoefficients::canpromotePawn_[cy]) / steps_to_promotion;
-        pwscore.common_  += prmBonus;
-        pwscore.endGame_ += prmBonus;
-      }
-    }    
 
     //// opponent king could not go to my pawns promotion path
     //if(couldIntercept(color, n, pp, std::abs(py - y) +1)) {
