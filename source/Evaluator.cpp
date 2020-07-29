@@ -981,13 +981,13 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   // bonus for double bishop
   if (fmgr.bishops(Figure::ColorWhite) >= 2)
   {
-    int pawnsN = fmgr.pawns(Figure::ColorWhite) != 0;
+    const int pawnsN = fmgr.pawns(Figure::ColorWhite);
     score.opening_ += EvalCoefficients::doubleBishopBonus_[0][pawnsN];
     score.endGame_ += EvalCoefficients::doubleBishopBonus_[1][pawnsN];
   }
   if (fmgr.bishops(Figure::ColorBlack) >= 2)
   {
-    int pawnsN = fmgr.pawns(Figure::ColorBlack) != 0;
+    const int pawnsN = fmgr.pawns(Figure::ColorBlack);
     score.opening_ -= EvalCoefficients::doubleBishopBonus_[0][pawnsN];
     score.endGame_ -= EvalCoefficients::doubleBishopBonus_[1][pawnsN];
   }
@@ -997,7 +997,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   {
     int kndiff = sign(knightsDiff);
     Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
-    int pawnsN = fmgr.pawns(ncolor) != 0;
+    const int pawnsN = fmgr.pawns(ncolor);
     score.opening_ += kndiff * EvalCoefficients::twoKnightsBonus_[0][pawnsN];
     score.endGame_ += kndiff * EvalCoefficients::twoKnightsBonus_[1][pawnsN];
   }
@@ -1005,7 +1005,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   if (bishopsDiff == 1 || bishopsDiff == -1)
   {
     Figure::Color ncolor = static_cast<Figure::Color>(bishopsDiff > 0);
-    int pawnsN = fmgr.pawns(ncolor) != 0;
+    const int pawnsN = fmgr.pawns(ncolor);
     score.opening_ += bishopsDiff * EvalCoefficients::oneBishopBonus_[0][pawnsN];
     score.endGame_ += bishopsDiff * EvalCoefficients::oneBishopBonus_[1][pawnsN];
   }
@@ -1014,7 +1014,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   {
     int bdiff = sign(bishopsDiff);
     Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
-    int pawnsN = fmgr.pawns(bcolor) != 0;
+    const int pawnsN = fmgr.pawns(bcolor);
     score.opening_ += bdiff * EvalCoefficients::twoBishopsBonus_[0][pawnsN];
     score.endGame_ += bdiff * EvalCoefficients::twoBishopsBonus_[1][pawnsN];
   }
@@ -1023,7 +1023,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   {
     int rdiff = sign(rooksDiff);
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
-    int pawnsN = fmgr.pawns(rcolor) != 0;
+    const int pawnsN = fmgr.pawns(rcolor);
     score.opening_ += rdiff * EvalCoefficients::twoRooksBonus_[0][pawnsN];
     score.endGame_ += rdiff * EvalCoefficients::twoRooksBonus_[1][pawnsN];
   }
@@ -1031,7 +1031,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   if(!rooksDiff && figuresDiff*pawnsDiff < 0)
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
-    int pawnsN = fmgr.pawns(fcolor) != 0;
+    const int pawnsN = fmgr.pawns(fcolor);
     int k = sign(figuresDiff);
     score.opening_ += k * EvalCoefficients::figureAgainstPawnBonus_[0][pawnsN];
     score.endGame_ += k * EvalCoefficients::figureAgainstPawnBonus_[1][pawnsN];
@@ -1040,7 +1040,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   if(!figuresDiff && rooksDiff*pawnsDiff < 0)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
-    int pawnsN = fmgr.pawns(rcolor) != 0;
+    const int pawnsN = fmgr.pawns(rcolor);
     int k = sign(rooksDiff);
     score.opening_ += k * EvalCoefficients::rookAgainstPawnBonus_[0][pawnsN];
     score.endGame_ += k * EvalCoefficients::rookAgainstPawnBonus_[1][pawnsN];
@@ -1049,7 +1049,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   if(rooksDiff*figuresDiff == -1)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
-    int pawnsN = fmgr.pawns(rcolor) != 0;
+    const int pawnsN = fmgr.pawns(rcolor);
     score.opening_ += rooksDiff * EvalCoefficients::rookAgainstFigureBonus_[0][pawnsN];
     score.endGame_ += rooksDiff * EvalCoefficients::rookAgainstFigureBonus_[1][pawnsN];
   }
@@ -1057,7 +1057,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   if((rooksDiff*figuresDiff <= -2) && (std::abs(rooksDiff) == 1))
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
-    int pawnsN = fmgr.pawns(fcolor) != 0;
+    const int pawnsN = fmgr.pawns(fcolor);
     int k = sign(rooksDiff);
     score.opening_ -= k * EvalCoefficients::figuresAgainstRookBonus_[0][pawnsN];
     score.endGame_ -= k * EvalCoefficients::figuresAgainstRookBonus_[1][pawnsN];

@@ -88,15 +88,15 @@ namespace NEngine
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::doubleBishopBonus_[2][2] = { {15, 30}, {7, 15} };
-  int EvalCoefficients::twoKnightsBonus_[2][2] = { {0, 15}, {0, 5} };
-  int EvalCoefficients::oneBishopBonus_[2][2] = { {5, 10}, {0, 5} };
-  int EvalCoefficients::twoBishopsBonus_[2][2] = { {20, 60}, {15, 40} };
-  int EvalCoefficients::twoRooksBonus_[2][2] = { {5, 10}, {5, 10} };
-  int EvalCoefficients::figureAgainstPawnBonus_[2][2] = { {20, 45}, {0, 20} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][2] = { {0, 10}, {0, 10} };
-  int EvalCoefficients::figuresAgainstRookBonus_[2][2] = { {10, 30}, {0, 20} };
-  int EvalCoefficients::rookAgainstPawnBonus_[2][2] = { {15, 30}, {10, 30} };
+  int EvalCoefficients::doubleBishopBonus_[2][10] = { {10, 15, 25, 30, 30, 30, 30, 30, 30, 30}, {5, 10, 15, 15, 15, 15, 15, 15, 15, 15} };
+  int EvalCoefficients::twoKnightsBonus_[2][10] = { {0, 5, 10, 15, 15, 15, 15, 15, 15, 15}, {0, 2, 5, 5, 5, 5, 5, 5, 5, 5} };
+  int EvalCoefficients::oneBishopBonus_[2][10] = { {2, 5, 10, 10, 10, 10, 10, 10, 10, 10}, {0, 2, 5, 5, 5, 5, 5, 5, 5, 5} };
+  int EvalCoefficients::twoBishopsBonus_[2][10] = { {15, 40, 60, 60, 60, 60, 60, 60, 60, 60}, {10, 20, 40, 40, 40, 40, 40, 40, 40, 40} };
+  int EvalCoefficients::twoRooksBonus_[2][10] = { {0, 5, 10, 10, 10, 10, 10, 10, 10, 10}, {0, 5, 10, 10, 10, 10, 10, 10, 10, 10} };
+  int EvalCoefficients::figureAgainstPawnBonus_[2][10] = { {0, 15, 45, 45, 45, 45, 45, 45, 45, 45}, {0, 5, 20, 20, 20, 20, 20, 20, 20, 20} };
+  int EvalCoefficients::rookAgainstFigureBonus_[2][10] = { {0, 5, 10, 10, 10, 10, 10, 10, 10, 10}, {0, 5, 10, 10, 10, 10, 10, 10, 10, 10} };
+  int EvalCoefficients::figuresAgainstRookBonus_[2][10] = { {0, 20, 30, 30, 30, 30, 30, 30, 30, 30}, {0, 15, 20, 20, 20, 20, 20, 20, 20, 20} };
+  int EvalCoefficients::rookAgainstPawnBonus_[2][10] = { {10, 30, 40, 40, 40, 40, 40, 40, 40, 40}, {10, 30, 40, 40, 40, 40, 40, 40, 40, 40} };
 
   // arrays
   int EvalCoefficients::passerPawn_[8] = { 0, 5, 9, 20, 38, 65, 98, 0 };
