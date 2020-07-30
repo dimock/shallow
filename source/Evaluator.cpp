@@ -657,7 +657,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         o_attack_mask |= or_attacks;
       }
     }
-    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor) | finfo_[ocolor].pawnAttacks_;
+    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor)) & ~finfo_[color].pawnAttacks_;
 
     // ahead fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
@@ -1096,9 +1096,9 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
   }
   else if (pawnsN == 1) {
-    forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
+    forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
     if (color == board_->color())
-      forkScore += EvalCoefficients::doublePawnAttack_ >> 3;
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
   }
 
   BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;

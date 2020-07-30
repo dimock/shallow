@@ -25,7 +25,7 @@ namespace NEngine
   int EvalCoefficients::bishopsAttackBonus_{ 65 };
   int EvalCoefficients::knightForkBonus_{ 65 };
   int EvalCoefficients::doublePawnAttack_{ 65 };
-  int EvalCoefficients::generalAttackBonus_{ 12 };
+  int EvalCoefficients::generalAttackBonus_{ 10 };
   int EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
   int EvalCoefficients::immobileAttackBonus_{ 30 };
   int EvalCoefficients::discoveredCheckBonus_{ 20 };

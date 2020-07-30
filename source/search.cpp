@@ -127,18 +127,25 @@ bool Engine::mainThreadSearch(int ictx)
   // copy to print stats later
   sdata.board_ = board;
 
+  int bestCount = 0;
+  bool timeAdded = false;
+
   for(sdata.depth_ = depth0_; !stopped(ictx) && sdata.depth_ <= sparams_.depthMax_; ++sdata.depth_)
   {
     sctx.plystack_[0].clearPV(sparams_.depthMax_);
-
     sdata.restart();
-
     ScoreType score = alphaBetta0(ictx);
 
     if(sdata.best_)
     {
-      if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 && sdata.counter_ < sdata.numOfMoves_ && 
-        ((sres.score_ - score >= Figure::figureWeight_[Figure::TypePawn]/4) || (sdata.best_ != sres.best_)) &&
+      if (sres.best_ != sdata.best_)
+        bestCount = 1;
+      else
+        bestCount++;
+
+      if(ictx == 0 && stopped(ictx) &&
+        sdata.depth_ > 2 &&
+        sdata.counter_ < sdata.numOfMoves_ && 
         callbacks_.giveTime_ &&
         !sparams_.analyze_mode_)
       {
@@ -147,40 +154,47 @@ bool Engine::mainThreadSearch(int ictx)
         {
           sctx.stop_ = false;
           sparams_.timeLimit_ += t_add;
-          if(sdata.counter_ < sdata.numOfMoves_)
-            sdata.depth_--;
+          sdata.depth_--;
+          timeAdded = true;
           continue;
         }
       }
 
-      auto t  = NTime::now();
-      auto dt = t - sdata.tstart_;
-      sdata.tprev_ = t;
-
-      sres.score_ = score;
-      sres.best_ = sdata.best_;
-      sres.depth_ = sdata.depth_;
-      sres.nodesCount_ = sdata.nodesCount_;
-      sres.totalNodes_ = sdata.totalNodes_;
-      sres.depthMax_ = 0;
-      sres.dt_ = dt;
-      sres.counter_ = sdata.counter_;
-
-      for(int i = 0; i < MaxPly; ++i)
+      if (sdata.counter_ == sdata.numOfMoves_)
       {
-        sres.depthMax_ = i;
-        sres.pv_[i] = sctx.plystack_[0].pv_[i];
-        if(!sres.pv_[i])
+        auto t = NTime::now();
+        auto dt = t - sdata.tstart_;
+        sdata.tprev_ = t;
+
+        sres.score_ = score;
+        sres.best_ = sdata.best_;
+        sres.depth_ = sdata.depth_;
+        sres.nodesCount_ = sdata.nodesCount_;
+        sres.totalNodes_ = sdata.totalNodes_;
+        sres.depthMax_ = 0;
+        sres.dt_ = dt;
+        sres.counter_ = sdata.counter_;
+
+        for (int i = 0; i < MaxPly; ++i)
+        {
+          sres.depthMax_ = i;
+          sres.pv_[i] = sctx.plystack_[0].pv_[i];
+          if (!sres.pv_[i])
+            break;
+        }
+
+        X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
+
+        if (ictx == 0 && callbacks_.sendOutput_)
+        {
+          for (size_t j = 1; j < scontexts_.size(); ++j)
+            sres.totalNodes_ += scontexts_.at(j).sdata_.totalNodes_;
+          (callbacks_.sendOutput_)(sres);
+        }
+
+        if (!sparams_.analyze_mode_ && timeAdded) {
           break;
-      }
-
-      X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
-
-      if (ictx == 0 && callbacks_.sendOutput_)
-      {
-        for (size_t j = 1; j < scontexts_.size(); ++j)
-          sres.totalNodes_ += scontexts_.at(j).sdata_.totalNodes_;
-        (callbacks_.sendOutput_)(sres);
+        }
       }
     }
     // we haven't found move and spend more time for search it than on prev. iteration
@@ -195,6 +209,7 @@ bool Engine::mainThreadSearch(int ictx)
           sctx.stop_ = false;
           sparams_.timeLimit_ += t_add;
           sdata.depth_--;
+          timeAdded = true;
           continue;
         }
       }
@@ -245,7 +260,7 @@ bool Engine::mainThreadSearch(int ictx)
 #endif // SYNCHRONIZE_LAST_ITER
     }
 
-    if(!sdata.best_ ||
+    if(!sres.best_ ||
        ( (score >= sparams_.scoreLimit_-MaxPly || score <= MaxPly-sparams_.scoreLimit_) &&
          !sparams_.analyze_mode_ &&
          sres.depth_ > NumUsualAfterHorizon+1))
@@ -599,11 +614,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && board.allowNullMove()
     )
   {
-    //if (hscore == -ScoreMax) {
-    //  hscore = sctx.eval_(alpha, betta);
-    //}
-    //int ScoreReduce = ONE_PLY * (hscore - betta) / 200;
-    //int null_depth = std::max(ONE_PLY, depth - NullMove_PlyReduce -ScoreReduce);
     int null_depth = board.nullMoveDepth(depth, betta);
     // do null-move
     board.makeNullMove();
