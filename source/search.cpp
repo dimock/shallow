@@ -952,12 +952,22 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   if(!board.underCheck())
   {
+    if (hmove && !board.is_capture(hmove) && hmove.new_type() == 0 && depth < 0) {
+      hmove = SMove{ true };
+    }
+
     // not initialized yet
     if (score0 == -ScoreMax)
       score0 = eval(alpha, betta);
 
     if (score0 >= betta)
       return score0;
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+    if (eval.move(board.color()) && !hmove) {
+      hmove = eval.move(board.color());
+    }
+#endif // GENERATE_MAT_MOVES_IN_EVAL
 
     ScoreType mscore = eval.materialScore();
     if (score0 > mscore)
@@ -972,11 +982,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
       scoreBest = score0;
     }
-  }
-
-  if (!board.underCheck() && hmove && !board.is_capture(hmove) && hmove.new_type() == 0 && depth < 0)
-  {
-    hmove = SMove{ true };
   }
 
   Move best{true};
@@ -995,7 +1000,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
-
 
 #ifdef RELEASEDEBUGINFO
     auto ff = (FIELD_NAME)move.from();

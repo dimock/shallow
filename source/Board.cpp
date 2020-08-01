@@ -453,6 +453,32 @@ bool Board::validateMoveBruteforce(const Move & move) const
   const auto & ffrom = getField(move.from());
   X_ASSERT(ffrom.type() != Figure::TypePawn && move.new_type() > 0, "not a pawn promotion");
   X_ASSERT(!ffrom || ffrom.color() != color(), "no moving figure or invalid color");
+  switch (ffrom.type()) {
+  case Figure::TypeKnight: {
+      auto to_mask = movesTable().caps(Figure::TypeKnight, move.from());
+      if (!(to_mask & set_mask_bit(move.to())))
+        return false;
+      break;
+  }
+  case Figure::TypeBishop: {
+    auto to_mask = magic_ns::bishop_moves(move.from(), fmgr_.mask(Figure::ColorBlack)| fmgr_.mask(Figure::ColorWhite));
+    if (!(to_mask & set_mask_bit(move.to())))
+      return false;
+    break;
+  }
+  case Figure::TypeRook: {
+    auto to_mask = magic_ns::rook_moves(move.from(), fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite));
+    if (!(to_mask & set_mask_bit(move.to())))
+      return false;
+    break;
+  }
+  case Figure::TypeQueen: {
+    auto to_mask = magic_ns::queen_moves(move.from(), fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite));
+    if (!(to_mask & set_mask_bit(move.to())))
+      return false;
+    break;
+  }
+  }
   auto ocolor = Figure::otherColor(color());
   X_ASSERT(move.to() == kingPos(ocolor), "try to capture king");
   X_ASSERT(getField(move.to()) && getField(move.to()).color() == color(), "try to capture own figure");
@@ -488,6 +514,12 @@ bool Board::validateMoveBruteforce(const Move & move) const
         : 0;
       X_ASSERT(ctype == 1 && getField(rook_through_pos), "long castling impossible, next to rook field is occupied");
       return !fieldAttacked(ocolor, king_through_pos, mask_all_inv);
+    }
+    else
+    {
+      auto to_mask = movesTable().caps(Figure::TypeKing, move.from());
+      if (!(to_mask & set_mask_bit(move.to())))
+        return false;
     }
     return true;
   }

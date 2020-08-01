@@ -33,6 +33,7 @@ inline int pop_count(uint64 n)
 
 inline int _lsb32(unsigned long n)
 {
+  X_ASSERT(!n, "zero mask in _lsb32");
   unsigned long i;
   uint8 b = _BitScanForward(&i, n);
   X_ASSERT(!b, "no bit found in nonzero number");
@@ -41,6 +42,7 @@ inline int _lsb32(unsigned long n)
 
 inline int _msb32(unsigned long n)
 {
+  X_ASSERT(!n, "zero mask in _msb32");
   unsigned long i;
   uint8 b = _BitScanReverse(&i, n);
   X_ASSERT(!b, "no bit found in nonzero number");
@@ -54,6 +56,7 @@ inline int _msb32(unsigned long n)
 
 inline int _lsb64(const uint64 & mask)
 {
+  X_ASSERT(!mask, "zero mask in _lsb64");
   unsigned long n;
   uint8 b = _BitScanForward64(&n, mask);
   X_ASSERT(!b, "no bit found in nonzero number");
@@ -62,6 +65,7 @@ inline int _lsb64(const uint64 & mask)
 
 inline int _msb64(const uint64 & mask)
 {
+  X_ASSERT(!mask, "zero mask in _msb64");
   unsigned long n;
   uint8 b = _BitScanReverse64(&n, mask);
   X_ASSERT(!b, "no bit found in nonzero number");
@@ -78,6 +82,7 @@ inline int log2(uint64 n)
 #else
 inline int _lsb64(const uint64 & mask)
 {
+  X_ASSERT(!mask, "zero mask in _lsb64");
   unsigned long n;
   const unsigned * pmask = reinterpret_cast<const unsigned int *>(&mask);
 
@@ -91,6 +96,7 @@ inline int _lsb64(const uint64 & mask)
 
 inline int _msb64(const uint64 & mask)
 {
+  X_ASSERT(!mask, "zero mask in _msb64");
   unsigned long n;
   const unsigned * pmask = reinterpret_cast<const unsigned int * >(&mask);
 
@@ -121,21 +127,25 @@ inline int log2(uint64 n)
 
 inline int _lsb32(uint32 mask)
 {
+  X_ASSERT(!mask, "zero mask in _lsb32");
   return __builtin_ctz(mask);
 }
 
 inline int _msb32(uint32 mask)
 {
+  X_ASSERT(!mask, "zero mask in _msb32");
   return 31 - __builtin_clz(mask);
 }
 
 inline int _lsb64(uint64 mask)
 {
+  X_ASSERT(!mask, "zero mask in _lsb64");
   return __builtin_ctzll(mask);
 }
 
 inline int _msb64(uint64 mask)
 {
+  X_ASSERT(!mask, "zero mask in _msb64");
   return 63 - __builtin_clzll(mask);
 }
 

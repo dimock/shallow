@@ -100,6 +100,7 @@ class Evaluator
     int score_king_{};
     int score_opening_{};
     bool discoveredCheck_{};
+    bool matTreat_{};
     BitMask pawnAttacks_{};
     BitMask knightMoves_{};
     BitMask bishopMoves_{};
@@ -124,7 +125,19 @@ class Evaluator
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
     BitMask pawns_fwd_{};
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+    BitMask kingMoves_{};
+    BitMask knights_{};
+    BitMask bishops_{};
+    BitMask rooks_{};
+    BitMask queens_{};
+#endif // GENERATE_MAT_MOVES_IN_EVAL
   } finfo_[2];
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+  SMove move_[2];
+#endif // GENERATE_MAT_MOVES_IN_EVAL
 
 public:
   const int lazyThreshold0_ = 1000;
@@ -134,6 +147,10 @@ public:
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
   ScoreType materialScore() const;
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+  SMove move(Figure::Color) const;
+#endif // GENERATE_MAT_MOVES_IN_EVAL
 
   static const int colored_y_[2][8];
   static const int promo_y_[2];

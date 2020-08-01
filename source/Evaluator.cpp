@@ -102,6 +102,11 @@ void Evaluator::prepare()
 
     finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
     finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
+    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
+#endif // GENERATE_MAT_MOVES_IN_EVAL
   }
   
   // other mask
@@ -135,6 +140,10 @@ void Evaluator::prepare()
 //////////////////////////////////////////////////////////////////////////
 ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 {
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+  move_[0] = move_[1] = SMove{ false };
+#endif // GENERATE_MAT_MOVES_IN_EVAL
+
   X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
   if(!ehash_.empty())
@@ -156,6 +165,13 @@ ScoreType Evaluator::materialScore() const
   auto result = considerColor(fmgr.weight());
   return result;
 }
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+SMove Evaluator::move(Figure::Color color) const
+{
+  return move_[color];
+}
+#endif // GENERATE_MAT_MOVES_IN_EVAL
 
 ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 {
