@@ -769,7 +769,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
             alpha > -Figure::MatScore-MaxPly &&
             !move.see_ok() &&
             !curr.castle() &&
-            !curr.threat() &&
             !board.underCheck())
       {
           R = ONE_PLY;
