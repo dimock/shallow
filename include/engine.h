@@ -73,7 +73,7 @@ public:
   // prepare and start in threads
   bool generateStartposMoves(int ictx);
   bool mainThreadSearch(int ictx);
-  bool threadSearch(int ictx);
+  bool threadSearch(const int ictx, const int depth0);
 
   void setBoard(Board const& board);
   Board & getBoard() { return scontexts_.at(0).board_; }

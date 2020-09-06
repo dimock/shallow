@@ -95,10 +95,11 @@ bool Engine::search()
 
   // start threads
   std::vector<std::unique_ptr<std::thread>> threads;
-  for (int ictx = 1; ictx < scontexts_.size(); ++ictx)
+  int depth0 = depth0_+1;
+  for (int ictx = 1; ictx < scontexts_.size(); ++ictx, ++depth0)
   {
-    auto thread = std::unique_ptr<std::thread>(new std::thread{ [this](int ictx) {
-      this->threadSearch(ictx);
+    auto thread = std::unique_ptr<std::thread>(new std::thread{ [this, depth0](int ictx) {
+      this->threadSearch(ictx, depth0);
     }, ictx});
     threads.emplace_back(std::move(thread));
   }
@@ -288,7 +289,7 @@ bool Engine::mainThreadSearch(int ictx)
   return sres.best_;
 }
 
-bool Engine::threadSearch(int ictx)
+bool Engine::threadSearch(const int ictx, const int depth0)
 {
   X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
   auto& sctx = scontexts_[ictx];
@@ -301,10 +302,6 @@ bool Engine::threadSearch(int ictx)
   // copy to print stats later
   sdata.board_ = board;
 
-  int depth0 = depth0_;
-  for (auto const& sctx : scontexts_)
-    depth0 = std::max(sctx.sdata_.depth_, depth0);
-  depth0++;
   for (sdata.depth_ = depth0; !stopped(ictx) && sdata.depth_ <= sparams_.depthMax_;)
   {
     sctx.plystack_[0].clearPV(sparams_.depthMax_);
@@ -753,13 +750,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       {
         R = ONE_PLY;
 #ifdef LMR_REDUCE_MORE
-        auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
-        if (depth > LMR_DepthLimit && (!move.see_ok() || hist.good() * 20 < hist.bad()))
-        {
-          R += ONE_PLY;
-          if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
-            R += ONE_PLY;
-        }
+        //auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
+        //if (depth > LMR_DepthLimit && (!move.see_ok() || hist.good() * 20 < hist.bad()))
+        //{
+        //  R += ONE_PLY;
+        //  if (depth > LMR_DepthLimit + ONE_PLY && counter > 10)
+        //    R += ONE_PLY;
+        //}
         curr.mflags_ |= UndoInfo::Reduced;
       }
       else if(!check_escape &&
