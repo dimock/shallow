@@ -98,7 +98,7 @@ namespace nst
 #undef LOG_PV
 
 #ifdef NDEBUG
-#define USE_MINIDUMP
+#undef USE_MINIDUMP
 #endif
 
 #define USE_IID
@@ -107,7 +107,6 @@ namespace nst
 #define USE_HASH
 #define USE_NULL_MOVE
 #define USE_LMR
-#undef LMR_REDUCE_MORE
 #define VERIFY_LMR
 #define SINGULAR_EXT
 
