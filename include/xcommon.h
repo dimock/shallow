@@ -56,6 +56,93 @@ using ScoreType     = int16;
 using BitMask       = uint64;
 using SortValueType = int32;
 
+struct ScoreType32
+{
+  union
+  {
+    struct
+    {
+      ScoreType ev_[2];
+    };
+    int32 eval32_;
+  };
+
+  ScoreType32() : eval32_{0}
+  {
+  }
+
+  ScoreType32(int o, int e)
+  {
+    eval32_ = o + (e << 16);
+  }
+
+  ScoreType32(const ScoreType32& other)
+  {
+    eval32_ = other.eval32_;
+  }
+
+  inline ScoreType eval0() const
+  {
+    return (ScoreType)(eval32_ & 0xffff);
+  }
+
+  inline ScoreType eval1() const
+  {
+    return (ScoreType)((eval32_ - (int32)eval0()) >> 16);
+  }
+
+  inline ScoreType32 operator + (const ScoreType32& score) const
+  {
+    ScoreType32 result{ *this };
+    result.eval32_ += score.eval32_;
+    return result;
+  }
+
+  inline ScoreType32 operator - (const ScoreType32& score) const
+  {
+    ScoreType32 result{ *this };
+    result.eval32_ -= score.eval32_;
+    return result;
+  }
+
+  inline ScoreType32 operator * (const int& t) const
+  {
+    ScoreType32 result{ *this };
+    result.eval32_ *= t;
+    return result;
+  }
+
+  inline ScoreType32& operator += (const ScoreType32& score)
+  {
+    eval32_ += score.eval32_;
+    return *this;
+  }
+
+  inline ScoreType32& operator -= (const ScoreType32& score)
+  {
+    eval32_ -= score.eval32_;
+    return *this;
+  }
+
+  inline ScoreType32& operator *= (const int& t)
+  {
+    eval32_ *= t;
+    return *this;
+  }
+
+  inline bool operator != (const ScoreType32& other) const
+  {
+    return eval32_ != other.eval32_;
+  }
+
+  inline ScoreType32 operator - () const
+  {
+    ScoreType32 result;
+    result.eval32_ = -eval32_;
+    return result;
+  }
+};
+
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
 
 static const int NumOfFields = 64;
@@ -110,7 +197,7 @@ namespace nst
 #define VERIFY_LMR
 #define SINGULAR_EXT
 
-#define GENERATE_MAT_CHECK_AFTER_HORIZON
+#undef GENERATE_MAT_CHECK_AFTER_HORIZON
 #undef  GENERATE_MAT_MOVES_IN_EVAL
 
 #undef SYNCHRONIZE_LAST_ITER

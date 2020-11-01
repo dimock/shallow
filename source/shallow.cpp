@@ -38,6 +38,7 @@ int main(int argn, char *argv[])
 {
   NEngine::init_popcount_ptr();
   NEngine::magic_ns::initialize();
+  NEngine::EvalCoefficients::initialize();
 
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;

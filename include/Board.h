@@ -447,8 +447,8 @@ struct Board
   inline int nullMoveDepth(int depth, ScoreType betta) const
   {
     Figure::Color ocolor = Figure::otherColor(color());
-    ScoreType score = fmgr().weight(color()) - fmgr().weight(ocolor);
-    if(score > betta + 2*Figure::figureWeight_[Figure::TypePawn]*2 && depth > 7*ONE_PLY)
+    ScoreType score = (fmgr().weight(color()) - fmgr().weight(ocolor)).eval0();
+    if(score > betta + Figure::figureWeight_[Figure::TypePawn]*4 && depth > 7*ONE_PLY)
     {
       return std::max(1, depth - NullMove_PlyReduce - ONE_PLY);
     }

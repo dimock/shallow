@@ -162,6 +162,19 @@ private:
   void prepare();
 
   // linear interpolation between opening & endgame
+  ScoreType lipolScore(ScoreType32 const& score32, PhaseInfo const& phase) const
+  {
+    ScoreType result{};
+    if (phase.phase_ == Opening)
+      result += score32.eval0();
+    else if (phase.phase_ == EndGame)
+      result += score32.eval1();
+    else // middle game
+      result = result + (score32.eval0() * phase.opening_ + score32.eval1()* phase.endGame_) / weightOEDiff_;
+    return result;
+  }
+
+  // linear interpolation between opening & endgame
   ScoreType lipolScore(FullScore const& score, PhaseInfo const& phase) const
   {
     ScoreType result = score.common_;

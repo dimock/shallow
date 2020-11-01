@@ -31,6 +31,21 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HItem
 
   uint16     movesCount_{};
   Move       move_;
+
+  HItem() {}
+
+  inline HItem(uint64 hkey, ScoreType score, int depth, uint16 flag, const Move & move, bool threat, bool singular, bool pv, uint16 movesCount)
+  {
+    hkey_ = hkey;
+    score_ = score;
+    depth_ = depth;
+    flag_ = flag;
+    movesCount_ = movesCount_;
+    move_ = move;
+    threat_ = threat;
+    singular_ = singular;
+    pv_ = pv;
+  }
 };
 
 
@@ -61,22 +76,22 @@ public:
     std::fill(buffer_.begin(), buffer_.end(), ITEM{});
   }
 
-  size_t size() const
+  inline size_t size() const
   {
     return buffer_.size();
   }
 
-  bool empty() const
+  inline bool empty() const
   {
     return buffer_.empty();
   }
 
-  void inc()
+  inline void inc()
   {
     movesCount_++;
   }
 
-  int moveCount() const
+  inline int moveCount() const
   {
     return movesCount_;
   }
@@ -110,19 +125,19 @@ public:
     return (bool)ofs;
   }
 
-  void prefetch(const uint64 & code)
+  inline void prefetch(const uint64 & code)
   {
     _mm_prefetch((char*)&buffer_[code & szMask_], _MM_HINT_NTA);
   }
 
 protected:
 
-  ITEM & operator [] (const uint64 & code)
+  inline ITEM & operator [] (const uint64 & code)
   {
     return buffer_[code & szMask_];
   }
 
-  const ITEM & operator [] (const uint64 & code) const
+  inline const ITEM & operator [] (const uint64 & code) const
   {
     return buffer_[code & szMask_];
   }
@@ -132,7 +147,7 @@ protected:
   uint16 movesCount_{0};
 };
 
-#if 1
+#if 0
 ALIGN_MSC(16) struct ALIGN_GCC(16) HBucket
 {
   static const int BucketSize = 4;
@@ -168,8 +183,8 @@ ALIGN_MSC(16) struct ALIGN_GCC(16) HBucket
 class GHashTable : public HashTable<HBucket>
 {
 public:
-
-  enum Flag { NoFlag, Alpha, AlphaBetta, Betta };
+  using ItemType = HBucket;
+  enum Flag : uint16 { NoFlag, Alpha, AlphaBetta, Betta };
 
   GHashTable(int size) : HashTable<HBucket>(size)
   {}
@@ -219,36 +234,26 @@ public:
 class GHashTable : public HashTable<HItem>
 {
 public:
-
+  using ItemType = HItem;
   enum Flag { NoFlag, Alpha, AlphaBetta, Betta };
 
   GHashTable(int size) : HashTable<HItem>(size)
   {}
 
-  void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move)
+  inline void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat, bool singular, bool pv)
   {
     auto& hitem = (*this)[hkey];
-    if((hitem.hkey_ == hkey) &&
-       ((hitem.depth_ > depth) ||
-       (depth == hitem.depth_ && Alpha == flag && hitem.flag_ > Alpha) ||
-       (depth == hitem.depth_ && Alpha == flag && hitem.flag_ == Alpha && score >= hitem.score_)))
+    if ((hitem.hkey_ != hkey) || (depth >= hitem.depth_) ||
+      (((AlphaBetta == flag && hitem.flag_ < AlphaBetta) || (pv && !hitem.pv_ && flag != NoFlag)) && depth >= hitem.depth_ - 2 && depth > 0))
     {
-      return;
+      X_ASSERT(score > 32760, "write wrong value to the hash");
+      hitem = HItem{ hkey, score, depth, (uint16)flag, move, threat, singular, pv, movesCount_ };// newItem;
     }
-
-    X_ASSERT(score > 32760, "wrong value to hash");
-
-    hitem.hkey_   = hkey;
-    hitem.score_  = score;
-    hitem.depth_  = depth;
-    hitem.flag_   = flag;
-    hitem.move_   = move;
   }
 
-  HItem const* find(const uint64 & hkey) const
+  inline HItem* find(const uint64 & hkey)
   {
-    auto const& hitem = operator [] (hkey);
-    return hitem.hkey_ == hkey ? &hitem : nullptr;
+    return &(operator [] (hkey));
   }
 };
 #endif

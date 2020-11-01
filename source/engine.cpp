@@ -63,9 +63,9 @@ void Engine::setMemory(int mb)
     return;
 
 #ifdef USE_HASH
-  int bytesN = mb*1024*1024;
-  int hbucketSize = sizeof(HBucket);
-  int hsize = log2((uint64)(bytesN)/hbucketSize);
+  size_t bytesN = mb*1024*1024;
+  size_t hitemSize = sizeof(NEngine::GHashTable::ItemType);
+  size_t hsize = log2((uint64)(bytesN)/hitemSize);
   hash_.resize(hsize);
 #endif
 }

@@ -122,8 +122,10 @@ struct EvalCoefficients
   // basic king pressure
   static int kingDistanceBonus_[8][8];
 
-  // position evaluation. 0 - opening, 1 - endgame; color,type,pos
-  static int positionEvaluations_[2][8][64];
+  // position evaluation. 0 - black color, 1 - white color; color,type,pos
+  static ScoreType32 positionEvaluations_[2][8][64];
+
+  static void initialize();
 };
 
 }

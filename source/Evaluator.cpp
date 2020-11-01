@@ -162,7 +162,7 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 ScoreType Evaluator::materialScore() const
 {
   const FiguresManager& fmgr = board_->fmgr();
-  auto result = considerColor(fmgr.weight());
+  auto result = considerColor(fmgr.weight().eval0());
   return result;
 }
 
@@ -179,87 +179,84 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
-  auto spec = specialCases().eval(*board_);
-  if (spec.first)
-  {
-    ScoreType score = spec.second;
-    score = considerColor(score);
-    return score;
-  }
+  //auto spec = specialCases().eval(*board_);
+  //if (spec.first)
+  //{
+  //  ScoreType score = spec.second;
+  //  score = considerColor(score);
+  //  return score;
+  //}
 
-  // prepare lazy evaluation
-  if(alpha > -Figure::MatScore)
-  {
-    alpha0_ = (int)alpha - lazyThreshold0_;
-    alpha1_ = (int)alpha - lazyThreshold1_;
-  }
-  else
-  {
-    alpha0_ = -ScoreMax;
-    alpha1_ = -ScoreMax;
-  }
+  //// prepare lazy evaluation
+  //if(alpha > -Figure::MatScore)
+  //{
+  //  alpha0_ = (int)alpha - lazyThreshold0_;
+  //  alpha1_ = (int)alpha - lazyThreshold1_;
+  //}
+  //else
+  //{
+  //  alpha0_ = -ScoreMax;
+  //  alpha1_ = -ScoreMax;
+  //}
 
-  if(betta < +Figure::MatScore)
-  {
-    betta0_ = (int)betta + lazyThreshold0_;
-    betta1_ = (int)betta + lazyThreshold1_;
-  }
-  else
-  {
-    betta0_ = +ScoreMax;
-    betta1_ = +ScoreMax;
-  }
+  //if(betta < +Figure::MatScore)
+  //{
+  //  betta0_ = (int)betta + lazyThreshold0_;
+  //  betta1_ = (int)betta + lazyThreshold1_;
+  //}
+  //else
+  //{
+  //  betta0_ = +ScoreMax;
+  //  betta1_ = +ScoreMax;
+  //}
 
   const FiguresManager& fmgr = board_->fmgr();
-  FullScore score;
+  // evaluate figures weight
+  ScoreType32 score32 = fmgr.weight();
 
   // determine game phase (opening, middle or end game)
   auto phaseInfo = detectPhase();
+  //score += evaluateMaterialDiff();
 
-  // evaluate figures weight
-  score.common_ = fmgr.weight();
-  score += evaluateMaterialDiff();
+  score32 += fmgr.score();
 
-  score.opening_ += fmgr.eval(0);
-  score.endGame_ += fmgr.eval(1);
+  ///// use lazy evaluation level 0
+  //{
+  //  auto score0 = considerColor(lipolScore(score, phaseInfo));
+  //  if(score0 < alpha0_ || score0 > betta0_)
+  //    return score0;
+  //}
 
-  /// use lazy evaluation level 0
-  {
-    auto score0 = considerColor(lipolScore(score, phaseInfo));
-    if(score0 < alpha0_ || score0 > betta0_)
-      return score0;
-  }
+  //prepare();
 
-  prepare();
+  //// take pawns eval from hash if possible
+  //auto hashedScore = hashedEvaluation();
+  //score += hashedScore.score;
 
-  // take pawns eval from hash if possible
-  auto hashedScore = hashedEvaluation();
-  score += hashedScore.score;
+  //score += evaluateKnights();
+  //score += evaluateBishops();
+  //score += evaluateRook();
+  //score += evaluateQueens();
 
-  score += evaluateKnights();
-  score += evaluateBishops();
-  score += evaluateRook();
-  score += evaluateQueens();
+  //int score_mob = finfo_[Figure::ColorWhite].score_mob_ - finfo_[Figure::ColorBlack].score_mob_;
+  //score.common_ += score_mob;
 
-  int score_mob = finfo_[Figure::ColorWhite].score_mob_ - finfo_[Figure::ColorBlack].score_mob_;
-  score.common_ += score_mob;
+  //auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+  //scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+  //score += scoreKing;
 
-  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-  score += scoreKing;
+  //auto scoreForks = evaluateForks(Figure::ColorWhite);
+  //scoreForks -= evaluateForks(Figure::ColorBlack);
+  //score.common_ += scoreForks;
 
-  auto scoreForks = evaluateForks(Figure::ColorWhite);
-  scoreForks -= evaluateForks(Figure::ColorBlack);
-  score.common_ += scoreForks;
+  //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+  //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+  //score += scorePP;
 
-  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-  score += scorePP;
+  //auto scorePassers = passerEvaluation(hashedScore);
+  //score += scorePassers;
 
-  auto scorePassers = passerEvaluation(hashedScore);
-  score += scorePassers;
-
-  auto result = considerColor(lipolScore(score, phaseInfo));
+  auto result = considerColor(lipolScore(score32, phaseInfo));
   return result;
 }
 

@@ -26,6 +26,15 @@ extern const BitMask Figure::pawns2ndLineMask_[2] = { 0x0000ff0000000000, 0x0000
 extern const BitMask Figure::quaterBoard_[2][2] = { { 0xf0f0f0f000000000, 0x0f0f0f0f00000000 },
                                                     { 0x00000000f0f0f0f0, 0x000000000f0f0f0f } };
 
+extern const ScoreType32 Figure::figureWeight32_[7] = {
+  {Figure::figureWeight_[0], Figure::figureWeight_[0]},
+  {Figure::figureWeight_[1], Figure::figureWeight_[1]},
+  {Figure::figureWeight_[2], Figure::figureWeight_[2]},
+  {Figure::figureWeight_[3], Figure::figureWeight_[3]},
+  {Figure::figureWeight_[4], Figure::figureWeight_[4]},
+  {Figure::figureWeight_[5], Figure::figureWeight_[5]},
+  {Figure::figureWeight_[6], Figure::figureWeight_[6]} };
+
 Figure::Type Figure::toFtype(char c)
 {
   if ( 'P' == c )
@@ -41,15 +50,6 @@ Figure::Type Figure::toFtype(char c)
   else if ( 'K' == c )
     return Figure::TypeKing;
   return Figure::TypeNone;
-}
-
-ScoreType Figure::positionEvaluation(int stage, Figure::Color color, Figure::Type type, int pos)
-{
-  X_ASSERT(stage > 1 || color > 1 || type > 7 || pos < 0 || pos > 63, "invalid figure params");
-  if(color)
-    return +EvalCoefficients::positionEvaluations_[stage][type][mirrorIndex_[pos]];
-  else
-    return -EvalCoefficients::positionEvaluations_[stage][type][pos];
 }
 
 char Figure::fromFtype(Figure::Type t)

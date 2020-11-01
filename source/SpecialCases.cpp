@@ -134,7 +134,7 @@ namespace
     if (board.fmgr().rooks(pawnColor))
       score += Figure::figureWeight_[Figure::TypePawn];
     else if (board.fmgr().queens(pawnColor))
-      score += (Figure::figureWeight_[Figure::TypePawn]*3)/2;
+      score += (Figure::figureWeight_[Figure::TypePawn] *3)/2;
     auto ocolor = Figure::otherColor(pawnColor);
     Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
     Index kingP(board.kingPos(pawnColor));
@@ -170,7 +170,7 @@ namespace
     Index kingL(board.kingPos(ocolor));
     int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
     int queenL = _lsb64(board.fmgr().queen_mask(ocolor));
-    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kingL];
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kingL].eval1();
     score -= distanceCounter().getDistance(kingW, kingL) * 2;
     score -= distanceCounter().getDistance(queenW, kingL) * 2;
     score += distanceCounter().getDistance(queenL, kingL) * 2;
@@ -203,7 +203,7 @@ namespace
     Index kingL(board.kingPos(ocolor));
     int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
     int rookL = _lsb64(board.fmgr().rook_mask(ocolor));
-    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kingL];
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kingL].eval1();
     score -= distanceCounter().getDistance(kingW, kingL) * 2;
     score -= distanceCounter().getDistance(queenW, kingL) * 2;
     score += distanceCounter().getDistance(rookL, kingL) * 2;
@@ -262,8 +262,8 @@ void SpecialCasesDetector::initMatCases()
     auto kw = board.kingPos(winnerColor);
     auto kl = board.kingPos(loserColor);
     auto score = (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
-    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kl];
-    score += board.fmgr().weight(winnerColor) + EvalCoefficients::additionalMatBonus_;
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kl].eval1();
+    score += board.fmgr().weight(winnerColor).eval1() + EvalCoefficients::additionalMatBonus_;
     score -= board.fiftyMovesCount();
     if(!winnerColor)
       score = -score;
@@ -370,7 +370,7 @@ void SpecialCasesDetector::initMatCases()
     int bp = _lsb64(board.fmgr().bishop_mask(winnerColor));
     int kn = _lsb64(board.fmgr().knight_mask(winnerColor));
     int dist = distanceCounter().getDistance(kw, kl);
-    ScoreType score = board.fmgr().weight(winnerColor) - dist;
+    ScoreType score = board.fmgr().weight(winnerColor).eval1() - dist;
     int kp = kl;
     if(FiguresCounter::s_whiteColors_[bp])
     {
@@ -447,7 +447,7 @@ void SpecialCasesDetector::initUsual()
     auto kw = board.kingPos(winnerColor);
     auto kl = board.kingPos(loserColor);
     auto score = (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
-    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kl];
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kl].eval1();
     if(auto n_mask = board.fmgr().knight_mask(winnerColor))
     {
       auto np = _lsb64(n_mask);
@@ -688,7 +688,7 @@ void SpecialCasesDetector::initUsual()
     auto kl = board.kingPos(loserColor);
     int npos = _lsb64(board.fmgr().knight_mask(loserColor));
     ScoreType score = 70 + (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
-    score -= EvalCoefficients::positionEvaluations_[1][Figure::TypeKing][kl];
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kl].eval1();
     score += distanceCounter().getDistance(npos, kl) * EvalCoefficients::figureToKingDistanceMulti_;
     if(winnerColor == Figure::ColorBlack)
       score = -score;
@@ -1160,7 +1160,7 @@ std::pair<bool, ScoreType> SpecialCasesDetector::evalBishopAndPawns(Board const&
 std::pair<bool, ScoreType> SpecialCasesDetector::eval(Board const& board) const
 {
   auto const& fmgr = board.fmgr();
-  if(fmgr.weight(Figure::ColorWhite) == 0 || fmgr.weight(Figure::ColorBlack) == 0)
+  if(fmgr.weight(Figure::ColorWhite).eval32_ == 0 || fmgr.weight(Figure::ColorBlack).eval32_ == 0)
   {
     auto sc = toScpecialCase(fmgr);
     auto iter = matCases_.find(sc);

@@ -56,7 +56,8 @@ bool Engine::generateStartposMoves(int ictx)
   auto* e = b + sdata.numOfMoves_;
   std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
   auto const* hitem = hash_.find(board.fmgr().hashCode());
-  if (hitem && hitem->move_)
+  X_ASSERT(hitem == nullptr, "HItem not found in Hash table");
+  if (hitem->hkey_ == board.fmgr().hashCode()  && hitem->move_)
   {
     SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
     X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
@@ -679,9 +680,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
     if(const HItem * hitem = hash_.find(board.fmgr().hashCode()))
     {
-      X_ASSERT(hitem->hkey_ != board.fmgr().hashCode(), "invalid hash item found");
-      (Move&)hmove = hitem->move_;
-      singular = hitem->singular_;
+      if (hitem->hkey_ == board.fmgr().hashCode()) {
+        (Move&)hmove = hitem->move_;
+        singular = hitem->singular_;
+      }
     }
   }
 #endif
@@ -1047,117 +1049,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
   return scoreBest;
 }
-
-
-/// extract data from hash table
-#ifdef USE_HASH
-void Engine::prefetchHash(int ictx)
-{
-  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
-  auto& sctx = scontexts_[ictx];
-  hash_.prefetch(sctx.board_.fmgr().hashCode());
-}
-
-GHashTable::Flag Engine::getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular)
-{
-  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
-  auto& sctx = scontexts_[ictx];
-
-  auto& board = sctx.board_;
-  auto const* pitem = hash_.find(board.fmgr().hashCode());
-  if(!pitem)
-    return GHashTable::NoFlag;
-
-  auto hitem = *pitem;
-  if(hitem.hkey_ != board.fmgr().hashCode())
-    return GHashTable::NoFlag;
-
-  singular = hitem.singular_;
-  hmove = hitem.move_;
-  if(pv || !board.fmgr().weight(Figure::ColorBlack) || !board.fmgr().weight(Figure::ColorWhite))
-    return GHashTable::AlphaBetta;
-
-  depth = (depth + ONE_PLY - 1) / ONE_PLY;
-
-  hscore = hitem.score_;
-  if(hscore >= Figure::MatScore-MaxPly)
-    hscore = hscore - ply;
-  else if(hscore <= MaxPly-Figure::MatScore)
-    hscore = hscore + ply;
-
-  X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
-
-  if(hitem.flag_  != GHashTable::NoFlag && (int)hitem.depth_ >= depth && ply > 0 && hscore != 0)
-  {
-    if(GHashTable::Alpha == hitem.flag_ && hscore <= alpha)
-    {
-      X_ASSERT(!sctx.stop_ && alpha < -32760, "invalid hscore");
-      return GHashTable::Alpha;
-    }
-
-    if(hitem.flag_ > GHashTable::Alpha && hscore >= betta && hmove)
-    {
-      if(betta > 0 && board.hasReps(hmove))
-      {
-        return GHashTable::AlphaBetta;
-      }
-#ifdef VERIFY_LMR
-      else
-      {
-        /// danger move was reduced - recalculate it with full depth
-        auto const& prev = board.lastUndo();
-        if(hitem.threat_ && prev.is_reduced())
-        {
-          hscore = betta-1;
-          return GHashTable::Alpha;
-        }
-        return GHashTable::Betta;
-      }
-#endif
-    }
-  }
-
-  return GHashTable::AlphaBetta;
-}
-
-/// insert data to hash table
-void Engine::putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular, bool pv)
-{
-  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
-  auto& sctx = scontexts_[ictx];
-
-  auto& board = sctx.board_;
-  if (board.hasReps())
-    return;
-
-  GHashTable::Flag flag = GHashTable::NoFlag;
-  if(score != 0)
-  {
-    if ( score <= alpha || !move )
-      flag = GHashTable::Alpha;
-    else if(score >= betta)
-      flag = GHashTable::Betta;
-    else
-      flag = GHashTable::AlphaBetta;
-  }
-  if ( score >= +Figure::MatScore-MaxPly )
-    score += ply;
-  else if ( score <= -Figure::MatScore+MaxPly )
-    score -= ply;
-  hash_.push(board.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat, singular, pv);
-}
-
-void Engine::putCaptureHash(int ictx, const Move & move, bool pv)
-{
-  X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
-  auto& sctx = scontexts_[ictx];
-  auto& board = sctx.board_;
-  if(!move || board.hasReps())
-    return;
-  hash_.push(board.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false, false, pv);
-}
-#endif
-
 
 //////////////////////////////////////////////////////////////////////////
 // is given movement caused by previous? this mean that if we don't do this move we loose
