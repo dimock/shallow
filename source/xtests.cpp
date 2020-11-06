@@ -290,7 +290,7 @@ void analyzeFen(std::string const& fname)
       return;
     proc.setBoard(board);
     proc.clear();
-    proc.setThreadsNumber(4);
+    proc.setThreadsNumber(1);
     //proc.file2hash("D:\\Projects\\gitproj\\hash\\hash");
     proc.analyze();
   },
