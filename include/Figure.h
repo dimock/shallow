@@ -165,6 +165,7 @@ public:
   {
     hashCode_ = 0ULL;
     kpwnCode_ = 0ULL;
+    fgrsCode_ = 0ULL;
     fcounter_[0].clear();
     fcounter_[1].clear();
     score_.eval32_ = 0;
@@ -177,6 +178,8 @@ public:
     fcounter_[c].incr(c, t, p);
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
+    const BitMask & fc = fcode(c, t);
+    fgrsCode_ ^= fc;
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
     // + for black color. invert the sign
@@ -191,6 +194,8 @@ public:
     fcounter_[c].decr(c, t, p);
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
+    const BitMask & fc = fcode(c, t);
+    fgrsCode_ ^= fc;
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
     // + for black color. invert the sign
@@ -249,7 +254,6 @@ public:
   inline void hashColor()
   {
     hashCode_ ^= colorCode();
-    //kpwnCode_ ^= colorCode();
   }
 
   inline void hashNullmove()
@@ -259,6 +263,7 @@ public:
 
   void restoreHash(const BitMask & hcode) { hashCode_ = hcode; }
   void restoreKpwnCode(const BitMask & pcode) { kpwnCode_ = pcode; }
+  void restoreFgrsCode(const BitMask & fcode) { fgrsCode_ = fcode; }
 
   inline int tcount(Figure::Type type, Figure::Color color) const { return fcounter_[color].tcount(type); }
   inline int pawns(Figure::Color color) const { return fcounter_[color].pawns(); }
@@ -282,11 +287,17 @@ public:
 
   inline const BitMask & hashCode() const { return hashCode_; }
   inline const BitMask & kpwnCode() const { return kpwnCode_; }
+  inline const BitMask & fgrsCode() const { return fgrsCode_; }
 
   inline const ScoreType32 score() const { return score_; }
 
   //inline int32 eval32() const { return eval32_; }
   inline void resoreEval(int32 ev32) { score_.eval32_ = ev32; }
+
+  inline const BitMask & fcode(const Figure::Color c, const Figure::Type t) const
+  {
+    return s_zobristCodes_[(c << 3) | t];
+  }
 
   inline const BitMask & code(const Figure::Color c, const Figure::Type t, int p) const
   {
@@ -317,6 +328,7 @@ private:
 
   BitMask hashCode_{};
   BitMask kpwnCode_{};
+  BitMask fgrsCode_{};
   FiguresCounter fcounter_[2];
   ScoreType32 score_;
 };

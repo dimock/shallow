@@ -21,6 +21,7 @@ void Board::makeMove(const Move & move)
   // save Zobrist keys
   undo.zcode_ = fmgr_.hashCode();
   undo.zcode_kpw_ = fmgr_.kpwnCode();
+  undo.zcode_fgrs_ = fmgr_.fgrsCode();
   // clear flags
   undo.mflags_ = 0;
   // clear eaten type
@@ -267,6 +268,7 @@ void Board::unmakeMove(const Move& move)
 
   fmgr_.restoreHash(undo.zcode_);
   fmgr_.restoreKpwnCode(undo.zcode_kpw_);
+  fmgr_.restoreFgrsCode(undo.zcode_fgrs_);
 }
 
 void Board::makeNullMove()

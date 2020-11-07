@@ -75,6 +75,7 @@ struct UndoInfo
 
   uint64        zcode_;
   uint64        zcode_kpw_;
+  uint64        zcode_fgrs_;
   BoardSaveData data_;
   Move          move_;
   uint8         mflags_;
