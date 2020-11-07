@@ -260,22 +260,8 @@ public:
 
 ALIGN_MSC(8) struct ALIGN_GCC(8) HEval
 {
-  HEval() : hkey_(0), mask_(0) {}
-
-  uint32     hkey_;
-
-  union
-  {
-  struct
-  {
-    int32  common_  : 10,
-           opening_ : 10,
-           endGame_ : 10,
-           initizalized_ : 1;
-  };
-
-  uint32   mask_;
-  };
+  uint32      hkey_{};
+  ScoreType32 score_;
 };
 
 class EHashTable : public HashTable<HEval>

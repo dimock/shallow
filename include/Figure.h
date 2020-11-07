@@ -175,11 +175,17 @@ public:
 
   inline void incr(const Figure::Color c, const Figure::Type t, int p)
   {
+    BitMask fc = code(c, t, fcounter_[c].tcount(t));
+    fgrsCode_ ^= fc;
+
     fcounter_[c].incr(c, t, p);
+
+    fc = code(c, t, fcounter_[c].tcount(t));
+    fgrsCode_ ^= fc;
+
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
-    const BitMask & fc = fcode(c, t);
-    fgrsCode_ ^= fc;
+    
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
     // + for black color. invert the sign
@@ -191,11 +197,17 @@ public:
 
   inline void decr(const Figure::Color c, const Figure::Type t, int p)
   {
+    BitMask fc = code(c, t, fcounter_[c].tcount(t));
+    fgrsCode_ ^= fc;
+
     fcounter_[c].decr(c, t, p);
+
+    fc = code(c, t, fcounter_[c].tcount(t));
+    fgrsCode_ ^= fc;
+
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
-    const BitMask & fc = fcode(c, t);
-    fgrsCode_ ^= fc;
+
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
     // + for black color. invert the sign

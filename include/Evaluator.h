@@ -201,7 +201,7 @@ private:
   // calculate or take from hash
   // pawns structure for middle & end game
   // + king's pawn shield???
-  PasserInfo hashedEvaluation();
+  //PasserInfo hashedEvaluation();
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
   bool isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
@@ -238,7 +238,7 @@ private:
     return NEngine::couldIntercept(*board_, inv_mask_all, finfo_[color].attack_mask_, color, pawn_pos, promo_pos, stepsMax);
   }
 
-  FullScore evaluateMaterialDiff() const;
+  ScoreType32 evaluateMaterialDiff();
 
   /// find knight and pawn forks
   ScoreType evaluateForks(Figure::Color color);
@@ -268,8 +268,10 @@ private:
 
 #ifdef USE_HASH
   EHashTable ehash_{18};
+  EHashTable fhash_{18};
 #else
   EHashTable ehash_{0};
+  EHashTable fhash_{0};
 #endif
 
   static const BitMask castle_mask_[2][2];

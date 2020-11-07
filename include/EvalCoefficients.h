@@ -87,15 +87,15 @@ struct EvalCoefficients
   static int openRook_[2][2];
 
   // material diff
-  static int doubleBishopBonus_[2][10];
-  static int twoKnightsBonus_[2][10];
-  static int oneBishopBonus_[2][10];
-  static int twoBishopsBonus_[2][10];
-  static int twoRooksBonus_[2][10];
-  static int figureAgainstPawnBonus_[2][10];
-  static int rookAgainstFigureBonus_[2][10];
-  static int figuresAgainstRookBonus_[2][10];
-  static int rookAgainstPawnBonus_[2][10];
+  static ScoreType32 doubleBishopBonus_[10];
+  static ScoreType32 twoKnightsBonus_[10];
+  static ScoreType32 oneBishopBonus_[10];
+  static ScoreType32 twoBishopsBonus_[10];
+  static ScoreType32 twoRooksBonus_[10];
+  static ScoreType32 figureAgainstPawnBonus_[10];
+  static ScoreType32 rookAgainstFigureBonus_[10];
+  static ScoreType32 figuresAgainstRookBonus_[10];
+  static ScoreType32 rookAgainstPawnBonus_[10];
 
   static int pawnShieldA_[2];
   static int pawnShieldB_[2];

@@ -149,6 +149,9 @@ ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
   if(!ehash_.empty())
     ehash_.prefetch(board_->fmgr().kpwnCode());
 
+  if (!fhash_.empty())
+    fhash_.prefetch(board_->fmgr().fgrsCode());
+
   if(board_->matState())
     return -Figure::MatScore;
   else if(board_->drawState())
@@ -216,7 +219,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   // determine game phase (opening, middle or end game)
   auto phaseInfo = detectPhase();
-  //score += evaluateMaterialDiff();
+  score32 += evaluateMaterialDiff();
 
   score32 += fmgr.score();
 
@@ -313,46 +316,45 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   return score;
 }
 
-Evaluator::PasserInfo Evaluator::hashedEvaluation()
-{
-  HEval * heval = 0;
-  const uint64 & code = board_->fmgr().kpwnCode();
-  uint32 hkey = (uint32)(code >> 32);
-
-  if(!ehash_.empty())
-  {
-    heval = ehash_.get(code);
-
-    if(heval->hkey_ == hkey && heval->initizalized_)
-    {
-      PasserInfo info;
-      info.score.common_ = heval->common_;
-      info.score.opening_ = heval->opening_;
-      info.score.endGame_ = heval->endGame_;
-#ifndef NDEBUG
-      auto hscore = evaluatePawns().score;
-      hscore.opening_ += evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
-      X_ASSERT(!(info.score == hscore), "invalid pawns+king score in hash");
-#endif
-      return info;
-    }
-  }
-
-  PasserInfo info = evaluatePawns();
-  int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
-  info.score.opening_ += kingSafety;
-
-  if(heval)
-  {
-    heval->hkey_ = hkey;
-    heval->common_ = info.score.common_;
-    heval->opening_ = info.score.opening_;
-    heval->endGame_ = info.score.endGame_;
-    heval->initizalized_ = 1;
-  }
-
-  return info;
-}
+//Evaluator::PasserInfo Evaluator::hashedEvaluation()
+//{
+//  HEval * heval = 0;
+//  const uint64 & code = board_->fmgr().kpwnCode();
+//  uint32 hkey = (uint32)(code >> 32);
+//
+//  if(!ehash_.empty())
+//  {
+//    heval = ehash_.get(code);
+//
+//    if(heval->hkey_ == hkey && heval->initizalized_)
+//    {
+//      PasserInfo info;
+//      info.score.common_ = heval->common_;
+//      info.score.opening_ = heval->opening_;
+//      info.score.endGame_ = heval->endGame_;
+//#ifndef NDEBUG
+//      auto hscore = evaluatePawns().score;
+//      hscore.opening_ += evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
+//      X_ASSERT(!(info.score == hscore), "invalid pawns+king score in hash");
+//#endif
+//      return info;
+//    }
+//  }
+//
+//  PasserInfo info = evaluatePawns();
+//  int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
+//  info.score.opening_ += kingSafety;
+//
+//  if(heval)
+//  {
+//    heval->hkey_ = hkey;
+//    heval->score_ = info.score.common_;
+//    heval->opening_ = info.score.opening_;
+//    heval->endGame_ = info.score.endGame_;
+//  }
+//
+//  return info;
+//}
 
 // TODO: optimization required
 int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const
@@ -972,12 +974,20 @@ bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) cons
   return true;
 }
 
-Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
+ScoreType32 Evaluator::evaluateMaterialDiff()
 {
-  const FiguresManager & fmgr = board_->fmgr();
+#ifdef USE_HASH
+  const uint64 & code = board_->fmgr().fgrsCode();
+  HEval * heval = fhash_.get(code);
+  uint32 hkey = (uint32)(code >> 32);
+  if (heval->hkey_ == hkey)
+  {
+    return heval->score_;
+  }
+#endif
 
-  FullScore score;
-  score.endGame_ = (fmgr.pawns(Figure::ColorWhite) - fmgr.pawns(Figure::ColorBlack)) * EvalCoefficients::pawnEndgameBonus_;
+  const FiguresManager & fmgr = board_->fmgr();
+  ScoreType32 score{0, (fmgr.pawns(Figure::ColorWhite) - fmgr.pawns(Figure::ColorBlack)) * EvalCoefficients::pawnEndgameBonus_ };
 
   int pawnsDiff = fmgr.pawns(Figure::ColorWhite) - fmgr.pawns(Figure::ColorBlack);
   int knightsDiff = fmgr.knights(Figure::ColorWhite) - fmgr.knights(Figure::ColorBlack);
@@ -995,14 +1005,12 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
   if (fmgr.bishops(Figure::ColorWhite) >= 2)
   {
     const int pawnsN = fmgr.pawns(Figure::ColorWhite);
-    score.opening_ += EvalCoefficients::doubleBishopBonus_[0][pawnsN];
-    score.endGame_ += EvalCoefficients::doubleBishopBonus_[1][pawnsN];
+    score += EvalCoefficients::doubleBishopBonus_[pawnsN];
   }
   if (fmgr.bishops(Figure::ColorBlack) >= 2)
   {
     const int pawnsN = fmgr.pawns(Figure::ColorBlack);
-    score.opening_ -= EvalCoefficients::doubleBishopBonus_[0][pawnsN];
-    score.endGame_ -= EvalCoefficients::doubleBishopBonus_[1][pawnsN];
+    score -= EvalCoefficients::doubleBishopBonus_[pawnsN];
   }
 
   // bonus for 2 knights
@@ -1011,16 +1019,14 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
     int kndiff = sign(knightsDiff);
     Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
     const int pawnsN = fmgr.pawns(ncolor);
-    score.opening_ += kndiff * EvalCoefficients::twoKnightsBonus_[0][pawnsN];
-    score.endGame_ += kndiff * EvalCoefficients::twoKnightsBonus_[1][pawnsN];
+    score += EvalCoefficients::twoKnightsBonus_[pawnsN] * kndiff;
   }
   // bonus for one bishops
   if (bishopsDiff == 1 || bishopsDiff == -1)
   {
     Figure::Color ncolor = static_cast<Figure::Color>(bishopsDiff > 0);
     const int pawnsN = fmgr.pawns(ncolor);
-    score.opening_ += bishopsDiff * EvalCoefficients::oneBishopBonus_[0][pawnsN];
-    score.endGame_ += bishopsDiff * EvalCoefficients::oneBishopBonus_[1][pawnsN];
+    score += EvalCoefficients::oneBishopBonus_[pawnsN] * bishopsDiff;
   }
   // bonus for 2 bishops
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
@@ -1028,8 +1034,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
     int bdiff = sign(bishopsDiff);
     Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
     const int pawnsN = fmgr.pawns(bcolor);
-    score.opening_ += bdiff * EvalCoefficients::twoBishopsBonus_[0][pawnsN];
-    score.endGame_ += bdiff * EvalCoefficients::twoBishopsBonus_[1][pawnsN];
+    score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
   // bonus for 2 rooks
   if (rooksDiff >= 2 || rooksDiff <= -2)
@@ -1037,8 +1042,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
     int rdiff = sign(rooksDiff);
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     const int pawnsN = fmgr.pawns(rcolor);
-    score.opening_ += rdiff * EvalCoefficients::twoRooksBonus_[0][pawnsN];
-    score.endGame_ += rdiff * EvalCoefficients::twoRooksBonus_[1][pawnsN];
+    score += EvalCoefficients::twoRooksBonus_[pawnsN] * rdiff;
   }
   // Figure vs. Pawns
   if(!rooksDiff && figuresDiff*pawnsDiff < 0)
@@ -1046,8 +1050,7 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     const int pawnsN = fmgr.pawns(fcolor);
     int k = sign(figuresDiff);
-    score.opening_ += k * EvalCoefficients::figureAgainstPawnBonus_[0][pawnsN];
-    score.endGame_ += k * EvalCoefficients::figureAgainstPawnBonus_[1][pawnsN];
+    score += EvalCoefficients::figureAgainstPawnBonus_[pawnsN] * k;
   }
   // Rook vs. Pawns
   if(!figuresDiff && rooksDiff*pawnsDiff < 0)
@@ -1055,16 +1058,14 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     const int pawnsN = fmgr.pawns(rcolor);
     int k = sign(rooksDiff);
-    score.opening_ += k * EvalCoefficients::rookAgainstPawnBonus_[0][pawnsN];
-    score.endGame_ += k * EvalCoefficients::rookAgainstPawnBonus_[1][pawnsN];
+    score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * k;
   }
   // Knight|Bishop+Pawns vs. Rook
   if(rooksDiff*figuresDiff == -1)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     const int pawnsN = fmgr.pawns(rcolor);
-    score.opening_ += rooksDiff * EvalCoefficients::rookAgainstFigureBonus_[0][pawnsN];
-    score.endGame_ += rooksDiff * EvalCoefficients::rookAgainstFigureBonus_[1][pawnsN];
+    score += EvalCoefficients::rookAgainstFigureBonus_[pawnsN] * rooksDiff;
   }
   // 2 figures vs. Rook
   if((rooksDiff*figuresDiff <= -2) && (std::abs(rooksDiff) == 1))
@@ -1072,9 +1073,13 @@ Evaluator::FullScore Evaluator::evaluateMaterialDiff() const
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     const int pawnsN = fmgr.pawns(fcolor);
     int k = sign(rooksDiff);
-    score.opening_ -= k * EvalCoefficients::figuresAgainstRookBonus_[0][pawnsN];
-    score.endGame_ -= k * EvalCoefficients::figuresAgainstRookBonus_[1][pawnsN];
+    score -= EvalCoefficients::figuresAgainstRookBonus_[pawnsN] * k;
   }
+
+#ifdef USE_HASH
+    heval->hkey_ = hkey;
+    heval->score_ = score;
+#endif
 
   return score;
 }

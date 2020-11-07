@@ -88,15 +88,15 @@ namespace NEngine
 
   // material diff
   // endgame, opening
-  int EvalCoefficients::doubleBishopBonus_[2][10] = { {10, 15, 25, 30, 30, 30, 30, 30, 30, 30}, {5, 10, 15, 15, 15, 15, 15, 15, 15, 15} };
-  int EvalCoefficients::twoKnightsBonus_[2][10] = { {0, 5, 10, 15, 15, 15, 15, 15, 15, 15}, {0, 2, 5, 5, 5, 5, 5, 5, 5, 5} };
-  int EvalCoefficients::oneBishopBonus_[2][10] = { {2, 5, 10, 10, 10, 10, 10, 10, 10, 10}, {0, 2, 5, 5, 5, 5, 5, 5, 5, 5} };
-  int EvalCoefficients::twoBishopsBonus_[2][10] = { {15, 40, 60, 60, 60, 60, 60, 60, 60, 60}, {10, 20, 40, 40, 40, 40, 40, 40, 40, 40} };
-  int EvalCoefficients::twoRooksBonus_[2][10] = { {0, 5, 10, 10, 10, 10, 10, 10, 10, 10}, {0, 5, 10, 10, 10, 10, 10, 10, 10, 10} };
-  int EvalCoefficients::figureAgainstPawnBonus_[2][10] = { {0, 15, 45, 45, 45, 45, 45, 45, 45, 45}, {0, 5, 20, 20, 20, 20, 20, 20, 20, 20} };
-  int EvalCoefficients::rookAgainstFigureBonus_[2][10] = { {0, 5, 10, 10, 10, 10, 10, 10, 10, 10}, {0, 5, 10, 10, 10, 10, 10, 10, 10, 10} };
-  int EvalCoefficients::figuresAgainstRookBonus_[2][10] = { {0, 20, 30, 30, 30, 30, 30, 30, 30, 30}, {0, 15, 20, 20, 20, 20, 20, 20, 20, 20} };
-  int EvalCoefficients::rookAgainstPawnBonus_[2][10] = { {10, 30, 40, 40, 40, 40, 40, 40, 40, 40}, {10, 30, 40, 40, 40, 40, 40, 40, 40, 40} };
+  ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {10, 5}, {15, 10}, {25, 15}, {30, 15}, {30, 15}, {30, 15}, {30, 15}, {30, 15}, {30, 15}, {30, 15} };
+  ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 2}, {10, 5}, {15, 5}, {15, 5}, {15, 5}, {15, 5}, {15, 5}, {15, 5}, {15, 5} };
+  ScoreType32 EvalCoefficients::oneBishopBonus_[10] = { {2, 0}, {5, 2}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5} };
+  ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {15, 10}, {40, 20}, {60, 40}, {60, 40}, {60, 40}, {60, 40}, {60, 40}, {60, 40}, {60, 40}, {60, 40} };
+  ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
+  ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {15, 5}, {45, 20}, {45, 20}, {45, 20}, {45, 20}, {45, 20}, {45, 20}, {45, 20}, {45, 20} };
+  ScoreType32 EvalCoefficients::rookAgainstFigureBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
+  ScoreType32 EvalCoefficients::figuresAgainstRookBonus_[10] = { {0, 0}, {20, 15}, {30, 20}, {30, 20}, {30, 20}, {30, 20}, {30, 20}, {30, 20}, {30, 20}, {30, 20} };
+  ScoreType32 EvalCoefficients::rookAgainstPawnBonus_[10] = { {10, 10}, {30, 30}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40} };
 
   // arrays
   int EvalCoefficients::passerPawn_[8] = { 0, 5, 9, 20, 38, 65, 98, 0 };
