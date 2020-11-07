@@ -59,6 +59,51 @@ struct UsualGenerator
       }
     }
   }
+  
+  inline void generateBishops(Figure::Color color, BitMask const& mask_all, BitMask const& mask_all_inv)
+  {
+    auto rmask = board_.fmgr().bishop_mask(color);
+    for (; rmask;)
+    {
+      auto from = clear_lsb(rmask);
+      auto mask = magic_ns::bishop_moves(from, mask_all) & mask_all_inv;
+      for (; mask;)
+      {
+        auto to = clear_lsb(mask);
+        add(from, to);
+      }
+    }
+  }
+
+  inline void generateRooks(Figure::Color color, BitMask const& mask_all, BitMask const& mask_all_inv)
+  {
+    auto rmask = board_.fmgr().rook_mask(color);
+    for (; rmask;)
+    {
+      auto from = clear_lsb(rmask);
+      auto mask = magic_ns::rook_moves(from, mask_all) & mask_all_inv;
+      for (; mask;)
+      {
+        auto to = clear_lsb(mask);
+        add(from, to);
+      }
+    }
+  }
+
+  inline void generateQueens(Figure::Color color, BitMask const& mask_all, BitMask const& mask_all_inv)
+  {
+    auto qmask = board_.fmgr().queen_mask(color);
+    for (; qmask;)
+    {
+      auto from = clear_lsb(qmask);
+      auto mask = magic_ns::queen_moves(from, mask_all) & mask_all_inv;
+      for (; mask;)
+      {
+        auto to = clear_lsb(mask);
+        add(from, to);
+      }
+    }
+  }
 
   inline void generate()
   {
@@ -94,9 +139,9 @@ struct UsualGenerator
     }
     
     // bishops, rooks and queens movements
-    generate(Figure::TypeBishop, color, mask_all_inv);
-    generate(Figure::TypeRook, color, mask_all_inv);
-    generate(Figure::TypeQueen, color, mask_all_inv);
+    generateBishops(color, mask_all, mask_all_inv);
+    generateRooks(color, mask_all, mask_all_inv);
+    generateQueens(color, mask_all, mask_all_inv);
 
     // kings movements
     auto const& ki_pos  = board_.kingPos(color);
