@@ -17,7 +17,7 @@ struct EvalCoefficients
 
   // pawns
   static int pawnEndgameBonus_;
-  static int rookBehindBonus_;
+  static ScoreType32 rookBehindBonus_;
   static int protectedPawnPressure_;
   static int unprotectedPawnPressure_;
   static int semiprotectedPawnPressure_;
@@ -74,12 +74,12 @@ struct EvalCoefficients
   static int attackedNearKing_;
 
   // arrays
-  static int doubledPawn_[2];
-  static int isolatedPawn_[2];
-  static int backwardPawn_[2];
-  static int unguardedPawn_[2];
-  static int unprotectedPawn_[2];
-  static int hasneighborPawn_[2];
+  static ScoreType32 doubledPawn_;
+  static ScoreType32 isolatedPawn_;
+  static ScoreType32 backwardPawn_;
+  static ScoreType32 unguardedPawn_;
+  static ScoreType32 unprotectedPawn_;
+  static ScoreType32 hasneighborPawn_;
   
   static int opponentPawnPressure_[8];
 
@@ -102,11 +102,15 @@ struct EvalCoefficients
   static int pawnShieldC_[2];
 
   // arrays
-  static int passerPawn_[8];
+  static ScoreType32 passerPawn_[8];
+  static ScoreType32 passerPawn2_[8];
+  static ScoreType32 passerPawn4_[8];
+  static ScoreType32 passerPawn38_[8];
+  static ScoreType32 passerPawnEx_[8];
   static int passerPawnSc_[8]; // special cases only
   static int farKingPawn_[8];
   static int cangoPawn_[8];
-  static int canpromotePawn_[8];
+  static ScoreType32 canpromotePawn_[8];
   // distance between forwards
   static int closeToPromotion_[8];
   static int kingToPawnBonus_[8];

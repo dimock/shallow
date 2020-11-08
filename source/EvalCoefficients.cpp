@@ -14,7 +14,7 @@ namespace NEngine
   int EvalCoefficients::queenRookVsPwPenalty_{ 80 };
   // pawns
   int EvalCoefficients::pawnEndgameBonus_{ 20 };
-  int EvalCoefficients::rookBehindBonus_{ 5 };
+  ScoreType32 EvalCoefficients::rookBehindBonus_{ 5, 5 };
   int EvalCoefficients::protectedPawnPressure_{ 1 };
   int EvalCoefficients::unprotectedPawnPressure_{ 6 };
   int EvalCoefficients::semiprotectedPawnPressure_{ 2 };
@@ -70,12 +70,12 @@ namespace NEngine
   int EvalCoefficients::figureToKingDistanceMulti_{ 2 };
 
   // arrays
-  int EvalCoefficients::doubledPawn_[2] = { -12, -10 };
-  int EvalCoefficients::isolatedPawn_[2] = { -15, -13 };
-  int EvalCoefficients::backwardPawn_[2] = { -10, -9 };
-  int EvalCoefficients::unguardedPawn_[2] = { -6, -3 };
-  int EvalCoefficients::unprotectedPawn_[2] = { -5, -3 };
-  int EvalCoefficients::hasneighborPawn_[2] = { 3, 2 };
+  ScoreType32 EvalCoefficients::doubledPawn_ = { -12, -10 };
+  ScoreType32 EvalCoefficients::isolatedPawn_ = { -15, -13 };
+  ScoreType32 EvalCoefficients::backwardPawn_ = { -10, -9 };
+  ScoreType32 EvalCoefficients::unguardedPawn_ = { -6, -3 };
+  ScoreType32 EvalCoefficients::unprotectedPawn_ = { -5, -3 };
+  ScoreType32 EvalCoefficients::hasneighborPawn_ = { 3, 2 };
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 1, 0, 0, 0 };
 
@@ -99,10 +99,14 @@ namespace NEngine
   ScoreType32 EvalCoefficients::rookAgainstPawnBonus_[10] = { {10, 10}, {30, 30}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40} };
 
   // arrays
-  int EvalCoefficients::passerPawn_[8] = { 0, 5, 9, 20, 38, 65, 98, 0 };
+  ScoreType32 EvalCoefficients::passerPawn_[8]  = { {0, 0}, {5, 5}, {9, 9}, {20, 20}, {38, 38}, {65, 65}, {98, 98}, {0, 0} };
+  ScoreType32 EvalCoefficients::passerPawn2_[8] = { {0, 0}, {2, 2}, {4, 4}, {10, 10}, {19, 19}, {32, 32}, {49, 49}, {0, 0} };
+  ScoreType32 EvalCoefficients::passerPawn4_[8] = { {0, 0}, {1, 1}, {2, 2}, {5, 5}, {9, 9}, {16, 16}, {24, 24}, {0, 0} };
+  ScoreType32 EvalCoefficients::passerPawn38_[8] = { {0, 0}, {2, 2}, {3, 3}, {7, 7}, {14, 14}, {24, 24}, {37, 37}, {0, 0} };
+  ScoreType32 EvalCoefficients::passerPawnEx_[8] = { {0, 0}, {5, 10}, {9, 18}, {20, 40}, {38, 76}, {65, 130}, {98, 196}, {0, 0} };
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 3, 4, 8, 14, 23, 35, 0 };
-  int EvalCoefficients::canpromotePawn_[8] = { 0, 5, 9, 23, 45, 75, 115, 0 };
+  ScoreType32 EvalCoefficients::canpromotePawn_[8] = { {0, 0}, {5, 5}, {9, 9}, {23, 23}, {45, 45}, {75, 75}, {115, 115}, {0, 0} };
   int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 6, 8, 10, 12, 16 };
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 

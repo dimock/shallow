@@ -137,7 +137,7 @@ namespace
     Index kingP(board.kingPos(pawnColor));
     Index kingO(board.kingPos(ocolor));
     int pcy = pawn_colored_y_[pawnColor][index.y()];
-    score += EvalCoefficients::passerPawn_[pcy];
+    score += EvalCoefficients::passerPawn_[pcy].eval1();
     int pp = index.x() | (pawnColor * 56);
     int o_dist_promo = distanceCounter().getDistance(kingO, pp) - (board.color() == ocolor);
     int dist_promo = distanceCounter().getDistance(kingP, pp);
@@ -149,7 +149,7 @@ namespace
       score = (score * 3) / 4;
     }
     else {
-      score += EvalCoefficients::passerPawn_[pcy] / 2;
+      score += EvalCoefficients::passerPawn2_[pcy].eval1();
     }
     if (index.x() == 0 || index.x() == 7) {
       score = (score * 3) / 4;

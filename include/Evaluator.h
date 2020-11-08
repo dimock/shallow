@@ -88,9 +88,9 @@ class Evaluator
 
   struct PasserInfo
   {
-    FullScore score;
-    BitMask   passers_[2] = {};
-    bool      passers_observed_[2] = {};
+    ScoreType32 score_;
+    BitMask     passers_[2] = {};
+    bool        passers_observed_[2] = {};
   };
 
   struct FieldsInfo
@@ -199,9 +199,9 @@ private:
   PhaseInfo detectPhase() const;
 
   // calculate or take from hash
-  // pawns structure for middle & end game
-  // + king's pawn shield???
-  //PasserInfo hashedEvaluation();
+  // pawns structure for middle & end game + king's pawn shield
+  PasserInfo hashedEvaluation();
+  
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
   bool isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
@@ -226,8 +226,8 @@ private:
   FullScore evaluateKingPressure(Figure::Color color);
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
-  PasserInfo passerEvaluation(Figure::Color color, PasserInfo const&);
-  FullScore passerEvaluation(PasserInfo const&);
+  PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);
+  ScoreType32 passerEvaluation(PasserInfo const&);
 
   // search path from opponent king to pawn's promotion path of given color
   // idea from CCRL

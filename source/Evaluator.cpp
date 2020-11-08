@@ -90,52 +90,52 @@ void Evaluator::prepare()
     finfo_[1].attack_mask_ = finfo_[1].pawnAttacks_;
   }
 
-  // attacked fields near king
-  {
-    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
-    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
-
-    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
-    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
-
-    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
-    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
-
-    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
-    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
-    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-  }
-  
-  // other mask
-  {
-    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
-    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
-    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
-
-    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-
-    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-
-    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
-    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-
-    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
-    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-
-    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
-    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
-
-    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
-    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
-  }
+//  // attacked fields near king
+//  {
+//    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
+//    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
+//
+//    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
+//    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
+//
+//    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
+//    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
+//
+//    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
+//    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+//
+//#ifdef GENERATE_MAT_MOVES_IN_EVAL
+//    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
+//    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
+//#endif // GENERATE_MAT_MOVES_IN_EVAL
+//  }
+//  
+//  // other mask
+//  {
+//    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
+//    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
+//    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
+//
+//    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+//    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+//
+//    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+//    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+//
+//    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+//    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
+//    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+//
+//    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+//    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
+//    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+//
+//    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
+//    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
+//
+//    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
+//    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
+//  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -231,11 +231,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //    return score0;
   //}
 
-  //prepare();
+  prepare();
 
-  //// take pawns eval from hash if possible
-  //auto hashedScore = hashedEvaluation();
-  //score += hashedScore.score;
+  // take pawns eval from hash if possible
+  auto hashedScore = hashedEvaluation();
+  score32 += hashedScore.score_;
 
   //score += evaluateKnights();
   //score += evaluateBishops();
@@ -317,45 +317,36 @@ Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
   return score;
 }
 
-//Evaluator::PasserInfo Evaluator::hashedEvaluation()
-//{
-//  HEval * heval = 0;
-//  const uint64 & code = board_->fmgr().kpwnCode();
-//  uint32 hkey = (uint32)(code >> 32);
-//
-//  if(!ehash_.empty())
-//  {
-//    heval = ehash_.get(code);
-//
-//    if(heval->hkey_ == hkey && heval->initizalized_)
-//    {
-//      PasserInfo info;
-//      info.score.common_ = heval->common_;
-//      info.score.opening_ = heval->opening_;
-//      info.score.endGame_ = heval->endGame_;
-//#ifndef NDEBUG
-//      auto hscore = evaluatePawns().score;
-//      hscore.opening_ += evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
-//      X_ASSERT(!(info.score == hscore), "invalid pawns+king score in hash");
-//#endif
-//      return info;
-//    }
-//  }
-//
-//  PasserInfo info = evaluatePawns();
-//  int kingSafety = evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack);
-//  info.score.opening_ += kingSafety;
-//
-//  if(heval)
-//  {
-//    heval->hkey_ = hkey;
-//    heval->score_ = info.score.common_;
-//    heval->opening_ = info.score.opening_;
-//    heval->endGame_ = info.score.endGame_;
-//  }
-//
-//  return info;
-//}
+Evaluator::PasserInfo Evaluator::hashedEvaluation()
+{
+#ifdef USE_HASH
+  const uint64 & code = board_->fmgr().kpwnCode();
+  uint32 hkey = (uint32)(code >> 32);
+  HEval* heval = ehash_.get(code);
+  if(heval->hkey_ == hkey)
+  {
+    PasserInfo info;
+    info.score_ = heval->score_;
+#ifndef NDEBUG
+    auto hscore = evaluatePawns().score_;
+    hscore += ScoreType32{ evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack), 0 };
+    X_ASSERT(!(info.score_ == hscore), "invalid pawns+king score in hash");
+#endif
+    return info;
+  }
+#endif
+
+  PasserInfo info = evaluatePawns();
+  ScoreType32 kingSafety{ evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack), 0 };
+  info.score_ += kingSafety;
+
+#ifdef USE_HASH
+  heval->hkey_ = hkey;
+  heval->score_ = info.score_;
+#endif
+
+  return info;
+}
 
 // TODO: optimization required
 int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const
@@ -503,8 +494,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       auto const& dblmsk = pawnMasks().mask_doubled(x);
       auto num_dbl = pop_count(pmask & dblmsk);
       X_ASSERT(num_dbl <= 0, "doubled pawns number is zero or negative");
-      info.score.opening_ += (num_dbl - 1) * EvalCoefficients::doubledPawn_[0];
-      info.score.endGame_ += (num_dbl - 1) * EvalCoefficients::doubledPawn_[1];
+      info.score_ += EvalCoefficients::doubledPawn_ * (num_dbl - 1);
     }
 
     auto const& protectMask = movesTable().pawnCaps(ocolor, n);
@@ -517,17 +507,11 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool unprotected = !unguarded && !isolated && !backward && !pprotected;
     bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
 
-    info.score.opening_ += isolated * EvalCoefficients::isolatedPawn_[0];
-    info.score.opening_ += backward * EvalCoefficients::backwardPawn_[0];
-    info.score.opening_ += unguarded * EvalCoefficients::unguardedPawn_[0];
-    info.score.opening_ += unprotected * EvalCoefficients::unprotectedPawn_[0];
-    info.score.opening_ += neighbors * EvalCoefficients::hasneighborPawn_[0];
-
-    info.score.endGame_ += isolated * EvalCoefficients::isolatedPawn_[1];
-    info.score.endGame_ += backward * EvalCoefficients::backwardPawn_[1];
-    info.score.endGame_ += unguarded * EvalCoefficients::unguardedPawn_[1];
-    info.score.endGame_ += unprotected * EvalCoefficients::unprotectedPawn_[1];
-    info.score.endGame_ += neighbors * EvalCoefficients::hasneighborPawn_[1];
+    info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
+    info.score_ += EvalCoefficients::backwardPawn_ * backward;
+    info.score_ += EvalCoefficients::unguardedPawn_ * unguarded;
+    info.score_ += EvalCoefficients::unprotectedPawn_ * unprotected;
+    info.score_ += EvalCoefficients::hasneighborPawn_ * neighbors;
 
     // passer pawn
     const auto & halfpassmsk = pawnMasks().mask_forward(color, n);
@@ -541,10 +525,9 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       int cy = colored_y_[color][y];
       Index pp(x, py);
 
-      FullScore pwscore;
+      ScoreType32 pwscore;
       if (halfpasser)
       {
-        pwscore.common_ = EvalCoefficients::passerPawn_[cy] >> 1;
         BitMask attackers = passmsk & opmsk;
         int nguards = 0;
         BitMask guards = pawnMasks().mask_guards(color, n) & pmask;
@@ -561,27 +544,29 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
           }
         }
         if (nguards > 0 && nguards >= pop_count(attackers)) {
-          pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+          pwscore = EvalCoefficients::passerPawn38_[cy];
         }
-        pwscore >>= 1;
+        else {
+          pwscore = EvalCoefficients::passerPawn4_[cy];
+        }
       }
       else
       {
-        pwscore.common_ = EvalCoefficients::passerPawn_[cy];
+        pwscore = EvalCoefficients::passerPawn_[cy];
         int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
         int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
-        pwscore.endGame_ += (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_;
+        pwscore += ScoreType32{ 0, (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_ };
         if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
           while (guards) {
             int g = clear_lsb(guards);
             if (!(pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
-              pwscore.common_ += EvalCoefficients::passerPawn_[cy] >> 2;
+              pwscore += EvalCoefficients::passerPawn4_[cy];
               break;
             }
           }
         }
       }
-      info.score += pwscore;
+      info.score_ += pwscore;
     }
   }
 
@@ -592,20 +577,19 @@ Evaluator::PasserInfo Evaluator::evaluatePawns() const
 {
   auto info_w = evaluatePawns(Figure::ColorWhite);
   auto info_b = evaluatePawns(Figure::ColorBlack);
-  info_w.score -= info_b.score;
+  info_w.score_ -= info_b.score_;
   info_w.passers_observed_[0] = true;
   info_w.passers_observed_[1] = true;
   info_w.passers_[0] = info_b.passers_[0];
   return info_w;
 }
 
-
-Evaluator::FullScore Evaluator::passerEvaluation(PasserInfo const& pi)
+ScoreType32 Evaluator::passerEvaluation(PasserInfo const& pi)
 {
   auto infoW = passerEvaluation(Figure::ColorWhite, pi);
   auto infoB = passerEvaluation(Figure::ColorBlack, pi);
-  infoW.score -= infoB.score;
-  return infoW.score;
+  infoW.score_ -= infoB.score_;
+  return infoW.score_;
 }
 
 Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInfo const& pi)
@@ -643,7 +627,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
     const bool halfpasser = (opmsk & passmsk);
     const Index pp(x, py);
-    FullScore pwscore;
+    ScoreType32 pwscore;
 
     auto attack_mask = finfo_[color].attack_mask_;
     auto multiattack_mask = finfo_[color].multiattack_mask_;
@@ -655,7 +639,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       int rpos = color ? _msb64(behind_msk) : _lsb64(behind_msk);
       if (board_->is_nothing_between(n, rpos, inv_mask_all_))
       {
-        pwscore.common_ += EvalCoefficients::rookBehindBonus_;
+        pwscore += EvalCoefficients::rookBehindBonus_;
         auto r_attacks = magic_ns::rook_moves(rpos, mask_all_ & ~pmask);
         multiattack_mask |= attack_mask & r_attacks;
         attack_mask |= r_attacks;
@@ -667,7 +651,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       int rpos = color ? _msb64(o_behind_msk) : _lsb64(o_behind_msk);
       if (board_->is_nothing_between(n, rpos, inv_mask_all_))
       {
-        pwscore.common_ -= EvalCoefficients::rookBehindBonus_;
+        pwscore -= EvalCoefficients::rookBehindBonus_;
         auto or_attacks = magic_ns::rook_moves(rpos, mask_all_ & ~pmask);
         o_multiattack_mask |= o_attack_mask & or_attacks;
         o_attack_mask |= or_attacks;
@@ -678,12 +662,11 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     // ahead fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
     if (!fwd_mask) {
-      pwscore.common_  += EvalCoefficients::passerPawn_[cy];
-      pwscore.endGame_ += EvalCoefficients::passerPawn_[cy];
+      pwscore  += EvalCoefficients::passerPawnEx_[cy];
       // could promote on the next move and not attacked or it's turn
       if (cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
         !((o_attack_mask | fmgr.mask(ocolor)) & pawnMasks().mask_forward(color, n))) {
-        pwscore.common_ += EvalCoefficients::canpromotePawn_[cy];
+        pwscore += EvalCoefficients::canpromotePawn_[cy];
       }
     }
     else {
@@ -693,20 +676,15 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       if (steps > 0) {
         int steps_to_promotion = 7 - cy;
         X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
-        int prmBonus = (steps*EvalCoefficients::passerPawn_[cy]) / steps_to_promotion;
-        pwscore.common_  += prmBonus;
-        pwscore.endGame_ += prmBonus;
+        auto prmBonus = (EvalCoefficients::passerPawnEx_[cy] * steps);
+//        prmBonus /= steps_to_promotion;
+        pwscore += prmBonus;
       }
     }
 
-    //// opponent king could not go to my pawns promotion path
-    //if(couldIntercept(color, n, pp, std::abs(py - y) +1)) {
-    //  pwscore.endGame_ -= EvalCoefficients::farKingPawn_[cy];
-    //}
-
-    if (halfpasser)
-      pwscore >>= 1;
-    pinfo.score += pwscore;
+    //if (halfpasser)
+    //  pwscore /= 2;
+    pinfo.score_ += pwscore;
   }
   
   return pinfo;

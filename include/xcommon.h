@@ -141,6 +141,11 @@ struct ScoreType32
     result.eval32_ = -eval32_;
     return result;
   }
+
+  inline bool operator == (const ScoreType32& s) const
+  {
+    return s.eval32_ == eval32_;
+  }
 };
 
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
