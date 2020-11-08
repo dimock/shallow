@@ -10,6 +10,7 @@
 #include <xbitmath.h>
 #include <Helpers.h>
 #include <xalgorithm.h>
+#include <SpecialCases.h>
 
 namespace NEngine
 {

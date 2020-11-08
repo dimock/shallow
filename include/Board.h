@@ -810,4 +810,12 @@ private:
   std::vector<U> undoStackIntr_;
 };
 
+bool couldIntercept(Board const& board,
+  BitMask const& inv_mask_all,
+  BitMask const& attack_mask_c,
+  int8 color,
+  int pawn_pos,
+  int promo_pos,
+  int stepsLimit);
+
 } // NEngine

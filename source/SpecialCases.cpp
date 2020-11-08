@@ -1,5 +1,4 @@
 #include <SpecialCases.h>
-#include <Board.h>
 #include <xindex.h>
 #include <kpk.h>
 
@@ -12,22 +11,19 @@ namespace
   {
     Figure::Type  type_;
     Figure::Color color_;
-    char          count_;
+    int           count_;
   };
 
-  inline int calc_shift(Figure::Type t, Figure::Color c)
+  BitMask format(std::initializer_list<Triplet>&& figures)
   {
-    return (c << 5) + ((t - 1) << 2);
-  }
-  
-  SpecialCasesDetector::Scase format(std::initializer_list<Triplet>&& figures)
-  {
-    SpecialCasesDetector::Scase sc{};
-    for(auto const& f : figures)
-    {
-      sc |= ((uint64)f.count_) << calc_shift(f.type_, f.color_);
+    BitMask hkey = 0ULL;
+    hkey ^= FiguresManager::code(Figure::ColorBlack, Figure::TypeKing, 1);
+    hkey ^= FiguresManager::code(Figure::ColorWhite, Figure::TypeKing, 1);
+    for(auto const& f : figures) {
+      if(f.count_)
+        hkey ^= FiguresManager::code(f.color_, f.type_, f.count_);
     }
-    return sc;
+    return hkey;
   }
 
   const int pawn_colored_y_[2][8] = {
@@ -1150,31 +1146,6 @@ void SpecialCasesDetector::initWinnerLoser()
       };
     }
   }
-}
-
-inline SpecialCasesDetector::Scase toScpecialCase(FiguresManager const& fmgr)
-{
-  SpecialCasesDetector::Scase sc{};
-  for(int c = Figure::ColorBlack; c <= Figure::ColorWhite; ++c)
-  {
-    for(int t = Figure::TypePawn; t < Figure::TypeKing; ++t)
-    {
-      auto type = (Figure::Type)t;
-      auto color = (Figure::Color)c;
-      sc |= ((uint64)fmgr.tcount(type, color)) << calc_shift(type, color);
-    }
-  }
-  return sc;
-}
-
-std::pair<bool, ScoreType> SpecialCasesDetector::eval(Board const& board) const
-{
-  auto const& fmgr = board.fmgr();
-  auto sc = toScpecialCase(fmgr);
-  auto iter = scases_.find(sc);
-  if(iter != scases_.end())
-    return (iter->second)(board);
-  return { false, 0 };
 }
 
 } // NEngine

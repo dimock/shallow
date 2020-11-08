@@ -175,13 +175,11 @@ public:
 
   inline void incr(const Figure::Color c, const Figure::Type t, int p)
   {
-    BitMask fc = code(c, t, fcounter_[c].tcount(t));
-    fgrsCode_ ^= fc;
-
+    if (fcounter_[c].tcount(t)) {
+      fgrsCode_ ^= code(c, t, fcounter_[c].tcount(t));
+    }
     fcounter_[c].incr(c, t, p);
-
-    fc = code(c, t, fcounter_[c].tcount(t));
-    fgrsCode_ ^= fc;
+    fgrsCode_ ^= code(c, t, fcounter_[c].tcount(t));
 
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
@@ -197,13 +195,11 @@ public:
 
   inline void decr(const Figure::Color c, const Figure::Type t, int p)
   {
-    BitMask fc = code(c, t, fcounter_[c].tcount(t));
-    fgrsCode_ ^= fc;
-
+    fgrsCode_ ^= code(c, t, fcounter_[c].tcount(t));
     fcounter_[c].decr(c, t, p);
-
-    fc = code(c, t, fcounter_[c].tcount(t));
-    fgrsCode_ ^= fc;
+    if (fcounter_[c].tcount(t)) {
+      fgrsCode_ ^= code(c, t, fcounter_[c].tcount(t));
+    }
 
     const BitMask & uc = code(c, t, p);
     hashCode_ ^= uc;
@@ -306,32 +302,28 @@ public:
   //inline int32 eval32() const { return eval32_; }
   inline void resoreEval(int32 ev32) { score_.eval32_ = ev32; }
 
-  inline const BitMask & fcode(const Figure::Color c, const Figure::Type t) const
-  {
-    return s_zobristCodes_[(c << 3) | t];
-  }
-
-  inline const BitMask & code(const Figure::Color c, const Figure::Type t, int p) const
+  // HASH codes calculation
+  static inline const BitMask & code(const Figure::Color c, const Figure::Type t, int p)
   {
     return s_zobristCodes_[(p<<4) | (c<<3) | t];
   }
 
-  inline const BitMask & enpassantCode(uint8 pos, uint8 color) const
+  static inline const BitMask & enpassantCode(uint8 pos, uint8 color)
   {
     return s_zobristCodes_[ (pos<<4) | (color<<3) ];
   }
 
-  inline const BitMask & castleCode(uint8 color, uint8 index) const
+  static inline const BitMask & castleCode(uint8 color, uint8 index)
   {
     return s_zobristCastle_[color][index];
   }
 
-  inline const BitMask & colorCode() const
+  static inline const BitMask & colorCode()
   {
     return s_zobristColor_;
   }
 
-  inline const BitMask & nullmoveCode() const
+  static inline const BitMask & nullmoveCode()
   {
     return s_zobristNullmove_;
   }

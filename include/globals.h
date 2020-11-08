@@ -5,11 +5,12 @@ Board.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #include <MovesTable.h>
 #include <FigureDirs.h>
-#include <SpecialCases.h>
 #include <EvalCoefficients.h>
 
 namespace NEngine
 {
+
+class SpecialCasesDetector;
 
 namespace details
 {
