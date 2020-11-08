@@ -204,6 +204,29 @@ void see_perf_test(std::string const& fname)
   });
 }
 
+void saveFen(std::string const& ffname, std::string const& refname)
+{
+  std::ofstream ofs;
+  if (!refname.empty()) {
+    ofs.open(refname, std::ios::out);
+  }
+  testFen<Board, Move, UndoInfo>(
+    ffname,
+    [&ofs](size_t i, xEPD<Board, Move, UndoInfo>& e)
+  {
+    NEngine::Evaluator eval;
+    eval.initialize(&e.board_);
+    auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
+    if (ofs) {
+      ofs << i << ", " << score << std::endl;
+    }
+  },
+    [](std::string const& err_str)
+  {
+    std::cout << "Error: " << err_str << std::endl;
+  });
+}
+
 void evaluateFen(std::string const& ffname, std::string const& refname)
 {
   std::vector<int> refEvals;
