@@ -90,52 +90,52 @@ void Evaluator::prepare()
     finfo_[1].attack_mask_ = finfo_[1].pawnAttacks_;
   }
 
-//  // attacked fields near king
-//  {
-//    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
-//    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
-//
-//    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
-//    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
-//
-//    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
-//    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
-//
-//    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
-//    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
-//
-//#ifdef GENERATE_MAT_MOVES_IN_EVAL
-//    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
-//    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
-//#endif // GENERATE_MAT_MOVES_IN_EVAL
-//  }
-//  
-//  // other mask
-//  {
-//    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
-//    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
-//    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
-//
-//    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-//    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-//
-//    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-//    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-//
-//    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-//    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
-//    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-//
-//    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-//    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
-//    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-//
-//    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
-//    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
-//
-//    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
-//    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
-//  }
+  // attacked fields near king
+  {
+    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
+    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
+
+    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
+    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
+
+    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
+    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
+
+    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
+    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
+    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
+#endif // GENERATE_MAT_MOVES_IN_EVAL
+  }
+  
+  // other mask
+  {
+    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
+    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
+    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
+
+    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+
+    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+
+    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
+    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+
+    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
+    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+
+    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
+
+    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -237,13 +237,14 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto hashedScore = hashedEvaluation();
   score32 += hashedScore.score_;
 
-  //score += evaluateKnights();
-  //score += evaluateBishops();
-  //score += evaluateRook();
-  //score += evaluateQueens();
+  score32 += evaluateKnights();
+  score32 += evaluateBishops();
+  score32 += evaluateRook();
+  score32 += evaluateQueens();
 
-  //int score_mob = finfo_[Figure::ColorWhite].score_mob_ - finfo_[Figure::ColorBlack].score_mob_;
-  //score.common_ += score_mob;
+  auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
+  score_mob -= finfo_[Figure::ColorBlack].score_mob_;
+  score32 += score_mob;
 
   //auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
   //scoreKing -= evaluateKingPressure(Figure::ColorBlack);
@@ -1063,7 +1064,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   return score;
 }
 
-ScoreType Evaluator::evaluateForks(Figure::Color color)
+ScoreType32 Evaluator::evaluateForks(Figure::Color color)
 {
   Figure::Color ocolor = Figure::otherColor(color);
   BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
@@ -1130,13 +1131,13 @@ ScoreType Evaluator::evaluateForks(Figure::Color color)
   auto treat_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
   treat_mask &= ~counted_mask;
   auto min_treat_mask = (finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask;
-  auto generalScore = pop_count(treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_;
-  generalScore += (pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_) * EvalCoefficients::generalAttackBonus_) >> 2;
+  auto generalScore = EvalCoefficients::generalAttackBonus_ * pop_count(treat_mask & finfo_[ocolor].nbrq_mask_);
+  generalScore += (EvalCoefficients::generalAttackBonus_ * pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_)) >> 2;
   if (generalScore > 0 && color == board_->color()) {
-    generalScore += (generalScore >> 1);
+    generalScore += generalScore >> 1;
   }
   forkScore += generalScore;
-  return forkScore;
+  return ScoreType32{ forkScore, forkScore };
 }
 
 } //NEngine

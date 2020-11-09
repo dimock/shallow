@@ -25,15 +25,20 @@ struct EvalCoefficients
   static int kingToPasserDistanceBonus_;
 
   // forks & other treats
-  static int bishopsAttackBonus_;
-  static int knightForkBonus_;
-  static int doublePawnAttack_;
-  static int queenUnderRookAttackBonus_;
-  static int generalAttackBonus_;
-  static int immobileAttackBonus_;
-  static int discoveredCheckBonus_;
-  static int possibleCheckBonus_;
-  static int matTreatBonus_;
+  static ScoreType bishopsAttackBonus_;
+  static ScoreType knightForkBonus_;
+  static ScoreType doublePawnAttack_;
+  static ScoreType queenUnderRookAttackBonus_;
+  static ScoreType generalAttackBonus_;
+  static ScoreType generalAttackBonus4_;
+
+  // immobility
+  static ScoreType32 immobileAttackBonus_;
+
+  // check & mat treat
+  static ScoreType32 discoveredCheckBonus_;
+  static ScoreType32 possibleCheckBonus_;
+  static ScoreType32 matTreatBonus_;
 
   // king
   static int fakeCastle_;
@@ -43,17 +48,17 @@ struct EvalCoefficients
   static int pawnPenaltyC_;
 
   // blocked figure
-  static int knightBlocked_;
-  static int bishopBlocked_;
-  static int rookBlocked_;
+  static ScoreType32 knightBlocked_;
+  static ScoreType32 bishopBlocked_;
+  static ScoreType32 rookBlocked_;
 
   // king attacks
-  static int pawnKingAttack_;
-  static int knightKingAttack_;
-  static int bishopKingAttack_;
-  static int rookKingAttack_;
-  static int queenKingAttack_;
-  static int basicAttack_;
+  static ScoreType32 pawnKingAttack_;
+  static ScoreType32 knightKingAttack_;
+  static ScoreType32 bishopKingAttack_;
+  static ScoreType32 rookKingAttack_;
+  static ScoreType32 queenKingAttack_;
+  static ScoreType32 basicAttack_;
 
   static int generalKingPressure_;
   static int generalOpponentPressure_;
@@ -84,7 +89,7 @@ struct EvalCoefficients
   static int opponentPawnPressure_[8];
 
   // rook on open column
-  static int openRook_[2][2];
+  static ScoreType32 openRook_[2];
 
   // material diff
   static ScoreType32 doubleBishopBonus_[10];
@@ -116,15 +121,20 @@ struct EvalCoefficients
   static int kingToPawnBonus_[8];
 
   // mobility
-  static int knightMobility_[16];
-  static int bishopMobility_[16];
-  static int rookMobility_[16];
-  static int queenMobility_[32];
+  static ScoreType32 knightMobility_[16];
+  static ScoreType32 bishopMobility_[16];
+  static ScoreType32 rookMobility_[16];
+  static ScoreType32 queenMobility_[32];
+
+  static ScoreType32 knightPinned_;
+  static ScoreType32 bishopPinned_;
+  static ScoreType32 rookPinned_;
+  static ScoreType32 queenPinned_;
 
   static int bishopKnightMat_[64];
 
   // basic king pressure
-  static int kingDistanceBonus_[8][8];
+  static ScoreType32 kingDistanceBonus_[8][8];
 
   // position evaluation. 0 - black color, 1 - white color; color,type,pos
   static ScoreType32 positionEvaluations_[2][8][64];

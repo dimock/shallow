@@ -22,15 +22,20 @@ namespace NEngine
   int EvalCoefficients::kingToPasserDistanceBonus_{ 3 };
 
   // forks
-  int EvalCoefficients::bishopsAttackBonus_{ 65 };
-  int EvalCoefficients::knightForkBonus_{ 65 };
-  int EvalCoefficients::doublePawnAttack_{ 65 };
-  int EvalCoefficients::generalAttackBonus_{ 10 };
-  int EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
-  int EvalCoefficients::immobileAttackBonus_{ 30 };
-  int EvalCoefficients::discoveredCheckBonus_{ 20 };
-  int EvalCoefficients::possibleCheckBonus_{ 5 };
-  int EvalCoefficients::matTreatBonus_{ 150 };
+  ScoreType EvalCoefficients::bishopsAttackBonus_{ 65 };
+  ScoreType EvalCoefficients::knightForkBonus_{ 65 };
+  ScoreType EvalCoefficients::doublePawnAttack_{ 65 };
+  ScoreType EvalCoefficients::generalAttackBonus_{ 10 };
+  ScoreType EvalCoefficients::generalAttackBonus4_{ 2 };
+  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
+
+  // immobility
+  ScoreType32 EvalCoefficients::immobileAttackBonus_{ 30, 30 };
+
+  // check & mat treat
+  ScoreType32 EvalCoefficients::discoveredCheckBonus_{ 20, 20 };
+  ScoreType32 EvalCoefficients::possibleCheckBonus_{ 5, 5 };
+  ScoreType32 EvalCoefficients::matTreatBonus_{ 150, 150 };
 
   // king
   int EvalCoefficients::fakeCastle_{ -15 };
@@ -40,17 +45,17 @@ namespace NEngine
   int EvalCoefficients::pawnPenaltyC_{ -3 };
 
   // blocked figure
-  int EvalCoefficients::knightBlocked_{ 80 };
-  int EvalCoefficients::bishopBlocked_{ 80 };
-  int EvalCoefficients::rookBlocked_{ 80 };
+  ScoreType32 EvalCoefficients::knightBlocked_{ 80, 80 };
+  ScoreType32 EvalCoefficients::bishopBlocked_{ 80, 80 };
+  ScoreType32 EvalCoefficients::rookBlocked_{ 80, 80 };
 
   // king attacks
-  int EvalCoefficients::pawnKingAttack_{ 8 };
-  int EvalCoefficients::knightKingAttack_{ 8 };
-  int EvalCoefficients::bishopKingAttack_{ 8 };
-  int EvalCoefficients::rookKingAttack_{ 8 };
-  int EvalCoefficients::queenKingAttack_{ 10 };
-  int EvalCoefficients::basicAttack_{ 2 };
+  ScoreType32 EvalCoefficients::pawnKingAttack_{ 8, 8 };
+  ScoreType32 EvalCoefficients::knightKingAttack_{ 8, 8 };
+  ScoreType32 EvalCoefficients::bishopKingAttack_{ 8, 8 };
+  ScoreType32 EvalCoefficients::rookKingAttack_{ 8, 8 };
+  ScoreType32 EvalCoefficients::queenKingAttack_{ 10, 10 };
+  ScoreType32 EvalCoefficients::basicAttack_{ 2, 2 };
 
   int EvalCoefficients::generalKingPressure_{ 5 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
@@ -84,7 +89,7 @@ namespace NEngine
   int EvalCoefficients::pawnShieldC_[2] = { 6, 4 };
 
   // rook on open column
-  int EvalCoefficients::openRook_[2][2] = { {20, 8}, {8, 3} };
+  ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {8, 3} };
 
   // material diff
   // endgame, opening
@@ -111,11 +116,16 @@ namespace NEngine
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 
   // mobility
-  int EvalCoefficients::knightMobility_[16] = { -30, -15,  3,  5,  7,  8, 10, 12, 14 };
-  int EvalCoefficients::bishopMobility_[16] = { -30, -15,  3,  5,  7,  9, 12, 13, 14, 16, 20, 22, 23, 24, 25, 26 };
-  int EvalCoefficients::rookMobility_[16] = { -30, -15,  5,  8,  12,  16, 21, 25, 27, 29, 30, 31, 32, 33, 34, 35 };
-  int EvalCoefficients::queenMobility_[32] = { -60, -30,  6,  10, 13,  18, 23, 27, 30, 33, 36, 40, 43, 45, 47, 48,
-                                                 49,  50, 51,  52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64 };
+  ScoreType32 EvalCoefficients::knightMobility_[16] = { {-30, -30}, {-15, -15}, { 3,  3},  { 5,  5},  { 7,  7},  { 8,  8}, {10, 10}, {12, 12}, {14, 14} };
+  ScoreType32 EvalCoefficients::bishopMobility_[16] = { {-30, -30}, {-15, -15}, { 3,  3},  { 5,  5},  { 7,  7},  { 9,  9}, {12, 12}, {13, 13}, {14, 14}, {16, 16}, {20, 20}, {22, 22}, {23, 23}, {24, 24}, {25, 25}, {26, 26} };
+  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-30, -30}, {-15, -15}, { 5,  5},  { 8,  8},  {12, 12},  {16, 16}, {21, 21}, {25, 25}, {27, 27}, {29, 29}, {30, 30}, {31, 31}, {32, 32}, {33, 33}, {34, 34}, {35, 35} };
+  ScoreType32 EvalCoefficients::queenMobility_[32] =  { {-60, -60}, {-30, -30}, { 6,  6},  {10, 10},  {13, 13},  {18, 18}, {23, 23}, {27, 27}, {30, 30}, {33, 33}, {36, 36}, {40, 40}, {43, 43}, {45, 45}, {47, 47}, {48, 48},
+                                                        { 49,  49}, { 50,  50}, {51, 51},  {52, 52},  {53, 53},  {54, 54}, {55, 55}, {56, 56}, {57, 57}, {58, 58}, {59, 59}, {60, 60}, {61, 61}, {62, 62}, {63, 63}, {64, 64} };
+
+  ScoreType32 EvalCoefficients::knightPinned_ = { 15, 15 };
+  ScoreType32 EvalCoefficients::bishopPinned_ = { 15, 15 };
+  ScoreType32 EvalCoefficients::rookPinned_ = { 15, 15 };
+  ScoreType32 EvalCoefficients::queenPinned_ = { 30, 30 };
 
   // king position eval for BN-mat
   int EvalCoefficients::bishopKnightMat_[64] =
@@ -130,14 +140,14 @@ namespace NEngine
     -30, -20, -10,  -5,  -1,  10,  20,  30
   };
 
-  int EvalCoefficients::kingDistanceBonus_[8][8] =
+  ScoreType32 EvalCoefficients::kingDistanceBonus_[8][8] =
   {
     {},
     {},
-    { 0, 10, 7, 5, 3, 1, 0, -5 },
-    { 0, 10, 7, 5, 3, 1, 0, -5 },
-    { 0, 10, 7, 5, 3, 1, 0, -5 },
-    { 0, 10, 7, 5, 3, 1, 0, -5 },
+    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
+    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
+    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
+    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
     {},
     {}
   };

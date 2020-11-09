@@ -96,8 +96,8 @@ class Evaluator
   struct FieldsInfo
   {
     int num_attackers_{};
-    int score_mob_{};
-    int score_king_{};
+    ScoreType32 score_mob_{};
+    ScoreType32 score_king_{};
     int score_opening_{};
     bool discoveredCheck_{};
     bool matTreat_{};
@@ -219,11 +219,12 @@ private:
   bool blockedBishop(Figure::Color color, int n) const;
   bool blockedRook(Figure::Color color, Index rpos, BitMask rmask) const;
 
-  FullScore evaluateKnights();
-  FullScore evaluateBishops();
-  FullScore evaluateRook();
-  FullScore evaluateQueens();
-  FullScore evaluateKingPressure(Figure::Color color);
+  ScoreType32 evaluateKnights();
+  ScoreType32 evaluateBishops();
+  ScoreType32 evaluateRook();
+  ScoreType32 evaluateQueens();
+  
+  //FullScore evaluateKingPressure(Figure::Color color);
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
   PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);
@@ -241,7 +242,7 @@ private:
   ScoreType32 evaluateMaterialDiff();
 
   /// find knight and pawn forks
-  ScoreType evaluateForks(Figure::Color color);
+  ScoreType32 evaluateForks(Figure::Color color);
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
