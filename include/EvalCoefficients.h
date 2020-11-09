@@ -18,11 +18,11 @@ struct EvalCoefficients
   // pawns
   static int pawnEndgameBonus_;
   static ScoreType32 rookBehindBonus_;
-  static int protectedPawnPressure_;
-  static int unprotectedPawnPressure_;
-  static int semiprotectedPawnPressure_;
-  static int unprotectedPawnBishopTreat_;
-  static int kingToPasserDistanceBonus_;
+  static ScoreType32 protectedPawnPressure_;
+  static ScoreType32 unprotectedPawnPressure_;
+  static ScoreType32 semiprotectedPawnPressure_;
+  static ScoreType32 unprotectedPawnBishopTreat_;
+  static ScoreType32 kingToPasserDistanceBonus_;
 
   // forks & other treats
   static ScoreType bishopsAttackBonus_;
@@ -109,6 +109,7 @@ struct EvalCoefficients
   static int pawnShieldC_[2];
 
   // arrays
+  static ScoreType   passerPawn1_[8];
   static ScoreType32 passerPawn_[8];
   static ScoreType32 passerPawn2_[8];
   static ScoreType32 passerPawn4_[8];

@@ -15,11 +15,11 @@ namespace NEngine
   // pawns
   int EvalCoefficients::pawnEndgameBonus_{ 20 };
   ScoreType32 EvalCoefficients::rookBehindBonus_{ 5, 5 };
-  int EvalCoefficients::protectedPawnPressure_{ 1 };
-  int EvalCoefficients::unprotectedPawnPressure_{ 6 };
-  int EvalCoefficients::semiprotectedPawnPressure_{ 2 };
-  int EvalCoefficients::unprotectedPawnBishopTreat_{ 3 };
-  int EvalCoefficients::kingToPasserDistanceBonus_{ 3 };
+  ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 1 };
+  ScoreType32 EvalCoefficients::unprotectedPawnPressure_{ 6, 6 };
+  ScoreType32 EvalCoefficients::semiprotectedPawnPressure_{ 2, 2 };
+  ScoreType32 EvalCoefficients::unprotectedPawnBishopTreat_{ 0, 3 };
+  ScoreType32 EvalCoefficients::kingToPasserDistanceBonus_{ 0, 3 };
 
   // forks
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 65 };
@@ -106,6 +106,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::rookAgainstPawnBonus_[10] = { {10, 10}, {30, 30}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40}, {40, 40} };
 
   // arrays
+  ScoreType   EvalCoefficients::passerPawn1_[8] = { 0, 5, 9, 20, 38, 65, 98, 0 };
   ScoreType32 EvalCoefficients::passerPawn_[8]  = { {0, 0}, {5, 5}, {9, 9}, {20, 20}, {38, 38}, {65, 65}, {98, 98}, {0, 0} };
   ScoreType32 EvalCoefficients::passerPawn2_[8] = { {0, 0}, {2, 2}, {4, 4}, {10, 10}, {19, 19}, {32, 32}, {49, 49}, {0, 0} };
   ScoreType32 EvalCoefficients::passerPawn4_[8] = { {0, 0}, {1, 1}, {2, 2}, {5, 5}, {9, 9}, {16, 16}, {24, 24}, {0, 0} };

@@ -191,28 +191,20 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
     return score;
   }
 
-  //// prepare lazy evaluation
-  //if(alpha > -Figure::MatScore)
-  //{
-  //  alpha0_ = (int)alpha - lazyThreshold0_;
-  //  alpha1_ = (int)alpha - lazyThreshold1_;
-  //}
-  //else
-  //{
-  //  alpha0_ = -ScoreMax;
-  //  alpha1_ = -ScoreMax;
-  //}
+  // prepare lazy evaluation
+  if(alpha > -Figure::MatScore) {
+    alpha_ = (int)alpha - lazyThreshold_;
+  }
+  else {
+    alpha_ = -ScoreMax;
+  }
 
-  //if(betta < +Figure::MatScore)
-  //{
-  //  betta0_ = (int)betta + lazyThreshold0_;
-  //  betta1_ = (int)betta + lazyThreshold1_;
-  //}
-  //else
-  //{
-  //  betta0_ = +ScoreMax;
-  //  betta1_ = +ScoreMax;
-  //}
+  if(betta < +Figure::MatScore) {
+    betta_ = (int)betta + lazyThreshold_;
+  }
+  else {
+    betta_ = +ScoreMax;
+  }
 
   const FiguresManager& fmgr = board_->fmgr();
   // evaluate figures weight
@@ -224,12 +216,12 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   score32 += fmgr.score();
 
-  ///// use lazy evaluation level 0
-  //{
-  //  auto score0 = considerColor(lipolScore(score, phaseInfo));
-  //  if(score0 < alpha0_ || score0 > betta0_)
-  //    return score0;
-  //}
+  /// use lazy evaluation
+  {
+    auto score0 = considerColor(lipolScore(score32, phaseInfo));
+    if(score0 < alpha_ || score0 > betta_)
+      return score0;
+  }
 
   prepare();
 
@@ -250,16 +242,16 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   scoreKing -= evaluateKingPressure(Figure::ColorBlack);
   score32 += scoreKing;
 
-  //auto scoreForks = evaluateForks(Figure::ColorWhite);
-  //scoreForks -= evaluateForks(Figure::ColorBlack);
-  //score.common_ += scoreForks;
+  auto scoreForks = evaluateForks(Figure::ColorWhite);
+  scoreForks -= evaluateForks(Figure::ColorBlack);
+  score32 += scoreForks;
 
-  //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-  //score += scorePP;
+  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+  score32 += scorePP;
 
-  //auto scorePassers = passerEvaluation(hashedScore);
-  //score += scorePassers;
+  auto scorePassers = passerEvaluation(hashedScore);
+  score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   return result;
@@ -293,27 +285,26 @@ Evaluator::PhaseInfo Evaluator::detectPhase() const
   return phaseInfo;
 }
 
-Evaluator::FullScore Evaluator::evaluatePawnsPressure(Figure::Color color)
+ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
 {
-  FullScore score{};
   auto const& fmgr = board_->fmgr();
   auto const ocolor = Figure::otherColor(color);
   auto const& pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
   auto pw_unprotected = pw_mask ^ pw_protected;
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
-  score.common_  = pop_count(pw_protected   & attackers) * EvalCoefficients::protectedPawnPressure_;
-  score.common_ += pop_count(pw_unprotected & attackers & ~finfo_[ocolor].attack_mask_) * EvalCoefficients::unprotectedPawnPressure_;
-  score.common_ += pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_) * EvalCoefficients::semiprotectedPawnPressure_;
+  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & attackers);
+  score += EvalCoefficients::unprotectedPawnPressure_ * pop_count(pw_unprotected & attackers & ~finfo_[ocolor].attack_mask_);
+  score += EvalCoefficients::semiprotectedPawnPressure_ * pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_);
   // bishop treat
   if(fmgr.bishops(color))
   {
     auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
     auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
     if(bi_mask_w)
-      score.endGame_ += pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers) * EvalCoefficients::unprotectedPawnBishopTreat_;
+      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers);
     if(bi_mask_b)
-      score.endGame_ += pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers) * EvalCoefficients::unprotectedPawnBishopTreat_;
+      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers);
   }
   return score;
 }
@@ -556,7 +547,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         pwscore = EvalCoefficients::passerPawn_[cy];
         int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
         int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
-        pwscore += ScoreType32{ 0, (oking_dist_promo - king_dist_promo) * EvalCoefficients::kingToPasserDistanceBonus_ };
+        pwscore += EvalCoefficients::kingToPasserDistanceBonus_ * (oking_dist_promo - king_dist_promo);
         if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
           while (guards) {
             int g = clear_lsb(guards);
@@ -677,14 +668,14 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       if (steps > 0) {
         int steps_to_promotion = 7 - cy;
         X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
-        auto prmBonus = (EvalCoefficients::passerPawnEx_[cy] * steps);
-//        prmBonus /= steps_to_promotion;
-        pwscore += prmBonus;
+        auto prmBonus = (EvalCoefficients::passerPawn1_[cy] * steps);
+        prmBonus /= steps_to_promotion;
+        pwscore += ScoreType32{ prmBonus, prmBonus << 1 };
       }
     }
 
-    //if (halfpasser)
-    //  pwscore /= 2;
+    if (halfpasser)
+      pwscore >>= 1;
     pinfo.score_ += pwscore;
   }
   

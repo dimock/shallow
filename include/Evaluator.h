@@ -140,8 +140,7 @@ class Evaluator
 #endif // GENERATE_MAT_MOVES_IN_EVAL
 
 public:
-  const int lazyThreshold0_ = 1000;
-  const int lazyThreshold1_ = 600;
+  const int lazyThreshold_ = 1000;
 
   void initialize(Board const* board);
 
@@ -253,7 +252,7 @@ private:
   int evaluateKingSafety(Figure::Color color, Index const& kingPos) const;
   int evaluateKingsPawn(Figure::Color color, Index const& kingPos) const;
 
-  FullScore evaluatePawnsPressure(Figure::Color color);
+  ScoreType32 evaluatePawnsPressure(Figure::Color color);
 
   // sum of weights of all figures
   const int openingWeight_ = 2*(    Figure::figureWeight_[Figure::TypeQueen]
@@ -280,10 +279,8 @@ private:
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
-  int alpha0_{};
-  int betta0_{};
-  int alpha1_{};
-  int betta1_{};
+  int alpha_{};
+  int betta_{};
 
   static const int maximumAttackersWeight_ = 2 * Figure::figureWeight_[Figure::TypeKnight] +
     2 * Figure::figureWeight_[Figure::TypeBishop] +
