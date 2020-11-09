@@ -246,9 +246,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;
   score32 += score_mob;
 
-  //auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-  //scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-  //score += scoreKing;
+  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+  score32 += scoreKing;
 
   //auto scoreForks = evaluateForks(Figure::ColorWhite);
   //scoreForks -= evaluateForks(Figure::ColorBlack);

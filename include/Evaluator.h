@@ -97,7 +97,7 @@ class Evaluator
   {
     int num_attackers_{};
     ScoreType32 score_mob_{};
-    ScoreType32 score_king_{};
+    ScoreType score_king_{};
     int score_opening_{};
     bool discoveredCheck_{};
     bool matTreat_{};
@@ -224,7 +224,7 @@ private:
   ScoreType32 evaluateRook();
   ScoreType32 evaluateQueens();
   
-  //FullScore evaluateKingPressure(Figure::Color color);
+  ScoreType32 evaluateKingPressure(Figure::Color color);
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
   PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);

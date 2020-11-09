@@ -34,8 +34,10 @@ namespace NEngine
 
   // check & mat treat
   ScoreType32 EvalCoefficients::discoveredCheckBonus_{ 20, 20 };
-  ScoreType32 EvalCoefficients::possibleCheckBonus_{ 5, 5 };
-  ScoreType32 EvalCoefficients::matTreatBonus_{ 150, 150 };
+  ScoreType32 EvalCoefficients::discoveredCheckBonus4_{ 5, 5 };
+  ScoreType EvalCoefficients::discoveredCheckBonus1_{ 20 };
+  ScoreType EvalCoefficients::possibleCheckBonus_{ 5 };
+  ScoreType EvalCoefficients::matTreatBonus_{ 150 };
 
   // king
   int EvalCoefficients::fakeCastle_{ -15 };
@@ -50,12 +52,12 @@ namespace NEngine
   ScoreType32 EvalCoefficients::rookBlocked_{ 80, 80 };
 
   // king attacks
-  ScoreType32 EvalCoefficients::pawnKingAttack_{ 8, 8 };
-  ScoreType32 EvalCoefficients::knightKingAttack_{ 8, 8 };
-  ScoreType32 EvalCoefficients::bishopKingAttack_{ 8, 8 };
-  ScoreType32 EvalCoefficients::rookKingAttack_{ 8, 8 };
-  ScoreType32 EvalCoefficients::queenKingAttack_{ 10, 10 };
-  ScoreType32 EvalCoefficients::basicAttack_{ 2, 2 };
+  ScoreType EvalCoefficients::pawnKingAttack_{ 8 };
+  ScoreType EvalCoefficients::knightKingAttack_{ 8 };
+  ScoreType EvalCoefficients::bishopKingAttack_{ 8 };
+  ScoreType EvalCoefficients::rookKingAttack_{ 8 };
+  ScoreType EvalCoefficients::queenKingAttack_{ 10 };
+  ScoreType EvalCoefficients::basicAttack_{ 2 };
 
   int EvalCoefficients::generalKingPressure_{ 5 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };

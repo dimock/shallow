@@ -37,8 +37,10 @@ struct EvalCoefficients
 
   // check & mat treat
   static ScoreType32 discoveredCheckBonus_;
-  static ScoreType32 possibleCheckBonus_;
-  static ScoreType32 matTreatBonus_;
+  static ScoreType32 discoveredCheckBonus4_;
+  static ScoreType discoveredCheckBonus1_;
+  static ScoreType possibleCheckBonus_;
+  static ScoreType matTreatBonus_;
 
   // king
   static int fakeCastle_;
@@ -53,12 +55,12 @@ struct EvalCoefficients
   static ScoreType32 rookBlocked_;
 
   // king attacks
-  static ScoreType32 pawnKingAttack_;
-  static ScoreType32 knightKingAttack_;
-  static ScoreType32 bishopKingAttack_;
-  static ScoreType32 rookKingAttack_;
-  static ScoreType32 queenKingAttack_;
-  static ScoreType32 basicAttack_;
+  static ScoreType pawnKingAttack_;
+  static ScoreType knightKingAttack_;
+  static ScoreType bishopKingAttack_;
+  static ScoreType rookKingAttack_;
+  static ScoreType queenKingAttack_;
+  static ScoreType basicAttack_;
 
   static int generalKingPressure_;
   static int generalOpponentPressure_;
