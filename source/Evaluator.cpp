@@ -958,7 +958,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
 #endif
 
   const FiguresManager & fmgr = board_->fmgr();
-  ScoreType32 score{0, (fmgr.pawns(Figure::ColorWhite) - fmgr.pawns(Figure::ColorBlack)) * EvalCoefficients::pawnEndgameBonus_ };
+  ScoreType32 score;
 
   int pawnsDiff = fmgr.pawns(Figure::ColorWhite) - fmgr.pawns(Figure::ColorBlack);
   int knightsDiff = fmgr.knights(Figure::ColorWhite) - fmgr.knights(Figure::ColorBlack);

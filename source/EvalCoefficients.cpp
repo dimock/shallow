@@ -13,7 +13,6 @@ namespace NEngine
   int EvalCoefficients::additionalMatBonus_{ 150 };
   int EvalCoefficients::queenRookVsPwPenalty_{ 80 };
   // pawns
-  int EvalCoefficients::pawnEndgameBonus_{ 20 };
   ScoreType32 EvalCoefficients::rookBehindBonus_{ 5, 5 };
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 1 };
   ScoreType32 EvalCoefficients::unprotectedPawnPressure_{ 6, 6 };

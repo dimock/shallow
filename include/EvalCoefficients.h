@@ -16,7 +16,6 @@ struct EvalCoefficients
   static int queenRookVsPwPenalty_;
 
   // pawns
-  static int pawnEndgameBonus_;
   static ScoreType32 rookBehindBonus_;
   static ScoreType32 protectedPawnPressure_;
   static ScoreType32 unprotectedPawnPressure_;

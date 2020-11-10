@@ -28,7 +28,7 @@ extern const BitMask Figure::quaterBoard_[2][2] = { { 0xf0f0f0f000000000, 0x0f0f
 
 extern const ScoreType32 Figure::figureWeight32_[7] = {
   {Figure::figureWeight_[0], Figure::figureWeight_[0]},
-  {Figure::figureWeight_[1], Figure::figureWeight_[1]},
+  {Figure::figureWeight_[1], Figure::figureWeight_[1] + 20},
   {Figure::figureWeight_[2], Figure::figureWeight_[2]},
   {Figure::figureWeight_[3], Figure::figureWeight_[3]},
   {Figure::figureWeight_[4], Figure::figureWeight_[4]},
