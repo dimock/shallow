@@ -11,9 +11,14 @@ namespace NEngine
 {
 
 template <class T>
-int sign(T v)
+inline int sign(T v)
 {
   return (T{0} < v) - (v < T{0});
+}
+
+inline int change_sign(bool cond, int value)
+{
+  return (value ^ -(int)(cond)) + cond;
 }
     
 typedef int(*FUNC_POP_COUNT64)(uint64);

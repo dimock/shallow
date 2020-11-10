@@ -77,13 +77,13 @@ struct SeeCalc
     if(auto pwmask = (fmgr_.pawn_mask(color) & all_mask_ & pwmask_moveto_[ocolor]))
     {
       //auto mask = pwmask & movesTable().pawnCaps(ocolor, move_.to());
-      if(do_move(pwmask, color, ocolor, Figure::TypePawn, from, score))
+      if(do_pwmove(pwmask, color, ocolor, from, score))
         return true;
     }
     if(auto nmask = (fmgr_.knight_mask(color) & all_mask_ & ncaps_moveto_))
     {
       //auto mask = nmask & ncaps_moveto_;// movesTable().caps(Figure::TypeKnight, move_.to());
-      if(do_move(nmask, color, ocolor, Figure::TypeKnight, from, score))
+      if(do_fmove(nmask, color, ocolor, Figure::TypeKnight, from, score))
         return true;
     }
 
@@ -92,7 +92,7 @@ struct SeeCalc
     {
       last_b_[color] = mask_b = magic_ns::bishop_moves(move_.to(), all_mask_) & all_mask_;
       auto mask = mask_b & fmgr_.bishop_mask(color);
-      if(do_move(mask, color, ocolor, Figure::TypeBishop, from, score))
+      if(do_fmove(mask, color, ocolor, Figure::TypeBishop, from, score))
         return true;
     }
 
@@ -101,7 +101,7 @@ struct SeeCalc
     {
       last_r_[color] = mask_r = magic_ns::rook_moves(move_.to(), all_mask_) & all_mask_;
       auto mask = mask_r & fmgr_.rook_mask(color);
-      if(do_move(mask, color, ocolor, Figure::TypeRook, from, score))
+      if(do_fmove(mask, color, ocolor, Figure::TypeRook, from, score))
         return true;
     }
 
@@ -112,7 +112,7 @@ struct SeeCalc
       if(!mask_r)
         mask_r = magic_ns::rook_moves(move_.to(), all_mask_);
       auto mask = (mask_b | mask_r) & all_mask_ & board_.fmgr().queen_mask(color);
-      if(do_move(mask, color, ocolor, Figure::TypeQueen, from, score))
+      if(do_fmove(mask, color, ocolor, Figure::TypeQueen, from, score))
         return true;
     }
 
@@ -132,8 +132,28 @@ struct SeeCalc
     return false;
   }
 
-  inline bool do_move(BitMask mask, Figure::Color color, Figure::Color ocolor, Figure::Type const type, int& from, int& score)
+  inline bool do_pwmove(BitMask mask, Figure::Color color, Figure::Color ocolor, int& from, int& score)
   {
+    while (mask)
+    {
+      from = clear_lsb(mask);
+      if (discovered_check(from, ocolor, board_.kingPos(color)))
+        continue;
+      X_ASSERT((all_mask_ & set_mask_bit(from)) == 0ULL, "no figure which is going to make move");
+      all_mask_ ^= set_mask_bit(from);
+      score = promotion_
+        ? Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypePawn]
+        : Figure::figureWeight_[Figure::TypePawn];
+      if (color == color_)
+        score = -score;
+      return true;
+    }
+    return false;
+  }
+
+  inline bool do_fmove(BitMask mask, Figure::Color color, Figure::Color ocolor, Figure::Type const type, int& from, int& score)
+  {
+    X_ASSERT(type != Figure::TypePawn,  "SEE incorrect pawn move");
     while(mask)
     {
       from = clear_lsb(mask);
@@ -141,11 +161,7 @@ struct SeeCalc
         continue;
       X_ASSERT((all_mask_ & set_mask_bit(from)) == 0ULL, "no figure which is going to make move");
       all_mask_ ^= set_mask_bit(from);
-      score = promotion_ && type == Figure::TypePawn
-        ? Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypePawn]
-        : Figure::figureWeight_[type];
-      if(color == color_)
-        score = -score;
+      score = color == color_  ? -Figure::figureWeight_[type] : Figure::figureWeight_[type];
       return true;
     }
     return false;

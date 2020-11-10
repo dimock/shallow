@@ -216,42 +216,42 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   score32 += fmgr.score();
 
-  /// use lazy evaluation
-  {
-    auto score0 = considerColor(lipolScore(score32, phaseInfo));
-    if(score0 < alpha_ || score0 > betta_)
-      return score0;
-  }
+  ///// use lazy evaluation
+  //{
+  //  auto score0 = considerColor(lipolScore(score32, phaseInfo));
+  //  if(score0 < alpha_ || score0 > betta_)
+  //    return score0;
+  //}
 
-  prepare();
+  //prepare();
 
-  // take pawns eval from hash if possible
-  auto hashedScore = hashedEvaluation();
-  score32 += hashedScore.score_;
+  //// take pawns eval from hash if possible
+  //auto hashedScore = hashedEvaluation();
+  //score32 += hashedScore.score_;
 
-  score32 += evaluateKnights();
-  score32 += evaluateBishops();
-  score32 += evaluateRook();
-  score32 += evaluateQueens();
+  //score32 += evaluateKnights();
+  //score32 += evaluateBishops();
+  //score32 += evaluateRook();
+  //score32 += evaluateQueens();
 
-  auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
-  score_mob -= finfo_[Figure::ColorBlack].score_mob_;
-  score32 += score_mob;
+  //auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
+  //score_mob -= finfo_[Figure::ColorBlack].score_mob_;
+  //score32 += score_mob;
 
-  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-  score32 += scoreKing;
+  //auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+  //scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+  //score32 += scoreKing;
 
-  auto scoreForks = evaluateForks(Figure::ColorWhite);
-  scoreForks -= evaluateForks(Figure::ColorBlack);
-  score32 += scoreForks;
+  //auto scoreForks = evaluateForks(Figure::ColorWhite);
+  //scoreForks -= evaluateForks(Figure::ColorBlack);
+  //score32 += scoreForks;
 
-  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
-  score32 += scorePP;
+  //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
+  //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+  //score32 += scorePP;
 
-  auto scorePassers = passerEvaluation(hashedScore);
-  score32 += scorePassers;
+  //auto scorePassers = passerEvaluation(hashedScore);
+  //score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   return result;
