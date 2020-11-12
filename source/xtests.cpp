@@ -138,7 +138,7 @@ void testMovegen(std::string const& ffname)
   {
     std::cout << toFEN(epd.board_) << std::endl;
     ChecksGenerator<Board, SMove> ckg{ epd.board_ };
-    ckg.generateOne(0, true);
+    ckg.generate();
     Move* move = nullptr;
     for (int j = 1; move = ckg.next();)
     {
@@ -228,7 +228,7 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
     eval.initialize(&e.board_);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     ChecksGenerator<Board, SMove> ck{ e.board_ };
-    ck.generateOne(0, false);
+    ck.generate();
 
 #ifdef GENERATE_MAT_MOVES_IN_EVAL
     auto hmove = eval.move(e.board_.color());

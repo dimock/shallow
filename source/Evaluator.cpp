@@ -183,28 +183,28 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
-  auto spec = specialCases().eval(*board_);
-  if (spec.first)
-  {
-    ScoreType score = spec.second;
-    score = considerColor(score);
-    return score;
-  }
+  //auto spec = specialCases().eval(*board_);
+  //if (spec.first)
+  //{
+  //  ScoreType score = spec.second;
+  //  score = considerColor(score);
+  //  return score;
+  //}
 
-  // prepare lazy evaluation
-  if(alpha > -Figure::MatScore) {
-    alpha_ = (int)alpha - lazyThreshold_;
-  }
-  else {
-    alpha_ = -ScoreMax;
-  }
+  //// prepare lazy evaluation
+  //if(alpha > -Figure::MatScore) {
+  //  alpha_ = (int)alpha - lazyThreshold_;
+  //}
+  //else {
+  //  alpha_ = -ScoreMax;
+  //}
 
-  if(betta < +Figure::MatScore) {
-    betta_ = (int)betta + lazyThreshold_;
-  }
-  else {
-    betta_ = +ScoreMax;
-  }
+  //if(betta < +Figure::MatScore) {
+  //  betta_ = (int)betta + lazyThreshold_;
+  //}
+  //else {
+  //  betta_ = +ScoreMax;
+  //}
 
   const FiguresManager& fmgr = board_->fmgr();
   // evaluate figures weight
@@ -212,9 +212,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   // determine game phase (opening, middle or end game)
   auto phaseInfo = detectPhase();
-  score32 += evaluateMaterialDiff();
+  //score32 += evaluateMaterialDiff();
 
-  score32 += fmgr.score();
+  //score32 += fmgr.score();
 
   ///// use lazy evaluation
   //{

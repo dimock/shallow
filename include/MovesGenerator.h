@@ -352,13 +352,6 @@ struct TacticalGenerator
         ckg_.generate();
         order_ = oChecks;
       }
-#ifdef GENERATE_MAT_CHECK_AFTER_HORIZON
-      else
-      {
-        ckg_.generateOne(threshold, atLeast);
-        order_ = oChecks;
-      }
-#endif // GENERATE_MAT_CHECK_AFTER_HORIZON
     }
     if (order_ == oChecks)
     {

@@ -171,7 +171,8 @@ public:
       items[last].next = heap;
     else
       first = heap;
-    items[heap] = { t, -1 };
+    items[heap].x = t;
+    items[heap].next = -1;
     last = heap;
     heap++;
     count++;

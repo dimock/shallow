@@ -37,10 +37,10 @@ struct UsualGenerator
  
   inline void generateBishops(Figure::Color color, BitMask const& mask_all, BitMask const& mask_all_inv)
   {
-    auto rmask = board_.fmgr().bishop_mask(color);
-    for (; rmask;)
+    auto bmask = board_.fmgr().bishop_mask(color);
+    for (; bmask;)
     {
-      auto from = clear_lsb(rmask);
+      auto from = clear_lsb(bmask);
       auto mask = magic_ns::bishop_moves(from, mask_all) & mask_all_inv;
       for (; mask;)
       {
