@@ -30,7 +30,6 @@ struct SeeCalc
   Figure::Color ocolor_;
   bool promotion_;
   bool discovered_check_;
-  bool discovered_attack_ = false;
   mutable bool usual_check_detected_ = false;
   mutable bool usual_check_ = false;
 
@@ -54,13 +53,6 @@ struct SeeCalc
       discovered_check_ = discovered_check(move_.from(), color_, board_.kingPos(ocolor_));
     if (discovered_check_)
       return;
-    if (board_.fmgr().queens(ocolor_) > 0 && ffield.type() != Figure::TypeQueen)
-    {
-      auto queenPos = _lsb64(board_.fmgr().queen_mask(ocolor_));
-      auto const& queen_moves = magic_ns::queen_moves(queenPos, all_mask_);
-      if ((queen_moves & set_mask_bit(move_.to())) == 0ULL)
-        discovered_attack_ = discovered_check(move_.from(), color_, queenPos);
-    }
     all_mask_ ^= set_mask_bit(move_.from());
     promotion_ = (ffield.type() == Figure::TypePawn) && ((move_.to() >> 3) == 0 || (move_.to() >> 3) == 7);
   }
@@ -344,10 +336,6 @@ bool Board::see(const Move & move, int threshold) const
 
   // assume discovered check is always good
   if(see_calc.discovered_check_)
-    return true;
-
-  // discovers attack to queen with check
-  if (see_calc.discovered_attack_ && see_calc.is_usual_check())
     return true;
 
   // could be checkmate

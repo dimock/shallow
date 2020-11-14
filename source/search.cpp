@@ -55,15 +55,19 @@ bool Engine::generateStartposMoves(int ictx)
   auto* b = sctx.moves_.data();
   auto* e = b + sdata.numOfMoves_;
   std::sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
-  auto const* hitem = hash_.find(board.fmgr().hashCode());
+
+#ifdef USE_HASH
+  auto * hitem = hash_.get(board.fmgr().hashCode());
   X_ASSERT(hitem == nullptr, "HItem not found in Hash table");
-  if (hitem->hkey_ == board.fmgr().hashCode()  && hitem->move_)
+  HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8);
+  if (hitem->hkey_ == hk && hitem->move_)
   {
     SMove best{ hitem->move_.from(), hitem->move_.to(), (Figure::Type)hitem->move_.new_type() };
     X_ASSERT(!board.possibleMove(best), "move from hash is impossible");
     X_ASSERT(!board.validateMove(best), "move from hash is invalid");
     bring_to_front(b, e, best);
   }
+#endif
 
   sres.numOfMoves_ = sdata.numOfMoves_;
   return sdata.numOfMoves_ > 0;
@@ -549,8 +553,6 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
 //////////////////////////////////////////////////////////////////////////
 ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm)
 {
-  prefetchHash(ictx);
-
   if(alpha >= Figure::MatScore-ply)
     return alpha;
 
@@ -574,17 +576,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   ScoreType const alpha0 = alpha;
   SMove hmove{true};
   bool singular = false;
-
+  ScoreType hscore = -ScoreMax;
 
   if (depth <= 0) {
     return captures(ictx, depth, ply, alpha, betta, pv);
   }
 
-  ScoreType hscore = -ScoreMax;
-
 #ifdef USE_HASH
-  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
-  if (flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  HItem *pitem = nullptr;
+  Flag flag = getHash(ictx, depth/ONE_PLY, ply, alpha, betta, hmove, hscore, pv, singular, pitem);
+  if (flag == Alpha || flag == Betta)
   {
     return hscore;
   }
@@ -678,9 +679,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(!hmove && depth >= 4 * ONE_PLY)
   {
     alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
-    if(const HItem * hitem = hash_.find(board.fmgr().hashCode()))
+    if(const HItem * hitem = hash_.get(board.fmgr().hashCode()))
     {
-      if (hitem->hkey_ == board.fmgr().hashCode()) {
+      if (hitem->hkey_ == (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8)) {
         (Move&)hmove = hitem->move_;
         singular = hitem->singular_;
       }
@@ -712,6 +713,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
+
+#ifdef USE_HASH
+    hash_.prefetch(board.hashAfterMove(move));
+#endif
 
     bool danger_pawn = board.isDangerPawn(move);
 
@@ -833,6 +838,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     X_ASSERT(!best, "best move wasn't found but one move was");
     singular = true;
 
+    hash_.prefetch(board.hashAfterMove(best));
+
     board.makeMove(best);
     sdata.inc_nc();
 
@@ -888,7 +895,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef USE_HASH
-  putHash(ictx, best, alpha0, betta, scoreBest, depth, ply, threat, singular, pv);
+  putHash(ictx, best, alpha0, betta, scoreBest, depth/ONE_PLY, ply, threat, singular, pv, pitem);
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -914,10 +921,12 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   SMove hmove{ true };
 
 #ifdef USE_HASH
+  HItem* pitem = nullptr;
   ScoreType hscore = -ScoreMax;
   bool singular = false;
-  GHashTable::Flag flag = getHash(ictx, depth, ply, alpha, betta, hmove, hscore, pv, singular);
-  if (flag == GHashTable::Alpha || flag == GHashTable::Betta)
+  int cdepth = depth < 0 ? -1 : 0;
+  Flag flag = getHash(ictx, cdepth, ply, alpha, betta, hmove, hscore, pv, singular, pitem);
+  if (flag == Alpha || flag == Betta)
   {
     return hscore;
   }
@@ -935,11 +944,16 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     }
 
     // not initialized yet
-    if (score0 == -ScoreMax)
+    if (score0 == -ScoreMax) {
       score0 = eval(alpha, betta);
+    }
 
-    if (score0 >= betta)
+    if (score0 >= betta) {
+#ifdef USE_HASH
+      putHash(ictx, hmove, alpha, betta, score0, cdepth, ply, false, false, pv, pitem);
+#endif
       return score0;
+    }
 
 #ifdef GENERATE_MAT_MOVES_IN_EVAL
     if (eval.move(board.color()) && !hmove) {
@@ -972,12 +986,16 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(thr, counter == 0);
+    auto* pmove = tg.next(thr);
     if(!pmove)
       break;
 
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
+
+#ifdef USE_HASH
+    hash_.prefetch(board.hashAfterMove(move));
+#endif
 
 #ifdef RELEASEDEBUGINFO
     auto ff = (FIELD_NAME)move.from();
@@ -1043,7 +1061,9 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   }
 
 #ifdef USE_HASH
-  putCaptureHash(ictx, best, pv);
+  else {
+    putHash(ictx, best, alpha, betta, scoreBest, cdepth, ply, false, false, pv, pitem);
+  }
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");

@@ -40,9 +40,9 @@ Engine::SearchContext& Engine::SearchContext::operator = (SearchContext const& o
 }
 
 //////////////////////////////////////////////////////////////////////////
-Engine::Engine() :
+Engine::Engine()
 #ifdef USE_HASH
-  hash_(0)
+  : hash_(0)
 #endif
 {
   setMemory(HASH_SIZE_DEFAULT);

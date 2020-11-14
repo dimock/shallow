@@ -175,109 +175,129 @@ public:
 private:
 
 #ifdef USE_HASH
-  inline void prefetchHash(int ictx)
-  {
-    X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
-    auto& sctx = scontexts_[ictx];
-    hash_.prefetch(sctx.board_.fmgr().hashCode());
-  }
-
   // we should return alpha if flag is Alpha, or Betta if flag is Betta
-  inline GHashTable::Flag getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular)
+  inline Flag getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular, HItem*& pitem)
   {
     X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
     auto& sctx = scontexts_[ictx];
 
     auto& board = sctx.board_;
-    HItem* pitem = hash_.find(board.fmgr().hashCode());
+    pitem = hash_.get(board.fmgr().hashCode());
     auto const& hitem = *pitem;
-    if (hitem.hkey_ == board.fmgr().hashCode())
+    if (hitem.hkey_ == (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8))
     {
       singular = hitem.singular_;
-      hmove = hitem.move_;
+      auto hflag = hitem.flag();
       if (!pv && board.fmgr().weight(Figure::ColorBlack).eval32_ && board.fmgr().weight(Figure::ColorWhite).eval32_)
       {
-        depth = (depth + ONE_PLY - 1) / ONE_PLY;
-
-        hscore = hitem.score_;
-        if (hscore >= Figure::MatScore - MaxPly)
-          hscore = hscore - ply;
-        else if (hscore <= MaxPly - Figure::MatScore)
-          hscore = hscore + ply;
+        //depth /= ONE_PLY;
 
         X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
 
-        if (hitem.flag_ != GHashTable::NoFlag && (int)hitem.depth_ >= depth && ply > 0 && hscore != 0)
+        if (hflag != NoFlag && (int)hitem.depth_ >= depth && ply > 0)// && hscore != 0)
         {
-          if (GHashTable::Alpha == hitem.flag_ && hscore <= alpha)
-          {
-            X_ASSERT(!sctx.stop_ && alpha < -32760, "invalid hscore");
-            return GHashTable::Alpha;
-          }
+          hscore = hitem.score_;
+          if (hscore >= Figure::MatScore - MaxPly)
+            hscore = hscore - ply;
+          else if (hscore <= MaxPly - Figure::MatScore)
+            hscore = hscore + ply;
 
-          if (hitem.flag_ > GHashTable::Alpha && hscore >= betta && hmove)
-          {
-            if (betta > 0 && board.hasReps(hmove))
-            {
-              return GHashTable::AlphaBetta;
-            }
-#ifdef VERIFY_LMR
-            else
-            {
-              /// danger move was reduced - recalculate it with full depth
-              auto const& prev = board.lastUndo();
-              if (hitem.threat_ && prev.is_reduced())
-              {
-                hscore = betta - 1;
-                return GHashTable::Alpha;
-              }
-              return GHashTable::Betta;
-            }
-#endif
-          }
+          if (hscore >= betta && hflag == Betta)
+            return Betta;
+          else if (hscore < alpha && hflag == Alpha)
+            return Alpha;
+//          if (hscore <= alpha)
+//          {
+//            X_ASSERT(!sctx.stop_ && alpha < -32760, "invalid hscore");
+//            return Alpha;
+//          }
+//
+//          if ((hflag == AlphaBetta || hflag == Betta) && hscore >= betta)// && hmove)
+//          {
+//            //if (betta > 0 && board.hasReps(hmove))
+//            //{
+//            //  return AlphaBetta;
+//            //}
+//#ifdef VERIFY_LMR
+//            else
+//            {
+//              /// danger move was reduced - recalculate it with full depth
+//              auto const& prev = board.lastUndo();
+//              if (hitem.threat_ && prev.is_reduced())
+//              {
+//                hscore = betta - 1;
+//                return Alpha;
+//              }
+//              return Betta;
+//            }
+//#endif
+//          }
         }
       }
-      return GHashTable::AlphaBetta;
+      hmove = hitem.move_;
+      return AlphaBetta;
     }
     else
-      return GHashTable::NoFlag;
+      return NoFlag;
   }
 
   /// insert data to hash table
-  inline void putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular, bool pv)
+  inline void putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular, bool pv, HItem* pitem)
   {
     X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
     auto& sctx = scontexts_[ictx];
 
     auto& board = sctx.board_;
-    if (board.hasReps())
-      return;
+    //if (board.hasReps())
+    //  return;
 
-    GHashTable::Flag flag = GHashTable::NoFlag;
+    Flag flag = NoFlag;
     if (score != 0)
     {
-      if (score <= alpha || !move)
-        flag = GHashTable::Alpha;
-      else if (score >= betta)
-        flag = GHashTable::Betta;
+      //if (score <= alpha)
+      //  flag = Alpha;
+      //else if (score >= betta)
+      //  flag = Betta;
+      //else
+      //  flag = AlphaBetta;
+      if (score >= betta)
+        flag = Betta;
+      else if (move && score > alpha)
+        flag = AlphaBetta;
       else
-        flag = GHashTable::AlphaBetta;
+        flag = Alpha;
     }
     if (score >= +Figure::MatScore - MaxPly)
       score += ply;
     else if (score <= -Figure::MatScore + MaxPly)
       score -= ply;
-    hash_.push(board.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat, singular, pv);
-  }
+//    hash_.push(board.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat, singular, pv);
+    {
+      //depth /= ONE_PLY;
+      auto& hitem = *pitem;
+      HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8);
+      if (
+        (hitem.hkey_ != hk) ||
+        (depth > hitem.depth_) ||
+        (AlphaBetta == flag)
+        )
+        //((((AlphaBetta == flag || Betta == flag) && (hitem.flag() == NoFlag || hitem.flag() == Alpha)) || (pv && !hitem.pv_)) && depth > hitem.depth_) )
+      {
+        X_ASSERT(score > 32760, "write wrong value to the hash");
+        hitem = HItem{ hk, score, depth, flag, move, threat, singular, pv/*, (uint16)hash_.moveCount()*/};
+        //hitem.hkey_ = hk;
+        //hitem.score_ = score;
+        //hitem.depth_ = depth;
+        //hitem.xflag_ = flag;
+        ////hitem.//movesCount_ = movesCount_;
+        //hitem.move_ = move;
+        ////hitem.threat_ = threat;
+        ////hitem.singular_ = singular;
+        ////hitem.pv_ = pv;
 
-  inline void putCaptureHash(int ictx, const Move & move, bool pv)
-  {
-    X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
-    auto& sctx = scontexts_[ictx];
-    auto& board = sctx.board_;
-    if (!move || board.hasReps())
-      return;
-    hash_.push(board.fmgr().hashCode(), 0, 0, GHashTable::NoFlag, move, false, false, pv);
+      }
+
+    }
   }
 #endif // USE_HASH
 };

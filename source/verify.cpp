@@ -174,6 +174,7 @@ bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
         }
       }
     }
+    return identical;
   }
 
   //if(identical)

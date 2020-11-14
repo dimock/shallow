@@ -131,6 +131,47 @@ struct Board
   void makeMove(const Move&);
   void unmakeMove(const Move&);
 
+  /// hash code for prefetch
+  inline uint64 hashAfterMove(const Move & move) const
+  {
+    uint64 zcode = fmgr_.hashCode();
+
+    const Field & ffrom = getField(move.from());
+    const Field & fto = getField(move.to());
+
+    // clear en-passant hash code
+    if (enpassant() > 0)
+      zcode ^= FiguresManager::enpassantCode(enpassant(), Figure::otherColor(color()));
+
+    // remove captured figure
+    if (fto)
+    {
+      const BitMask & uc = FiguresManager::code(fto.color(), fto.type(), move.to());
+      zcode ^= uc;
+    }
+
+    // 'from' -> 'to'
+    if (move.new_type() == 0) {
+      // usual movement
+      const BitMask & uc0 = FiguresManager::code(ffrom.color(), ffrom.type(), move.from());
+      const BitMask & uc1 = FiguresManager::code(ffrom.color(), ffrom.type(), move.to());
+      zcode ^= uc0;
+      zcode ^= uc1;
+    }
+    else {
+      // pawn promotion
+      const BitMask & uc0 = FiguresManager::code(ffrom.color(), ffrom.type(), move.from());
+      const BitMask & uc1 = FiguresManager::code(color(), (Figure::Type)move.new_type(), move.to());
+      zcode ^= uc0;
+      zcode ^= uc1;
+    }
+
+    // add hash color key
+    zcode ^= FiguresManager::colorCode();
+    return zcode;
+  }
+
+
   /// null-move
   void makeNullMove();
   void unmakeNullMove();

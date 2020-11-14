@@ -203,11 +203,10 @@ namespace nst
 
 #define USE_IID
 #define USE_FUTILITY_PRUNING
-#define USE_DELTA_PRUNING
 #define USE_HASH
-#define USE_NULL_MOVE
-#define USE_LMR
-#define VERIFY_LMR
+#undef USE_NULL_MOVE
+#undef USE_LMR
+#undef VERIFY_LMR
 #define SINGULAR_EXT
 
 #undef  GENERATE_MAT_MOVES_IN_EVAL

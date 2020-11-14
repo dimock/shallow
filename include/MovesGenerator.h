@@ -315,7 +315,7 @@ struct TacticalGenerator
       order_ = oHash;
   }
 
-  MOVE* next(int threshold, bool atLeast)
+  MOVE* next(int threshold)
   {
     if (order_ == oEscape)
     {
