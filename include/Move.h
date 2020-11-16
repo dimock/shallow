@@ -88,7 +88,7 @@ struct SMove : public Move
 
   inline bool operator >= (SMove const& m) const
   {
-    return sort_value > m.sort_value;
+    return sort_value >= m.sort_value;
   }
 };
 

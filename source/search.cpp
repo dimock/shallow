@@ -986,7 +986,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
   {
-    auto* pmove = tg.next(thr);
+    auto* pmove = tg.next();
     if(!pmove)
       break;
 
@@ -1002,7 +1002,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     auto ft = (FIELD_NAME)move.to();
 #endif
 
-    if((!board.underCheck() || counter > 0) && !move.see_ok() && !board.see(move, thr))
+    if((!board.underCheck()) && !move.see_ok() && !board.see(move, thr))
       continue;
 
     ScoreType score = -ScoreMax;

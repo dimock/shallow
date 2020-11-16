@@ -315,11 +315,11 @@ struct TacticalGenerator
       order_ = oHash;
   }
 
-  MOVE* next(int threshold)
+  MOVE* next()
   {
     if (order_ == oEscape)
     {
-      return eg_.next();
+      return eg_.next_see();
     }
     if (order_ == oHash)
     {
