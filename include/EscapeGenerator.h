@@ -182,25 +182,51 @@ struct EscapeGenerator
 
     auto const& color = board_.color();
     auto const& fmgr = board_.fmgr();
+    auto mask_all = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
+    auto mask_all_inv = ~mask_all;
 
     // 1. Pawns. exclude promotions and captures
     auto pw_mask = fmgr.pawn_mask(color) & ~movesTable().promote(color);
-    for(; pw_mask;)
-    {
-      auto pw_pos = clear_msb(pw_mask);
-
-      // +2 - skip captures
-      const auto* table = movesTable().pawn(color, pw_pos) + 2;
-      for(; *table >= 0 && !board_.getField(*table); ++table)
-      {
-        if((protect_king_msk_ & set_mask_bit(*table)) == 0)
-          continue;
-
-        X_ASSERT(*table > 55 || *table < 8, "pawn move should not be a promotion");
-        add_usual(pw_pos, *table);
+    if (color) {
+      pw_mask <<= 8;
+      pw_mask &= 0x00ffffffffffff00 & mask_all_inv;
+      if (pw_mask) {
+        auto pw_mask0 = (pw_mask >> 8) & 0xff00;
+        pw_mask0 <<= 16;
+        pw_mask0 &= mask_all_inv & protect_king_msk_;
+        pw_mask &= protect_king_msk_;
+        for (; pw_mask;)
+        {
+          auto to = clear_lsb(pw_mask);
+          add_usual(to - 8, to);
+        }
+        for (; pw_mask0;)
+        {
+          auto to = clear_lsb(pw_mask0);
+          add_usual(to - 16, to);
+        }
       }
     }
-
+    else {
+      pw_mask >>= 8;
+      pw_mask &= 0x00ffffffffffff00 & mask_all_inv;
+      if (pw_mask) {
+        auto pw_mask0 = (pw_mask << 8) & 0x00ff000000000000;
+        pw_mask0 >>= 16;
+        pw_mask0 &= mask_all_inv & protect_king_msk_;
+        pw_mask &= protect_king_msk_;
+        for (; pw_mask;)
+        {
+          auto to = clear_lsb(pw_mask);
+          add_usual(to + 8, to);
+        }
+        for (; pw_mask0;)
+        {
+          auto to = clear_lsb(pw_mask0);
+          add_usual(to + 16, to);
+        }
+      }
+    }
 
     // 2. Knights
     auto kn_mask = fmgr.knight_mask(color);

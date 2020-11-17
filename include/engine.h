@@ -188,13 +188,11 @@ private:
     {
       singular = hitem.singular_;
       auto hflag = hitem.flag();
-      if (!pv && board.fmgr().weight(Figure::ColorBlack).eval32_ && board.fmgr().weight(Figure::ColorWhite).eval32_)
+      if (!pv)// && board.fmgr().weight(Figure::ColorBlack).eval32_ && board.fmgr().weight(Figure::ColorWhite).eval32_)
       {
-        //depth /= ONE_PLY;
-
         X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
 
-        if (hflag != NoFlag && (int)hitem.depth_ >= depth && ply > 0)// && hscore != 0)
+        if (hflag != NoFlag && (int)hitem.depth_ >= depth && ply > 0)
         {
           hscore = hitem.score_;
           if (hscore >= Figure::MatScore - MaxPly)
@@ -254,12 +252,6 @@ private:
     Flag flag = NoFlag;
     if (score != 0)
     {
-      //if (score <= alpha)
-      //  flag = Alpha;
-      //else if (score >= betta)
-      //  flag = Betta;
-      //else
-      //  flag = AlphaBetta;
       if (score >= betta)
         flag = Betta;
       else if (move && score > alpha)
@@ -271,9 +263,7 @@ private:
       score += ply;
     else if (score <= -Figure::MatScore + MaxPly)
       score -= ply;
-//    hash_.push(board.fmgr().hashCode(), score, depth / ONE_PLY, flag, move, threat, singular, pv);
     {
-      //depth /= ONE_PLY;
       auto& hitem = *pitem;
       HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8);
       if (
@@ -281,20 +271,9 @@ private:
         (depth > hitem.depth_) ||
         (AlphaBetta == flag)
         )
-        //((((AlphaBetta == flag || Betta == flag) && (hitem.flag() == NoFlag || hitem.flag() == Alpha)) || (pv && !hitem.pv_)) && depth > hitem.depth_) )
       {
         X_ASSERT(score > 32760, "write wrong value to the hash");
         hitem = HItem{ hk, score, depth, flag, move, threat, singular, pv/*, (uint16)hash_.moveCount()*/};
-        //hitem.hkey_ = hk;
-        //hitem.score_ = score;
-        //hitem.depth_ = depth;
-        //hitem.xflag_ = flag;
-        ////hitem.//movesCount_ = movesCount_;
-        //hitem.move_ = move;
-        ////hitem.threat_ = threat;
-        ////hitem.singular_ = singular;
-        ////hitem.pv_ = pv;
-
       }
 
     }
