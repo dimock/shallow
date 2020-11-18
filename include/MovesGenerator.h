@@ -216,6 +216,8 @@ struct FastGenerator
       {
         if(*move == hmove_)
           continue;
+        if (*move == killer_)
+          killer_ = MOVE{ true };
         if(board_.see(*move, 0))
         {
           move->set_ok();
@@ -231,12 +233,14 @@ struct FastGenerator
       order_ = oGenUsual;
       bool capture = killer_.new_type() || board_.getField(killer_.to())
         || (killer_.to() > 0 && board_.enpassant() == killer_.to() && board_.getField(killer_.from()).type() == Figure::TypePawn);
-      if(!capture && board_.possibleMove(killer_) && board_.validateMove(killer_))
+      if (!capture && board_.possibleMove(killer_) && board_.validateMove(killer_) && board_.see(killer_, 0))
       {
         X_ASSERT(!board_.moveExists(killer_), "non-existing killer");
         killer_.set_ok();
         return &killer_;
       }
+      else
+        killer_ = MOVE{ true };
       X_ASSERT(!capture && board_.moveExists(killer_), "killer was not detected as valid move");
     }
     if(order_ == oGenUsual)
@@ -319,7 +323,7 @@ struct TacticalGenerator
   {
     if (order_ == oEscape)
     {
-      return eg_.next_see();
+      return eg_.next();
     }
     if (order_ == oHash)
     {

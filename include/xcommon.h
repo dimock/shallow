@@ -201,16 +201,18 @@ namespace nst
 #undef USE_MINIDUMP
 #endif
 
-#define USE_IID
-#define USE_FUTILITY_PRUNING
-#define USE_HASH
+#undef SEE_PRUNING
+#undef USE_FUTILITY_PRUNING
+#undef USE_HASH
+
+#undef USE_IID
+#undef SINGULAR_EXT
+
 #undef USE_NULL_MOVE
 #undef USE_LMR
 #undef VERIFY_LMR
-#define SINGULAR_EXT
 
-#undef  GENERATE_MAT_MOVES_IN_EVAL
-
+#undef GENERATE_MAT_MOVES_IN_EVAL
 #undef SYNCHRONIZE_LAST_ITER
 
 static const SortValueType CaptureRecentlyBonus = 10;

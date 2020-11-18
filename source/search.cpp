@@ -133,7 +133,6 @@ bool Engine::mainThreadSearch(int ictx)
   // copy to print stats later
   sdata.board_ = board;
 
-  int bestCount = 0;
   bool timeAdded = false;
 
   for(sdata.depth_ = depth0_; !stopped(ictx) && sdata.depth_ <= sparams_.depthMax_; ++sdata.depth_)
@@ -144,16 +143,12 @@ bool Engine::mainThreadSearch(int ictx)
 
     if(sdata.best_)
     {
-      if (sres.best_ != sdata.best_)
-        bestCount = 1;
-      else
-        bestCount++;
-
       if(ictx == 0 && stopped(ictx) &&
-        sdata.depth_ > 2 &&
-        sdata.counter_ < sdata.numOfMoves_ && 
+        (sdata.depth_ > 2) &&
+        (sdata.counter_ < sdata.numOfMoves_) && 
         callbacks_.giveTime_ &&
-        !sparams_.analyze_mode_)
+        !sparams_.analyze_mode_ &&
+        (sres.best_ != sdata.best_ || sres.best_ != sres.prevBest_))
       {
         auto t_add = (callbacks_.giveTime_)();
         if(NTime::milli_seconds<int>(t_add) > 0)
@@ -173,6 +168,7 @@ bool Engine::mainThreadSearch(int ictx)
         sdata.tprev_ = t;
 
         sres.score_ = score;
+        sres.prevBest_ = sres.best_;
         sres.best_ = sdata.best_;
         sres.depth_ = sdata.depth_;
         sres.nodesCount_ = sdata.nodesCount_;
@@ -203,11 +199,11 @@ bool Engine::mainThreadSearch(int ictx)
         }
       }
     }
-    // we haven't found move and spend more time for search it than on prev. iteration
-    else if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 && callbacks_.giveTime_ && !sparams_.analyze_mode_)
+    // we haven't found move and spend more time for search it than on prev. iteration and best move changed from prev iteration
+    else if(ictx == 0 && stopped(ictx) && sdata.depth_ > 2 && callbacks_.giveTime_ && !sparams_.analyze_mode_ && sres.best_ != sres.prevBest_)
     {
       auto t = NTime::now();
-      if((t - sdata.tprev_) >= (sdata.tprev_ - sdata.tstart_))
+      //if((t - sdata.tprev_) >= (sdata.tprev_ - sdata.tstart_))
       {
         auto t_add = (callbacks_.giveTime_)();
         if(t_add > NTime::duration(0))
@@ -1002,8 +998,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     auto ft = (FIELD_NAME)move.to();
 #endif
 
+#ifdef SEE_PRUNING
     if((!board.underCheck()) && !move.see_ok() && !board.see(move, thr))
       continue;
+#endif
 
     ScoreType score = -ScoreMax;
 

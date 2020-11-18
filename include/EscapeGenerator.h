@@ -376,9 +376,9 @@ struct EscapeGenerator
     }
     if(order_ == oGenUsual)
     {
+      generateKingUsual();
       if(!board_.doubleCheck())
         generateUsual();
-      generateKingUsual();
       order_ = oUsual;
       iter_ = usual_.begin();
     }

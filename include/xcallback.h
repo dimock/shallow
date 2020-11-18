@@ -30,6 +30,7 @@ public:
 
   /// result
   Move best_{};
+  Move prevBest_{};
   int  depth_{};
   ScoreType score_{};
   std::array<Move, MaxPly + 4> pv_;
