@@ -120,6 +120,15 @@ struct Board
     return true;
   }
 
+  /// quick verification of move's possibility
+  inline bool validateMoveExpress(const Move& mv) const
+  {
+    const auto from = mv.from();
+    const auto& ffrom = getField(from);
+    const auto to = mv.to();
+    const auto& fto = getField(to);
+    return (ffrom.color() == color()) && (movesTable().figure_moves(color(), ffrom.type(), from) & set_mask_bit(to)) && (!fto.type() || (fto.color() != color()));
+  }
 
   /// is move meet rules. if under check verifies only discovered checks to my king
   bool validateMove(const Move & mv) const;

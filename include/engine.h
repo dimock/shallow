@@ -232,11 +232,13 @@ private:
 //          }
         }
       }
-      hmove = hitem.move_;
-      return AlphaBetta;
+      if (hitem.move_ && board.validateMoveExpress(hitem.move_)) {
+        hmove = hitem.move_;
+        return AlphaBetta;
+      }
     }
-    else
-      return NoFlag;
+
+    return NoFlag;
   }
 
   /// insert data to hash table

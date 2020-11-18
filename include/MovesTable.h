@@ -21,6 +21,9 @@ class MovesTable
   BitMask s_pawnsFrom_[2][64];
   BitMask s_otherCaps_[8][64];
   BitMask s_pawnPromotions_[2];
+  
+  // all possible moves for each color
+  BitMask s_figureMoves_[2][8][64];
 
   // blocked rook
   BitMask s_blockedRook_[64];
@@ -118,6 +121,14 @@ public:
   {
     X_ASSERT((unsigned)pos > 63, "try to get mask for invalid position");
     return s_blockedRook_[pos];
+  }
+
+  inline const BitMask & figure_moves(int color, int type, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1, "try to get mask for invalid color");
+    X_ASSERT((unsigned)type > 1, "try to get mask for invalid type");
+    X_ASSERT((unsigned)pos > 63, "try to get mask for invalid position");
+    return s_figureMoves_[color][type][pos];
   }
 };
 

@@ -11,8 +11,6 @@ namespace NEngine
 //////////////////////////////////////////////////////////////////////////
 MovesTable::MovesTable()
 {
-  initCastle();
-
   for (int i = 0; i < 64; ++i)
   {
     resetAllTables(i);
@@ -24,6 +22,8 @@ MovesTable::MovesTable()
     initRooks(i);
     initQueens(i);
   }
+
+  initCastle();
 
   // pawn promotions
   for (int color = 0; color < 2; ++color)
@@ -48,6 +48,9 @@ void MovesTable::initCastle()
 
   s_castleMasks_[1][0] = set_mask_bit(5) | set_mask_bit(6);
   s_castleMasks_[1][1] = set_mask_bit(1) | set_mask_bit(2) | set_mask_bit(3);
+
+  s_figureMoves_[0][Figure::TypeKing][60] |= set_mask_bit(58) | set_mask_bit(62);
+  s_figureMoves_[1][Figure::TypeKing][4] |= set_mask_bit(2) | set_mask_bit(6);
 }
 
 void MovesTable::resetAllTables(int pos)
@@ -74,6 +77,8 @@ void MovesTable::resetAllTables(int pos)
     s_pawnsCaps_[color][pos] = 0;
     s_pawnsMoves_[color][pos] = 0;
     s_pawnsFrom_[color][pos] = 0;
+    for (int t = 0; t < 8; ++t)
+      s_figureMoves_[color][t][pos] = 0;
   }
 
   for (int type = 0; type < 8; ++type)
@@ -113,7 +118,6 @@ void MovesTable::initPawns(int pos)
       {
         int8 & pp = s_tablePawn_[color][pos][i];
         s_pawnsCaps_[color][pos] |= set_mask_bit(pp);
-        //s_pawnsCaps_t_[color][pos] |= set_mask_bit(FiguresCounter::s_transposeIndex_[pp]);
       }
     }
 
@@ -123,6 +127,8 @@ void MovesTable::initPawns(int pos)
     {
       s_pawnsMoves_[color][pos] |= set_mask_bit(*ptable);
     }
+    s_figureMoves_[color][Figure::TypePawn][pos] |= s_pawnsCaps_[color][pos];
+    s_figureMoves_[color][Figure::TypePawn][pos] |= s_pawnsMoves_[color][pos];
 
     // fill 'from' mask
     if ( p.y() == 0 || p.y() == 7 )
@@ -180,6 +186,9 @@ void MovesTable::initKnights(int pos)
   // fill captures masks
   for (int i = 0; i < 8 && s_tableKnight_[pos][i] >= 0; ++i)
     s_otherCaps_[Figure::TypeKnight][pos] |= set_mask_bit(s_tableKnight_[pos][i]);
+
+  for (int c = 0; c < 2; ++c)
+    s_figureMoves_[c][Figure::TypeKnight][pos] |= s_otherCaps_[Figure::TypeKnight][pos];
 }
 
 void MovesTable::initKings(int pos)
@@ -243,6 +252,9 @@ void MovesTable::initKings(int pos)
       s_kingPressure_[pos] |= set_mask_bit(p);
     }
   }
+
+  for (int c = 0; c < 2; ++c)
+    s_figureMoves_[c][Figure::TypeKing][pos] |= s_otherCaps_[Figure::TypeKing][pos];
 }
 
 void MovesTable::initBishops(int pos)
@@ -266,6 +278,9 @@ void MovesTable::initBishops(int pos)
 
     s_tableOther_[Figure::TypeBishop-Figure::TypeBishop][pos][j++] = (d.delta() << 8) | (n);
   }
+
+  for (int c = 0; c < 2; ++c)
+    s_figureMoves_[c][Figure::TypeBishop][pos] |= s_otherCaps_[Figure::TypeBishop][pos];
 }
 
 void MovesTable::initRooks(int pos)
@@ -292,6 +307,9 @@ void MovesTable::initRooks(int pos)
 
     s_tableOther_[Figure::TypeRook-Figure::TypeBishop][pos][j++] = (d.delta() << 8) | (n);
   }
+
+  for (int c = 0; c < 2; ++c)
+    s_figureMoves_[c][Figure::TypeRook][pos] |= s_otherCaps_[Figure::TypeRook][pos];
 }
 
 void MovesTable::initQueens(int pos)
@@ -314,6 +332,9 @@ void MovesTable::initQueens(int pos)
       continue;
     s_tableOther_[Figure::TypeQueen-Figure::TypeBishop][pos][j++] = (d.delta() << 8) | (n);
   }
+
+  for (int c = 0; c < 2; ++c)
+    s_figureMoves_[c][Figure::TypeQueen][pos] |= s_otherCaps_[Figure::TypeQueen][pos];
 }
 
 } // NEngine

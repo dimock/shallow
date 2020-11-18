@@ -602,7 +602,7 @@ bool Board::validateMove(const Move & move) const
     mask_all ^= set_mask_bit(move.from());
     if(isAttacked(move.to(), mask_all, ocolor))
       return false;
-    // no need to verify castle under check
+    // don't need to verify castle under check
     if(underCheck())
       return true;
     // castle

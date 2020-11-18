@@ -12,7 +12,8 @@ namespace NEngine
 using HKeyType = uint32;
 enum Flag : uint8 { NoFlag, Alpha, AlphaBetta, Betta };
 
-ALIGN_MSC(4) struct ALIGN_GCC(4) HItem
+#pragma pack(push, 1)
+ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
 {
   operator bool () const { return hkey_ != 0; }
 
@@ -48,7 +49,7 @@ ALIGN_MSC(4) struct ALIGN_GCC(4) HItem
     return (Flag)(((uint8)xflag_) & 3);
   }
 };
-
+#pragma pack(pop)
 
 template <class ITEM>
 class HashTable
@@ -149,7 +150,7 @@ protected:
 };
 
 #if 0
-ALIGN_MSC(4) struct ALIGN_GCC(4) HBucket
+ALIGN_MSC(2) struct ALIGN_GCC(2) HBucket
 {
   static const int BucketSize = 4;
 
