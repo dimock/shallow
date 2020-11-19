@@ -18,7 +18,8 @@ struct History
 
   SortValueType score() const
   {
-    return (((int64)score_ * good_count_) / (bad_count_ + good_count_ + 1));
+    return score_;
+    //return (SortValueType)good_count_ - (SortValueType)bad_count_;// (((int64)score_ * good_count_) / (bad_count_ + good_count_ + 1));
   }
 
   void normalize(int n)
@@ -54,14 +55,19 @@ struct History
     bad_count_++;
   }
 
-  void inc_score(int ds)
+  inline void inc_score(int ds)
   {
     score_ += ds;
   }
 
+  inline void dec_score(int ds)
+  {
+    score_ -= ds;
+  }
+
 protected:
 
-  unsigned score_{};
+  SortValueType score_{};
   unsigned good_count_{};
   unsigned bad_count_{};
 };

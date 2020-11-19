@@ -463,7 +463,7 @@ ScoreType Engine::alphaBetta0(int ictx)
   if(sdata.best_)
   {
     auto& hist = history(board.color(), sdata.best_.from(), sdata.best_.to());
-    hist.inc_score(sdata.depth_ / ONE_PLY);
+    hist.inc_score(sdata.depth_);
     sortMoves0(ictx);
 
     X_ASSERT(!(scontexts_[ictx].moves_[0] == sdata.best_), "not best move first");
@@ -790,26 +790,25 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
       auto& hist = history(board.color(), move.from(), move.to());
-      bool capture = board.getField(move.to());
       if(score > scoreBest)
       {
-        //if(!capture)
-          hist.inc_good();
         best = move;
         dont_reduce = check_or_cap;
         scoreBest = score;
         if(score > alpha)
         {
-          capture = capture || move.new_type() || (move.to() > 0 && board.enpassant() == move.to() && board.getField(move.from()).type() == Figure::TypePawn);
-          if(!capture)
+          bool capture = board.getField(move.to())  || move.new_type() || (move.to() > 0 && board.enpassant() == move.to() && board.getField(move.from()).type() == Figure::TypePawn);
+          if (!capture) {
             sctx.plystack_[ply].killer_ = move;
+          }
+          hist.inc_score(depth >> 4);
           alpha = score;
           if(pv)
             assemblePV(ictx, move, board.underCheck(), ply);
         }
       }
-      else// if(!capture)
-        hist.inc_bad();
+      else
+        hist.dec_score(depth >> 4);
     }
 
     ++counter;
@@ -869,9 +868,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool threat{ false };
   if(best)
   {
-    auto& hist = history(board.color(), best.from(), best.to());
-    hist.inc_score(depth / ONE_PLY);
-
 #if ((defined USE_LMR) && (defined VERIFY_LMR))
     // have to recalculate with full depth, or indicate threat in hash
     if ( !sctx.stop_ && !dont_reduce && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )
