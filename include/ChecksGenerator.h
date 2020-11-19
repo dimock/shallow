@@ -16,7 +16,7 @@ struct ChecksGenerator
     board_(board)
   {}
 
-  inline void add_sh(int from, int to)
+  inline void add(int from, int to)
   {
     MOVE move{ from, to };
     X_ASSERT(find(move), "ChecksGenerator. move exists");
@@ -58,7 +58,7 @@ struct ChecksGenerator
 
     // pawns
     {
-      auto pw_check_mask = movesTable().pawnCaps(ocolor, oki_pos);
+      auto pw_check_mask = movesTable().pawnCaps(ocolor, oki_pos) & mask_all_inv;
       for(; pw_check_mask;)
       {
         auto to = clear_lsb(pw_check_mask);
@@ -74,7 +74,7 @@ struct ChecksGenerator
           auto from = clear_lsb(pw_from);
           if(board_.is_something_between(from, to, mask_all_inv))
             continue;
-          add_sh(from, to);
+          add(from, to);
           break;
         }
       }
@@ -94,7 +94,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(kn_moves);
           X_ASSERT(board_.getField(to), "field, from that we are going to check is occupied");
-          add_sh(from, to);
+          add(from, to);
         }
       }
     }
@@ -114,7 +114,7 @@ struct ChecksGenerator
                   || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
         if((oki_pos&7) == (r_pos&7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add_sh(ki_pos, ki_pos+2);
+          add(ki_pos, ki_pos+2);
           castle = true;
         }
       }
@@ -129,7 +129,7 @@ struct ChecksGenerator
                   || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
         if((oki_pos&7) == (r_pos&7) && board_.is_nothing_between(r_pos, oki_pos, mask_all_inv))
         {
-          add_sh(ki_pos, ki_pos-2);
+          add(ki_pos, ki_pos-2);
           castle = true;
         }
       }
@@ -142,7 +142,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(ki_mask);
           X_ASSERT(board_.getField(to), "king moves to occupied field");
-          add_sh(ki_pos, to);
+          add(ki_pos, to);
         }
       }
     }
@@ -171,7 +171,7 @@ struct ChecksGenerator
             X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discoved check");
             const auto* to = movesTable().pawn(color, from) + 2; // skip captures
             for(; *to >= 0 && !board_.getField(*to); ++to)
-              add_sh(from, *to);
+              add(from, *to);
           }
           auto rm = btw_mask & r_mask;
           visited |= rm;
@@ -206,7 +206,7 @@ struct ChecksGenerator
             X_ASSERT(!board_.discoveredCheck(from, mask_all, color, oki_pos), "pawn should discover check");
             const auto* to = movesTable().pawn(color, from) + 2; // skip captures
             for(; *to >= 0 && !board_.getField(*to); ++to)
-              add_sh(from, *to);
+              add(from, *to);
           }
           auto bm = btw_mask & bi_mask;
           visited |= bm;
@@ -235,7 +235,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(q_moves);
           X_ASSERT(board_.getField(to), "queen goes to occupied field");
-          add_sh(from, to);
+          add(from, to);
         }
       }
     }
@@ -250,7 +250,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(bi_moves);
           X_ASSERT(board_.getField(to), "bishop goes to occupied field");
-          add_sh(from, to);
+          add(from, to);
         }
       }
     }
@@ -266,7 +266,7 @@ struct ChecksGenerator
         {
           auto to = clear_lsb(r_moves);
           X_ASSERT(board_.getField(to), "rook goes to occupied field");
-          add_sh(from, to);
+          add(from, to);
         }
       }
     }
@@ -280,7 +280,7 @@ struct ChecksGenerator
     for (; bmask;)
     {
       auto to = clear_lsb(bmask);
-      add_sh(from, to);
+      add(from, to);
     }
   }
 
@@ -290,7 +290,7 @@ struct ChecksGenerator
     for (; rmask;)
     {
       auto to = clear_lsb(rmask);
-      add_sh(from, to);
+      add(from, to);
     }
   }
 

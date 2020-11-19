@@ -81,9 +81,9 @@ void Engine::setThreadsNumber(int n)
   if (!scontexts_.empty())
   {
     // stash/restore existing context
-    auto sctx0 = scontexts_.at(0);
+    auto sctx0 = scontexts_[0];
     scontexts_.resize(n);
-    scontexts_.at(0) = sctx0;
+    scontexts_[0] = sctx0;
   }
   else
   {
@@ -104,7 +104,7 @@ bool Engine::fromFEN(std::string const& fen)
   for(auto& sctx : scontexts_)
     sctx.stop_ = false;
 
-  SBoard<Board, UndoInfo, Board::GameLength> tboard(scontexts_.at(0).board_);
+  SBoard<Board, UndoInfo, Board::GameLength> tboard(scontexts_[0].board_);
 
   // verify FEN first
   if(!NEngine::fromFEN(fen, tboard))
@@ -112,7 +112,7 @@ bool Engine::fromFEN(std::string const& fen)
 
   clear_history();
 
-  return NEngine::fromFEN(fen, scontexts_.at(0).board_);
+  return NEngine::fromFEN(fen, scontexts_[0].board_);
 }
 
 void Engine::setBoard(Board const& board)
@@ -122,12 +122,12 @@ void Engine::setBoard(Board const& board)
   for (auto& sctx : scontexts_)
     sctx.stop_ = false;
   clear_history();
-  scontexts_.at(0).board_ = board;
+  scontexts_[0].board_ = board;
 }
 
 std::string Engine::toFEN() const
 {
-  return NEngine::toFEN(scontexts_.at(0).board_);
+  return NEngine::toFEN(scontexts_[0].board_);
 }
 
 void Engine::clearHash()
@@ -178,29 +178,29 @@ void Engine::pleaseStop(int ictx)
 {
   if (ictx != 0)
     return;
-  scontexts_.at(ictx).stop_ = true;
+  scontexts_[ictx].stop_ = true;
 }
 
 bool Engine::checkForStop(int ictx)
 {
   if (ictx != 0)
     return false;
-  auto& sdata = scontexts_.at(ictx).sdata_;
-  if(sdata.totalNodes_ && !(sdata.totalNodes_ & TIMING_FLAG))
+  auto& sdata = scontexts_[ictx].sdata_;
+  if (sdata.totalNodes_ && !(sdata.totalNodes_ & TIMING_FLAG))
   {
-    if(sparams_.timeLimit_ > NTime::duration(0))
+    if (sparams_.timeLimit_ > NTime::duration(0))
       testTimer(ictx);
     else
       testInput(ictx);
   }
-  return scontexts_.at(ictx).stop_;
+  return scontexts_[ictx].stop_;
 }
 
 void Engine::testTimer(int ictx)
 {
   if (ictx != 0)
     return;
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  auto& sdata = scontexts_[ictx].sdata_;
   if((NTime::now() - sdata.tstart_) > sparams_.timeLimit_)
     pleaseStop(ictx);
 
@@ -211,7 +211,7 @@ void Engine::testInput(int ictx)
 {
   if (ictx != 0)
     return;
-  auto& sdata = scontexts_.at(ictx).sdata_;
+  auto& sdata = scontexts_[ictx].sdata_;
   if(callbacks_.queryInput_)
   {
     (callbacks_.queryInput_)();
@@ -224,7 +224,7 @@ void Engine::testInput(int ictx)
     {
       SearchData sdataTotal = sdata;
       for (size_t i = 1; i < scontexts_.size(); ++i)
-        sdataTotal.nodesCount_ += scontexts_.at(i).sdata_.nodesCount_;
+        sdataTotal.nodesCount_ += scontexts_[i].sdata_.nodesCount_;
       (callbacks_.sendStats_)(sdataTotal);
     }
   }
@@ -235,13 +235,14 @@ void Engine::assemblePV(int ictx, const Move & move, bool checking, int ply)
   if(ply >= MaxPly-1)
     return;
 
-  scontexts_.at(ictx).plystack_[ply].pv_[ply] = move;
-  scontexts_.at(ictx).plystack_[ply].pv_[ply+1] = Move{true};
+  auto& sctx = scontexts_[ictx];
+  sctx.plystack_[ply].pv_[ply] = move;
+  sctx.plystack_[ply].pv_[ply+1] = Move{true};
 
   for(int i = ply+1; i < MaxPly-1; ++i)
   {
-    scontexts_.at(ictx).plystack_[ply].pv_[i] = scontexts_.at(ictx).plystack_[ply+1].pv_[i];
-    if(!scontexts_.at(ictx).plystack_[ply].pv_[i])
+    sctx.plystack_[ply].pv_[i] = sctx.plystack_[ply+1].pv_[i];
+    if(!sctx.plystack_[ply].pv_[i])
     {
       break;
     }

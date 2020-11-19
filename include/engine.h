@@ -76,8 +76,8 @@ public:
   bool threadSearch(const int ictx, const int depth0);
 
   void setBoard(Board const& board);
-  Board & getBoard() { return scontexts_.at(0).board_; }
-  const Board & getBoard() const { return scontexts_.at(0).board_; }
+  Board & getBoard() { return scontexts_[0].board_; }
+  const Board & getBoard() const { return scontexts_[0].board_; }
 
   void pleaseStop(int ictx);
 
@@ -110,7 +110,6 @@ private:
   // time control
   void testTimer(int ictx);
   void testInput(int ictx);
-  bool stopped(int ictx) const { return scontexts_.at(ictx).stop_; }
 
   // search routine
   ScoreType alphaBetta0(int ictx);
