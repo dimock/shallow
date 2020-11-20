@@ -580,7 +580,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
 #ifdef USE_HASH
   HItem *pitem = nullptr;
-  Flag flag = getHash(ictx, depth/ONE_PLY, ply, alpha, betta, hmove, hscore, pv, singular, pitem);
+  Flag flag = getHash(ictx, depth>>4 /* /ONE_PLY */, ply, alpha, betta, hmove, hscore, pv, singular, pitem);
   if (flag == Alpha || flag == Betta)
   {
     return hscore;
@@ -660,7 +660,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     if (score0 > mscore)
       mscore = score0;
     int threshold = (int)alpha - (int)mscore - Position_GainFP;
-    if (threshold > thresholds_[(depth / ONE_PLY) & 3])
+    if (threshold > thresholds_[(depth >> 4 /* / ONE_PLY */) & 3])
       return captures(ictx, depth, ply, alpha, betta, pv, score0);
   }
 #endif // futility pruning
@@ -672,7 +672,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef USE_IID
-  if(!hmove && depth >= 4 * ONE_PLY)
+  if(!hmove && depth >= (ONE_PLY<<2))
   {
     alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
     if(const HItem * hitem = hash_.get(board.fmgr().hashCode()))
@@ -746,7 +746,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_LMR
       if(!check_escape &&         
          !danger_pawn &&
-          sdata.depth_ * ONE_PLY > LMR_MinDepthLimit &&
+          (sdata.depth_<<4) /* *ONE_PLY*/ > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
           alpha > -Figure::MatScore-MaxPly &&
           scontexts_[ictx].board_.canBeReduced(move))
@@ -888,7 +888,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef USE_HASH
-  putHash(ictx, best, alpha0, betta, scoreBest, depth/ONE_PLY, ply, threat, singular, pv, pitem);
+  putHash(ictx, best, alpha0, betta, scoreBest, depth>>4 /* /ONE_PLY */, ply, threat, singular, pv, pitem);
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -1012,7 +1012,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     }
 #endif // RELEASEDEBUGINFO
 
-    int depthInc = board.underCheck() ? ONE_PLY : 0;
+    int depthInc = board.underCheck() * ONE_PLY;
     score = -captures(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv);
 
 #ifdef RELEASEDEBUGINFO

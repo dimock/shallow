@@ -139,13 +139,10 @@ void Engine::clearHash()
 
 void Engine::reset()
 {
-  for (auto& sctx : scontexts_)
-  {
+  for (auto& sctx : scontexts_) {
     sctx.reset();
   }
-
   clear_history();
-
 }
 
 void Engine::setCallbacks(xCallback cs)
