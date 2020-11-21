@@ -427,6 +427,7 @@ ScoreType Engine::alphaBetta0(int ictx)
       break;
 
     auto& move = sctx.moves_[sdata.counter_];
+    move.sort_value = -Figure::MatScore;
     ScoreType score = processMove0(ictx, move, alpha, betta, !sdata.counter_);
     X_ASSERT(board != board0, "board undo error");
 
@@ -436,13 +437,14 @@ ScoreType Engine::alphaBetta0(int ictx)
     auto& hist = history(board.color(), move.from(), move.to());
     if(score > alpha)
     {
-      hist.inc_good();
+      move.sort_value = score;
+      //hist.inc_good();
       sdata.best_ = move;
       alpha = score;
       assemblePV(ictx, sdata.best_, board.underCheck(), 0);
     }
-    else
-      hist.inc_bad();
+    //else
+    //  hist.inc_bad();
 
     if (ictx == 0 && callbacks_.sendStats_ && sparams_.analyze_mode_)
     {
@@ -462,8 +464,8 @@ ScoreType Engine::alphaBetta0(int ictx)
 
   if(sdata.best_)
   {
-    auto& hist = history(board.color(), sdata.best_.from(), sdata.best_.to());
-    hist.inc_score(sdata.depth_);
+    //auto& hist = history(board.color(), sdata.best_.from(), sdata.best_.to());
+    //hist.inc_score(sdata.depth_);
     sortMoves0(ictx);
 
     X_ASSERT(!(scontexts_[ictx].moves_[0] == sdata.best_), "not best move first");
@@ -480,22 +482,22 @@ void Engine::sortMoves0(int ictx)
   auto& moves = sctx.moves_;
   auto& board = sctx.board_;
 
-  bring_to_front(moves.data(), moves.data() + sdata.numOfMoves_, sdata.best_);
+  //bring_to_front(moves.data(), moves.data() + sdata.numOfMoves_, sdata.best_);
   
-  if (sdata.numOfMoves_ > 2)
-  {
+  //if (sdata.numOfMoves_ > 2)
+  //{
     auto* b = moves.data();
     auto* e = b + sdata.numOfMoves_;
-    b++;
-    for (auto* m = b; m != e; ++m)
-    {
-      if (m->new_type() || board.is_capture(*m))
-        continue;
-      auto& hist = history(board.color(), m->from(), m->to());
-      m->sort_value = hist.score();
-    }
+  //  b++;
+    //for (auto* m = b; m != e; ++m)
+    //{
+    //  if (m->new_type() || board.is_capture(*m))
+    //    continue;
+    //  auto& hist = history(board.color(), m->from(), m->to());
+    //  m->sort_value = hist.score();
+    //}
     std::stable_sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
-  }
+  //}
 }
 
 ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv)
@@ -789,7 +791,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
 #endif
 
-      auto& hist = history(board.color(), move.from(), move.to());
       if(score > scoreBest)
       {
         best = move;
@@ -797,18 +798,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         scoreBest = score;
         if(score > alpha)
         {
-          bool capture = board.getField(move.to())  || move.new_type() || (move.to() > 0 && board.enpassant() == move.to() && board.getField(move.from()).type() == Figure::TypePawn);
-          if (!capture) {
-            sctx.plystack_[ply].killer_ = move;
-          }
-          hist.inc_score(depth >> 4);
           alpha = score;
           if(pv)
             assemblePV(ictx, move, board.underCheck(), ply);
         }
       }
-      else
-        hist.dec_score(depth >> 4);
+      else {
+        auto& hist = history(board.color(), move.from(), move.to());
+        auto d = depth >> 4;
+        hist.dec_score(d*d);
+      }
     }
 
     ++counter;
@@ -868,6 +867,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool threat{ false };
   if(best)
   {
+    bool capture = board.getField(best.to()) || best.new_type() || (best.to() > 0 && board.enpassant() == best.to() && board.getField(best.from()).type() == Figure::TypePawn);
+    if (!capture) {
+      sctx.plystack_[ply].killer_ = best;
+      auto& hist = history(board.color(), best.from(), best.to());
+      auto d = depth >> 4;
+      hist.inc_score(d*d);
+    }
+
 #if ((defined USE_LMR) && (defined VERIFY_LMR))
     // have to recalculate with full depth, or indicate threat in hash
     if ( !sctx.stop_ && !dont_reduce && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )

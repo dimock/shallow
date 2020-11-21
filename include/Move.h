@@ -71,6 +71,12 @@ struct SMove : public Move
   {
   }
 
+  SMove& operator = (Move const& m)
+  {
+    (Move&)(*this) = m;
+    return *this;
+  }
+
   inline bool operator < (SMove const& m) const
   {
     return sort_value < m.sort_value;

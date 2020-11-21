@@ -32,20 +32,20 @@ void max_history()
   ofs << score_max << std::endl;
 }
 
-void normalize_history(int n)
-{
-  for(int c = 0; c < 2; ++c)
-  {
-    for(int i = 0; i < NumOfFields; ++i)
-    {
-      for(int j = 0; j < NumOfFields; ++j)
-      {
-        History & hist = history_[c][i][j];
-        hist.normalize(n);
-      }
-    }
-  }
-}
+//void normalize_history(int n)
+//{
+//  for(int c = 0; c < 2; ++c)
+//  {
+//    for(int i = 0; i < NumOfFields; ++i)
+//    {
+//      for(int j = 0; j < NumOfFields; ++j)
+//      {
+//        History & hist = history_[c][i][j];
+//        hist.normalize(n);
+//      }
+//    }
+//  }
+//}
 
 void save_history(std::string const& fname)
 {

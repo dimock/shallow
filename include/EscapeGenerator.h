@@ -30,11 +30,13 @@ struct EscapeGenerator
 
   inline void add_caps(int from, int to, Figure::Type new_type)
   {
+    //caps_.emplace_back(from, to, new_type);
     insert_sorted(caps_, MOVE{ from, to, new_type, board_.sortValueOfCap(from, to, new_type) });
   }
 
   inline void add_usual(int from, int to)
   {
+    //usual_.emplace_back(from, to);
     insert_sorted(usual_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
   }
 
@@ -355,9 +357,9 @@ struct EscapeGenerator
     }
     if(order_ == oGenCaps)
     {
-      if(!board_.doubleCheck())
-        generateCaps();
       generateKingCaps();
+      if (!board_.doubleCheck())
+        generateCaps();
       order_ = oCaps;
       iter_ = caps_.begin();
     }

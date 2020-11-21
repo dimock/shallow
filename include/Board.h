@@ -473,7 +473,7 @@ struct Board
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
     auto const& undo = lastUndo();
-    return  ((hist.good()<<2) <= hist.bad()) &&
+    return  //((hist.good()<<2) <= hist.bad()) &&
       !(lastUndo().capture()
        || move.new_type() > 0
        || undo.castle()
