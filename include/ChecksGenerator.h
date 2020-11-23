@@ -21,6 +21,7 @@ struct ChecksGenerator
     MOVE move{ from, to };
     X_ASSERT(find(move), "ChecksGenerator. move exists");
     moves_.push_back(move);
+    //insert_sorted(moves_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
   }
 
   bool find(MOVE const& m)

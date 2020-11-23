@@ -35,7 +35,8 @@ struct EscapeGenerator
 
   inline void add_usual(int from, int to)
   {
-    insert_sorted(usual_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
+    usual_.emplace_back(from, to);
+    //insert_sorted(usual_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
   }
 
   inline void generateCaps()
@@ -313,7 +314,8 @@ struct EscapeGenerator
     const auto& o_mask = board_.fmgr().mask(ocolor);
 
     // captures
-    auto ki_mask = movesTable().caps(Figure::TypeKing, board_.kingPos(color)) & o_mask;
+    auto ki_mask = movesTable().caps(Figure::TypeKing, board_.kingPos(color))
+      & (o_mask | movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor)));
     for(; ki_mask;)
     {
       auto to = clear_lsb(ki_mask);

@@ -799,7 +799,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
             sctx.plystack_[ply].killer_ = move;
           }
           auto d = depth >> 4;
-          hist.inc_score(d*d);
+          hist.inc_score(d);
           alpha = score;
           if(pv)
             assemblePV(ictx, move, board.underCheck(), ply);

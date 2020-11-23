@@ -216,6 +216,7 @@ namespace nst
 #undef SYNCHRONIZE_LAST_ITER
 
 static const SortValueType CaptureRecentlyBonus = 10;
+static const SortValueType PromotionBonus = 10;
 
 static const int NumUsualAfterHorizon = 3;
 static const int ONE_PLY = 16;
