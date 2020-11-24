@@ -133,34 +133,15 @@ bool Engine::mainThreadSearch(int ictx)
   // copy to print stats later
   sdata.board_ = board;
 
-  bool timeAdded = false;
-
   for(sdata.depth_ = depth0_; !sctx.stop_ && sdata.depth_ <= sparams_.depthMax_; ++sdata.depth_)
   {
     sctx.plystack_[0].clearPV(sparams_.depthMax_);
     sdata.restart();
+    
     ScoreType score = alphaBetta0(ictx);
 
     if(sdata.best_)
     {
-      if(ictx == 0 && sctx.stop_ &&
-        (sdata.depth_ > 2) &&
-        (sdata.counter_ < sdata.numOfMoves_) && 
-        callbacks_.giveTime_ &&
-        !sparams_.analyze_mode_ &&
-        (sres.best_ != sdata.best_ || sres.best_ != sres.prevBest_))
-      {
-        auto t_add = (callbacks_.giveTime_)();
-        if(NTime::milli_seconds<int>(t_add) > 0)
-        {
-          sctx.stop_ = false;
-          sparams_.timeLimit_ += t_add;
-          sdata.depth_--;
-          timeAdded = true;
-          continue;
-        }
-      }
-
       if (sdata.counter_ == sdata.numOfMoves_)
       {
         auto t = NTime::now();
@@ -194,28 +175,14 @@ bool Engine::mainThreadSearch(int ictx)
           (callbacks_.sendOutput_)(sres);
         }
 
-        if (!sparams_.analyze_mode_ && timeAdded) {
+        if (!sparams_.analyze_mode_ && sparams_.timeAdded_) {
+          pleaseStop(ictx);
           break;
         }
       }
     }
-    // we haven't found move and spend more time for search it than on prev. iteration and best move changed from prev iteration
-    else if(ictx == 0 && sctx.stop_ && sdata.depth_ > 2 && callbacks_.giveTime_ && !sparams_.analyze_mode_ && sres.best_ != sres.prevBest_)
+    else
     {
-      auto t = NTime::now();
-      //if((t - sdata.tprev_) >= (sdata.tprev_ - sdata.tstart_))
-      {
-        auto t_add = (callbacks_.giveTime_)();
-        if(t_add > NTime::duration(0))
-        {
-          sctx.stop_ = false;
-          sparams_.timeLimit_ += t_add;
-          sdata.depth_--;
-          timeAdded = true;
-          continue;
-        }
-      }
-
 #ifdef SYNCHRONIZE_LAST_ITER
       int jcbest = -1;
       {
@@ -272,7 +239,6 @@ bool Engine::mainThreadSearch(int ictx)
   }
 
   sres.totalNodes_ = sdata.totalNodes_;
-
   sres.dt_ = NTime::now() - sdata.tstart_;
 
   if(ictx == 0 && sparams_.analyze_mode_ && callbacks_.sendFinished_)

@@ -9,14 +9,6 @@
 namespace NEngine
 {
 
-void SearchParams::reset()
-{
-  timeLimit_ = NTime::duration(0);
-  depthMax_ = 0;
-  analyze_mode_ = false;
-  scoreLimit_ = Figure::MatScore;
-}
-
 void Engine::SearchContext::reset()
 {
   sdata_.reset();
@@ -139,6 +131,7 @@ void Engine::clearHash()
 
 void Engine::reset()
 {
+  sparams_.timeAdded_ = false;
   for (auto& sctx : scontexts_) {
     sctx.reset();
   }
@@ -198,10 +191,34 @@ void Engine::testTimer(int ictx)
   if (ictx != 0)
     return;
   auto& sdata = scontexts_[ictx].sdata_;
-  if((NTime::now() - sdata.tstart_) > sparams_.timeLimit_)
+  if(((NTime::now() - sdata.tstart_) > sparams_.timeLimit_) && !tryToAddTime())
     pleaseStop(ictx);
 
   testInput(ictx);
+}
+
+bool Engine::tryToAddTime()
+{
+  if (sparams_.analyze_mode_ || !callbacks_.giveTime_) {
+    return false;
+  }
+
+  auto& sctx = scontexts_[0];
+  auto& sres = sctx.sres_;
+  auto& sdata = sctx.sdata_;
+
+  if ((sdata.best_ && (sdata.counter_ < sdata.numOfMoves_) && (sres.best_ != sdata.best_ || sres.best_ != sres.prevBest_)) ||
+      (!sdata.best_ && (sres.best_ != sres.prevBest_)))
+  {
+    auto t_add = (callbacks_.giveTime_)();
+    if (NTime::milli_seconds<int>(t_add) > 0)
+    {
+      sparams_.timeLimit_ += t_add;
+      sparams_.timeAdded_ = true;
+      return true;
+    }
+  }
+  return false;
 }
 
 void Engine::testInput(int ictx)

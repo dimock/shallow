@@ -40,11 +40,10 @@ struct PlyStack
 
 struct SearchParams
 {
-  void reset();
-
   NTime::duration timeLimit_{};
   int  depthMax_{};
   bool analyze_mode_{};
+  bool timeAdded_{};
   ScoreType scoreLimit_{ Figure::MatScore };
 };
 
@@ -108,6 +107,7 @@ private:
   void logMovies(int ictx);
 
   // time control
+  bool tryToAddTime();
   void testTimer(int ictx);
   void testInput(int ictx);
 
@@ -163,7 +163,6 @@ private:
 
 #ifdef RELEASEDEBUGINFO
   bool findSequence(int ictx, int ply, bool exactMatch) const;
-  void verifyGenerators(int ictx, const Move & hmove);
 #endif
 
 public:
