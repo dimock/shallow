@@ -12,6 +12,8 @@
 
 namespace NShallow
 {
+  
+constexpr int DepthMaximum = 32;
 
 struct ReplyStruct
 {
@@ -67,7 +69,7 @@ public:
   ReplyStruct move(xCmd const& moveCmd);
   bool makeMove(std::string const& moveStr);
   ReplyStruct reply(bool winboardFormat);
-  bool analyze();
+  bool analyze(int maxDepth);
   void stop();
 
   void setCallback(NEngine::xCallback& xcbk);

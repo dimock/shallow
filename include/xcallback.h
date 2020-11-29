@@ -56,6 +56,7 @@ struct SearchData
   NTime::point tstart_{};
   NTime::point tprev_{};
   SMove best_;
+  ScoreType scoreBest_{-Figure::MatScore};
 };
 
 using query_input_command    = std::function<bool()>;

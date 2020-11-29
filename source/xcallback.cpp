@@ -38,6 +38,7 @@ void SearchResult::reset()
     pv_[i] = Move{ true };
 
   best_ = Move{ true };
+  prevBest_ = Move{ true };
   dt_ = NTime::duration{};
   nodesCount_ = 0;
   totalNodes_ = 0;
@@ -46,7 +47,7 @@ void SearchResult::reset()
   counter_ = 0;
   board_ = Board{};
   depth_ = 0;
-  score_ = 0;
+  score_ = -Figure::MatScore;
 }
 void SearchData::reset()
 {
@@ -56,6 +57,7 @@ void SearchData::reset()
   tprev_ = tstart_ = NTime::now();
   numOfMoves_ = 0;
   best_ = SMove{ true };
+  scoreBest_ = -Figure::MatScore;
   counter_ = 0;
   plyMax_ = 0;
 }
@@ -63,6 +65,7 @@ void SearchData::reset()
 void SearchData::restart()
 {
   best_ = SMove{ true };
+  scoreBest_ = -Figure::MatScore;
   nodesCount_ = 0;
   plyMax_ = 0;
   counter_ = 0;

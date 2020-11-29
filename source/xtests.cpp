@@ -273,7 +273,7 @@ void analyzeFen(std::string const& fname)
 
   xcbk.sendStats_ = [](NEngine::SearchData const& sdata)
   {
-    printUciStat(sdata);
+    //printUciStat(sdata);
   };
 
   NShallow::Processor proc;
@@ -292,7 +292,7 @@ void analyzeFen(std::string const& fname)
     proc.clear();
     proc.setThreadsNumber(1);
     //proc.file2hash("D:\\Projects\\gitproj\\hash\\hash");
-    proc.analyze();
+    proc.analyze(NShallow::DepthMaximum);
   },
     [](std::string const& err_str)
   {

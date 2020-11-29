@@ -56,6 +56,11 @@ struct BoardSaveData
     };
     uint64  mask_;
   };
+
+  void clear()
+  {
+    mask_ = 0;
+  }
 };
 
 struct UndoInfo
@@ -92,6 +97,18 @@ struct UndoInfo
   bool is_reduced() const { return (mflags_ & Reduced) != 0; }
   bool threat() const { return (mflags_ & Threat) != 0; }
   bool is_nullmove() const { return (mflags_ & Nullmove) != 0; }
+
+  void clear()
+  {
+    zcode_ = 0;
+    zcode_kpw_ = 0;
+    zcode_fgrs_ = 0;
+    data_.clear();
+    move_ = Move{ true };
+    mflags_ = 0;
+    eaten_type_ = 0;
+    psq32_ = 0;
+  }
 };
 
 struct Board
@@ -849,6 +866,13 @@ public:
   {
     B::g_undoStack = undoStackIntr_.data();
     copyStack(oboard);
+  }
+
+  void clearStack()
+  {
+    for (auto& u : undoStackIntr_) {
+      u.clear();
+    }
   }
 private:
   void copyStack(B const& oboard)

@@ -18,10 +18,9 @@ struct ChecksGenerator
 
   inline void add(int from, int to)
   {
-    MOVE move{ from, to };
+    MOVE move{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() };
     X_ASSERT(find(move), "ChecksGenerator. move exists");
-    moves_.push_back(move);
-    //insert_sorted(moves_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
+    insert_sorted(moves_, move);
   }
 
   bool find(MOVE const& m)

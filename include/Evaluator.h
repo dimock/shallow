@@ -24,68 +24,6 @@ class Evaluator
     GamePhase phase_{Opening};
   };
 
-  struct FullScore
-  {
-    int common_{};
-    int opening_{};
-    int endGame_{};
-
-    FullScore& operator -= (FullScore const& other)
-    {
-      common_  -= other.common_;
-      opening_ -= other.opening_;
-      endGame_ -= other.endGame_;
-      return *this;
-    }
-
-    FullScore& operator += (FullScore const& other)
-    {
-      common_  += other.common_;
-      opening_ += other.opening_;
-      endGame_ += other.endGame_;
-      return *this;
-    }
-
-    FullScore operator + (FullScore const& other) const
-    {
-      FullScore result{*this};
-      result.common_  += other.common_;
-      result.opening_ += other.opening_;
-      result.endGame_ += other.endGame_;
-      return result;
-    }
-
-    FullScore operator - (FullScore const& other) const
-    {
-      FullScore result{ *this };
-      result.common_ -= other.common_;
-      result.opening_ -= other.opening_;
-      result.endGame_ -= other.endGame_;
-      return result;
-    }
-
-    FullScore& operator >>= (int shift)
-    {
-      common_ >>= shift;
-      opening_ >>= shift;
-      endGame_ >>= shift;
-      return *this;
-    }
-
-    FullScore& operator /= (int n)
-    {
-      common_  /= n;
-      opening_ /= n;
-      endGame_ /= n;
-      return *this;
-    }
-
-    bool operator == (FullScore const& other) const
-    {
-      return common_ == other.common_ && opening_ == other.opening_ && endGame_ == other.endGame_;
-    }
-  };
-
   struct PasserInfo
   {
     ScoreType32 score_;
@@ -139,10 +77,26 @@ class Evaluator
   SMove move_[2];
 #endif // GENERATE_MAT_MOVES_IN_EVAL
 
+  BitMask mask_all_{};
+  BitMask inv_mask_all_{};
+  int alpha_{};
+  int betta_{};
+
+  Board const* board_{ nullptr };
+
+#ifdef USE_HASH
+  EHashTable ehash_{ 18 };
+  EHashTable fhash_{ 18 };
+#else
+  EHashTable ehash_{ 0 };
+  EHashTable fhash_{ 0 };
+#endif
+
 public:
   const int lazyThreshold_ = 1000;
 
   void initialize(Board const* board);
+  void reset();
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
   ScoreType materialScore() const;
@@ -170,19 +124,6 @@ private:
       result += score32.eval1();
     else // middle game
       result = result + (score32.eval0() * phase.opening_ + score32.eval1()* phase.endGame_) / weightOEDiff_;
-    return result;
-  }
-
-  // linear interpolation between opening & endgame
-  ScoreType lipolScore(FullScore const& score, PhaseInfo const& phase) const
-  {
-    ScoreType result = score.common_;
-    if(phase.phase_ == Opening)
-      result += score.opening_;
-    else if(phase.phase_ == EndGame)
-      result += score.endGame_;
-    else // middle game
-      result = result + (score.opening_ * phase.opening_ + score.endGame_ * phase.endGame_) / weightOEDiff_;
     return result;
   }
 
@@ -264,23 +205,8 @@ private:
 
   const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 
-  Board const* board_{ nullptr };
-
-#ifdef USE_HASH
-  EHashTable ehash_{18};
-  EHashTable fhash_{18};
-#else
-  EHashTable ehash_{0};
-  EHashTable fhash_{0};
-#endif
-
   static const BitMask castle_mask_[2][2];
   static const BitMask blocked_rook_mask_[2][2];
-
-  BitMask mask_all_{};
-  BitMask inv_mask_all_{};
-  int alpha_{};
-  int betta_{};
 
   static const int maximumAttackersWeight_ = 2 * Figure::figureWeight_[Figure::TypeKnight] +
     2 * Figure::figureWeight_[Figure::TypeBishop] +

@@ -35,7 +35,6 @@ struct EscapeGenerator
 
   inline void add_usual(int from, int to)
   {
-    //usual_.emplace_back(from, to);
     insert_sorted(usual_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
   }
 
@@ -314,8 +313,8 @@ struct EscapeGenerator
     const auto& o_mask = board_.fmgr().mask(ocolor);
 
     // captures
-    auto ki_mask = movesTable().caps(Figure::TypeKing, board_.kingPos(color))
-      & (o_mask | movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor)));
+    auto ki_mask = (movesTable().caps(Figure::TypeKing, board_.kingPos(color)) & o_mask)
+      & ~movesTable().caps(Figure::TypeKing, board_.kingPos(ocolor));
     for(; ki_mask;)
     {
       auto to = clear_lsb(ki_mask);
@@ -454,9 +453,9 @@ struct EscapeGenerator
     }
     if(order_ == oGenUsual)
     {
+      generateKingUsual();
       if(!board_.doubleCheck())
         generateUsual();
-      generateKingUsual();
       order_ = oUsual;
       iter_ = usual_.begin();
     }
@@ -488,7 +487,7 @@ struct EscapeGenerator
         auto* move = &*iter_;
         X_ASSERT(*move == hmove_, "do move from hash second time");
         ++iter_;
-        X_ASSERT(!board_.validateMove(*move), "invalid weak move");
+        X_ASSERT(!board_.validateMoveBruteforce(*move), "invalid weak move");
         return move;
       }
       order_ = oWeakUsual;
@@ -501,7 +500,7 @@ struct EscapeGenerator
         auto* move = &*iter_;
         X_ASSERT(*move == hmove_, "do move from hash second time");
         ++iter_;
-        X_ASSERT(!board_.validateMove(*move), "invalid weak move");
+        X_ASSERT(!board_.validateMoveBruteforce(*move), "invalid weak move");
         return move;
       }
     }
@@ -514,11 +513,11 @@ struct EscapeGenerator
   MovesList weak_;
   MovesList weakUsual_;
   typename MovesList::iterator iter_;
-  BitMask protect_king_msk_;
-  BitMask mask_all;
-  Figure::Color ocolor;
-  MOVE hmove_;
-  MOVE killer_;
+  BitMask protect_king_msk_{};
+  BitMask mask_all{};
+  Figure::Color ocolor{};
+  MOVE hmove_{true};
+  MOVE killer_{true};
 }; // EscapeGenerator
 
 } // NEngine

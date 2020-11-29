@@ -10,6 +10,7 @@ engine.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <queue>
 #include <array>
 #include <mutex>
+#include <Helpers.h>
 
 namespace NEngine
 {
@@ -118,7 +119,41 @@ private:
 
   ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
 
-  int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const;
+  int depthIncrement(int ictx, Move const& move, bool pv, bool singular) const
+  {
+    X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
+
+    auto& board = scontexts_[ictx].board_;
+
+#ifdef EXTEND_CHECK_SEE_ONLY
+    if (!move.see_ok() && !pv )
+      return 0;
+#endif
+
+    if (board.underCheck())
+      return ONE_PLY;
+
+    if (!pv || !move.see_ok())
+      return 0;
+
+    if (move.new_type() || singular)
+      return ONE_PLY;
+
+    // recapture
+    if (board.halfmovesCount() > 1)
+    {
+      auto const& prev = board.reverseUndo(1);
+      auto const& curr = board.lastUndo();
+
+      if (prev.move_.to() == curr.move_.to() && prev.eaten_type_ > 0)
+      {
+        return ONE_PLY;
+      }
+    }
+
+    return 0;
+  }
+  
   void assemblePV(int ictx, Move const & move, bool checking, int ply);
 
   void sortMoves0(int ictx);
@@ -146,6 +181,7 @@ private:
 
     SearchContext& operator = (SearchContext const& other);
     void reset();
+    void clearStack();
   };
 
   // multi-threading mode

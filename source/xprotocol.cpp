@@ -181,7 +181,7 @@ bool xProtocolMgr::uciGo(const xCmd & cmd)
 {
   if(cmd.infinite())
   {
-    return proc_.analyze();
+    return proc_.analyze(DepthMaximum);
   }
 
   bool const white = proc_.color() == NEngine::Figure::ColorWhite;
@@ -441,7 +441,7 @@ void xProtocolMgr::processCmd(xCmd const& cmd)
     break;
 
   case xType::xAnalyze:
-    proc_.analyze();
+    proc_.analyze(DepthMaximum);
     break;
 
   case xType::xGoNow:

@@ -25,7 +25,6 @@ private:
   size_type first{ -1 };
   size_type last{ -1 };
   size_type heap{ 0 };
-  size_type count{ 0 };
 
 public:
   using value_type = T;
@@ -175,7 +174,6 @@ public:
     items[heap].next = -1;
     last = heap;
     heap++;
-    count++;
   }
 
   void push_back(T&& t)
@@ -189,7 +187,6 @@ public:
     items[heap].next = -1;
     last = heap;
     heap++;
-    count++;
   }
 
   template <class ...A>
@@ -204,7 +201,6 @@ public:
     items[heap].next = -1;
     last = heap;
     heap++;
-    count++;
   }
 
   void push_front(T const& t)
@@ -215,7 +211,6 @@ public:
     if(last < 0)
       last = heap;
     heap++;
-    count++;
   }
 
   void push_front(T&& t)
@@ -227,7 +222,6 @@ public:
     if(last < 0)
       last = heap;
     heap++;
-    count++;
   }
 
   template <class ...A>
@@ -240,7 +234,6 @@ public:
     if(last < 0)
       last = heap;
     heap++;
-    count++;
   }
 
   // inserts before iterator
@@ -257,7 +250,6 @@ public:
     if(last < 0 || iter.index < 0)
       last = heap;
     heap++;
-    count++;
   }
 
   T& back()
@@ -284,29 +276,6 @@ public:
     return items[first].x;
   }
 
-  iterator erase(iterator iter)
-  {
-    X_ASSERT(iter.index < 0, "invalid xlist erase index");
-    auto const prev = iter.prev;
-    auto const next = items[iter.index].next;
-    if(prev < 0)
-    {
-      X_ASSERT(iter.index != first, "inconsistent xlist. invalid first index");
-      first = next;
-    }
-    else
-    {
-      items[prev].next = next;
-    }
-    if(next < 0)
-    {
-      X_ASSERT(iter.index != last, "inconsistent xlist. invalid last index");
-      last = prev;
-    }
-    count--;
-    return iterator{this, next, prev};
-  }
-
   iterator begin()
   {
     return iterator{ this, first, -1 };
@@ -330,15 +299,15 @@ public:
   bool empty() const
   {
     X_ASSERT(first >= 0 && last < 0, "invalid xlist last index");
-    X_ASSERT(count < 0, "invalid xlist size");
-    X_ASSERT(count == 0 && first >= 0, "xlist size params mismatch");
+    X_ASSERT(heap < 0, "invalid xlist size");
+    X_ASSERT(heap == 0 && first >= 0, "xlist size params mismatch");
     return first < 0;
   }
 
   size_type size() const
   {
-    X_ASSERT(count < 0, "invalid xlist size");
-    return count;
+    X_ASSERT(heap < 0, "invalid xlist size");
+    return heap;
   }
 
   void clear()
@@ -346,7 +315,6 @@ public:
     first = -1;
     last = -1;
     heap = 0;
-    count = 0;
   }
 };
 

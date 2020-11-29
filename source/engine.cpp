@@ -11,18 +11,30 @@ namespace NEngine
 
 void Engine::SearchContext::reset()
 {
+  board_.clearStack();
   sdata_.reset();
   sres_.reset();
-  for (auto& pls : plystack_)
-    pls.clearKiller();
+  eval_.reset();
+  clearStack();
+  for (auto& m : moves_) {
+    m = SMove{true};
+  }
   stop_ = false;
+}
+
+void Engine::SearchContext::clearStack()
+{
+  for (auto& pls : plystack_) {
+    pls.clearKiller();
+    pls.clearPV(MaxPly);
+  }
 }
 
 Engine::SearchContext& Engine::SearchContext::operator = (SearchContext const& other)
 {
   board_ = static_cast<Board>(other.board_);
   for(size_t i = 0; i < plystack_.size(); ++i)
-    plystack_[i] = other.plystack_[i];
+    plystack_[i] = other.plystack_[i];    
   for(size_t i = 0; i < moves_.size(); ++i)
     moves_[i] = other.moves_[i];
   sdata_ = other.sdata_;
@@ -84,6 +96,7 @@ void Engine::setThreadsNumber(int n)
   
   for (auto& scontext : scontexts_)
   {
+    scontext.clearStack();
     scontext.eval_.initialize(&scontext.board_);
   }
 }
@@ -103,7 +116,9 @@ bool Engine::fromFEN(std::string const& fen)
     return false;
 
   clear_history();
-
+  for (auto& sctx : scontexts_) {
+    sctx.board_.clearStack();
+  }
   return NEngine::fromFEN(fen, scontexts_[0].board_);
 }
 
@@ -114,6 +129,9 @@ void Engine::setBoard(Board const& board)
   for (auto& sctx : scontexts_)
     sctx.stop_ = false;
   clear_history();
+  for (auto& sctx : scontexts_) {
+    sctx.board_.clearStack();
+  }
   scontexts_[0].board_ = board;
 }
 
@@ -207,7 +225,8 @@ bool Engine::tryToAddTime()
   auto& sres = sctx.sres_;
   auto& sdata = sctx.sdata_;
 
-  if ((sdata.best_ && (sdata.counter_ < sdata.numOfMoves_) && (sres.best_ != sdata.best_ || sres.best_ != sres.prevBest_)) ||
+  if ((sdata.best_ && (sdata.counter_ < sdata.numOfMoves_) &&
+      (sres.best_ != sdata.best_ || sres.best_ != sres.prevBest_ || sdata.scoreBest_ < sres.score_-10)) ||
       (!sdata.best_ && (sres.best_ != sres.prevBest_)))
   {
     auto t_add = (callbacks_.giveTime_)();

@@ -68,6 +68,23 @@ void Evaluator::initialize(Board const* board)
   board_ = board;
 }
 
+void Evaluator::reset()
+{
+  finfo_[0] = finfo_[1] = FieldsInfo{};
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+  move_[0] = move_[1] = SMove{true};
+#endif // GENERATE_MAT_MOVES_IN_EVAL
+
+  mask_all_ = 0;
+  inv_mask_all_ = 0;
+  alpha_ = 0;
+  betta_ = 0;
+
+  ehash_.clear();
+  fhash_.clear();
+}
+
 void Evaluator::prepare()
 {
   auto const& fmgr = board_->fmgr();

@@ -19,7 +19,6 @@ namespace NShallow
 
 static const NTime::duration minimalXtimeToGive_ = NTime::duration(0.5);
 static const NTime::duration minimalTimePerMove_ = NTime::duration(0.1);
-static const int DepthMaximum = 32;
 
 void Processor::setCallback(NEngine::xCallback& xcbk)
 {
@@ -214,14 +213,14 @@ bool Processor::init()
   return engine_.fromFEN("");
 }
 
-bool Processor::analyze()
+bool Processor::analyze(int maxDepth)
 {
   if(is_thinking())
     return false;
 
   thinking_ = true;
   engine_.setTimeLimit(NTime::duration(0));
-  engine_.setMaxDepth(DepthMaximum);
+  engine_.setMaxDepth(maxDepth);
 
 
   engine_.setAnalyzeMode(true);

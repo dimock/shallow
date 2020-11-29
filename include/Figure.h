@@ -56,7 +56,6 @@ public:
 
   void clear()
   {
-    //count_ = 0;
     weight32_.eval32_ = 0;
     figuresWeight_ = 0;
     mask_all_ = 0ULL;
@@ -72,7 +71,6 @@ public:
     X_ASSERT(t == Figure::TypeNone, "incr for invalid figure type");
     
     tcount_[t]++;
-    //count_++;
     weight32_ += Figure::figureWeight32_[t];
     if (t != Figure::TypePawn)
       figuresWeight_ += Figure::figureWeight_[t];
@@ -94,7 +92,6 @@ public:
     X_ASSERT(t == Figure::TypeNone, "decr for invalid figure type");
 
     tcount_[t]--;
-    //count_--;
     weight32_ -= Figure::figureWeight32_[t];
     if(t != Figure::TypePawn)
       figuresWeight_ -= Figure::figureWeight_[t];
@@ -123,7 +120,6 @@ public:
   }
 
   inline int tcount(Figure::Type type) const { return tcount_[type]; }
-  //inline int count() const { return count_; }
   inline int pawns() const { return tcount_[Figure::TypePawn]; }
   inline int knights() const { return tcount_[Figure::TypeKnight]; }
   inline int bishops() const { return tcount_[Figure::TypeBishop]; }
@@ -141,11 +137,7 @@ public:
   inline const BitMask & type_mask(const Figure::Type type) const { return tmask_[type]; }
   inline const BitMask & mask_all() const { return mask_all_; }
 
-  //// temp. should be removed
-  //inline void set_mask_all(BitMask const& m) { mask_all_ = m; }
-
 private:
-
   BitMask   tmask_[8];
   BitMask   mask_all_;
   uint8     tcount_[8];
@@ -170,8 +162,6 @@ public:
     fcounter_[1].clear();
     score_.eval32_ = 0;
   }
-
-  //static const Figure::Type FIGURE_TYPE = Figure::TypeKing;
 
   inline void incr(const Figure::Color c, const Figure::Type t, int p)
   {
@@ -299,7 +289,6 @@ public:
 
   inline const ScoreType32 score() const { return score_; }
 
-  //inline int32 eval32() const { return eval32_; }
   inline void resoreEval(int32 ev32) { score_.eval32_ = ev32; }
 
   // HASH codes calculation

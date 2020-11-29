@@ -201,6 +201,9 @@ namespace nst
 #undef USE_MINIDUMP
 #endif
 
+#undef  SORT_MOVES_0_HIST
+#undef  EXTEND_CHECK_SEE_ONLY
+
 #undef SEE_PRUNING
 #undef USE_FUTILITY_PRUNING
 #undef USE_HASH
