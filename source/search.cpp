@@ -960,8 +960,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     }
 #endif // RELEASEDEBUGINFO
 
-    int depthInc = board.underCheck() * ONE_PLY;
-    score = -captures(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv);
+    score = -captures(ictx, depth - ONE_PLY, ply + 1, -betta, -alpha, pv);
 
 #ifdef RELEASEDEBUGINFO
     if (findSequence(ictx, ply, true) && score > alpha)
