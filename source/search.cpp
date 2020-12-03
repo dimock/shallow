@@ -951,6 +951,11 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     ScoreType score = -ScoreMax;
 
     board.makeMove(move);
+
+#ifdef USE_HASH
+    eval.prefetch();
+#endif
+
     sdata.inc_nc();
 
 #ifdef RELEASEDEBUGINFO

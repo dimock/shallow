@@ -231,7 +231,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto phaseInfo = detectPhase();
   //score32 += evaluateMaterialDiff();
 
-  //score32 += fmgr.score();
+  score32 += fmgr.score();
 
   ///// use lazy evaluation
   //{

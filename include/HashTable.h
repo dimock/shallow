@@ -278,7 +278,7 @@ public:
   EHashTable(int size) : HashTable<HEval>(size)
   {}
 
-  HEval* get(const uint64 & code)
+  inline HEval* get(const uint64 & code)
   {
     return &(operator [] (code));
   }

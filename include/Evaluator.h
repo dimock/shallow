@@ -105,6 +105,14 @@ public:
   SMove move(Figure::Color) const;
 #endif // GENERATE_MAT_MOVES_IN_EVAL
 
+#ifdef USE_HASH
+  inline void prefetch()
+  {
+    ehash_.prefetch(board_->fmgr().kpwnCode());
+    fhash_.prefetch(board_->fmgr().fgrsCode());
+  }
+#endif
+
   static const int colored_y_[2][8];
   static const int promo_y_[2];
   static const int delta_y_[2];
