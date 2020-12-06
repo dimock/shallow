@@ -94,14 +94,19 @@ struct EvalCoefficients
 
   // material diff
   static ScoreType32 doubleBishopBonus_[10];
+  static ScoreType32 doubleKnightBonus_[10];
   static ScoreType32 twoKnightsBonus_[10];
-  static ScoreType32 oneBishopBonus_[10];
   static ScoreType32 twoBishopsBonus_[10];
   static ScoreType32 twoRooksBonus_[10];
   static ScoreType32 figureAgainstPawnBonus_[10];
   static ScoreType32 rookAgainstFigureBonus_[10];
   static ScoreType32 figuresAgainstRookBonus_[10];
   static ScoreType32 rookAgainstPawnBonus_[10];
+
+  static ScoreType32 noKnightsPenalty_;
+  static ScoreType32 noBishopsPenalty_;
+  static ScoreType32 noRooksPenalty_;
+  static ScoreType32 noQueensPenalty_;
 
   static int pawnShieldA_[2];
   static int pawnShieldB_[2];

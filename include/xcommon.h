@@ -202,7 +202,7 @@ namespace nst
 #endif
 
 #define SORT_MOVES_0_HIST
-#undef EXTEND_CHECK_SEE_ONLY
+#define EXTEND_CHECK_SEE_ONLY
 
 #undef SEE_PRUNING
 #undef USE_FUTILITY_PRUNING

@@ -223,15 +223,14 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //  betta_ = +ScoreMax;
   //}
 
+  // determine game phase (opening, middle or end game)
+  auto phaseInfo = detectPhase();
+
   const FiguresManager& fmgr = board_->fmgr();
   // evaluate figures weight
   ScoreType32 score32 = fmgr.weight();
-
-  // determine game phase (opening, middle or end game)
-  auto phaseInfo = detectPhase();
-  //score32 += evaluateMaterialDiff();
-
   score32 += fmgr.score();
+  score32 += evaluateMaterialDiff();
 
   ///// use lazy evaluation
   //{
@@ -982,12 +981,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   int bishopsDiff = fmgr.bishops(Figure::ColorWhite) - fmgr.bishops(Figure::ColorBlack);
   int figuresDiff = knightsDiff + bishopsDiff;
   int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
-  int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
-
-  if (std::abs(queensDiff) == 1) {
-    rooksDiff += 2 * queensDiff;
-    queensDiff = 0;
-  }
+  //int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
 
   // bonus for double bishop
   if (fmgr.bishops(Figure::ColorWhite) >= 2)
@@ -1001,7 +995,19 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     score -= EvalCoefficients::doubleBishopBonus_[pawnsN];
   }
 
-  // bonus for 2 knights
+  // bonus for double knight
+  if (fmgr.knights(Figure::ColorWhite) >= 2)
+  {
+    const int pawnsN = fmgr.pawns(Figure::ColorWhite);
+    score += EvalCoefficients::doubleKnightBonus_[pawnsN];
+  }
+  if (fmgr.knights(Figure::ColorBlack) >= 2)
+  {
+    const int pawnsN = fmgr.pawns(Figure::ColorBlack);
+    score -= EvalCoefficients::doubleKnightBonus_[pawnsN];
+  }
+
+  // bonus for 2 knights difference
   if (knightsDiff >= 2 || knightsDiff <= -2)
   {
     int kndiff = sign(knightsDiff);
@@ -1009,14 +1015,40 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int pawnsN = fmgr.pawns(ncolor);
     score += EvalCoefficients::twoKnightsBonus_[pawnsN] * kndiff;
   }
-  // bonus for one bishops
-  if (bishopsDiff == 1 || bishopsDiff == -1)
-  {
-    Figure::Color ncolor = static_cast<Figure::Color>(bishopsDiff > 0);
-    const int pawnsN = fmgr.pawns(ncolor);
-    score += EvalCoefficients::oneBishopBonus_[pawnsN] * bishopsDiff;
+
+  // penalty for knights absence
+  if (fmgr.knights(Figure::ColorWhite) == 0) {
+    score -= EvalCoefficients::noKnightsPenalty_;
   }
-  // bonus for 2 bishops
+  if (fmgr.knights(Figure::ColorBlack) == 0) {
+    score += EvalCoefficients::noKnightsPenalty_;
+  }
+
+  // penalty for bishops absence
+  if (fmgr.bishops(Figure::ColorWhite) == 0) {
+    score -= EvalCoefficients::noBishopsPenalty_;
+  }
+  if (fmgr.bishops(Figure::ColorBlack) == 0) {
+    score += EvalCoefficients::noBishopsPenalty_;
+  }
+
+  // penalty for rooks absence
+  if (fmgr.rooks(Figure::ColorWhite) == 0) {
+    score -= EvalCoefficients::noRooksPenalty_;
+  }
+  if (fmgr.rooks(Figure::ColorBlack) == 0) {
+    score += EvalCoefficients::noRooksPenalty_;
+  }
+
+  // penalty for queens absence
+  if (fmgr.queens(Figure::ColorWhite) == 0) {
+    score -= EvalCoefficients::noQueensPenalty_;
+  }
+  if (fmgr.queens(Figure::ColorBlack) == 0) {
+    score += EvalCoefficients::noQueensPenalty_;
+  }
+
+  // bonus for 2 bishops difference
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
   {
     int bdiff = sign(bishopsDiff);
@@ -1033,35 +1065,34 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     score += EvalCoefficients::twoRooksBonus_[pawnsN] * rdiff;
   }
   // Figure vs. Pawns
-  if(!rooksDiff && figuresDiff*pawnsDiff < 0)
+  if (!rooksDiff && figuresDiff)
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     const int pawnsN = fmgr.pawns(fcolor);
-    int k = sign(figuresDiff);
-    score += EvalCoefficients::figureAgainstPawnBonus_[pawnsN] * k;
+    score += EvalCoefficients::figureAgainstPawnBonus_[pawnsN] * figuresDiff;
   }
   // Rook vs. Pawns
-  if(!figuresDiff && rooksDiff*pawnsDiff < 0)
+  if (!figuresDiff && rooksDiff)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     const int pawnsN = fmgr.pawns(rcolor);
-    int k = sign(rooksDiff);
-    score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * k;
+    score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * rooksDiff;
   }
-  // Knight|Bishop+Pawns vs. Rook
-  if(rooksDiff*figuresDiff == -1)
+  // Knight|Bishop vs. Rook
+  if (rooksDiff*figuresDiff == -1)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
-    const int pawnsN = fmgr.pawns(rcolor);
-    score += EvalCoefficients::rookAgainstFigureBonus_[pawnsN] * rooksDiff;
+    Figure::Color fcolor = Figure::otherColor(rcolor);
+    const int rpawnsN = fmgr.pawns(rcolor);
+    score += EvalCoefficients::rookAgainstFigureBonus_[rpawnsN] * rooksDiff;
   }
   // 2 figures vs. Rook
-  if((rooksDiff*figuresDiff <= -2) && (std::abs(rooksDiff) == 1))
+  if ((rooksDiff*figuresDiff <= -2) && (rooksDiff == 1 || rooksDiff == -1))
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
-    const int pawnsN = fmgr.pawns(fcolor);
-    int k = sign(rooksDiff);
-    score -= EvalCoefficients::figuresAgainstRookBonus_[pawnsN] * k;
+    Figure::Color rcolor = Figure::otherColor(fcolor);
+    const int fpawnsN = fmgr.pawns(fcolor);
+    score -= EvalCoefficients::figuresAgainstRookBonus_[fpawnsN] * rooksDiff;
   }
 
 #ifdef USE_HASH

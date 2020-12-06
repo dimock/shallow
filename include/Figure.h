@@ -21,7 +21,7 @@ namespace Figure
   extern const BitMask pawns2ndLineMask_[2];
   
   // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
-  constexpr ScoreType figureWeight_[7] = { 0, 90, 355, 355, 545, 1090, 0 };
+  constexpr ScoreType figureWeight_[7] = { 0, 90, 345, 360, 560, 1120, 0 };
   extern const ScoreType32 figureWeight32_[7];
 
   extern const uint8     mirrorIndex_[64];
