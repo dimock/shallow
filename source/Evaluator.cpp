@@ -230,7 +230,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   // evaluate figures weight
   ScoreType32 score32 = fmgr.weight();
   score32 += fmgr.score();
-  score32 += evaluateMaterialDiff();
+  //score32 += evaluateMaterialDiff();
 
   ///// use lazy evaluation
   //{
@@ -981,7 +981,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   int bishopsDiff = fmgr.bishops(Figure::ColorWhite) - fmgr.bishops(Figure::ColorBlack);
   int figuresDiff = knightsDiff + bishopsDiff;
   int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
-  //int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
+  int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
 
   // bonus for double bishop
   if (fmgr.bishops(Figure::ColorWhite) >= 2)
@@ -1069,14 +1069,23 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     const int pawnsN = fmgr.pawns(fcolor);
-    score += EvalCoefficients::figureAgainstPawnBonus_[pawnsN] * figuresDiff;
+    int fdiff = sign(figuresDiff);
+    score += EvalCoefficients::figureAgainstPawnBonus_[pawnsN] * fdiff;
   }
+
+  // Then evaluate 2 rooks as 1 queen
+  if (queensDiff*rooksDiff < 0) {
+    rooksDiff += 2 * queensDiff;
+    queensDiff = 0;
+  }
+
   // Rook vs. Pawns
   if (!figuresDiff && rooksDiff)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     const int pawnsN = fmgr.pawns(rcolor);
-    score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * rooksDiff;
+    int rdiff = sign(rooksDiff);
+    score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * rdiff;
   }
   // Knight|Bishop vs. Rook
   if (rooksDiff*figuresDiff == -1)
