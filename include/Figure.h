@@ -177,7 +177,7 @@ public:
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
     // + for black color. invert the sign
-      score_ -= EvalCoefficients::positionEvaluations_[c][t][p];
+    score_ -= EvalCoefficients::positionEvaluations_[c][t][p];
     ScoreType32 score{ -12, -10 };
     auto s = score_.eval1();
     return;
@@ -197,7 +197,7 @@ public:
     if(t == Figure::TypePawn || t == Figure::TypeKing)
       kpwnCode_ ^= uc;
     // + for black color. invert the sign
-      score_ += EvalCoefficients::positionEvaluations_[c][t][p];
+    score_ += EvalCoefficients::positionEvaluations_[c][t][p];
   }
 
   inline void move(const Figure::Color c, const Figure::Type t, int from, int to)
@@ -216,8 +216,8 @@ public:
     }
 
     // + for black color. invert the sign
-      score_ += EvalCoefficients::positionEvaluations_[c][t][from];
-      score_ -= EvalCoefficients::positionEvaluations_[c][t][to];
+    score_ += EvalCoefficients::positionEvaluations_[c][t][from];
+    score_ -= EvalCoefficients::positionEvaluations_[c][t][to];
 
     X_ASSERT(fcounter_[c].mask_all() & set_mask_bit(from), "invalid figures mask");
   }

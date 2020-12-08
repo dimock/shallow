@@ -230,7 +230,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   // evaluate figures weight
   ScoreType32 score32 = fmgr.weight();
   score32 += fmgr.score();
-  score32 += evaluateMaterialDiff();
+  //score32 += evaluateMaterialDiff();
 
   ///// use lazy evaluation
   //{
