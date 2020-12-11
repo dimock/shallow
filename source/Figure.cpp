@@ -26,7 +26,7 @@ extern const BitMask Figure::pawns2ndLineMask_[2] = { 0x0000ff0000000000, 0x0000
 extern const BitMask Figure::quaterBoard_[2][2] = { { 0xf0f0f0f000000000, 0x0f0f0f0f00000000 },
                                                     { 0x00000000f0f0f0f0, 0x000000000f0f0f0f } };
 
-extern const ScoreType32 Figure::figureWeight32_[7] = { {0, 0}, {90, 105}, {345, 345}, {360, 360}, {560, 560}, {1120, 1120}, {0, 0} };
+extern const ScoreType32 Figure::figureWeight32_[7] = { {0, 0}, {90, 105}, {345, 350}, {360, 360}, {560, 560}, {1120, 1120}, {0, 0} };
 
 Figure::Type Figure::toFtype(char c)
 {

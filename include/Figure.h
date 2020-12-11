@@ -21,7 +21,7 @@ namespace Figure
   extern const BitMask pawns2ndLineMask_[2];
   
   // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
-  constexpr ScoreType figureWeight_[7] = { 0, 90, 345, 360, 560, 1120, 0 };
+  constexpr ScoreType figureWeight_[7] = { 0, 90, 355, 355, 545, 1090, 0 };
   extern const ScoreType32 figureWeight32_[7];
 
   extern const uint8     mirrorIndex_[64];
@@ -178,8 +178,6 @@ public:
       kpwnCode_ ^= uc;
     // + for black color. invert the sign
     score_ -= EvalCoefficients::positionEvaluations_[c][t][p];
-    ScoreType32 score{ -12, -10 };
-    auto s = score_.eval1();
     return;
   }
 
