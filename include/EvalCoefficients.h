@@ -101,6 +101,7 @@ struct EvalCoefficients
   static ScoreType32 figureAgainstPawnBonus_[10];
   static ScoreType32 rookAgainstFigureBonus_[10];
   static ScoreType32 figuresAgainstRookBonus_[10];
+  static ScoreType32 knightsAgainstRookBonus_[10];
   static ScoreType32 rookAgainstPawnBonus_[10];
 
   static ScoreType32 noKnightsPenalty_;
