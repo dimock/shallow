@@ -203,6 +203,7 @@ namespace nst
 
 #define SORT_MOVES_0_HIST
 #define EXTEND_CHECK_SEE_ONLY
+#undef USE_EVAL_HASH
 
 #undef SEE_PRUNING
 #undef USE_FUTILITY_PRUNING

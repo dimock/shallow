@@ -103,56 +103,56 @@ void Evaluator::prepare()
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
 
-    finfo_[0].attack_mask_ = finfo_[0].pawnAttacks_;
-    finfo_[1].attack_mask_ = finfo_[1].pawnAttacks_;
+    //finfo_[0].attack_mask_ = finfo_[0].pawnAttacks_;
+    //finfo_[1].attack_mask_ = finfo_[1].pawnAttacks_;
   }
 
-  // attacked fields near king
-  {
-    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
-    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
-
-    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
-    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
-
-    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
-    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
-
-    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
-    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
-    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-  }
-  
-  // other mask
-  {
-    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
-    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
-    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
-
-    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-
-    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-
-    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
-    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-
-    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
-    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-
-    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
-    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
-
-    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
-    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
-  }
+//  // attacked fields near king
+//  {
+//    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
+//    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
+//
+//    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
+//    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
+//
+//    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
+//    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
+//
+//    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
+//    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+//
+//#ifdef GENERATE_MAT_MOVES_IN_EVAL
+//    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
+//    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
+//#endif // GENERATE_MAT_MOVES_IN_EVAL
+//  }
+//  
+//  // other mask
+//  {
+//    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
+//    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
+//    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
+//
+//    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+//    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+//
+//    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+//    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+//
+//    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+//    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
+//    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+//
+//    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+//    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
+//    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+//
+//    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
+//    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
+//
+//    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
+//    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
+//  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -327,7 +327,7 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
 
 Evaluator::PasserInfo Evaluator::hashedEvaluation()
 {
-#ifdef USE_HASH
+#ifdef USE_EVAL_HASH
   const uint64 & code = board_->fmgr().kpwnCode();
   uint32 hkey = (uint32)(code >> 32);
   HEval* heval = ehash_.get(code);
@@ -348,7 +348,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   ScoreType32 kingSafety{ evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack), 0 };
   info.score_ += kingSafety;
 
-#ifdef USE_HASH
+#ifdef USE_EVAL_HASH
   heval->hkey_ = hkey;
   heval->score_ = info.score_;
 #endif
@@ -963,7 +963,7 @@ bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) cons
 
 ScoreType32 Evaluator::evaluateMaterialDiff()
 {
-#ifdef USE_HASH
+#ifdef USE_EVAL_HASH
   const uint64 & code = board_->fmgr().fgrsCode();
   HEval * heval = fhash_.get(code);
   uint32 hkey = (uint32)(code >> 32);
@@ -1109,7 +1109,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
       score -= EvalCoefficients::figuresAgainstRookBonus_[fpawnsN] * rooksDiff;
   }
 
-#ifdef USE_HASH
+#ifdef USE_EVAL_HASH
     heval->hkey_ = hkey;
     heval->score_ = score;
 #endif

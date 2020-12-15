@@ -27,6 +27,7 @@ struct xEPD
   xEPD(xEPD&& other) :
     board_(std::move(other.board_)),
     moves_(std::move(other.moves_)),
+    imoves_(std::move(other.imoves_)),
     score_(other.score_),
     fen_(std::move(other.fen_))
   {
@@ -36,12 +37,14 @@ struct xEPD
   {
     board_ = std::move(other.board_);
     moves_ = std::move(other.moves_);
+    imoves_ = std::move(other.imoves_);
     score_ = other.score_;
     fen_   = std::move(other.fen_);
   }
 
   SBoard<BOARD, UNDO, 32> board_;
   std::vector<MOVE> moves_;
+  std::vector<std::string> imoves_;
   int score_{};
   std::string fen_;
   std::string err_;
@@ -75,7 +78,7 @@ class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 public:
   FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
   {
-    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnullrqkPNBRQKOx+=!_\\s\\-]+)?([\\s]*dmin[\\s]+)?([0-9]+)?([\\s]*dmax[\\s]*)?([0-9]+)?([\\s]+hash[\\s]+)?([0-9]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?");
+    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+)([\\s]*bm[\\s]*)?([0-9a-hpnullrqkPNBRQKOx+=!_\\s\\-]+)?([\\s]*dmin[\\s]+)?([0-9]+)?([\\s]*dmax[\\s]*)?([0-9]+)?([\\s]+hash[\\s]+)?([0-9]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?([\\s]*moves[\\s]*)?([0-9a-hprqkPNBRQKOx+=!_\\s\\-]+)?");
     ::std::ifstream ifs(ffname);
     for(; ifs;)
     {
@@ -118,6 +121,16 @@ public:
       }
       if (m.size() > 9 && ((std::string)m[8]).find("hash") != std::string::npos) {
         epd.board_.stestHashKey_ = std::stoull(m[9]);
+      }
+      if (m.size() > 13 && ((std::string)m[12]).find("moves") != std::string::npos) {
+        std::string imstr = m[13];
+        auto str_imoves = NEngine::split(imstr, [](char c) { return NEngine::is_any_of(" \t", c); });
+        for (auto const& smove : str_imoves)
+        {
+          if (smove.empty())
+            continue;
+          epd.imoves_.push_back(smove);
+        }
       }
 #endif
       if(m.size() >= 6)

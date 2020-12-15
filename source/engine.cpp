@@ -11,7 +11,6 @@ namespace NEngine
 
 void Engine::SearchContext::reset()
 {
-  board_.clearStack();
   sdata_.reset();
   sres_.reset();
   eval_.reset();

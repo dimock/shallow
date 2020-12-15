@@ -291,6 +291,9 @@ void analyzeFen(std::string const& fname)
     proc.setBoard(board);
     proc.clear();
     proc.setThreadsNumber(1);
+    for (auto const& mv : e.imoves_) {
+      proc.makeMove(mv);
+    }
     //proc.file2hash("D:\\Projects\\gitproj\\hash\\hash");
     proc.analyze(NShallow::DepthMaximum);
   },

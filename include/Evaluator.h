@@ -84,7 +84,7 @@ class Evaluator
 
   Board const* board_{ nullptr };
 
-#ifdef USE_HASH
+#ifdef USE_EVAL_HASH
   EHashTable ehash_{ 18 };
   EHashTable fhash_{ 18 };
 #else
@@ -105,7 +105,7 @@ public:
   SMove move(Figure::Color) const;
 #endif // GENERATE_MAT_MOVES_IN_EVAL
 
-#ifdef USE_HASH
+#ifdef USE_EVAL_HASH
   inline void prefetch()
   {
     ehash_.prefetch(board_->fmgr().kpwnCode());

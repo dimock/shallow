@@ -17,7 +17,7 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
 {
   operator bool () const { return hkey_ != 0; }
 
-  HKeyType     hkey_{};
+  HKeyType   hkey_{};
   ScoreType  score_{};
 
   int16      depth_   : 11,
