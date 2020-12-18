@@ -43,10 +43,10 @@ struct EvalCoefficients
 
   // king
   static int fakeCastle_;
-  static int kingIsUnsafe_;
-  static int pawnPenaltyA_;
-  static int pawnPenaltyB_;
-  static int pawnPenaltyC_;
+  //static int kingIsUnsafe_;
+  //static int pawnPenaltyA_;
+  //static int pawnPenaltyB_;
+  //static int pawnPenaltyC_;
 
   // blocked figure
   static ScoreType32 knightBlocked_;
@@ -83,6 +83,7 @@ struct EvalCoefficients
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_;
   static ScoreType32 backwardPawn_;
+  static ScoreType32 blockedPawn_;
   static ScoreType32 unguardedPawn_;
   static ScoreType32 unprotectedPawn_;
   static ScoreType32 hasneighborPawn_;
@@ -99,19 +100,20 @@ struct EvalCoefficients
   static ScoreType32 twoBishopsBonus_[10];
   static ScoreType32 twoRooksBonus_[10];
   static ScoreType32 figureAgainstPawnBonus_[10];
-  static ScoreType32 rookAgainstFigureBonus_[10];
   static ScoreType32 figuresAgainstRookBonus_[10];
   static ScoreType32 knightsAgainstRookBonus_[10];
   static ScoreType32 rookAgainstPawnBonus_[10];
+  static ScoreType32 rookAgainstFigureBonus_[10][10];
 
   static ScoreType32 noKnightsPenalty_;
   static ScoreType32 noBishopsPenalty_;
   static ScoreType32 noRooksPenalty_;
   static ScoreType32 noQueensPenalty_;
 
-  static int pawnShieldA_[2];
-  static int pawnShieldB_[2];
-  static int pawnShieldC_[2];
+  static int pawnShieldA_[4];
+  static int pawnShieldB_[4];
+  static int pawnShieldC_[4];
+  static int pawnShieldAbove_[4];
 
   // arrays
   static ScoreType   passerPawn1_[8];

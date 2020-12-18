@@ -63,6 +63,10 @@ class Evaluator
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
     BitMask pawns_fwd_{};
+    //BitMask discovered_mask_bi_{};
+    //BitMask discovered_mask_r_{};
+    //BitMask discovered_attackers_bi_{};
+    //BitMask discovered_attackers_r_{};
 
 #ifdef GENERATE_MAT_MOVES_IN_EVAL
     BitMask kingMoves_{};
@@ -152,7 +156,7 @@ private:
   
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
-  bool isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
+  //bool isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
   bool couldBeGuarded(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field, int n1) const;
 
   PasserInfo evaluatePawns(Figure::Color color) const;
@@ -171,6 +175,27 @@ private:
   ScoreType32 evaluateBishops();
   ScoreType32 evaluateRook();
   ScoreType32 evaluateQueens();
+
+  //bool discoveredCheck(int pos, Figure::Color color) const
+  //{
+  //  auto const & ki_pos = board_->kingPos(color);
+  //  auto dir = figureDir().br_dir(ki_pos, pos);
+  //  if (!dir)
+  //    return false;
+  //  if (dir == nst::bishop)
+  //  {
+  //    auto pos_mask = set_mask_bit(pos);
+  //    if (!(finfo_[color].discovered_mask_bi_ & pos_mask))
+  //      return false;
+  //    auto const& tail_mask = betweenMasks().tail(ki_pos, pos);
+  //    return (tail_mask & finfo_[color].discovered_attackers_bi_);
+  //  }
+  //  if (!(finfo_[color].discovered_mask_r_ & set_mask_bit(pos)))
+  //    return false;
+  //  auto pos_mask = set_mask_bit(pos);
+  //  auto const& tail_mask = betweenMasks().tail(ki_pos, pos);
+  //  return (tail_mask & finfo_[color].discovered_attackers_r_);
+  //}
   
   ScoreType32 evaluateKingPressure(Figure::Color color);
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;

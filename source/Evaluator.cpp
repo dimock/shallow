@@ -103,56 +103,74 @@ void Evaluator::prepare()
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
 
-    //finfo_[0].attack_mask_ = finfo_[0].pawnAttacks_;
-    //finfo_[1].attack_mask_ = finfo_[1].pawnAttacks_;
+    finfo_[0].attack_mask_ = finfo_[0].pawnAttacks_;
+    finfo_[1].attack_mask_ = finfo_[1].pawnAttacks_;
   }
 
-//  // attacked fields near king
-//  {
-//    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
-//    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
-//
-//    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
-//    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
-//
-//    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
-//    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
-//
-//    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
-//    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
-//
-//#ifdef GENERATE_MAT_MOVES_IN_EVAL
-//    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
-//    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
-//#endif // GENERATE_MAT_MOVES_IN_EVAL
-//  }
-//  
-//  // other mask
-//  {
-//    auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
-//    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
-//    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
-//
-//    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-//    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-//
-//    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-//    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-//
-//    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-//    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
-//    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
-//
-//    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-//    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
-//    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
-//
-//    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
-//    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
-//
-//    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
-//    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
-//  }
+  // attacked fields near king
+  {
+    finfo_[0].ki_fields_ = finfo_[0].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack));
+    finfo_[1].ki_fields_ = finfo_[1].kingAttacks_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite));
+    
+    finfo_[0].multiattack_mask_ = finfo_[0].attack_mask_ & finfo_[0].kingAttacks_;
+    finfo_[1].multiattack_mask_ = finfo_[1].attack_mask_ & finfo_[1].kingAttacks_;
+
+    finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
+    finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
+
+    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
+    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+
+#ifdef GENERATE_MAT_MOVES_IN_EVAL
+    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
+    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
+#endif // GENERATE_MAT_MOVES_IN_EVAL
+  }
+  
+  // other mask
+  {
+    //auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
+    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
+    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
+
+    finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+    finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+
+    finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+    finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+
+    finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+    finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
+    finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
+
+    finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+    finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
+    finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
+
+    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
+
+    finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
+
+    //finfo_[0].discovered_mask_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
+    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack));
+    //finfo_[0].discovered_attackers_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~finfo_[0].discovered_mask_bi_) &
+    //  (fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+    //finfo_[0].discovered_mask_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
+    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.bishop_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.bishop_mask(Figure::ColorBlack));
+    //finfo_[0].discovered_attackers_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~finfo_[0].discovered_mask_r_) &
+    //  (fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+
+    //finfo_[1].discovered_mask_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
+    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack));
+    //finfo_[1].discovered_attackers_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~finfo_[1].discovered_mask_bi_) &
+    //  (fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+    //finfo_[1].discovered_mask_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
+    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.bishop_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.bishop_mask(Figure::ColorBlack));
+    //finfo_[1].discovered_attackers_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~finfo_[1].discovered_mask_r_) &
+    //  (fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -239,20 +257,20 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //    return score0;
   //}
 
-  //prepare();
+  prepare();
 
-  //// take pawns eval from hash if possible
-  //auto hashedScore = hashedEvaluation();
-  //score32 += hashedScore.score_;
+  // take pawns eval from hash if possible
+  auto hashedScore = hashedEvaluation();
+  score32 += hashedScore.score_;
 
-  //score32 += evaluateKnights();
-  //score32 += evaluateBishops();
-  //score32 += evaluateRook();
-  //score32 += evaluateQueens();
+  score32 += evaluateKnights();
+  score32 += evaluateBishops();
+  score32 += evaluateRook();
+  score32 += evaluateQueens();
 
-  //auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
-  //score_mob -= finfo_[Figure::ColorBlack].score_mob_;
-  //score32 += score_mob;
+  auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
+  score_mob -= finfo_[Figure::ColorBlack].score_mob_;
+  score32 += score_mob;
 
   //auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
   //scoreKing -= evaluateKingPressure(Figure::ColorBlack);
@@ -266,8 +284,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   //score32 += scorePP;
 
-  //auto scorePassers = passerEvaluation(hashedScore);
-  //score32 += scorePassers;
+  auto scorePassers = passerEvaluation(hashedScore);
+  score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   return result;
@@ -452,17 +470,17 @@ bool Evaluator::isPawnBackward(Index const& idx, Figure::Color color, BitMask co
   return blocked;
 }
 
-bool Evaluator::isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const
-{
-  Figure::Color ocolor = Figure::otherColor(color);
-  auto blocked_mask = (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_) | opmsk;
-  bool blocked = (blocked_mask & fwd_field) != 0ULL;
-  if (!blocked && (idx.y() < 6 && color || idx.y() > 3 && !color)) {
-    auto fwd_field2 = color == Figure::ColorWhite ? fwd_field << 8 : fwd_field >> 8;
-    blocked = (fwd_field & pmask) != 0ULL && (fwd_field2 & blocked_mask) != 0ULL;
-  }
-  return blocked;
-}
+//bool Evaluator::isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const
+//{
+//  Figure::Color ocolor = Figure::otherColor(color);
+//  auto blocked_mask = (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_) | opmsk;
+//  bool blocked = (blocked_mask & fwd_field) != 0ULL;
+//  if (!blocked && (idx.y() < 6 && color || idx.y() > 3 && !color)) {
+//    auto fwd_field2 = color == Figure::ColorWhite ? fwd_field << 8 : fwd_field >> 8;
+//    blocked = (fwd_field & pmask) != 0ULL && (fwd_field2 & blocked_mask) != 0ULL;
+//  }
+//  return blocked;
+//}
 
 Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 {
@@ -478,7 +496,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
   bool no_opawns = opmsk == 0ULL;
   auto pawns_all = opmsk | pmask;
 
-  uint8 x_visited{ 0 };
   uint8 x_passers{ 0 };
   int dy = delta_y_[color];
   int py = promo_y_[color];
@@ -495,31 +512,25 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     auto pw_field = set_mask_bit(n);
     auto fwd_field = set_mask_bit(n1);
 
-    // doubled pawn
-    if(!(x_visited & (1<<x)))
-    {
-      x_visited |= 1<<x;
-      auto const& dblmsk = pawnMasks().mask_doubled(x);
-      auto num_dbl = pop_count(pmask & dblmsk);
-      X_ASSERT(num_dbl <= 0, "doubled pawns number is zero or negative");
-      info.score_ += EvalCoefficients::doubledPawn_ * (num_dbl - 1);
-    }
-
     auto const& protectMask = movesTable().pawnCaps(ocolor, n);
     bool pprotected = (protectMask & pmask) != 0ULL;
 
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
+    bool blocked = backward && ((fwd_field & opmsk) != 0ULL);
     bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
     bool unprotected = !unguarded && !isolated && !backward && !pprotected;
     bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
+    bool doubled = !pprotected && (pop_count(pawnMasks().mask_doubled(x) & pmask) > 1);
 
     info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
     info.score_ += EvalCoefficients::backwardPawn_ * backward;
+    info.score_ += EvalCoefficients::blockedPawn_ * blocked;
     info.score_ += EvalCoefficients::unguardedPawn_ * unguarded;
     info.score_ += EvalCoefficients::unprotectedPawn_ * unprotected;
     info.score_ += EvalCoefficients::hasneighborPawn_ * neighbors;
+    info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
     // passer pawn
     const auto & halfpassmsk = pawnMasks().mask_forward(color, n);
@@ -730,7 +741,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   }
   else
   {
-    score = evaluateKingSafety(color, kingPos) + (EvalCoefficients::kingIsUnsafe_>>1);
+    score = evaluateKingSafety(color, kingPos);
     if (board_->castling(color, 0)) {
       int scoreK = evaluateKingSafety(color, Index{6, promo_y_[Figure::otherColor(color)]});
       score = std::max(score, scoreK);
@@ -753,7 +764,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
 
   auto king_cy = colored_y_[color][kingPos.y()];
   if (king_cy > 5)
-    return EvalCoefficients::kingIsUnsafe_;
+    return 0;// EvalCoefficients::kingIsUnsafe_;
 
   int above1 = (kingPos + delta_y[color]) & 63;
   int above2 = (above1 + delta_y[color]) & 63;
@@ -778,9 +789,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
   else if (mabove2 & pmask)
     score += EvalCoefficients::pawnShieldB_[1];
   else if (mabove3 & pmask)
-    score += EvalCoefficients::pawnPenaltyB_ >> 1;
-  else
-    score += EvalCoefficients::pawnPenaltyB_;
+    score += EvalCoefficients::pawnShieldB_[2];
 
   if (kingPos.x() > 3) // right side
   {
@@ -789,18 +798,14 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
     else if (mleft2 & pmask)
       score += EvalCoefficients::pawnShieldC_[1];
     else if (mleft3 & pmask)
-      score += EvalCoefficients::pawnPenaltyC_ >> 1;
-    else
-      score += EvalCoefficients::pawnPenaltyC_;
+      score += EvalCoefficients::pawnShieldC_[2];
 
     if (mright1 & pmask)
       score += EvalCoefficients::pawnShieldA_[0];
     else if (mright2 & pmask)
       score += EvalCoefficients::pawnShieldA_[1];
     else if (mright3 & pmask)
-      score += EvalCoefficients::pawnPenaltyA_ >> 1;
-    else
-      score += EvalCoefficients::pawnPenaltyA_;
+      score += EvalCoefficients::pawnShieldA_[2];
   }
   else // left side
   {
@@ -809,18 +814,14 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
     else if (mleft2 & pmask)
       score += EvalCoefficients::pawnShieldA_[1];
     else if (mleft3 & pmask)
-      score += EvalCoefficients::pawnPenaltyA_ >> 1;
-    else
-      score += EvalCoefficients::pawnPenaltyA_;
+      score += EvalCoefficients::pawnShieldA_[2];
 
     if (mright1 & pmask)
       score += EvalCoefficients::pawnShieldC_[0];
     else if (mright2 & pmask)
       score += EvalCoefficients::pawnShieldC_[1];
     else if (mright3 & pmask)
-      score += EvalCoefficients::pawnPenaltyC_ >> 1;
-    else
-      score += EvalCoefficients::pawnPenaltyC_;
+      score += EvalCoefficients::pawnShieldC_[2];
   }
 
   // opponents pawns pressure
@@ -843,7 +844,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
         break;
       if (auto m = (opmask & pawnMasks().mask_column(x)))
       {
-        int y = std::max(0, Index(_lsb64(m)).y() - king_cy);
+        int y = std::max(0, Index(_lsb64(m)).y());
         auto penalty = EvalCoefficients::opponentPawnPressure_[y];
         opponent_penalty += penalty;
       }
@@ -857,7 +858,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
         break;
       if (auto m = (opmask & pawnMasks().mask_column(x)))
       {
-        int y = std::max(0, 7 - Index(_msb64(m)).y() - king_cy);
+        int y = std::max(0, 7 - Index(_msb64(m)).y());
         auto penalty = EvalCoefficients::opponentPawnPressure_[y];
         if (x == xk)
           penalty >>= 1;
@@ -880,7 +881,7 @@ int Evaluator::evaluateKingsPawn(Figure::Color color, Index const& kingPos) cons
 
   auto king_cy = colored_y_[color][kingPos.y()];
   if (king_cy > 5)
-    return EvalCoefficients::kingIsUnsafe_;
+    return 0;// EvalCoefficients::kingIsUnsafe_;
 
   int above1 = (kingPos + delta_y[color]) & 63;
   int above2 = (above1 + delta_y[color]) & 63;
@@ -892,13 +893,11 @@ int Evaluator::evaluateKingsPawn(Figure::Color color, Index const& kingPos) cons
   
   int score = 0;
   if (mabove1 & pmask)
-    score += EvalCoefficients::pawnShieldB_[0];
+    score += EvalCoefficients::pawnShieldAbove_[0];
   else if (mabove2 & pmask)
-    score += EvalCoefficients::pawnShieldB_[1];
+    score += EvalCoefficients::pawnShieldAbove_[1];
   else if (mabove3 & pmask)
-    score += EvalCoefficients::pawnPenaltyB_ >> 1;
-  else
-    score += EvalCoefficients::pawnPenaltyB_;
+    score += EvalCoefficients::pawnShieldAbove_[2];
   return score;
 }
 
@@ -1093,7 +1092,8 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     Figure::Color fcolor = Figure::otherColor(rcolor);
     const int rpawnsN = fmgr.pawns(rcolor);
-    score += EvalCoefficients::rookAgainstFigureBonus_[rpawnsN] * rooksDiff;
+    const int fpawnsN = fmgr.pawns(fcolor);
+    score += EvalCoefficients::rookAgainstFigureBonus_[rpawnsN][fpawnsN] * rooksDiff;
   }
   // 2 figures vs. Rook
   if ((rooksDiff*figuresDiff <= -2) && (rooksDiff == 1 || rooksDiff == -1))

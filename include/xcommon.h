@@ -203,7 +203,7 @@ namespace nst
 
 #define SORT_MOVES_0_HIST
 #define EXTEND_CHECK_SEE_ONLY
-#undef USE_EVAL_HASH
+#define USE_EVAL_HASH
 
 #undef SEE_PRUNING
 #undef USE_FUTILITY_PRUNING
@@ -218,6 +218,7 @@ namespace nst
 
 #undef GENERATE_MAT_MOVES_IN_EVAL
 #undef SYNCHRONIZE_LAST_ITER
+#undef MOBILITY_EXTENDED
 
 static const SortValueType CaptureRecentlyBonus = 10;
 static const SortValueType PromotionBonus = 10;
