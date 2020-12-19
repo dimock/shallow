@@ -594,9 +594,9 @@ ScoreType32 Evaluator::passerEvaluation(PasserInfo const& pi)
 
 Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInfo const& pi)
 {
-  const FiguresManager & fmgr = board_->fmgr();
-  const BitMask & pmask = fmgr.pawn_mask(color);
-  BitMask pawn_mask = pmask & pi.passers_;
+  const auto& fmgr = board_->fmgr();
+  const auto& pmask = fmgr.pawn_mask(color);
+  auto pawn_mask = pmask & pi.passers_;
   if(!pawn_mask)
     return{};
     
@@ -606,79 +606,49 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   PasserInfo pinfo;
 
   Figure::Color ocolor = Figure::otherColor(color);
-  const BitMask & opmsk = fmgr.pawn_mask(ocolor);
+  const auto& opmsk = fmgr.pawn_mask(ocolor);
+  const auto& ofgs = fmgr.mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
   
   while(pawn_mask)
   {
     const int n = clear_lsb(pawn_mask);
-    const auto & passmsk = pawnMasks().mask_passed(color, n);
     const auto& halfpassmsk = pawnMasks().mask_forward(color, n);
 
     const Index idx(n);
-    const int x = idx.x();
-    const int y = idx.y();
-    const int cy = colored_y_[color][y];
+    const int cy = colored_y_[color][idx.y()];
 
-    const bool halfpasser = (opmsk & passmsk);
-    const Index pp(x, py);
+    auto n1 = n + (dy << 3);
+    auto fwd_field = set_mask_bit(n1);
+
+    if (fwd_field & ofgs)
+      continue;
+   
+    const bool halfpasser = halfpassmsk & finfo_[ocolor].pawnAttacks_;
     ScoreType32 pwscore;
 
     auto attack_mask = finfo_[color].attack_mask_;
     auto multiattack_mask = finfo_[color].multiattack_mask_;
     auto o_attack_mask = finfo_[ocolor].attack_mask_;
     auto o_multiattack_mask = finfo_[ocolor].multiattack_mask_;
-    if (BitMask behind_msk = betweenMasks().from_dir(n, dir_behind_[color]) & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
-    {
-      // my rook behind passed pawn - give bonus
-      int rpos = color ? _msb64(behind_msk) : _lsb64(behind_msk);
-      if (board_->is_nothing_between(n, rpos, inv_mask_all_))
-      {
-        pwscore += EvalCoefficients::rookBehindBonus_;
-        auto r_attacks = magic_ns::rook_moves(rpos, mask_all_ & ~pmask);
-        multiattack_mask |= attack_mask & r_attacks;
-        attack_mask |= r_attacks;
-      }
+    BitMask behind_msk = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_);
+    if (behind_msk & (fmgr.rook_mask(color) | fmgr.queen_mask(color))) {
+      multiattack_mask |= attack_mask & fwd_field;
+      attack_mask |= fwd_field;
     }
-    else if (BitMask o_behind_msk = betweenMasks().from_dir(n, dir_behind_[color]) & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)))
-    {
-      // may be opponent's rook - give penalty
-      int rpos = color ? _msb64(o_behind_msk) : _lsb64(o_behind_msk);
-      if (board_->is_nothing_between(n, rpos, inv_mask_all_))
-      {
-        pwscore -= EvalCoefficients::rookBehindBonus_;
-        auto or_attacks = magic_ns::rook_moves(rpos, mask_all_ & ~pmask);
-        o_multiattack_mask |= o_attack_mask & or_attacks;
-        o_attack_mask |= or_attacks;
-      }
+    else if (behind_msk & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor))) {
+      o_multiattack_mask |= o_attack_mask & fwd_field;
+      o_attack_mask |= fwd_field;
     }
-    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | fmgr.mask(ocolor)) & ~finfo_[color].pawnAttacks_;
 
-    // ahead fields are not blocked by opponent
-    auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
+    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_);
+    auto fwd_mask = fwd_field & blockers_mask;
     if (!fwd_mask) {
-      pwscore  += EvalCoefficients::passerPawnEx_[cy];
-      // could promote on the next move and not attacked or it's turn
-      if (cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
-        !((o_attack_mask | fmgr.mask(ocolor)) & pawnMasks().mask_forward(color, n))) {
-        pwscore += EvalCoefficients::canpromotePawn_[cy];
-      }
-    }
-    else {
-      int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
-      int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
-      int steps = last_cango - cy;
-      if (steps > 0) {
-        int steps_to_promotion = 7 - cy;
-        X_ASSERT(steps < 0 || steps_to_promotion < 1, "invalid number of pawn steps");
-        auto prmBonus = (EvalCoefficients::passerPawn1_[cy] * steps);
-        prmBonus /= steps_to_promotion;
-        pwscore += ScoreType32{ prmBonus, prmBonus << 1 };
-      }
+      pwscore += EvalCoefficients::passerPawnEx_[halfpasser][cy];
+      if (cy == 6)
+        pwscore += EvalCoefficients::canpromotePawn_[halfpasser];
     }
 
-    if (halfpasser)
-      pwscore >>= 1;
     pinfo.score_ += pwscore;
   }
   
@@ -740,7 +710,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
 
   auto king_cy = colored_y_[color][kingPos.y()];
   if (king_cy > 5)
-    return 0;// EvalCoefficients::kingIsUnsafe_;
+    return 0;
 
   int above1 = (kingPos + delta_y[color]) & 63;
   int above2 = (above1 + delta_y[color]) & 63;
@@ -857,7 +827,7 @@ int Evaluator::evaluateKingsPawn(Figure::Color color, Index const& kingPos) cons
 
   auto king_cy = colored_y_[color][kingPos.y()];
   if (king_cy > 5)
-    return 0;// EvalCoefficients::kingIsUnsafe_;
+    return 0;
 
   int above1 = (kingPos + delta_y[color]) & 63;
   int above2 = (above1 + delta_y[color]) & 63;

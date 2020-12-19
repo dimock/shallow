@@ -136,14 +136,6 @@ struct ScoreType32
     return *this;
   }
 
-  /// this method is compromise between accuracy and performance
-  inline ScoreType32& operator >>= (const int& t)
-  {
-    ev_[0] >>= t;
-    ev_[1] >>= t;
-    return *this;
-  }
-
   inline bool operator != (const ScoreType32& other) const
   {
     return eval32_ != other.eval32_;

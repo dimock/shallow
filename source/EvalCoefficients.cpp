@@ -40,10 +40,6 @@ namespace NEngine
 
   // king
   int EvalCoefficients::fakeCastle_{ -15 };
-  //int EvalCoefficients::kingIsUnsafe_{ -10 };
-  //int EvalCoefficients::pawnPenaltyA_{ -13 };
-  //int EvalCoefficients::pawnPenaltyB_{ -15 };
-  //int EvalCoefficients::pawnPenaltyC_{ -3 };
 
   // blocked figure
   ScoreType32 EvalCoefficients::knightBlocked_{ 80, 80 };
@@ -129,10 +125,14 @@ namespace NEngine
   ScoreType32 EvalCoefficients::passerPawn2_[8] = { {0, 0}, {1, 1}, {2, 2}, {3, 3}, {7, 7}, {11, 11}, {16, 16}, {0, 0} };
   ScoreType32 EvalCoefficients::passerPawn4_[8] = { {0, 0}, {1, 1}, {1, 1}, {2, 2}, {3, 3}, {5, 5}, {8, 8}, {0, 0} };
   ScoreType32 EvalCoefficients::passerPawn38_[8] = { {0, 0}, {1, 1}, {2, 2}, {3, 3}, {5, 5}, {8, 8}, {12, 12}, {0, 0} };
-  ScoreType32 EvalCoefficients::passerPawnEx_[8] = { {0, 0}, {5, 10}, {9, 18}, {20, 40}, {38, 76}, {65, 130}, {98, 196}, {0, 0} };
+  ScoreType32 EvalCoefficients::passerPawnEx_[2][8] = {
+    { {0, 0}, {5, 5}, {9, 9}, {20, 20}, {38, 38}, {65, 65}, {98, 98}, {0, 0} },
+    { {0, 0}, {2, 2}, {4, 4}, {10, 10}, {19, 19}, {32, 32}, {49, 49}, {0, 0} }
+  };
+  ScoreType32 EvalCoefficients::canpromotePawn_[2] = { { 60, 60 }, {30, 30} };
+
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
   int EvalCoefficients::farKingPawn_[8] = { 0, 3, 4, 8, 14, 23, 35, 0 };
-  ScoreType32 EvalCoefficients::canpromotePawn_[8] = { {0, 0}, {5, 5}, {9, 9}, {23, 23}, {45, 45}, {75, 75}, {115, 115}, {0, 0} };
   int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 6, 8, 10, 12, 16 };
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 

@@ -43,10 +43,6 @@ struct EvalCoefficients
 
   // king
   static int fakeCastle_;
-  //static int kingIsUnsafe_;
-  //static int pawnPenaltyA_;
-  //static int pawnPenaltyB_;
-  //static int pawnPenaltyC_;
 
   // blocked figure
   static ScoreType32 knightBlocked_;
@@ -79,7 +75,6 @@ struct EvalCoefficients
 
   static int attackedNearKing_;
 
-  // arrays
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_;
   static ScoreType32 backwardPawn_;
@@ -121,11 +116,11 @@ struct EvalCoefficients
   static ScoreType32 passerPawn2_[8];
   static ScoreType32 passerPawn4_[8];
   static ScoreType32 passerPawn38_[8];
-  static ScoreType32 passerPawnEx_[8];
+  static ScoreType32 passerPawnEx_[2][8];
+  static ScoreType32 canpromotePawn_[2];
   static int passerPawnSc_[8]; // special cases only
   static int farKingPawn_[8];
   static int cangoPawn_[8];
-  static ScoreType32 canpromotePawn_[8];
   // distance between forwards
   static int closeToPromotion_[8];
   static int kingToPawnBonus_[8];
