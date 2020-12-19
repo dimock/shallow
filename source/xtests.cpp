@@ -230,20 +230,6 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
     ChecksGenerator<Board, SMove> ck{ e.board_ };
     ck.generate();
 
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-    auto hmove = eval.move(e.board_.color());
-    TacticalGenerator<Board, SMove> tg(e.board_, hmove, 0);
-
-    for (;;) {
-      auto* pmove = tg.next(0, false);
-      if (!pmove)
-        break;
-      auto& move = *pmove;
-      if (!e.board_.validateMoveBruteforce(move))
-        throw std::runtime_error("invalid move");
-    }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
     int diff = -100000;
     float t = 0.0f;
     int refScore = -10000;

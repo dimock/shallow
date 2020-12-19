@@ -265,20 +265,41 @@ public:
 };
 #endif
 
-ALIGN_MSC(8) struct ALIGN_GCC(8) HEval
+ALIGN_MSC(8) struct ALIGN_GCC(8) PHEval
+{
+  uint32      hkey_{};
+  ScoreType32 score_;
+  BitMask     passers_;
+};
+
+class PHashTable : public HashTable<PHEval>
+{
+public:
+
+  PHashTable(int size) : HashTable<PHEval>(size)
+  {}
+
+  inline PHEval* get(const uint64 & code)
+  {
+    return &(operator [] (code));
+  }
+};
+
+
+ALIGN_MSC(8) struct ALIGN_GCC(8) FHEval
 {
   uint32      hkey_{};
   ScoreType32 score_;
 };
 
-class EHashTable : public HashTable<HEval>
+class FHashTable : public HashTable<FHEval>
 {
 public:
 
-  EHashTable(int size) : HashTable<HEval>(size)
+  FHashTable(int size) : HashTable<FHEval>(size)
   {}
 
-  inline HEval* get(const uint64 & code)
+  inline FHEval* get(const uint64 & code)
   {
     return &(operator [] (code));
   }

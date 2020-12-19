@@ -27,8 +27,7 @@ class Evaluator
   struct PasserInfo
   {
     ScoreType32 score_;
-    BitMask     passers_[2] = {};
-    bool        passers_observed_[2] = {};
+    BitMask     passers_{};
   };
 
   struct FieldsInfo
@@ -63,23 +62,9 @@ class Evaluator
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
     BitMask pawns_fwd_{};
-    //BitMask discovered_mask_bi_{};
-    //BitMask discovered_mask_r_{};
-    //BitMask discovered_attackers_bi_{};
-    //BitMask discovered_attackers_r_{};
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-    BitMask kingMoves_{};
-    BitMask knights_{};
-    BitMask bishops_{};
-    BitMask rooks_{};
-    BitMask queens_{};
-#endif // GENERATE_MAT_MOVES_IN_EVAL
+    BitMask discovered_attackers_{};
+    BitMask discovered_mask_{};
   } finfo_[2];
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-  SMove move_[2];
-#endif // GENERATE_MAT_MOVES_IN_EVAL
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
@@ -89,11 +74,11 @@ class Evaluator
   Board const* board_{ nullptr };
 
 #ifdef USE_EVAL_HASH
-  EHashTable ehash_{ 18 };
-  EHashTable fhash_{ 18 };
+  PHashTable ehash_{ 18 };
+  FHashTable fhash_{ 18 };
 #else
-  EHashTable ehash_{ 0 };
-  EHashTable fhash_{ 0 };
+  PHashTable ehash_{ 0 };
+  FHashTable fhash_{ 0 };
 #endif
 
 public:
@@ -104,10 +89,6 @@ public:
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
   ScoreType materialScore() const;
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-  SMove move(Figure::Color) const;
-#endif // GENERATE_MAT_MOVES_IN_EVAL
 
 #ifdef USE_EVAL_HASH
   inline void prefetch()
@@ -176,26 +157,13 @@ private:
   ScoreType32 evaluateRook();
   ScoreType32 evaluateQueens();
 
-  //bool discoveredCheck(int pos, Figure::Color color) const
-  //{
-  //  auto const & ki_pos = board_->kingPos(color);
-  //  auto dir = figureDir().br_dir(ki_pos, pos);
-  //  if (!dir)
-  //    return false;
-  //  if (dir == nst::bishop)
-  //  {
-  //    auto pos_mask = set_mask_bit(pos);
-  //    if (!(finfo_[color].discovered_mask_bi_ & pos_mask))
-  //      return false;
-  //    auto const& tail_mask = betweenMasks().tail(ki_pos, pos);
-  //    return (tail_mask & finfo_[color].discovered_attackers_bi_);
-  //  }
-  //  if (!(finfo_[color].discovered_mask_r_ & set_mask_bit(pos)))
-  //    return false;
-  //  auto pos_mask = set_mask_bit(pos);
-  //  auto const& tail_mask = betweenMasks().tail(ki_pos, pos);
-  //  return (tail_mask & finfo_[color].discovered_attackers_r_);
-  //}
+  bool discoveredCheck(int pos, Figure::Color color) const
+  {
+    auto const& ki_pos = board_->kingPos(color);
+    auto const pos_mask = set_mask_bit(pos);
+    auto const& from_mask = betweenMasks().from(ki_pos, pos);
+    return (from_mask & finfo_[color].discovered_attackers_ & ~pos_mask) && (from_mask & finfo_[color].discovered_mask_ & pos_mask);
+  }
   
   ScoreType32 evaluateKingPressure(Figure::Color color);
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;

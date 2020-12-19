@@ -43,6 +43,12 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
   #define TIMING_FLAG 0x3FFF
 #endif
 
+#ifdef RELEASEDEBUGINFO
+  #define X_ASSERT_R(v, msg) if ( v ) throw std::runtime_error(msg); else;
+#else
+  #define X_ASSERT_R(v, msg)
+#endif
+
 using int8    = std::int8_t;
 using uint8   = std::uint8_t;
 using int16   = std::int16_t;
@@ -216,7 +222,6 @@ namespace nst
 #undef USE_LMR
 #undef VERIFY_LMR
 
-#undef GENERATE_MAT_MOVES_IN_EVAL
 #undef SYNCHRONIZE_LAST_ITER
 #undef MOBILITY_EXTENDED
 

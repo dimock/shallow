@@ -71,16 +71,10 @@ void Evaluator::initialize(Board const* board)
 void Evaluator::reset()
 {
   finfo_[0] = finfo_[1] = FieldsInfo{};
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-  move_[0] = move_[1] = SMove{true};
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
   mask_all_ = 0;
   inv_mask_all_ = 0;
   alpha_ = 0;
   betta_ = 0;
-
   ehash_.clear();
   fhash_.clear();
 }
@@ -120,16 +114,10 @@ void Evaluator::prepare()
 
     finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
     finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-    finfo_[0].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorBlack)) & ~(finfo_[1].attack_mask_ | mask_all_);
-    finfo_[1].kingMoves_ = movesTable().caps(Figure::TypeKing, board_->kingPos(Figure::ColorWhite)) & ~(finfo_[0].attack_mask_ | mask_all_);
-#endif // GENERATE_MAT_MOVES_IN_EVAL
   }
   
   // other mask
   {
-    //auto kings_mask = fmgr.king_mask(Figure::ColorBlack) | fmgr.king_mask(Figure::ColorWhite);
     finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
     finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
 
@@ -153,33 +141,35 @@ void Evaluator::prepare()
     finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
     finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
 
-    //finfo_[0].discovered_mask_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
-    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack));
-    //finfo_[0].discovered_attackers_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~finfo_[0].discovered_mask_bi_) &
-    //  (fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
-    //finfo_[0].discovered_mask_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
-    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.bishop_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.bishop_mask(Figure::ColorBlack));
-    //finfo_[0].discovered_attackers_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~finfo_[0].discovered_mask_r_) &
-    //  (fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+    auto const discovered_mask_bi_b = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
+      (fmgr.knight_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | finfo_[0].nbrq_mask_);
+    finfo_[0].discovered_mask_ = discovered_mask_bi_b;
+    finfo_[0].discovered_attackers_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~discovered_mask_bi_b) &
+      (fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+    
+    auto const discovered_mask_r_b = magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
+      (fmgr.knight_mask(Figure::ColorWhite) | fmgr.bishop_mask(Figure::ColorWhite) | finfo_[0].nbrq_mask_);
+    finfo_[0].discovered_mask_ |= discovered_mask_r_b;
+    finfo_[0].discovered_attackers_ |= magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~discovered_mask_r_b) &
+      (fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
 
-    //finfo_[1].discovered_mask_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
-    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack));
-    //finfo_[1].discovered_attackers_bi_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~finfo_[1].discovered_mask_bi_) &
-    //  (fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
-    //finfo_[1].discovered_mask_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
-    //  (fmgr.knight_mask(Figure::ColorWhite) | fmgr.bishop_mask(Figure::ColorWhite) | fmgr.knight_mask(Figure::ColorBlack) | fmgr.bishop_mask(Figure::ColorBlack));
-    //finfo_[1].discovered_attackers_r_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~finfo_[1].discovered_mask_r_) &
-    //  (fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+    auto const discovered_mask_bi_w = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
+      (fmgr.knight_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | finfo_[1].nbrq_mask_);
+    finfo_[1].discovered_mask_ = discovered_mask_bi_w;
+    finfo_[1].discovered_attackers_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~discovered_mask_bi_w) &
+      (fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+
+    auto const discovered_mask_r_w = magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
+      (fmgr.knight_mask(Figure::ColorBlack) | fmgr.bishop_mask(Figure::ColorBlack) | finfo_[1].nbrq_mask_);
+    finfo_[1].discovered_mask_ |= discovered_mask_r_w;
+    finfo_[1].discovered_attackers_ |= magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~discovered_mask_r_w) &
+      (fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
 ScoreType Evaluator::operator () (ScoreType alpha, ScoreType betta)
 {
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-  move_[0] = move_[1] = SMove{ false };
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
   X_ASSERT(!board_, "Evaluator wasn't properly initialized");
 
   if(!ehash_.empty())
@@ -204,13 +194,6 @@ ScoreType Evaluator::materialScore() const
   auto result = considerColor(fmgr.weight().eval0());
   return result;
 }
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-SMove Evaluator::move(Figure::Color color) const
-{
-  return move_[color];
-}
-#endif // GENERATE_MAT_MOVES_IN_EVAL
 
 ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 {
@@ -348,11 +331,12 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #ifdef USE_EVAL_HASH
   const uint64 & code = board_->fmgr().kpwnCode();
   uint32 hkey = (uint32)(code >> 32);
-  HEval* heval = ehash_.get(code);
+  auto* heval = ehash_.get(code);
   if(heval->hkey_ == hkey)
   {
     PasserInfo info;
     info.score_ = heval->score_;
+    info.passers_ = heval->passers_;
 #ifndef NDEBUG
     auto hscore = evaluatePawns().score_;
     hscore += ScoreType32{ evaluateKingSafety(Figure::ColorWhite) - evaluateKingSafety(Figure::ColorBlack), 0 };
@@ -369,6 +353,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #ifdef USE_EVAL_HASH
   heval->hkey_ = hkey;
   heval->score_ = info.score_;
+  heval->passers_ = info.passers_;
 #endif
 
   return info;
@@ -496,7 +481,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
   bool no_opawns = opmsk == 0ULL;
   auto pawns_all = opmsk | pmask;
 
-  uint8 x_passers{ 0 };
   int dy = delta_y_[color];
   int py = promo_y_[color];
 
@@ -537,7 +521,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     if(!(halfpassmsk & (opmsk|pmask)))
     {
       // save position for further usage
-      info.passers_[color] |= set_mask_bit(n);
+      info.passers_ |= set_mask_bit(n);
 
       const auto & passmsk = pawnMasks().mask_passed(color, n);
       bool halfpasser = (opmsk & passmsk);
@@ -597,9 +581,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns() const
   auto info_w = evaluatePawns(Figure::ColorWhite);
   auto info_b = evaluatePawns(Figure::ColorBlack);
   info_w.score_ -= info_b.score_;
-  info_w.passers_observed_[0] = true;
-  info_w.passers_observed_[1] = true;
-  info_w.passers_[0] = info_b.passers_[0];
+  info_w.passers_ |= info_b.passers_;
   return info_w;
 }
 
@@ -615,7 +597,8 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 {
   const FiguresManager & fmgr = board_->fmgr();
   const BitMask & pmask = fmgr.pawn_mask(color);
-  if(!pmask || (pi.passers_observed_[color] && !pi.passers_[color]))
+  BitMask pawn_mask = pmask & pi.passers_;
+  if(!pawn_mask)
     return{};
     
   const int py = promo_y_[color];
@@ -626,18 +609,12 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   Figure::Color ocolor = Figure::otherColor(color);
   const BitMask & opmsk = fmgr.pawn_mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
-
-  BitMask pawn_mask = pmask;
-  if(pi.passers_observed_[color])
-    pawn_mask = pi.passers_[color];
   
   while(pawn_mask)
   {
     const int n = clear_lsb(pawn_mask);
     const auto & passmsk = pawnMasks().mask_passed(color, n);
     const auto& halfpassmsk = pawnMasks().mask_forward(color, n);
-    if((opmsk|pmask) & halfpassmsk)
-      continue;
 
     const Index idx(n);
     const int x = idx.x();
@@ -964,7 +941,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
 {
 #ifdef USE_EVAL_HASH
   const uint64 & code = board_->fmgr().fgrsCode();
-  HEval * heval = fhash_.get(code);
+  auto * heval = fhash_.get(code);
   uint32 hkey = (uint32)(code >> 32);
   if (heval->hkey_ == hkey)
   {

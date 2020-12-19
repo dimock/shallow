@@ -896,12 +896,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       return score0;
     }
 
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-    if (eval.move(board.color()) && !hmove) {
-      hmove = eval.move(board.color());
-    }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
     ScoreType mscore = eval.materialScore();
     if (score0 > mscore)
       mscore = score0;

@@ -257,30 +257,24 @@ ScoreType32 Evaluator::evaluateKnights()
       auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
       finfo_[color].knightAttacks_ |= knight_moves;
 
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-      finfo_[ocolor].kingMoves_ &= ~knight_moves;
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color] += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
       
-      if (board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+      X_ASSERT_R(board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor)) != discoveredCheck(n, ocolor), "discovered check not detected");
+      if (discoveredCheck(n, ocolor)) {
         finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
         finfo_[color].discoveredCheck_ = true;
       }
       
       bool qpinned = false;
-      if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
+      if (discoveredCheck(n, color)) {
         knight_moves = 0ULL;
       }
 #if MOBILITY_EXTENDED
       else
       {
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-        finfo_[color].knights_ |= set_mask_bit(n);
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
         if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none)) {
           qpinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
@@ -288,34 +282,6 @@ ScoreType32 Evaluator::evaluateKnights()
         if (board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
           finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
           finfo_[color].discoveredCheck_ = true;
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-          auto nmsk = knight_moves & inv_mask_all_;
-          if (!finfo_[ocolor].kingMoves_ && nmsk) {
-            finfo_[color].matTreat_ = true;
-            if (color == board_->color()) {
-              nmsk &= ~(finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].kingAttacks_);
-              if (nmsk & !(knight_moves & finfo_[ocolor].rq_mask_)) {
-                int to = _lsb64(nmsk);
-                move_[color] = SMove{ n, to };
-              }
-            }
-          }
-          else if (color == board_->color() && !(knight_moves & finfo_[ocolor].rq_mask_)) {
-            while (nmsk) {
-              int to = clear_lsb(nmsk);
-              auto to_attacks = movesTable().caps(Figure::TypeKnight, to);
-              if (to_attacks & fmgr.queen_mask(ocolor)) {
-                move_[color] = SMove{ n, to };
-                break;
-              }
-              else if (to_attacks & finfo_[ocolor].rq_mask_) {
-                move_[color] = SMove{ n, to };
-                // continue searching for queen attack
-              }
-            }
-          }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
         }
       }
 
@@ -368,30 +334,24 @@ ScoreType32 Evaluator::evaluateBishops()
       auto const& bishop_attacks = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_);
       auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
       finfo_[color].bishopAttacks_ |= bishop_attacks;
-      
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-      finfo_[ocolor].kingMoves_ &= ~bishop_attacks;
-#endif // GENERATE_MAT_MOVES_IN_EVAL
 
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color] += EvalCoefficients::kingDistanceBonus_[Figure::TypeBishop][ki_dist];
 
-      if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+      X_ASSERT_R(board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor)) != discoveredCheck(n, ocolor), "discovered check not detected");
+      if (!finfo_[color].discoveredCheck_ && discoveredCheck(n, ocolor)) {
         finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
         finfo_[color].discoveredCheck_ = true;
       }
       bool q_pinned = false;
-      if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
+      if (discoveredCheck(n, color)) {
         bishop_moves = 0ULL;
       }
 #if MOBILITY_EXTENDED
       else
       {
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-        finfo_[color].bishops_ |= set_mask_bit(n);
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
         if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
@@ -399,34 +359,6 @@ ScoreType32 Evaluator::evaluateBishops()
         if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
           finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
           finfo_[color].discoveredCheck_ = true;
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-          auto bimsk = bishop_moves & inv_mask_all_;
-          if (!finfo_[ocolor].kingMoves_) {
-            finfo_[color].matTreat_ = true;
-            if (color == board_->color()) {
-              bimsk &= ~(finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].kingAttacks_);
-              if (bimsk && !(bishop_moves & finfo_[ocolor].rq_mask_)) {
-                int to = _lsb64(bimsk);
-                move_[color] = SMove{ n, to };
-              }
-            }
-          }
-          else if (color == board_->color() && !(bishop_moves & finfo_[ocolor].rq_mask_)) {
-            while (bimsk) {
-              int to = clear_lsb(bimsk);
-              auto to_attacks = magic_ns::bishop_moves(to, mask_all_);
-              if (to_attacks & fmgr.queen_mask(ocolor)) {
-                move_[color] = SMove{ n, to };
-                break;
-              }
-              else if (to_attacks & finfo_[ocolor].rq_mask_) {
-                move_[color] = SMove{ n, to };
-                // continue searching for queen attack
-              }
-            }
-          }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
         }
       }
 
@@ -484,10 +416,6 @@ ScoreType32 Evaluator::evaluateRook()
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
       finfo_[color].rookAttacks_ |= rook_attacks;
 
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-      finfo_[ocolor].kingMoves_ &= ~rook_attacks;
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
       // open column
       auto const& mask_col = pawnMasks().mask_column(n & 7);
       if(!(mask_col & fmgr.pawn_mask(color)))
@@ -500,22 +428,20 @@ ScoreType32 Evaluator::evaluateRook()
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color] += EvalCoefficients::kingDistanceBonus_[Figure::TypeRook][ki_dist];
 
-      if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
+      X_ASSERT_R(board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor)) != discoveredCheck(n, ocolor), "discovered check not detected");
+      if (!finfo_[color].discoveredCheck_ && discoveredCheck(n, ocolor)) {
         finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
         finfo_[color].discoveredCheck_ = true;
       }
 
       bool q_pinned = false;
-      if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
+      if (discoveredCheck(n, color)) {
         rook_moves = 0ULL;
       }
 #if MOBILITY_EXTENDED
       else
       {
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-        finfo_[color].rooks_ |= set_mask_bit(n);
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
         if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::bishop)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::rookPinned_;
@@ -523,30 +449,6 @@ ScoreType32 Evaluator::evaluateRook()
         if (!finfo_[color].discoveredCheck_ && board_->discoveredCheck(n, mask_all_, color, board_->kingPos(ocolor))) {
           finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
           finfo_[color].discoveredCheck_ = true;
-
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-          auto rmsk = rook_moves & inv_mask_all_;
-          if (!finfo_[ocolor].kingMoves_) {
-            finfo_[color].matTreat_ = true;
-            if (color == board_->color()) {
-              rmsk &= ~(finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].nb_attacked_ | finfo_[ocolor].kingAttacks_);
-              if (rmsk && !(rook_moves & fmgr.queen_mask(ocolor))) {
-                int to = _lsb64(rmsk);
-                move_[color] = SMove{ n, to };
-              }
-            }
-          }
-          else if(color == board_->color() && !(rook_moves & fmgr.queen_mask(ocolor))) {
-            while (rmsk) {
-              int to = clear_lsb(rmsk);
-              auto to_attacks = magic_ns::rook_moves(to, mask_all_);
-              if (to_attacks & fmgr.queen_mask(ocolor)) {
-                move_[color] = SMove{ n, to };
-                break;
-              }
-            }
-          }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
         }
       }
 
@@ -610,10 +512,6 @@ ScoreType32 Evaluator::evaluateQueens()
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
       finfo_[color].queenAttacks_ |= queen_attacks;
 
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-      finfo_[ocolor].kingMoves_ &= ~queen_attacks;
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color] += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
@@ -630,16 +528,11 @@ ScoreType32 Evaluator::evaluateQueens()
 #endif // king protection, discovered checks etc...
 
       // pinned
-      if (board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color))) {
+      X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
+      if (discoveredCheck(n, color)) {
         auto from_mask = betweenMasks().from(board_->kingPos(color), n);
         queen_moves &= from_mask;
       }
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-      else {
-        finfo_[color].queens_ |= set_mask_bit(n);
-      }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
-
 
       // mobility
       if (queen_moves) {
@@ -740,21 +633,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     score += EvalCoefficients::discoveredCheckBonus_;
     if (mpattack & finfo_[ocolor].nbrq_mask_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].kingAttacks_)) {
       score += EvalCoefficients::discoveredCheckBonus4_;
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-      if (color == board_->color()) {
-        if (mpawn && !board_->discoveredCheck(from, mask_all_, ocolor, board_->kingPos(color))) {
-          int to = _lsb64(mpawn);
-          move_[color] = SMove{ from, to };
-        }
-      }
-    }
-    else if (mpawn && !finfo_[ocolor].kingMoves_ && !board_->discoveredCheck(from, mask_all_, ocolor, board_->kingPos(color))) {
-      if (color == board_->color()) {
-        int to = _lsb64(mpawn);
-        move_[color] = SMove{ from, to };
-      }
-      finfo_[color].matTreat_ = true;
-#endif // GENERATE_MAT_MOVES_IN_EVAL
     }
     break;
   }
@@ -782,14 +660,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
         if (!oking_mv) {
           check_score += EvalCoefficients::knightChecking_;
           finfo_[color].matTreat_ = true;
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-          if (color == board_->color() && (set_mask_bit(n) & inv_mask_all_)) {
-            if (auto nmsk = movesTable().caps(Figure::TypeKnight, n) & finfo_[color].knights_) {
-              int from = _lsb64(nmsk);
-              move_[color] = SMove{ from, n };
-            }
-          }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
         }
       }
       if (!finfo_[color].matTreat_)
@@ -808,14 +678,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
           if (!(btw_mask & o_qnbr_protect_mask)) {
             check_score += EvalCoefficients::matTreatBonus_;
             finfo_[color].matTreat_ = true;
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-            if (color == board_->color() && (set_mask_bit(n) & inv_mask_all_)) {
-              if (auto bimsk = magic_ns::bishop_moves(n, mask_all_) & finfo_[color].bishops_) {
-                int from = _lsb64(bimsk);
-                move_[color] = SMove{ from, n };
-              }
-            }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
           }
         }
         while (!finfo_[color].matTreat_ && r_check) {
@@ -828,14 +690,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
           if (!(btw_mask & o_qnbr_protect_mask)) {
             check_score += EvalCoefficients::matTreatBonus_;
             finfo_[color].matTreat_ = true;
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-            if (color == board_->color() && (set_mask_bit(n) & inv_mask_all_)) {
-              if (auto rmsk = magic_ns::rook_moves(n, mask_all_) & finfo_[color].rooks_) {
-                int from = _lsb64(rmsk);
-                move_[color] = SMove{ from, n };
-              }
-            }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
           }
         }
         if (!finfo_[color].matTreat_)
@@ -850,14 +704,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
             if (!(btw_mask & o_qnbr_protect_mask)) {
               check_score += EvalCoefficients::matTreatBonus_;
               finfo_[color].matTreat_ = true;
-#ifdef GENERATE_MAT_MOVES_IN_EVAL
-              if (color == board_->color() && (set_mask_bit(n) & inv_mask_all_)) {
-                if (auto qmsk = magic_ns::queen_moves(n, mask_all_) & finfo_[color].queens_) {
-                  int from = _lsb64(qmsk);
-                  move_[color] = SMove{ from, n };
-                }
-              }
-#endif // GENERATE_MAT_MOVES_IN_EVAL
             }
           }
         }
