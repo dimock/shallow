@@ -32,21 +32,11 @@ class Evaluator
 
   struct FieldsInfo
   {
-    int num_attackers_{};
-    ScoreType32 score_mob_{};
-    ScoreType score_king_{};
-    int score_opening_{};
-    bool discoveredCheck_{};
-    bool matTreat_{};
     BitMask pawnAttacks_{};
     BitMask knightMoves_{};
     BitMask bishopMoves_{};
     BitMask rookMoves_{};
     BitMask queenMoves_{};
-    BitMask knightAttacks_{};
-    BitMask bishopAttacks_{};
-    BitMask rookAttacks_{};
-    BitMask queenAttacks_{};
     BitMask bishopTreatAttacks_{};
     BitMask rookTreatAttacks_{};
     BitMask kingAttacks_{};
@@ -64,13 +54,20 @@ class Evaluator
     BitMask pawns_fwd_{};
     BitMask discovered_attackers_{};
     BitMask discovered_mask_{};
+    ScoreType32 score_mob_{};
+#ifdef DO_KING_EVAL
+    int num_attackers_{};
+    int score_opening_{};
+    ScoreType score_king_{};
+    bool matTreat_{};
+#endif
+    bool discoveredCheck_{};
   } finfo_[2];
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
   int alpha_{};
   int betta_{};
-
   Board const* board_{ nullptr };
 
 #ifdef USE_EVAL_HASH
@@ -82,7 +79,7 @@ class Evaluator
 #endif
 
 public:
-  const int lazyThreshold_ = 1000;
+  static const int lazyThreshold_ = 1000;
 
   void initialize(Board const* board);
   void reset();
@@ -164,8 +161,11 @@ private:
     auto const& from_mask = betweenMasks().from(ki_pos, pos);
     return (from_mask & finfo_[color].discovered_attackers_ & ~pos_mask) && (from_mask & finfo_[color].discovered_mask_ & pos_mask);
   }
-  
+
+#ifdef DO_KING_EVAL
   ScoreType32 evaluateKingPressure(Figure::Color color);
+#endif
+
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
   PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);
@@ -197,14 +197,14 @@ private:
   ScoreType32 evaluatePawnsPressure(Figure::Color color);
 
   // sum of weights of all figures
-  const int openingWeight_ = 2*(    Figure::figureWeight_[Figure::TypeQueen]
+  static const int openingWeight_ = 2*(    Figure::figureWeight_[Figure::TypeQueen]
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
                                 + 2*Figure::figureWeight_[Figure::TypeBishop]
                                 +   Figure::figureWeight_[Figure::TypeKnight]);
 
-  const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeKnight] + Figure::figureWeight_[Figure::TypeRook]);
+  static const int endgameWeight_ = 2*(Figure::figureWeight_[Figure::TypeKnight] + Figure::figureWeight_[Figure::TypeRook]);
 
-  const int weightOEDiff_ = openingWeight_ - endgameWeight_;
+  static const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 
   static const BitMask castle_mask_[2][2];
   static const BitMask blocked_rook_mask_[2][2];

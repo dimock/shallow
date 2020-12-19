@@ -86,9 +86,6 @@ void Evaluator::prepare()
   mask_all_ = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
   inv_mask_all_ = ~mask_all_;
 
-  finfo_[0] = FieldsInfo{};
-  finfo_[1] = FieldsInfo{};
-
   // pawns attacks
   {
     const BitMask & pawn_msk_w = fmgr.pawn_mask(Figure::ColorWhite);
@@ -255,9 +252,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;
   score32 += score_mob;
 
-  //auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-  //scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-  //score32 += scoreKing;
+#ifdef DO_KING_EVAL
+  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+  score32 += scoreKing;
+#endif
 
   //auto scoreForks = evaluateForks(Figure::ColorWhite);
   //scoreForks -= evaluateForks(Figure::ColorBlack);
