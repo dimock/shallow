@@ -546,7 +546,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
           }
         }
         if (nguards > 0 && nguards >= pop_count(attackers)) {
-          pwscore = EvalCoefficients::passerPawn38_[cy];
+          pwscore = EvalCoefficients::passerPawn2_[cy];
         }
         else {
           pwscore = EvalCoefficients::passerPawn4_[cy];
@@ -555,9 +555,9 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore = EvalCoefficients::passerPawn_[cy];
-        int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
+        int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) + (board_->color() == color);
         int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
-        pwscore += EvalCoefficients::kingToPasserDistanceBonus_ * (oking_dist_promo - king_dist_promo);
+        pwscore += EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist_promo - EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist_promo;
         if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
           while (guards) {
             int g = clear_lsb(guards);
@@ -623,9 +623,6 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
     if (fwd_field & ofgs)
       continue;
-   
-    const bool halfpasser = halfpassmsk & finfo_[ocolor].pawnAttacks_;
-    ScoreType32 pwscore;
 
     auto attack_mask = finfo_[color].attack_mask_;
     auto multiattack_mask = finfo_[color].multiattack_mask_;
@@ -642,14 +639,10 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     }
 
     auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_);
-    auto fwd_mask = fwd_field & blockers_mask;
-    if (!fwd_mask) {
-      pwscore += EvalCoefficients::passerPawnEx_[halfpasser][cy];
-      if (cy == 6)
-        pwscore += EvalCoefficients::canpromotePawn_[halfpasser];
+    if (!(fwd_field & blockers_mask)) {
+      const bool halfpasser = halfpassmsk & finfo_[ocolor].pawnAttacks_;
+      pinfo.score_ += EvalCoefficients::passerPawnEx_[halfpasser][cy];
     }
-
-    pinfo.score_ += pwscore;
   }
   
   return pinfo;
