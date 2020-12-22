@@ -525,7 +525,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       const auto & passmsk = pawnMasks().mask_passed(color, n);
       bool halfpasser = (opmsk & passmsk);
       int cy = colored_y_[color][y];
-      Index pp(x, py);
 
       ScoreType32 pwscore;
       if (halfpasser)
@@ -555,8 +554,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore = EvalCoefficients::passerPawn_[cy];
-        int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), pp) + (board_->color() == color);
-        int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), pp);
+        int oking_dist_promo = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
+        int king_dist_promo = distanceCounter().getDistance(board_->kingPos(color), n1);
         pwscore += EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist_promo - EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist_promo;
         if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
           while (guards) {
