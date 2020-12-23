@@ -79,8 +79,8 @@ namespace NEngine
   ScoreType32 EvalCoefficients::isolatedPawn_ = { -12, -11 };
   ScoreType32 EvalCoefficients::backwardPawn_ = { -12, -11 };
   ScoreType32 EvalCoefficients::blockedPawn_ = { -7, -5 };
-  ScoreType32 EvalCoefficients::unguardedPawn_ = { -6, -3 };
-  ScoreType32 EvalCoefficients::unprotectedPawn_ = { -5, -3 };
+  ScoreType32 EvalCoefficients::unguardedPawn_ = { -4, -2 };
+  ScoreType32 EvalCoefficients::unprotectedPawn_ = { -3, -2 };
   ScoreType32 EvalCoefficients::hasneighborPawn_ = { 3, 2 };
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 10, 5, 1, 0, 0, 0 };
@@ -139,10 +139,10 @@ namespace NEngine
 
   // mobility
   ScoreType32 EvalCoefficients::knightMobility_[16] = { {-35, -35}, {-15, -15}, { 3,  3},  { 5,  5},  { 7,  7},  { 8,  8}, {10, 10}, {12, 12}, {14, 14} };
-  ScoreType32 EvalCoefficients::bishopMobility_[16] = { {-35, -35}, {-15, -15}, { 3,  3},  { 5,  5},  { 7,  7},  { 9,  9}, {12, 12}, {13, 13}, {14, 14}, {16, 16}, {20, 20}, {22, 22}, {23, 23}, {24, 24}, {25, 25}, {26, 26} };
-  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-35, -35}, {-15, -15}, { 4,  4},  { 6,  6},  { 9,  9},  {11, 11}, {15, 15}, {18, 18}, {21, 21}, {23, 23}, {26, 26}, {28, 28}, {30, 30}, {31, 31}, {32, 32}, {33, 33} };
-  ScoreType32 EvalCoefficients::queenMobility_[32] =  { {-65, -65}, {-30, -30}, { 6,  6},  {10, 10},  {13, 13},  {18, 18}, {23, 23}, {27, 27}, {30, 30}, {33, 33}, {36, 36}, {40, 40}, {43, 43}, {45, 45}, {47, 47}, {48, 48},
-                                                        { 49,  49}, { 50,  50}, {51, 51},  {52, 52},  {53, 53},  {54, 54}, {55, 55}, {56, 56}, {57, 57}, {58, 58}, {59, 59}, {60, 60}, {61, 61}, {62, 62}, {63, 63}, {64, 64} };
+  ScoreType32 EvalCoefficients::bishopMobility_[16] = { {-35, -35}, {-15, -15}, { 3,  3},  { 5,  5},  { 8,  8},  {10, 10}, {12, 12}, {13, 13}, {14, 14}, {15, 15}, {16, 16}, {17, 17}, {17, 17}, {18, 18}, {18, 18}, {18, 18} };
+  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-35, -35}, {-15, -15}, { 2,  2},  { 6,  6},  { 9,  9},  {11, 11}, {15, 15}, {18, 18}, {21, 21}, {23, 23}, {26, 26}, {28, 28}, {30, 30}, {31, 31}, {32, 32}, {33, 33} };
+  ScoreType32 EvalCoefficients::queenMobility_[32] =  { {-65, -65}, {-30, -30}, { 3,  3},  {10, 10},  {14, 14},  {20, 20}, {25, 25}, {30, 30}, {33, 33}, {37, 37}, {39, 39}, {41, 41}, {43, 43}, {45, 45}, {46, 46}, {47, 47},
+                                                        { 48,  48}, { 49,  49}, {50, 50},  {51, 51},  {52, 52},  {52, 52}, {53, 53}, {53, 53}, {53, 53}, {54, 54}, {54, 54}, {54, 54}, {54, 54}, {55, 55}, {55, 63}, {55, 55} };
 
   ScoreType32 EvalCoefficients::knightPinned_ = { 15, 15 };
   ScoreType32 EvalCoefficients::bishopPinned_ = { 15, 15 };

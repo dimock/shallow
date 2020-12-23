@@ -505,8 +505,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
     bool blocked = backward && ((fwd_field & opmsk) != 0ULL);
     bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
-    bool unprotected = !unguarded && !isolated && !backward && !pprotected;
     bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
+    bool unprotected = !unguarded && !isolated && !backward && !pprotected;
     bool doubled = !pprotected && (pop_count(pawnMasks().mask_doubled(x) & pmask) > 1);
 
     info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
