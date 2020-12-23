@@ -253,9 +253,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score32 += score_mob;
 
 #ifdef DO_KING_EVAL
-  auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-  scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-  score32 += scoreKing;
+  if (phaseInfo.phase_ != GamePhase::EndGame) {
+    auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+    scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+    score32 += scoreKing;
+  }
 #endif
 
   //auto scoreForks = evaluateForks(Figure::ColorWhite);

@@ -36,10 +36,10 @@ struct EvalCoefficients
 
   // check & mat treat
   static ScoreType32 discoveredCheckBonus_;
-  static ScoreType32 discoveredCheckBonus4_;
-  static ScoreType discoveredCheckBonus1_;
-  static ScoreType possibleCheckBonus_;
-  static ScoreType matTreatBonus_;
+  //static ScoreType32 discoveredCheckBonus4_;
+  //static ScoreType discoveredCheckBonus1_;
+  //static ScoreType possibleCheckBonus_;
+  //static ScoreType matTreatBonus_;
 
   // king
   static int fakeCastle_;
@@ -50,12 +50,12 @@ struct EvalCoefficients
   static ScoreType32 rookBlocked_;
 
   // king attacks
-  static ScoreType pawnKingAttack_;
-  static ScoreType knightKingAttack_;
-  static ScoreType bishopKingAttack_;
-  static ScoreType rookKingAttack_;
-  static ScoreType queenKingAttack_;
-  static ScoreType basicAttack_;
+  static ScoreType32 pawnKingAttack_;
+  static ScoreType32 knightKingAttack_;
+  static ScoreType32 bishopKingAttack_;
+  static ScoreType32 rookKingAttack_;
+  static ScoreType32 queenKingAttack_;
+  static ScoreType32 basicAttack_;
 
   static int generalKingPressure_;
   static int generalOpponentPressure_;
@@ -67,13 +67,15 @@ struct EvalCoefficients
   static int figureToKingDistanceMulti_;
 
   // king threat
-  static int knightChecking_;
-  static int bishopChecking_;
-  static int rookChecking_;
-  static int queenChecking_;
-  static int checkedFieldBonus_;
-
-  static int attackedNearKing_;
+  static ScoreType32 knightChecking_;
+  static ScoreType32 bishopChecking_;
+  static ScoreType32 rookChecking_;
+  static ScoreType32 queenChecking_;
+  static ScoreType32 checkedFieldBonus_;
+  
+  static int attackedNearKingCoeff_;
+  static int kingCheckersCoefficients[8];
+  static int kingAttackersCoefficients[8];
 
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_;

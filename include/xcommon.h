@@ -73,7 +73,7 @@ struct ScoreType32
     int32 eval32_;
   };
 
-  ScoreType32() : eval32_{0}
+  ScoreType32() : eval32_{ 0 }
   {
   }
 
@@ -152,6 +152,13 @@ struct ScoreType32
   {
     return s.eval32_ == eval32_;
   }
+
+  inline ScoreType32& operator >>= (const int n)
+  {
+    ev_[0] >>= n;
+    ev_[1] >>= n;
+    return *this;
+  }
 };
 
 const ScoreType ScoreMax = std::numeric_limits<ScoreType>::max();
@@ -216,7 +223,7 @@ namespace nst
 
 #undef SYNCHRONIZE_LAST_ITER
 #undef MOBILITY_EXTENDED
-#undef DO_KING_EVAL
+#define DO_KING_EVAL
 
 static const SortValueType CaptureRecentlyBonus = 10;
 static const SortValueType PromotionBonus = 10;

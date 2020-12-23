@@ -57,9 +57,9 @@ class Evaluator
     ScoreType32 score_mob_{};
 #ifdef DO_KING_EVAL
     int num_attackers_{};
-    int score_opening_{};
-    ScoreType score_king_{};
-    bool matTreat_{};
+    ScoreType32 score_king_{};
+    //int score_opening_{};
+    //bool matTreat_{};
 #endif
     bool discoveredCheck_{};
   } finfo_[2];

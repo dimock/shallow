@@ -33,10 +33,10 @@ namespace NEngine
 
   // check & mat treat
   ScoreType32 EvalCoefficients::discoveredCheckBonus_{ 20, 20 };
-  ScoreType32 EvalCoefficients::discoveredCheckBonus4_{ 5, 5 };
-  ScoreType EvalCoefficients::discoveredCheckBonus1_{ 20 };
-  ScoreType EvalCoefficients::possibleCheckBonus_{ 5 };
-  ScoreType EvalCoefficients::matTreatBonus_{ 150 };
+  //ScoreType32 EvalCoefficients::discoveredCheckBonus4_{ 5, 5 };
+  //ScoreType EvalCoefficients::discoveredCheckBonus1_{ 20 };
+  //ScoreType EvalCoefficients::possibleCheckBonus_{ 5 };
+  //ScoreType EvalCoefficients::matTreatBonus_{ 150 };
 
   // king
   int EvalCoefficients::fakeCastle_{ -15 };
@@ -47,23 +47,26 @@ namespace NEngine
   ScoreType32 EvalCoefficients::rookBlocked_{ 80, 80 };
 
   // king attacks
-  ScoreType EvalCoefficients::pawnKingAttack_{ 8 };
-  ScoreType EvalCoefficients::knightKingAttack_{ 8 };
-  ScoreType EvalCoefficients::bishopKingAttack_{ 8 };
-  ScoreType EvalCoefficients::rookKingAttack_{ 8 };
-  ScoreType EvalCoefficients::queenKingAttack_{ 10 };
-  ScoreType EvalCoefficients::basicAttack_{ 2 };
+  ScoreType32 EvalCoefficients::pawnKingAttack_{ 8, 0 };
+  ScoreType32 EvalCoefficients::knightKingAttack_{ 8, 0 };
+  ScoreType32 EvalCoefficients::bishopKingAttack_{ 8, 0 };
+  ScoreType32 EvalCoefficients::rookKingAttack_{ 10, 0 };
+  ScoreType32 EvalCoefficients::queenKingAttack_{ 12, 0 };
+  ScoreType32 EvalCoefficients::basicAttack_{ 2, 0 };
 
   int EvalCoefficients::generalKingPressure_{ 5 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
-  int EvalCoefficients::knightChecking_{ 45 };
-  int EvalCoefficients::bishopChecking_{ 45 };
-  int EvalCoefficients::rookChecking_{ 65 };
-  int EvalCoefficients::queenChecking_{ 85 };
-  int EvalCoefficients::checkedFieldBonus_{ 12 };
-  int EvalCoefficients::attackedNearKing_{ 20 };
+  ScoreType32 EvalCoefficients::knightChecking_{ 45, 0 };
+  ScoreType32 EvalCoefficients::bishopChecking_{ 45, 0 };
+  ScoreType32 EvalCoefficients::rookChecking_{ 65, 0 };
+  ScoreType32 EvalCoefficients::queenChecking_{ 85, 0 };
+  ScoreType32 EvalCoefficients::checkedFieldBonus_{ 12, 0 };
+  
+  int EvalCoefficients::attackedNearKingCoeff_{ 20 };
+  int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 64, 64, 64, 64, 64, 64 };
+  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 32, 36, 40, 42, 44 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -82,13 +85,13 @@ namespace NEngine
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 10, 5, 1, 0, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[4] = { 22, 18, 5, 0 };
-  int EvalCoefficients::pawnShieldB_[4] = { 22, 18, 5, 0 };
+  int EvalCoefficients::pawnShieldA_[4] = { 25, 20, 5, 0 };
+  int EvalCoefficients::pawnShieldB_[4] = { 25, 20, 5, 0 };
   int EvalCoefficients::pawnShieldC_[4] = { 17, 14, 3, 0 };
   int EvalCoefficients::pawnShieldAbove_[4] = { 10, 5, 1, 0 };
 
   // rook on open column
-  ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {8, 3} };
+  ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {10, 4} };
 
   // material diff
   // endgame, opening
@@ -137,7 +140,7 @@ namespace NEngine
   // mobility
   ScoreType32 EvalCoefficients::knightMobility_[16] = { {-35, -35}, {-15, -15}, { 3,  3},  { 5,  5},  { 7,  7},  { 8,  8}, {10, 10}, {12, 12}, {14, 14} };
   ScoreType32 EvalCoefficients::bishopMobility_[16] = { {-35, -35}, {-15, -15}, { 3,  3},  { 5,  5},  { 7,  7},  { 9,  9}, {12, 12}, {13, 13}, {14, 14}, {16, 16}, {20, 20}, {22, 22}, {23, 23}, {24, 24}, {25, 25}, {26, 26} };
-  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-35, -30}, {-15, -15}, { 5,  5},  { 8,  8},  {12, 12},  {16, 16}, {21, 21}, {25, 25}, {27, 27}, {29, 29}, {30, 30}, {31, 31}, {32, 32}, {33, 33}, {34, 34}, {35, 35} };
+  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-35, -35}, {-15, -15}, { 4,  4},  { 6,  6},  { 9,  9},  {11, 11}, {15, 15}, {18, 18}, {21, 21}, {23, 23}, {26, 26}, {28, 28}, {30, 30}, {31, 31}, {32, 32}, {33, 33} };
   ScoreType32 EvalCoefficients::queenMobility_[32] =  { {-65, -65}, {-30, -30}, { 6,  6},  {10, 10},  {13, 13},  {18, 18}, {23, 23}, {27, 27}, {30, 30}, {33, 33}, {36, 36}, {40, 40}, {43, 43}, {45, 45}, {47, 47}, {48, 48},
                                                         { 49,  49}, { 50,  50}, {51, 51},  {52, 52},  {53, 53},  {54, 54}, {55, 55}, {56, 56}, {57, 57}, {58, 58}, {59, 59}, {60, 60}, {61, 61}, {62, 62}, {63, 63}, {64, 64} };
 
