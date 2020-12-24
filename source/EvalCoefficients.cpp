@@ -48,25 +48,25 @@ namespace NEngine
 
   // king attacks
   ScoreType32 EvalCoefficients::pawnKingAttack_{ 8, 0 };
-  ScoreType32 EvalCoefficients::knightKingAttack_{ 8, 0 };
-  ScoreType32 EvalCoefficients::bishopKingAttack_{ 8, 0 };
-  ScoreType32 EvalCoefficients::rookKingAttack_{ 10, 0 };
-  ScoreType32 EvalCoefficients::queenKingAttack_{ 12, 0 };
-  ScoreType32 EvalCoefficients::basicAttack_{ 2, 0 };
+  ScoreType32 EvalCoefficients::knightKingAttack_{ 12, 0 };
+  ScoreType32 EvalCoefficients::bishopKingAttack_{ 12, 0 };
+  ScoreType32 EvalCoefficients::rookKingAttack_{ 12, 0 };
+  ScoreType32 EvalCoefficients::queenKingAttack_{ 15, 0 };
+  ScoreType32 EvalCoefficients::basicAttack_{ 3, 0 };
 
   int EvalCoefficients::generalKingPressure_{ 5 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
-  ScoreType32 EvalCoefficients::knightChecking_{ 45, 0 };
-  ScoreType32 EvalCoefficients::bishopChecking_{ 45, 0 };
-  ScoreType32 EvalCoefficients::rookChecking_{ 65, 0 };
-  ScoreType32 EvalCoefficients::queenChecking_{ 85, 0 };
+  ScoreType32 EvalCoefficients::knightChecking_{ 50, 0 };
+  ScoreType32 EvalCoefficients::bishopChecking_{ 50, 0 };
+  ScoreType32 EvalCoefficients::rookChecking_{ 80, 0 };
+  ScoreType32 EvalCoefficients::queenChecking_{ 90, 0 };
   ScoreType32 EvalCoefficients::checkedFieldBonus_{ 12, 0 };
   
-  int EvalCoefficients::attackedNearKingCoeff_{ 20 };
-  int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 64, 64, 64, 64, 64, 64 };
-  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 32, 36, 40, 42, 44 };
+  int EvalCoefficients::attackedNearKingCoeff_{ 25 };
+  int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 40, 64, 64, 64, 64, 64, 64 };
+  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 36, 50, 56, 60, 62 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -77,8 +77,8 @@ namespace NEngine
   // arrays
   ScoreType32 EvalCoefficients::doubledPawn_ = { -6, -5 };
   ScoreType32 EvalCoefficients::isolatedPawn_ = { -12, -11 };
-  ScoreType32 EvalCoefficients::backwardPawn_ = { -12, -11 };
-  ScoreType32 EvalCoefficients::blockedPawn_ = { -7, -5 };
+  ScoreType32 EvalCoefficients::backwardPawn_ = { -10, -9 };
+  ScoreType32 EvalCoefficients::blockedPawn_ = { -6, -4 };
   ScoreType32 EvalCoefficients::unguardedPawn_ = { -4, -2 };
   ScoreType32 EvalCoefficients::unprotectedPawn_ = { -3, -2 };
   ScoreType32 EvalCoefficients::hasneighborPawn_ = { 3, 2 };
@@ -95,7 +95,7 @@ namespace NEngine
 
   // material diff
   // endgame, opening
-  ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {0, 0}, {12, 12}, {17, 17}, {17, 17}, {17, 17}, {17, 17}, {17, 17}, {17, 17}, {17, 17}, {17, 17} };
+  ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {0, 0}, {12, 12}, {13, 13}, {13, 13}, {13, 13}, {13, 13}, {13, 13}, {13, 13}, {13, 13}, {13, 13} };
   ScoreType32 EvalCoefficients::doubleKnightBonus_[10] = { {0, 0}, {3, 3}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
   ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
   ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {20, 25}, {30, 35}, {40, 45}, {40, 45}, {40, 45}, {40, 45}, {40, 45}, {40, 45}, {40, 45} };
@@ -123,14 +123,18 @@ namespace NEngine
   ScoreType32 EvalCoefficients::noQueensPenalty_ = {15, 15};
 
   // arrays
-  ScoreType32 EvalCoefficients::passerPawn_[8]  = { {  0,   0}, {  1,   2}, {  4,   4}, { 11,  12}, { 22,  26}, { 39,  45}, { 72,  84}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  1,   2}, {  4,   4}, { 11,  12}, { 22,  26}, { 39,  45}, { 72,  84}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  0,   1}, {  2,   2}, {  5,   6}, { 11,  13}, { 19,  22}, { 36,  42}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn4_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  2,   3}, {  5,   6}, {  9,  11}, { 18,  21}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnEx_[2][8] = {
-    { {  0,   0}, {  1,   3}, {  4,   8}, { 11,  22}, { 22,  45}, { 39,  77}, { 72, 142}, {  0,   0} },
+    { {  0,   0}, {  2,   3}, {  5,   8}, { 14,  23}, { 29,  47}, { 50,  82}, { 93, 151}, {  0,   0} },
     { {  0,   0}, {  0,   1}, {  2,   2}, {  5,   6}, { 11,  13}, { 19,  22}, { 36,  42}, {  0,   0} }
   };
-  ScoreType32 EvalCoefficients::kingToPasserDistanceBonus_[8]  = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   1}, {  0,   3}, {  0,   6}, {  0,  10}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawnBasic_[2][8] = {
+    { {  0,   0}, {  0,   1}, {  2,   2}, {  5,   6}, { 11,  13}, { 19,  22}, { 36,  42}, {  0,   0} },
+    { {  0,   0}, {  0,   0}, {  1,   1}, {  2,   3}, {  5,   6}, {  9,  11}, { 18,  21}, {  0,   0} }
+  };
+  ScoreType32 EvalCoefficients::kingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   1}, {  0,   3}, {  0,   6}, {  0,  10}, {  0,   0} };
   ScoreType32 EvalCoefficients::okingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  0,   4}, {  0,   9}, {  0,  16}, {  0,  25}, {  0,   0} };
 
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };

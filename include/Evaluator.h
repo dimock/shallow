@@ -192,6 +192,7 @@ private:
 
   int evaluateKingSafety(Figure::Color color) const;
   int evaluateKingSafety(Figure::Color color, Index const& kingPos) const;
+  int opponentPawnsPressure(Figure::Color color, Index const& kingPos) const;
   int evaluateKingsPawn(Figure::Color color, Index const& kingPos) const;
 
   ScoreType32 evaluatePawnsPressure(Figure::Color color);
