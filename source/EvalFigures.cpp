@@ -567,6 +567,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 {
   const auto& fmgr = board_->fmgr();
   const auto ocolor = Figure::otherColor(color);
+  const auto  ki_pos = board_->kingPos(color);
   const auto oki_pos = board_->kingPos(ocolor);
 
   const auto& oki_fields = finfo_[ocolor].ki_fields_;
@@ -594,6 +595,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   bi_check &= finfo_[color].bishopMoves_;
   r_check &= finfo_[color].rookMoves_;
 
+  if(!finfo_[color].discoveredCheck_) {
+    X_ASSERT_R(board_->discoveredCheck(ki_pos, mask_all_, color, board_->kingPos(ocolor)) != discoveredCheck(ki_pos, ocolor), "discovered check not detected");
+    X_ASSERT(board_->discoveredCheck(ki_pos, mask_all_, color, board_->kingPos(ocolor)) != discoveredCheck(ki_pos, ocolor), "discovered check not detected");
+    finfo_[color].discoveredCheck_ = discoveredCheck(ki_pos, ocolor);
+  }
+
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
   r_check &= can_check_r;
@@ -617,7 +624,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   auto remaining_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_;
   remaining_oking |= protected_oking;
   if (remaining_oking)
-    attack_coeff += (pop_count(remaining_oking) * EvalCoefficients::attackedNearKingCoeff_) >> 3;
+    attack_coeff += (pop_count(remaining_oking) * EvalCoefficients::attackedNearKingCoeff_ * 3) >> 4;
   
   num_checkers = std::min(num_checkers, 4);
   auto check_coeff = EvalCoefficients::kingCheckersCoefficients[num_checkers] + (attack_coeff >> 1);

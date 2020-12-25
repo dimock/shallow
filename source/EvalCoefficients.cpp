@@ -65,8 +65,8 @@ namespace NEngine
   ScoreType32 EvalCoefficients::checkedFieldBonus_{ 12, 0 };
   
   int EvalCoefficients::attackedNearKingCoeff_{ 25 };
-  int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 40, 64, 64, 64, 64, 64, 64 };
-  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 36, 50, 56, 60, 62 };
+  int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 40, 64, 72, 72, 72, 72, 72 };
+  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 38, 50, 56, 60, 62 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
