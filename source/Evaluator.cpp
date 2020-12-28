@@ -47,19 +47,12 @@ const BitMask Evaluator::castle_mask_[2][2] = {
 
 const BitMask Evaluator::blocked_rook_mask_[2][2] = {
   {
-    set_mask_bit(G1) | set_mask_bit(H1) | set_mask_bit(F1) |
-    set_mask_bit(G2) | set_mask_bit(H2) | set_mask_bit(H3),
-
-    set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(C1) |
-    set_mask_bit(A2) | set_mask_bit(B2) | set_mask_bit(A3)
+    set_mask_bit(G1) | set_mask_bit(H1) | set_mask_bit(G2) | set_mask_bit(H2),
+    set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(A2) | set_mask_bit(B2)
   },
-
   {
-    set_mask_bit(G8) | set_mask_bit(H8) | set_mask_bit(F8) |
-    set_mask_bit(G7) | set_mask_bit(H7) | set_mask_bit(H6),
-
-    set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(C8) |
-    set_mask_bit(A7) | set_mask_bit(B7) | set_mask_bit(A6)
+    set_mask_bit(G8) | set_mask_bit(H8) | set_mask_bit(G7) | set_mask_bit(H7),
+    set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(A7) | set_mask_bit(B7)
   }
 };
 
@@ -882,50 +875,13 @@ bool Evaluator::fakeCastle(Figure::Color color, int rpos, BitMask rmask) const
   if ((color == Figure::ColorWhite && ki_pos.y() != 0) || (color == Figure::ColorBlack && ki_pos.y() != 7))
     return false;
   auto ocolor = Figure::otherColor(color);
-  bool rblocked = ((blocked_rook_mask_[ocolor][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[ocolor][ctype]) == 0ULL);
-  if (!rblocked)
-    return false;
-  int y = r_pos.y() < 3 ? 0 : 7;
-  int x = r_pos.x() < 2 ? 0 : 7;
-  int dx = x == 0 ? 1 : -1;
-  Index ppos01{ x, y + delta_y_[color] };
-  Index ppos02{ x, y + 2 * delta_y_[color] };
-  Index ppos03{ x, y + 3 * delta_y_[color] };
-  Index ppos11{ x + dx, y + delta_y_[color] };
-  Index ppos12{ x + dx, y + 2 * delta_y_[color] };
-  auto pwblockers0 = set_mask_bit(ppos01) | set_mask_bit(ppos02) | set_mask_bit(ppos03);
-  auto pwblockers1 = set_mask_bit(ppos11) | set_mask_bit(ppos12);
-  auto const& pmask = fmgr.pawn_mask(color);
-  return (pmask & pwblockers0) != 0ULL && (pmask & pwblockers1) != 0ULL;
+  return ((blocked_rook_mask_[ocolor][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[ocolor][ctype]) == 0ULL);
 }
 
 bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) const
 {
-  int ctype = rpos.x() < 4;
-  bool rblocked = ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL);
-  if (!rblocked)
-    return false;
-  auto ocolor = Figure::otherColor(color);
-  const FiguresManager & fmgr = board_->fmgr();
-  int y = rpos.y() < 3 ? 0 : 7;
-  int x = rpos.x() < 2 ? 0 : 7;
-  int dx = x == 0 ? 1 : -1;
-  Index ppos01{ x, y + delta_y_[ocolor] };
-  Index ppos02{ x, y + 2 * delta_y_[ocolor] };
-  Index ppos03{ x, y + 3 * delta_y_[ocolor] };
-  Index ppos11{ x + dx, y + delta_y_[ocolor] };
-  Index ppos12{ x + dx, y + 2 * delta_y_[ocolor] };
-  auto pwblockers0 = set_mask_bit(ppos01) | set_mask_bit(ppos02) | set_mask_bit(ppos03);
-  auto pwblockers1 = set_mask_bit(ppos11) | set_mask_bit(ppos12);
-  auto const& pmask = fmgr.pawn_mask(ocolor);
-  bool opawns_blocking = (pmask & pwblockers0) != 0ULL || (pmask & pwblockers1) != 0ULL;
-  if (!opawns_blocking)
-    return false;
-  //int ki_pos = board_->kingPos(color);
-  //int ki_dist = distanceCounter().getDistance(rpos, ki_pos);
-  //if (ki_dist < 3)
-  //  return false;
-  return true;
+  const int ctype = rpos.x() < 4;
+  return ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL);
 }
 
 ScoreType32 Evaluator::evaluateMaterialDiff()

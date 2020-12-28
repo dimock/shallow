@@ -261,7 +261,21 @@ public:
     return pmask_row_[n];
   }
 
+  inline const BitMask & blocked_knight(int color, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
+    return pmask_blocked_knight_[color][pos];
+  }
+
+  inline const BitMask & blocked_bishop(int color, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
+    return pmask_blocked_bishop_[color][pos];
+  }
+
 private:
+  BitMask pmask_blocked_knight_[2][64] = {};
+  BitMask pmask_blocked_bishop_[2][64] = {};
   BitMask pmasks_passed_[2][64] = {};
   BitMask pmasks_forward_[2][64] = {};
   BitMask pmasks_neighbor_[2][64] = {};

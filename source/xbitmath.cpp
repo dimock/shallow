@@ -166,6 +166,47 @@ PawnMasks::PawnMasks()
       }
     }
   }
+
+  /// blocked knights and bishops
+  pmask_blocked_knight_[Figure::ColorBlack][A1] = set_mask_bit(A2) | set_mask_bit(C2);
+  pmask_blocked_knight_[Figure::ColorBlack][A2] = set_mask_bit(A3);
+  pmask_blocked_knight_[Figure::ColorBlack][B1] = set_mask_bit(B2);
+  pmask_blocked_knight_[Figure::ColorBlack][B2] = set_mask_bit(B3);
+  pmask_blocked_knight_[Figure::ColorBlack][H1] = set_mask_bit(H2) | set_mask_bit(F2);
+  pmask_blocked_knight_[Figure::ColorBlack][H2] = set_mask_bit(H3);
+  pmask_blocked_knight_[Figure::ColorBlack][G1] = set_mask_bit(G2);
+  pmask_blocked_knight_[Figure::ColorBlack][G2] = set_mask_bit(G3);
+
+  pmask_blocked_knight_[Figure::ColorWhite][A8] = set_mask_bit(A7) | set_mask_bit(C7);
+  pmask_blocked_knight_[Figure::ColorWhite][A7] = set_mask_bit(A6);
+  pmask_blocked_knight_[Figure::ColorWhite][B8] = set_mask_bit(B7);
+  pmask_blocked_knight_[Figure::ColorWhite][B7] = set_mask_bit(B6);
+  pmask_blocked_knight_[Figure::ColorWhite][H8] = set_mask_bit(H7) | set_mask_bit(F7);
+  pmask_blocked_knight_[Figure::ColorWhite][H7] = set_mask_bit(H6);
+  pmask_blocked_knight_[Figure::ColorWhite][G8] = set_mask_bit(G7);
+  pmask_blocked_knight_[Figure::ColorWhite][G7] = set_mask_bit(G6);
+
+  pmask_blocked_bishop_[Figure::ColorBlack][A1] = set_mask_bit(B2);
+  pmask_blocked_bishop_[Figure::ColorBlack][A2] = set_mask_bit(B3);
+  pmask_blocked_bishop_[Figure::ColorBlack][A3] = set_mask_bit(B4);
+  pmask_blocked_bishop_[Figure::ColorBlack][B1] = set_mask_bit(C2) | set_mask_bit(A2);
+  pmask_blocked_bishop_[Figure::ColorBlack][B2] = set_mask_bit(C3) | set_mask_bit(A3);
+  pmask_blocked_bishop_[Figure::ColorBlack][H1] = set_mask_bit(G2);
+  pmask_blocked_bishop_[Figure::ColorBlack][H2] = set_mask_bit(G3);
+  pmask_blocked_bishop_[Figure::ColorBlack][H3] = set_mask_bit(G4);
+  pmask_blocked_bishop_[Figure::ColorBlack][G1] = set_mask_bit(F2) | set_mask_bit(H2);
+  pmask_blocked_bishop_[Figure::ColorBlack][G2] = set_mask_bit(F3) | set_mask_bit(H3);
+
+  pmask_blocked_bishop_[Figure::ColorWhite][A6] = set_mask_bit(B5);
+  pmask_blocked_bishop_[Figure::ColorWhite][A7] = set_mask_bit(B6);
+  pmask_blocked_bishop_[Figure::ColorWhite][A8] = set_mask_bit(B7);
+  pmask_blocked_bishop_[Figure::ColorWhite][B8] = set_mask_bit(C7) | set_mask_bit(A7);
+  pmask_blocked_bishop_[Figure::ColorWhite][B7] = set_mask_bit(C6) | set_mask_bit(A6);
+  pmask_blocked_bishop_[Figure::ColorWhite][H6] = set_mask_bit(G5);
+  pmask_blocked_bishop_[Figure::ColorWhite][H7] = set_mask_bit(G6);
+  pmask_blocked_bishop_[Figure::ColorWhite][H8] = set_mask_bit(G7);
+  pmask_blocked_bishop_[Figure::ColorWhite][G8] = set_mask_bit(F7) | set_mask_bit(H7);
+  pmask_blocked_bishop_[Figure::ColorWhite][G7] = set_mask_bit(F6) | set_mask_bit(H6);
 }
 
 //////////////////////////////////////////////////////////////////////////

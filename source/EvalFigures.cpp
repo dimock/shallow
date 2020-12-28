@@ -25,222 +25,234 @@ bool Evaluator::isPinned(int pos, Figure::Color color, Figure::Color ocolor, Bit
   return false;
 }
 
+//bool Evaluator::blockedKnight(Figure::Color color, int n) const
+//{
+//  if (color == Figure::ColorWhite)
+//  {
+//    switch (n)
+//    {
+//    case A8:
+//      if (board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn) ||
+//        board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case A7:
+//      if (board_->isFigure(A6, Figure::ColorBlack, Figure::TypePawn) &&
+//        board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case B8:
+//      if (board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case H8:
+//      if (board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn) ||
+//        board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case H7:
+//      if (board_->isFigure(H6, Figure::ColorBlack, Figure::TypePawn) &&
+//        board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case G8:
+//      if (board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//    }
+//  }
+//  else
+//  {
+//    switch (n)
+//    {
+//    case A1:
+//      if (board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn) ||
+//        board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case A2:
+//      if (board_->isFigure(A3, Figure::ColorWhite, Figure::TypePawn) &&
+//        board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case B1:
+//      if (board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case H1:
+//      if (board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn) ||
+//        board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case H2:
+//      if (board_->isFigure(H3, Figure::ColorWhite, Figure::TypePawn) &&
+//        board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case G1:
+//      if (board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//    }
+//  }
+//  return false;
+//}
+
+//bool Evaluator::blockedBishop(Figure::Color color, int n) const
+//{
+//  if (color == Figure::ColorWhite)
+//  {
+//    switch (n)
+//    {
+//    case A7:
+//      if (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case A6:
+//      if (board_->isFigure(B5, Figure::ColorBlack, Figure::TypePawn) &&
+//        board_->isFigure(C6, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case A8:
+//      if (board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case B8:
+//      if (board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn) &&
+//        (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn) ||
+//          board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn))) {
+//        return true;
+//      }
+//      break;
+//
+//    case H7:
+//      if (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case H8:
+//      if (board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case G8:
+//      if (board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn) &&
+//        (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn) ||
+//          board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn))) {
+//        return true;
+//      }
+//      break;
+//
+//    case H6:
+//      if (board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
+//        board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//    }
+//  }
+//  else
+//  {
+//    switch (n)
+//    {
+//    case A2:
+//      if (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case A3:
+//      if (board_->isFigure(B4, Figure::ColorWhite, Figure::TypePawn) &&
+//        board_->isFigure(C3, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case A1:
+//      if (board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case B1:
+//      if (board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn) &&
+//        (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn) ||
+//          board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn))) {
+//        return true;
+//      }
+//      break;
+//
+//    case H2:
+//      if (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case H1:
+//      if (board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//
+//    case G1:
+//      if (board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn) &&
+//        (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn) ||
+//          board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn))) {
+//        return true;
+//      }
+//      break;
+//
+//    case H3:
+//      if (board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
+//        board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn)) {
+//        return true;
+//      }
+//      break;
+//    }
+//  }
+//  return false;
+//}
+
 bool Evaluator::blockedKnight(Figure::Color color, int n) const
 {
-  if (color == Figure::ColorWhite)
-  {
-    switch (n)
-    {
-    case A8:
-      if (board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn) ||
-        board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case A7:
-      if (board_->isFigure(A6, Figure::ColorBlack, Figure::TypePawn) &&
-        board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case B8:
-      if (board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case H8:
-      if (board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn) ||
-        board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case H7:
-      if (board_->isFigure(H6, Figure::ColorBlack, Figure::TypePawn) &&
-        board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case G8:
-      if (board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-    }
-  }
-  else
-  {
-    switch (n)
-    {
-    case A1:
-      if (board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn) ||
-        board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case A2:
-      if (board_->isFigure(A3, Figure::ColorWhite, Figure::TypePawn) &&
-        board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case B1:
-      if (board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case H1:
-      if (board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn) ||
-        board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case H2:
-      if (board_->isFigure(H3, Figure::ColorWhite, Figure::TypePawn) &&
-        board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case G1:
-      if (board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-    }
-  }
-  return false;
+  auto const& fmgr = board_->fmgr();
+  return (pawnMasks().blocked_knight(color, n) & fmgr.pawn_mask(Figure::otherColor(color))) != 0ULL;
 }
 
 bool Evaluator::blockedBishop(Figure::Color color, int n) const
 {
-  if (color == Figure::ColorWhite)
-  {
-    switch (n)
-    {
-    case A7:
-      if (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case A6:
-      if (board_->isFigure(B5, Figure::ColorBlack, Figure::TypePawn) &&
-        board_->isFigure(C6, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case A8:
-      if (board_->isFigure(B7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case B8:
-      if (board_->isFigure(C7, Figure::ColorBlack, Figure::TypePawn) &&
-        (board_->isFigure(B6, Figure::ColorBlack, Figure::TypePawn) ||
-          board_->isFigure(A7, Figure::ColorBlack, Figure::TypePawn))) {
-        return true;
-      }
-      break;
-
-    case H7:
-      if (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case H8:
-      if (board_->isFigure(G7, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case G8:
-      if (board_->isFigure(F7, Figure::ColorBlack, Figure::TypePawn) &&
-        (board_->isFigure(G6, Figure::ColorBlack, Figure::TypePawn) ||
-          board_->isFigure(H7, Figure::ColorBlack, Figure::TypePawn))) {
-        return true;
-      }
-      break;
-
-    case H6:
-      if (board_->isFigure(G5, Figure::ColorBlack, Figure::TypePawn) &&
-        board_->isFigure(F6, Figure::ColorBlack, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-    }
-  }
-  else
-  {
-    switch (n)
-    {
-    case A2:
-      if (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case A3:
-      if (board_->isFigure(B4, Figure::ColorWhite, Figure::TypePawn) &&
-        board_->isFigure(C3, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case A1:
-      if (board_->isFigure(B2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case B1:
-      if (board_->isFigure(C2, Figure::ColorWhite, Figure::TypePawn) &&
-        (board_->isFigure(B3, Figure::ColorWhite, Figure::TypePawn) ||
-          board_->isFigure(A2, Figure::ColorWhite, Figure::TypePawn))) {
-        return true;
-      }
-      break;
-
-    case H2:
-      if (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case H1:
-      if (board_->isFigure(G2, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-
-    case G1:
-      if (board_->isFigure(F2, Figure::ColorWhite, Figure::TypePawn) &&
-        (board_->isFigure(G3, Figure::ColorWhite, Figure::TypePawn) ||
-          board_->isFigure(H2, Figure::ColorWhite, Figure::TypePawn))) {
-        return true;
-      }
-      break;
-
-    case H3:
-      if (board_->isFigure(G4, Figure::ColorWhite, Figure::TypePawn) &&
-        board_->isFigure(F3, Figure::ColorWhite, Figure::TypePawn)) {
-        return true;
-      }
-      break;
-    }
-  }
-  return false;
+  auto const& fmgr = board_->fmgr();
+  return (pawnMasks().blocked_bishop(color, n) & fmgr.pawn_mask(Figure::otherColor(color))) != 0ULL;
 }
 
 ScoreType32 Evaluator::evaluateKnights()
@@ -309,10 +321,11 @@ ScoreType32 Evaluator::evaluateKnights()
 
       finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[n_moves & 15];
 
-#if MOBILITY_EXTENDED
-      if (n_moves < 2 && blockedKnight(color, n)) {
+      if ((n_moves < 2 || !(n_moves_mask & ~finfo_[ocolor].attack_mask_)) && blockedKnight(color, n)) {
         finfo_[color].score_mob_ -= EvalCoefficients::knightBlocked_;
       }
+
+#if MOBILITY_EXTENDED
       if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n))) {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_;
       }
@@ -389,13 +402,13 @@ ScoreType32 Evaluator::evaluateBishops()
       int n_moves = pop_count(b_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[n_moves & 15];
 
+      if ((n_moves < 2 || !(b_moves_mask & ~finfo_[ocolor].attack_mask_)) && blockedBishop(color, n)) {
+        finfo_[color].score_mob_ -= EvalCoefficients::bishopBlocked_;
+      }
+
 #if MOBILITY_EXTENDED
       if ((q_pinned || !(b_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_;
-      }
-
-      if (n_moves < 2 && blockedBishop(color, n)) {
-        finfo_[color].score_mob_ -= EvalCoefficients::bishopBlocked_;
       }
 #endif // king protection, discovered checks etc...
     }
@@ -478,20 +491,20 @@ ScoreType32 Evaluator::evaluateRook()
       int n_moves = pop_count(r_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[n_moves & 15];
 
+      // fake castle possible
+      if (n_moves < 3) {
+        if (fakeCastle(color, n, r_moves_mask)) {
+          finfo_[color].score_mob_ += EvalCoefficients::fakeCastle_;
+        }
+        else if (blockedRook(color, n, r_moves_mask))
+          finfo_[color].score_mob_ -= EvalCoefficients::rookBlocked_;
+      }
+
 #if MOBILITY_EXTENDED
       if ((q_pinned || !(r_moves_mask & ~fmgr.mask(color) & ~finfo_[ocolor].bishopTreatAttacks_)) &&
           ((finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].nb_attacked_) & set_mask_bit(n)) != 0ULL)
       {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_;
-      }
-
-      // fake castle possible
-      if (n_moves < 4) {
-        if (fakeCastle(color, n, r_moves_mask)) {
-          finfo_[color].score_opening_ += EvalCoefficients::fakeCastle_;
-        }
-        else if (blockedRook(color, n, r_moves_mask))
-          finfo_[color].score_mob_ -= EvalCoefficients::rookBlocked_;
       }
 #endif // king protection, discovered checks etc...
     }

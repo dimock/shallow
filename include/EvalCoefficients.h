@@ -42,7 +42,7 @@ struct EvalCoefficients
   //static ScoreType matTreatBonus_;
 
   // king
-  static int fakeCastle_;
+  static ScoreType32 fakeCastle_;
 
   // blocked figure
   static ScoreType32 knightBlocked_;

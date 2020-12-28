@@ -39,12 +39,12 @@ namespace NEngine
   //ScoreType EvalCoefficients::matTreatBonus_{ 150 };
 
   // king
-  int EvalCoefficients::fakeCastle_{ -15 };
+  ScoreType32 EvalCoefficients::fakeCastle_{ -15, 0 };
 
   // blocked figure
-  ScoreType32 EvalCoefficients::knightBlocked_{ 80, 80 };
-  ScoreType32 EvalCoefficients::bishopBlocked_{ 80, 80 };
-  ScoreType32 EvalCoefficients::rookBlocked_{ 80, 80 };
+  ScoreType32 EvalCoefficients::knightBlocked_{ 60, 50 };
+  ScoreType32 EvalCoefficients::bishopBlocked_{ 60, 50 };
+  ScoreType32 EvalCoefficients::rookBlocked_{ 60, 60 };
 
   // king attacks
   ScoreType32 EvalCoefficients::pawnKingAttack_{ 8, 0 };
@@ -123,7 +123,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::noQueensPenalty_ = {15, 15};
 
   // arrays
-  ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  1,   2}, {  4,   4}, { 11,  12}, { 22,  26}, { 39,  45}, { 72,  84}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawn_[8]  = { {  0,   0}, {  1,   2}, {  4,   4}, { 11,  12}, { 22,  26}, { 39,  45}, { 72,  84}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  0,   1}, {  2,   2}, {  5,   6}, { 11,  13}, { 19,  22}, { 36,  42}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn4_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  2,   3}, {  5,   6}, {  9,  11}, { 18,  21}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnEx_[2][8] = {
@@ -134,7 +134,7 @@ namespace NEngine
     { {  0,   0}, {  0,   1}, {  2,   2}, {  5,   6}, { 11,  13}, { 19,  22}, { 36,  42}, {  0,   0} },
     { {  0,   0}, {  0,   0}, {  1,   1}, {  2,   3}, {  5,   6}, {  9,  11}, { 18,  21}, {  0,   0} }
   };
-  ScoreType32 EvalCoefficients::kingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   1}, {  0,   3}, {  0,   6}, {  0,  10}, {  0,   0} };
+  ScoreType32 EvalCoefficients::kingToPasserDistanceBonus_[8]  = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   1}, {  0,   3}, {  0,   6}, {  0,  10}, {  0,   0} };
   ScoreType32 EvalCoefficients::okingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  0,   4}, {  0,   9}, {  0,  16}, {  0,  25}, {  0,   0} };
 
   int EvalCoefficients::passerPawnSc_[8] = { 0, 3, 6, 9, 12, 15, 18, 0 };
