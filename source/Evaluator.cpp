@@ -497,15 +497,15 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
     bool blocked = backward && ((fwd_field & opmsk) != 0ULL);
-    bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
+    //bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
     bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
-    bool unprotected = !unguarded && !isolated && !backward && !pprotected;
+    bool unprotected = /*!unguarded && */!isolated && !backward && !pprotected;
     bool doubled = !pprotected && (pop_count(pawnMasks().mask_doubled(x) & pmask) > 1);
 
     info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
     info.score_ += EvalCoefficients::backwardPawn_ * backward;
     info.score_ += EvalCoefficients::blockedPawn_ * blocked;
-    info.score_ += EvalCoefficients::unguardedPawn_ * unguarded;
+    //info.score_ += EvalCoefficients::unguardedPawn_ * unguarded;
     info.score_ += EvalCoefficients::unprotectedPawn_ * unprotected;
     info.score_ += EvalCoefficients::hasneighborPawn_ * neighbors;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
@@ -1002,14 +1002,14 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     queensDiff = 0;
   }
 
-  // Rook vs. Pawns
-  if (!figuresDiff && rooksDiff)
-  {
-    Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
-    const int pawnsN = fmgr.pawns(rcolor);
-    int rdiff = sign(rooksDiff);
-    score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * rdiff;
-  }
+  //// Rook vs. Pawns
+  //if (!figuresDiff && rooksDiff)
+  //{
+  //  Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
+  //  const int pawnsN = fmgr.pawns(rcolor);
+  //  int rdiff = sign(rooksDiff);
+  //  score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * rdiff;
+  //}
   // Knight|Bishop vs. Rook
   if (rooksDiff*figuresDiff == -1)
   {
