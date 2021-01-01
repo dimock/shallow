@@ -191,13 +191,13 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
-  //auto spec = specialCases().eval(*board_);
-  //if (spec.first)
-  //{
-  //  ScoreType score = spec.second;
-  //  score = considerColor(score);
-  //  return score;
-  //}
+  auto spec = specialCases().eval(*board_);
+  if (spec.first)
+  {
+    ScoreType score = spec.second;
+    score = considerColor(score);
+    return score;
+  }
 
   //// prepare lazy evaluation
   //if(alpha > -Figure::MatScore) {
