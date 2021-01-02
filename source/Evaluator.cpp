@@ -259,9 +259,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
 #endif
 
-  //auto scoreForks = evaluateForks(Figure::ColorWhite);
-  //scoreForks -= evaluateForks(Figure::ColorBlack);
-  //score32 += scoreForks;
+  auto scoreForks = evaluateForks(Figure::ColorWhite);
+  scoreForks -= evaluateForks(Figure::ColorBlack);
+  score32 += scoreForks;
 
   //auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   //scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
@@ -1111,15 +1111,15 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
     if(color == board_->color())
       forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
   }
-  auto treat_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
-  treat_mask &= ~counted_mask;
-  auto min_treat_mask = (finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask;
-  auto generalScore = EvalCoefficients::generalAttackBonus_ * pop_count(treat_mask & finfo_[ocolor].nbrq_mask_);
-  generalScore += (EvalCoefficients::generalAttackBonus_ * pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_)) >> 2;
-  if (generalScore > 0 && color == board_->color()) {
-    generalScore += generalScore >> 1;
-  }
-  forkScore += generalScore;
+  //auto treat_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
+  //treat_mask &= ~counted_mask;
+  //auto min_treat_mask = (finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask;
+  //auto generalScore = EvalCoefficients::generalAttackBonus_ * pop_count(treat_mask & finfo_[ocolor].nbrq_mask_);
+  //generalScore += (EvalCoefficients::generalAttackBonus_ * pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_)) >> 2;
+  //if (generalScore > 0 && color == board_->color()) {
+  //  generalScore += generalScore >> 1;
+  //}
+  //forkScore += generalScore;
   return ScoreType32{ forkScore, forkScore };
 }
 
