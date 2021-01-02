@@ -191,12 +191,18 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
+  int scoreOffset = 0;
   auto spec = specialCases().eval(*board_);
-  if (spec.first)
-  {
+  if (spec.first == SpecialCaseResult::SCORE) {
     ScoreType score = spec.second;
     score = considerColor(score);
     return score;
+  }
+  else if (spec.first == SpecialCaseResult::DRAW) {
+    scoreOffset = 5;
+  }
+  else if (spec.first == SpecialCaseResult::ALMOST_DRAW) {
+    scoreOffset = 3;
   }
 
   //// prepare lazy evaluation
@@ -265,7 +271,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
-  return result;
+  return result >> scoreOffset;
 }
 
 Evaluator::PhaseInfo Evaluator::detectPhase() const

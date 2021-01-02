@@ -8,27 +8,27 @@
 namespace NEngine
 {
 
+enum class SpecialCaseResult { SCORE, DRAW, ALMOST_DRAW, NO_RESULT };
+
 class SpecialCasesDetector
 {
 public:
   SpecialCasesDetector();
 
-  inline std::pair<bool, ScoreType> eval(Board const& board) const
+  inline std::pair<SpecialCaseResult, ScoreType> eval(Board const& board) const
   {
     auto const& fmgr = board.fmgr();
     auto const& hkey = fmgr.fgrsCode();
     auto iter = scases_.find(hkey);
     if (iter == scases_.end())
-      return { false, 0 };
+      return { SpecialCaseResult::NO_RESULT, 0 };
     return (iter->second)(board);
   }
 
 private:
-  void initUsual();
-  void initWinnerLoser();
-  void initMatCases();
+  void initCases();
 
-  std::unordered_map<BitMask, std::function<std::pair<bool, ScoreType>(Board const&)>> scases_;
+  std::unordered_map<BitMask, std::function<std::pair<SpecialCaseResult, ScoreType>(Board const&)>> scases_;
 };
 
 }
