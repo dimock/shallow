@@ -259,9 +259,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
 #endif
 
-  auto scoreForks = evaluateForks(Figure::ColorWhite);
-  scoreForks -= evaluateForks(Figure::ColorBlack);
-  score32 += scoreForks;
+  //auto scoreForks = evaluateForks(Figure::ColorWhite);
+  //scoreForks -= evaluateForks(Figure::ColorBlack);
+  //score32 += scoreForks;
 
   auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
