@@ -13,15 +13,12 @@ struct EvalCoefficients
 {
   // single vars
   static int additionalMatBonus_;
-  static int queenRookVsPwPenalty_;
 
   // pawns
-  static ScoreType32 rookBehindBonus_;
   static ScoreType32 protectedPawnPressure_;
   static ScoreType32 unprotectedPawnPressure_;
   static ScoreType32 semiprotectedPawnPressure_;
   static ScoreType32 unprotectedPawnBishopTreat_;
-  static ScoreType32 farKingPawn_;
 
   // forks & other treats
   static ScoreType bishopsAttackBonus_;
@@ -36,10 +33,6 @@ struct EvalCoefficients
 
   // check & mat treat
   static ScoreType32 discoveredCheckBonus_;
-  //static ScoreType32 discoveredCheckBonus4_;
-  //static ScoreType discoveredCheckBonus1_;
-  //static ScoreType possibleCheckBonus_;
-  //static ScoreType matTreatBonus_;
 
   // king
   static ScoreType32 fakeCastle_;
@@ -81,7 +74,6 @@ struct EvalCoefficients
   static ScoreType32 isolatedPawn_;
   static ScoreType32 backwardPawn_;
   static ScoreType32 blockedPawn_;
-  static ScoreType32 unguardedPawn_;
   static ScoreType32 unprotectedPawn_;
   static ScoreType32 hasneighborPawn_;
   

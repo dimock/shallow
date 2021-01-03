@@ -102,6 +102,9 @@ void Evaluator::prepare()
     finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
     finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
 
+    finfo_[0].attack_but_pawn_mask_ = finfo_[0].kingAttacks_;
+    finfo_[1].attack_but_pawn_mask_ = finfo_[1].kingAttacks_;
+
     finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
     finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
   }
@@ -259,9 +262,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
 #endif
 
-  //auto scoreForks = evaluateForks(Figure::ColorWhite);
-  //scoreForks -= evaluateForks(Figure::ColorBlack);
-  //score32 += scoreForks;
+  auto scoreForks = evaluateForks(Figure::ColorWhite);
+  scoreForks -= evaluateForks(Figure::ColorBlack);
+  score32 += scoreForks;
 
   auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
@@ -309,19 +312,18 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto const& pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
   auto pw_unprotected = pw_mask ^ pw_protected;
-  auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
-  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & attackers);
-  score += EvalCoefficients::unprotectedPawnPressure_ * pop_count(pw_unprotected & attackers & ~finfo_[ocolor].attack_mask_);
-  score += EvalCoefficients::semiprotectedPawnPressure_ * pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_);
+  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & finfo_[color].attack_but_pawn_mask_);
+  score += EvalCoefficients::unprotectedPawnPressure_ * pop_count(pw_unprotected & finfo_[color].attack_but_pawn_mask_ & ~finfo_[ocolor].attack_mask_);
+  score += EvalCoefficients::semiprotectedPawnPressure_ * pop_count(pw_unprotected & finfo_[color].attack_but_pawn_mask_ &  finfo_[ocolor].attack_mask_);
   // bishop treat
   if(fmgr.bishops(color))
   {
     auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
     auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
     if(bi_mask_w)
-      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers);
+      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_but_pawn_mask_);
     if(bi_mask_b)
-      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers);
+      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_but_pawn_mask_);
   }
   return score;
 }
@@ -384,61 +386,6 @@ int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Co
   return y_closest;
 }
 
-bool Evaluator::couldBeGuarded(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field, int n1) const
-{
-  // already guarded
-  if ((finfo_[color].pawnAttacks_ & set_mask_bit(idx)) != 0ULL)
-    return true;
-  // could move fwd to guarded field
-  if ((opmsk & fwd_field) == 0ULL) {
-    // protected
-    if ((finfo_[color].pawnAttacks_ & fwd_field) != 0ULL) {
-      // not attacked
-      if ((finfo_[ocolor].pawnAttacks_ & fwd_field) == 0ULL)
-        return true;
-      // protected by 2 and attacked by 1
-      auto attackers = movesTable().pawnCaps(color, n1) & opmsk;
-      auto guardians = movesTable().pawnCaps(ocolor, n1) & pmask;
-      if (pop_count(attackers) <= pop_count(guardians))
-        return true;
-    }
-    // on 1st line. could it move 2 lines forward?
-    if (colored_y_[color][idx.y()] == 1) {
-      int n2 = static_cast<int>(Index(idx.x(), idx.y() + (delta_y_[color] << 1)));
-      BitMask fwd_field2 = set_mask_bit(n2);
-      // not occupied and protected
-      if (((opmsk & fwd_field2) == 0ULL) && ((finfo_[color].pawnAttacks_ & fwd_field2) != 0ULL)) {
-        // not attacked
-        if ((finfo_[ocolor].pawnAttacks_ & fwd_field2) == 0ULL)
-          return true;
-        // protected by 2 and attacked by 1
-        auto attackers = movesTable().pawnCaps(color, n2) & opmsk;
-        auto guardians = movesTable().pawnCaps(ocolor, n2) & pmask;
-        if (pop_count(attackers) <= pop_count(guardians))
-          return true;
-      }
-    }
-  }
-  BitMask blockers_mask = (finfo_[ocolor].pawnAttacks_ & (~finfo_[color].pawnAttacks_)) | opmsk;
-  BitMask left  = (idx.x() != 0) ? (pawnMasks().mask_forward(ocolor, idx - 1) & pmask) : 0ULL;
-  if(left)
-  {
-    int y = color ? (_msb64(left) >> 3) : (_lsb64(left) >> 3);
-    BitMask pmask_before = betweenMasks().between(idx-1, Index(idx.x()-1, y));
-    if((pmask_before & blockers_mask) == 0ULL)
-      return true;
-  }
-  BitMask right = (idx.x() != 7) ? (pawnMasks().mask_forward(ocolor, idx + 1) & pmask) : 0ULL;
-  if(right)
-  {
-    int y = color ? (_msb64(right) >> 3) : (_lsb64(right) >> 3);
-    BitMask pmask_before = betweenMasks().between(idx+1, Index(idx.x()+1, y));
-    if((pmask_before & blockers_mask) == 0ULL)
-      return true;
-  }
-  return false;
-}
-
 bool Evaluator::isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const
 {
   // TODO: optimization required
@@ -454,18 +401,6 @@ bool Evaluator::isPawnBackward(Index const& idx, Figure::Color color, BitMask co
   }
   return blocked;
 }
-
-//bool Evaluator::isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const
-//{
-//  Figure::Color ocolor = Figure::otherColor(color);
-//  auto blocked_mask = (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_) | opmsk;
-//  bool blocked = (blocked_mask & fwd_field) != 0ULL;
-//  if (!blocked && (idx.y() < 6 && color || idx.y() > 3 && !color)) {
-//    auto fwd_field2 = color == Figure::ColorWhite ? fwd_field << 8 : fwd_field >> 8;
-//    blocked = (fwd_field & pmask) != 0ULL && (fwd_field2 & blocked_mask) != 0ULL;
-//  }
-//  return blocked;
-//}
 
 Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 {
@@ -503,15 +438,13 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
     bool blocked = backward && ((fwd_field & opmsk) != 0ULL);
-    //bool unguarded = !isolated && !backward && !couldBeGuarded(idx, color, ocolor, pmask, opmsk, fwd_field, n1);
     bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
-    bool unprotected = /*!unguarded && */!isolated && !backward && !pprotected;
+    bool unprotected = !isolated && !backward && !pprotected;
     bool doubled = !pprotected && (pop_count(pawnMasks().mask_doubled(x) & pmask) > 1);
 
     info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
     info.score_ += EvalCoefficients::backwardPawn_ * backward;
     info.score_ += EvalCoefficients::blockedPawn_ * blocked;
-    //info.score_ += EvalCoefficients::unguardedPawn_ * unguarded;
     info.score_ += EvalCoefficients::unprotectedPawn_ * unprotected;
     info.score_ += EvalCoefficients::hasneighborPawn_ * neighbors;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
@@ -905,7 +838,6 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   const FiguresManager & fmgr = board_->fmgr();
   ScoreType32 score;
 
-  int pawnsDiff = fmgr.pawns(Figure::ColorWhite) - fmgr.pawns(Figure::ColorBlack);
   int knightsDiff = fmgr.knights(Figure::ColorWhite) - fmgr.knights(Figure::ColorBlack);
   int bishopsDiff = fmgr.bishops(Figure::ColorWhite) - fmgr.bishops(Figure::ColorBlack);
   int figuresDiff = knightsDiff + bishopsDiff;
@@ -935,47 +867,6 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int pawnsN = fmgr.pawns(Figure::ColorBlack);
     score -= EvalCoefficients::doubleKnightBonus_[pawnsN];
   }
-
-  //// bonus for 2 knights difference
-  //if (knightsDiff >= 2 || knightsDiff <= -2)
-  //{
-  //  int kndiff = sign(knightsDiff);
-  //  Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
-  //  const int pawnsN = fmgr.pawns(ncolor);
-  //  score += EvalCoefficients::twoKnightsBonus_[pawnsN] * kndiff;
-  //}
-
-  //// penalty for knights absence
-  //if (fmgr.knights(Figure::ColorWhite) == 0) {
-  //  score -= EvalCoefficients::noKnightsPenalty_;
-  //}
-  //if (fmgr.knights(Figure::ColorBlack) == 0) {
-  //  score += EvalCoefficients::noKnightsPenalty_;
-  //}
-
-  //// penalty for bishops absence
-  //if (fmgr.bishops(Figure::ColorWhite) == 0) {
-  //  score -= EvalCoefficients::noBishopsPenalty_;
-  //}
-  //if (fmgr.bishops(Figure::ColorBlack) == 0) {
-  //  score += EvalCoefficients::noBishopsPenalty_;
-  //}
-
-  //// penalty for rooks absence
-  //if (fmgr.rooks(Figure::ColorWhite) == 0) {
-  //  score -= EvalCoefficients::noRooksPenalty_;
-  //}
-  //if (fmgr.rooks(Figure::ColorBlack) == 0) {
-  //  score += EvalCoefficients::noRooksPenalty_;
-  //}
-
-  //// penalty for queens absence
-  //if (fmgr.queens(Figure::ColorWhite) == 0) {
-  //  score -= EvalCoefficients::noQueensPenalty_;
-  //}
-  //if (fmgr.queens(Figure::ColorBlack) == 0) {
-  //  score += EvalCoefficients::noQueensPenalty_;
-  //}
 
   // bonus for 2 bishops difference
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
@@ -1008,14 +899,6 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     queensDiff = 0;
   }
 
-  //// Rook vs. Pawns
-  //if (!figuresDiff && rooksDiff)
-  //{
-  //  Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
-  //  const int pawnsN = fmgr.pawns(rcolor);
-  //  int rdiff = sign(rooksDiff);
-  //  score += EvalCoefficients::rookAgainstPawnBonus_[pawnsN] * rdiff;
-  //}
   // Knight|Bishop vs. Rook
   if (rooksDiff*figuresDiff == -1)
   {
@@ -1049,77 +932,91 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
 
 ScoreType32 Evaluator::evaluateForks(Figure::Color color)
 {
+  ScoreType forkScore = 0;
   Figure::Color ocolor = Figure::otherColor(color);
+  BitMask counted_mask = 0ULL;
   BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
   BitMask o_mask = board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | o_rq_mask;
-  BitMask pawn_fork = o_mask & (finfo_[color].pawnAttacks_);
-  int pawnsN = pop_count(pawn_fork);
-  ScoreType forkScore = 0;
-  BitMask counted_mask = pawn_fork;
-  if (pawnsN > 1) {
-    forkScore += EvalCoefficients::doublePawnAttack_;
-  }
-  else if(pawnsN == 1) {
-    forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
-    if(color == board_->color())
-      forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
-  }
   
-  BitMask pfwd_attacks = (finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].attack_mask_)) & ~finfo_[ocolor].pawnAttacks_;
-  if(color)
-    pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
-  else
-    pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
-  pawn_fork = o_mask & pfwd_attacks;
-  counted_mask |= pawn_fork;
-  pawnsN = pop_count(pawn_fork);
-  if (pawnsN > 1) {
-    forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
-  }
-  else if (pawnsN == 1) {
-    forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
-    if (color == board_->color())
-      forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
+  if (auto pawn_fork = (o_mask & (finfo_[color].pawnAttacks_))) {
+    int pawnsN = pop_count(pawn_fork);
+    counted_mask = pawn_fork;
+    if (pawnsN > 1) {
+      forkScore += EvalCoefficients::doublePawnAttack_;
+    }
+    else if (pawnsN == 1) {
+      forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
+      if (color == board_->color())
+        forkScore += EvalCoefficients::doublePawnAttack_ >> 2;
+    }
   }
 
-  BitMask kn_fork = o_rq_mask & finfo_[color].knightMoves_;
-  counted_mask |= kn_fork;
-  int knightsN = pop_count(kn_fork);
-  if (knightsN > 1) {
-    forkScore += EvalCoefficients::knightForkBonus_;
+  if (auto pfwd_attacks = ((finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].attack_mask_)) & ~finfo_[ocolor].pawnAttacks_)) {
+    if (color)
+      pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
+    else
+      pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
+    if (auto pawn_fork = (o_mask & pfwd_attacks)) {
+      counted_mask |= pawn_fork;
+      int pawnsN = pop_count(pawn_fork);
+      if (pawnsN > 1) {
+        forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
+      }
+      else if (pawnsN == 1) {
+        forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
+        if (color == board_->color())
+          forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
+      }
+    }
   }
-  else if(knightsN == 1) {
-    forkScore += EvalCoefficients::knightForkBonus_ >> 2;
-    if (color == board_->color())
+
+  if (auto kn_fork = (o_rq_mask & finfo_[color].knightMoves_)) {
+    counted_mask |= kn_fork;
+    int knightsN = pop_count(kn_fork);
+    if (knightsN > 1) {
+      forkScore += EvalCoefficients::knightForkBonus_;
+    }
+    else if (knightsN == 1) {
       forkScore += EvalCoefficients::knightForkBonus_ >> 2;
+      if (color == board_->color())
+        forkScore += EvalCoefficients::knightForkBonus_ >> 2;
+    }
   }
-  BitMask bi_treat = o_rq_mask & finfo_[color].bishopTreatAttacks_;
-  counted_mask |= bi_treat;
-  int bishopsN = pop_count(bi_treat);
-  if (bishopsN > 1) {
-    forkScore += EvalCoefficients::bishopsAttackBonus_;
-  }
-  else if (bishopsN == 1) {
-    forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
-    if (color == board_->color())
+  
+  if (auto bi_treat = (o_rq_mask & finfo_[color].bishopTreatAttacks_)) {
+    counted_mask |= bi_treat;
+    int bishopsN = pop_count(bi_treat);
+    if (bishopsN > 1) {
+      forkScore += EvalCoefficients::bishopsAttackBonus_;
+    }
+    else if (bishopsN == 1) {
       forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
+      if (color == board_->color())
+        forkScore += EvalCoefficients::bishopsAttackBonus_ >> 2;
+    }
   }
-  auto r2q_treat = board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_;
-  counted_mask |= r2q_treat;
-  if (r2q_treat) {
-    forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
-    if(color == board_->color())
+  
+  if (auto r2q_treat = (board_->fmgr().queen_mask(ocolor) & finfo_[color].rookMoves_)) {
+    counted_mask |= r2q_treat;
+    if (r2q_treat) {
       forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
+      if (color == board_->color())
+        forkScore += EvalCoefficients::queenUnderRookAttackBonus_ >> 1;
+    }
   }
-  //auto treat_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
-  //treat_mask &= ~counted_mask;
-  //auto min_treat_mask = (finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask;
-  //auto generalScore = EvalCoefficients::generalAttackBonus_ * pop_count(treat_mask & finfo_[ocolor].nbrq_mask_);
-  //generalScore += (EvalCoefficients::generalAttackBonus_ * pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_)) >> 2;
-  //if (generalScore > 0 && color == board_->color()) {
-  //  generalScore += generalScore >> 1;
-  //}
-  //forkScore += generalScore;
+  
+  if (auto treat_mask = ((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_))) {
+    treat_mask &= ~counted_mask;
+    auto generalScore = EvalCoefficients::generalAttackBonus_ * pop_count(treat_mask & finfo_[ocolor].nbrq_mask_);
+    if (auto min_treat_mask = ((finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask)) {
+      generalScore += (EvalCoefficients::generalAttackBonus_ * pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_)) >> 2;
+    }
+    if (generalScore > 0 && color == board_->color()) {
+      generalScore += generalScore >> 1;
+    }
+    forkScore += generalScore;
+  }
+  
   return ScoreType32{ forkScore, forkScore };
 }
 

@@ -11,14 +11,11 @@ namespace NEngine
 {
   // single vars
   int EvalCoefficients::additionalMatBonus_{ 150 };
-  int EvalCoefficients::queenRookVsPwPenalty_{ 80 };
   // pawns
-  ScoreType32 EvalCoefficients::rookBehindBonus_{ 5, 5 };
-  ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 1 };
-  ScoreType32 EvalCoefficients::unprotectedPawnPressure_{ 6, 6 };
-  ScoreType32 EvalCoefficients::semiprotectedPawnPressure_{ 2, 2 };
+  ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
+  ScoreType32 EvalCoefficients::unprotectedPawnPressure_{ 6, 10 };
+  ScoreType32 EvalCoefficients::semiprotectedPawnPressure_{ 2, 3 };
   ScoreType32 EvalCoefficients::unprotectedPawnBishopTreat_{ 0, 3 };
-  ScoreType32 EvalCoefficients::farKingPawn_ = { 5, 20 };
 
   // forks
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 65 };
@@ -33,10 +30,6 @@ namespace NEngine
 
   // check & mat treat
   ScoreType32 EvalCoefficients::discoveredCheckBonus_{ 20, 20 };
-  //ScoreType32 EvalCoefficients::discoveredCheckBonus4_{ 5, 5 };
-  //ScoreType EvalCoefficients::discoveredCheckBonus1_{ 20 };
-  //ScoreType EvalCoefficients::possibleCheckBonus_{ 5 };
-  //ScoreType EvalCoefficients::matTreatBonus_{ 150 };
 
   // king
   ScoreType32 EvalCoefficients::fakeCastle_{ -15, 0 };
@@ -79,7 +72,6 @@ namespace NEngine
   ScoreType32 EvalCoefficients::isolatedPawn_ = { -12, -11 };
   ScoreType32 EvalCoefficients::backwardPawn_ = { -10, -9 };
   ScoreType32 EvalCoefficients::blockedPawn_ = { -6, -4 };
-  ScoreType32 EvalCoefficients::unguardedPawn_ = { -4, -2 };
   ScoreType32 EvalCoefficients::unprotectedPawn_ = { -3, -2 };
   ScoreType32 EvalCoefficients::hasneighborPawn_ = { 3, 2 };
 

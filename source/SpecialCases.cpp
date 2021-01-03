@@ -63,7 +63,7 @@ namespace
       ScoreType score{ +10 };
       Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
       auto xpawnColor = (pawnColor == Figure::ColorWhite) ? pawnColor : Figure::otherColor(pawnColor);
-      score = 4*Figure::figureWeight_[Figure::TypePawn] + pawn_colored_y_[xpawnColor][index.y()] * 20 + EvalCoefficients::additionalMatBonus_;
+      score = 4*Figure::figureWeight_[Figure::TypePawn] + pawn_colored_y_[xpawnColor][index.y()] * 20;
       if (pawnColor == Figure::ColorBlack)
         score = -score;
       return { SpecialCaseResult::SCORE, score };

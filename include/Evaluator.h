@@ -41,6 +41,7 @@ class Evaluator
     BitMask rookTreatAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
+    BitMask attack_but_pawn_mask_{};
     BitMask multiattack_mask_{};
     BitMask cango_mask_{};
     BitMask mask_xray_b_{};
@@ -134,8 +135,6 @@ private:
   
   int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
   bool isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
-  //bool isPawnBlocked(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
-  bool couldBeGuarded(Index const& idx, Figure::Color color, Figure::Color ocolor, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field, int n1) const;
 
   PasserInfo evaluatePawns(Figure::Color color) const;
   PasserInfo evaluatePawns() const;
@@ -170,15 +169,6 @@ private:
 
   PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);
   ScoreType32 passerEvaluation(PasserInfo const&);
-
-  // search path from opponent king to pawn's promotion path of given color
-  // idea from CCRL
-  inline bool couldIntercept(Figure::Color color, int pawn_pos, int promo_pos, int stepsMax) const
-  {
-    auto ocolor = Figure::otherColor(color);
-    BitMask inv_mask_all = ~(board_->fmgr().pawn_mask(ocolor) | board_->fmgr().king_mask(ocolor) | board_->fmgr().king_mask(color));
-    return NEngine::couldIntercept(*board_, inv_mask_all, finfo_[color].attack_mask_, color, pawn_pos, promo_pos, stepsMax);
-  }
 
   ScoreType32 evaluateMaterialDiff();
 
