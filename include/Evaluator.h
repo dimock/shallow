@@ -41,7 +41,6 @@ class Evaluator
     BitMask rookTreatAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
-    BitMask attack_but_pawn_mask_{};
     BitMask multiattack_mask_{};
     BitMask cango_mask_{};
     BitMask mask_xray_b_{};

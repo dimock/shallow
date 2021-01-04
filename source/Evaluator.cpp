@@ -102,8 +102,6 @@ void Evaluator::prepare()
     finfo_[0].attack_mask_ |= finfo_[0].kingAttacks_;
     finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
 
-    finfo_[0].attack_but_pawn_mask_ = finfo_[0].kingAttacks_;
-    finfo_[1].attack_but_pawn_mask_ = finfo_[1].kingAttacks_;
 
     finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
     finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
@@ -262,9 +260,9 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
 #endif
 
-  auto scoreForks = evaluateForks(Figure::ColorWhite);
-  scoreForks -= evaluateForks(Figure::ColorBlack);
-  score32 += scoreForks;
+  //auto scoreForks = evaluateForks(Figure::ColorWhite);
+  //scoreForks -= evaluateForks(Figure::ColorBlack);
+  //score32 += scoreForks;
 
   auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
@@ -312,18 +310,19 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto const& pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
   auto pw_unprotected = pw_mask ^ pw_protected;
-  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & finfo_[color].attack_but_pawn_mask_);
-  score += EvalCoefficients::unprotectedPawnPressure_ * pop_count(pw_unprotected & finfo_[color].attack_but_pawn_mask_ & ~finfo_[ocolor].attack_mask_);
-  score += EvalCoefficients::semiprotectedPawnPressure_ * pop_count(pw_unprotected & finfo_[color].attack_but_pawn_mask_ &  finfo_[ocolor].attack_mask_);
+  auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
+  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & attackers);
+  score += EvalCoefficients::unprotectedPawnPressure_ * pop_count(pw_unprotected & attackers & ~finfo_[ocolor].attack_mask_);
+  score += EvalCoefficients::semiprotectedPawnPressure_ * pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_);
   // bishop treat
   if(fmgr.bishops(color))
   {
     auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
     auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
     if(bi_mask_w)
-      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_but_pawn_mask_);
+      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers);
     if(bi_mask_b)
-      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_but_pawn_mask_);
+      score += EvalCoefficients::unprotectedPawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers);
   }
   return score;
 }

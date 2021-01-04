@@ -95,7 +95,6 @@ ScoreType32 Evaluator::evaluateKnights()
       if (knight_moves) {
         finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & knight_moves;
         finfo_[color].attack_mask_ |= knight_moves;
-        finfo_[color].attack_but_pawn_mask_ |= knight_moves;
         finfo_[color].knightMoves_ |= knight_moves;
       }
       
@@ -175,7 +174,6 @@ ScoreType32 Evaluator::evaluateBishops()
       if (bishop_moves) {
         finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & bishop_attacks;
         finfo_[color].attack_mask_ |= bishop_attacks;
-        finfo_[color].attack_but_pawn_mask_ |= bishop_attacks;
         auto mask_all_no_orq = mask_all_ & ~(board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor));
         auto bishop_treat = magic_ns::bishop_moves(n, mask_all_no_orq);
         finfo_[color].bishopTreatAttacks_ |= bishop_treat;
@@ -265,7 +263,6 @@ ScoreType32 Evaluator::evaluateRook()
       if (rook_moves) {
         finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & rook_attacks;
         finfo_[color].attack_mask_ |= rook_attacks;
-        finfo_[color].attack_but_pawn_mask_ |= rook_attacks;
         auto mask_all_no_oq = mask_all_ & ~board_->fmgr().queen_mask(ocolor);
         auto rook_treat = magic_ns::rook_moves(n, mask_all_no_oq);
         finfo_[color].rookTreatAttacks_ |= rook_treat;
@@ -341,7 +338,6 @@ ScoreType32 Evaluator::evaluateQueens()
       if (queen_moves) {
         finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & queen_attacks;
         finfo_[color].attack_mask_ |= queen_attacks;
-        finfo_[color].attack_but_pawn_mask_ |= queen_attacks;
         finfo_[color].queenMoves_ |= queen_moves;
       }
 
