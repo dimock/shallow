@@ -781,7 +781,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     X_ASSERT(!best, "best move wasn't found but one move was");
     singular = true;
 
+#ifdef USE_HASH
     hash_.prefetch(board.hashAfterMove(best));
+#endif
 
     board.makeMove(best);
     sdata.inc_nc();

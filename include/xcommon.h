@@ -215,7 +215,7 @@ namespace nst
 #undef USE_HASH
 
 #undef USE_IID
-#undef SINGULAR_EXT
+#define SINGULAR_EXT
 
 #undef USE_NULL_MOVE
 #undef USE_LMR
