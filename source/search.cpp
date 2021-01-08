@@ -549,7 +549,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && betta > -Figure::MatScore + MaxPly
     && betta < Figure::MatScore - MaxPly
     && depth > 0
-    && depth <= 5 * ONE_PLY
+    && depth <= 4 * ONE_PLY
     && ply > 1
     && board.allowNullMove())
   {
@@ -566,7 +566,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
     }
     int threshold = (int)alpha - (int)score0 - Position_GainFP;
-    if ((int)score0 > (int)betta + (int)Figure::figureWeight_[Figure::TypePawn] * (depth >> 4)) {
+    if ((int)score0 > (int)betta + 2*(int)Figure::figureWeight_[Figure::TypePawn] * (depth >> 4)) {
       return score0;
     }
     else if (depth <= ONE_PLY && threshold > 0) {
