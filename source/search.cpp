@@ -543,6 +543,27 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool nm_threat{false};
   auto const& prev = board.lastUndo();
 
+#ifdef USE_FUTILITY_PRUNING
+  if (!pv
+    && !board.underCheck()
+    && betta > -Figure::MatScore + MaxPly
+    && betta < Figure::MatScore - MaxPly
+    && depth > 0
+    && depth <= 4 * ONE_PLY
+    && ply > 1
+    && board.allowNullMove())
+  {
+    ScoreType score0 = sctx.eval_(alpha, betta);
+    int threshold = (int)alpha - (int)score0 - Position_GainFP;
+    if ((int)score0 > (int)betta + 2*(int)Figure::figureWeight_[Figure::TypePawn] * (depth >> 4)) {
+      return score0;
+    }
+    else if (depth <= ONE_PLY && threshold > 0) {
+      return captures(ictx, depth, ply, alpha, betta, pv, score0);
+    }
+  }
+#endif // futility pruning
+
 #ifdef USE_NULL_MOVE
   if(
     !pv
@@ -586,28 +607,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     }
   }
 #endif // null-move
-
-#ifdef USE_FUTILITY_PRUNING
-  if(!pv
-      && !board.underCheck()
-      && alpha > -Figure::MatScore+MaxPly
-      && alpha < Figure::MatScore-MaxPly
-      && depth > 0 && depth <= ONE_PLY && ply > 1)
-  {
-    static const int thresholds_[4] = { 0,
-      0,
-      Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypePawn],
-      Figure::figureWeight_[Figure::TypeQueen] + Figure::figureWeight_[Figure::TypeRook] };
-
-    ScoreType mscore = sctx.eval_.materialScore();
-    ScoreType score0 = sctx.eval_(alpha, betta);
-    if (score0 > mscore)
-      mscore = score0;
-    int threshold = (int)alpha - (int)mscore - Position_GainFP;
-    if (threshold > thresholds_[(depth >> 4 /* / ONE_PLY */) & 3])
-      return captures(ictx, depth, ply, alpha, betta, pv, score0);
-  }
-#endif // futility pruning
 
 #ifdef SINGULAR_EXT
   int  aboveAlphaN = 0;
