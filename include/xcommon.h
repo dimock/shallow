@@ -210,9 +210,9 @@ namespace nst
 #define EXTEND_CHECK_SEE_ONLY
 #define USE_EVAL_HASH
 
-#undef SEE_PRUNING
-#undef USE_FUTILITY_PRUNING
-#undef USE_HASH
+#define SEE_PRUNING
+#define USE_FUTILITY_PRUNING
+#define USE_HASH
 
 #undef USE_IID
 #define SINGULAR_EXT

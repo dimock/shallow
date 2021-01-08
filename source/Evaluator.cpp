@@ -193,18 +193,18 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 #endif
 
   int scoreOffset = 0;
-  //auto spec = specialCases().eval(*board_);
-  //if (spec.first == SpecialCaseResult::SCORE) {
-  //  ScoreType score = spec.second;
-  //  score = considerColor(score);
-  //  return score;
-  //}
-  //else if (spec.first == SpecialCaseResult::DRAW) {
-  //  scoreOffset = 5;
-  //}
-  //else if (spec.first == SpecialCaseResult::ALMOST_DRAW) {
-  //  scoreOffset = 3;
-  //}
+  auto spec = specialCases().eval(*board_);
+  if (spec.first == SpecialCaseResult::SCORE) {
+    ScoreType score = spec.second;
+    score = considerColor(score);
+    return score;
+  }
+  else if (spec.first == SpecialCaseResult::DRAW) {
+    scoreOffset = 5;
+  }
+  else if (spec.first == SpecialCaseResult::ALMOST_DRAW) {
+    scoreOffset = 3;
+  }
 
   //// prepare lazy evaluation
   //if(alpha > -Figure::MatScore) {
