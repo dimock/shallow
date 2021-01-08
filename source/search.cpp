@@ -549,13 +549,24 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && betta > -Figure::MatScore + MaxPly
     && betta < Figure::MatScore - MaxPly
     && depth > 0
-    && depth <= 4 * ONE_PLY
+    && depth <= 5 * ONE_PLY
     && ply > 1
     && board.allowNullMove())
   {
-    ScoreType score0 = sctx.eval_(alpha, betta);
+    bool hashOk = pitem && pitem->hkey_ == board.fmgr().hashKey();
+    ScoreType score0 = Figure::MatScore;
+    if (hashOk && pitem->eval_ != -ScoreMax) {
+      score0 = pitem->eval_;
+      X_ASSERT_R(score0 != sctx.eval_(alpha, betta), "incorrect evaluation in hash");
+    }
+    else {
+      score0 = sctx.eval_(alpha, betta);
+      if (hashOk) {
+        pitem->eval_ = score0;
+      }
+    }
     int threshold = (int)alpha - (int)score0 - Position_GainFP;
-    if ((int)score0 > (int)betta + 2*(int)Figure::figureWeight_[Figure::TypePawn] * (depth >> 4)) {
+    if ((int)score0 > (int)betta + (int)Figure::figureWeight_[Figure::TypePawn] * (depth >> 4)) {
       return score0;
     }
     else if (depth <= ONE_PLY && threshold > 0) {
@@ -887,7 +898,17 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
     // not initialized yet
     if (score0 == -ScoreMax) {
-      score0 = eval(alpha, betta);
+      bool hashOk = pitem && pitem->hkey_ == board.fmgr().hashKey();
+      if (hashOk && pitem->eval_ != -ScoreMax) {
+        score0 = pitem->eval_;
+        X_ASSERT_R(score0 != eval(alpha, betta), "incorrect evaluation in hash");
+      }
+      else {
+        score0 = eval(alpha, betta);
+        if (hashOk) {
+          pitem->eval_ = score0;
+        }
+      }
     }
 
     if (score0 >= betta) {

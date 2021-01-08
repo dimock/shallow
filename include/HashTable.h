@@ -9,7 +9,6 @@
 namespace NEngine
 {
 
-using HKeyType = uint32;
 enum Flag : uint8 { NoFlag, Alpha, AlphaBetta, Betta };
 
 #pragma pack(push, 1)
@@ -26,18 +25,17 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
              singular_: 1,
              pv_      : 1;
 
-  //uint16     movesCount_{};
+  ScoreType  eval_{ -ScoreMax };
   Move       move_;
 
   HItem() {}
 
-  inline HItem(HKeyType hkey, ScoreType score, int depth, Flag xflag, const Move & move, bool threat, bool singular, bool pv)//, uint16 movesCount)
+  inline HItem(HKeyType hkey, ScoreType score, int depth, Flag xflag, const Move & move, bool threat, bool singular, bool pv)
   {
     hkey_ = hkey;
     score_ = score;
     depth_ = depth;
     xflag_ = xflag;
-    //movesCount_ = movesCount_;
     move_ = move;
     threat_ = threat;
     singular_ = singular;
@@ -139,100 +137,10 @@ protected:
     return buffer_[code & szMask_];
   }
 
-  //inline const ITEM & operator [] (const uint64 & code) const
-  //{
-  //  return buffer_[code & szMask_];
-  //}
-
   std::vector<ITEM> buffer_;
   size_t szMask_{0};
   uint16 movesCount_{0};
 };
-
-#if 0
-ALIGN_MSC(2) struct ALIGN_GCC(2) HBucket
-{
-  static const int BucketSize = 4;
-
-  //const HItem * find(const HKeyType & hkey) const
-  //{
-  //  for (int i = 0; i < BucketSize; ++i)
-  //  {
-  //    if (items_[i].hkey_ == hkey)
-  //      return items_ + i;
-  //  }
-  //  return 0;
-  //}
-
-  inline HItem* get(const HKeyType & hkey)
-  {
-    HItem * hfar = nullptr;
-    for (int i = 0; i < BucketSize; ++i)
-    {
-      if (items_[i].hkey_ == hkey)
-        return items_ + i;      
-
-      if (!hfar || items_[i].movesCount_ < hfar->movesCount_)
-        hfar = items_ + i;
-
-      if(!items_[i].hkey_ && (!hfar || hfar->hkey_))
-        hfar = items_ + i;
-    }
-    return hfar;
-  }
-
-  HItem items_[BucketSize];
-};
-
-class GHashTable : public HashTable<HBucket>
-{
-public:
-  using ItemType = HBucket;
-
-  GHashTable(int size) : HashTable<HBucket>(size)
-  {}
-
-  //void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat, bool singular, bool pv)
-  //{
-  //  HBucket & hb = (*this)[hkey];
-  //  HItem * hitem = hb.get(hkey);
-  //  if( !hitem )
-  //    return;
-
-  //  //if (hitem->hkey_ == hkey && hitem->flag_ != NoFlag && flag == NoFlag && hitem->depth_ < depth) {
-  //  //  return;
-  //  //}
-
-  //  if ((hitem->hkey_ != hkey) || (depth >= hitem->depth_) ||
-  //      (((AlphaBetta == flag && hitem->flag_ < AlphaBetta) || (pv && !hitem->pv_ && flag != NoFlag)) && depth >= hitem->depth_-2 && depth > 0))
-  //  {
-  //    X_ASSERT(score > 32760, "write wrong value to the hash");
-
-  //    HItem newItem;
-  //    newItem.hkey_ = hkey;
-  //    newItem.score_ = score;
-  //    newItem.depth_ = depth;
-  //    newItem.flag_ = flag;
-  //    newItem.movesCount_ = movesCount_;
-  //    newItem.move_ = move;
-  //    newItem.threat_ = threat;
-  //    newItem.singular_ = singular;
-  //    newItem.pv_ = pv;
-
-  //    *hitem = newItem;
-  //  }
-  //}
-
-  inline HItem * get(const uint64 & hkey)
-  {
-    HBucket & hb = this->operator [] (hkey);
-    HKeyType hk = (HKeyType)(hkey >> (sizeof(uint64) - sizeof(HKeyType)) * 8);
-    return hb.get(hk);
-  }
-
-};
-
-#else
 
 class GHashTable : public HashTable<HItem>
 {
@@ -242,28 +150,11 @@ public:
   GHashTable(int size) : HashTable<HItem>(size)
   {}
 
-  //inline void push(const uint64 & hkey, ScoreType score, int depth, Flag flag, const Move & move, bool threat, bool singular, bool pv)
-  //{
-  //  auto& hitem = (*this)[hkey];
-  //  HKeyType hk = (HKeyType)(hkey >> (sizeof(uint64)-sizeof(HKeyType))*8);
-  //  if (
-  //       (hitem.hkey_ != hk) ||
-  //       (depth > hitem.depth_) ||
-  //       (AlphaBetta == flag)
-  //     )
-  //       //((((AlphaBetta == flag || Betta == flag) && (hitem.flag() == NoFlag || hitem.flag() == Alpha)) || (pv && !hitem.pv_)) && depth > hitem.depth_) )
-  //  {
-  //    X_ASSERT(score > 32760, "write wrong value to the hash");
-  //    hitem = HItem{ hk, score, depth, flag, move, threat, singular, pv };
-  //  }
-  //}
-
   inline HItem* get(const uint64 & hkey)
   {
     return &(operator [] (hkey));
   }
 };
-#endif
 
 ALIGN_MSC(8) struct ALIGN_GCC(8) PHEval
 {

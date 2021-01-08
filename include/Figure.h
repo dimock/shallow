@@ -285,6 +285,8 @@ public:
   inline const BitMask & kpwnCode() const { return kpwnCode_; }
   inline const BitMask & fgrsCode() const { return fgrsCode_; }
 
+  inline const HKeyType hashKey() const { return (HKeyType)(hashCode_ >> (sizeof(uint64) - sizeof(HKeyType)) * 8); }
+
   inline const ScoreType32 score() const { return score_; }
 
   inline void resoreEval(int32 ev32) { score_.eval32_ = ev32; }

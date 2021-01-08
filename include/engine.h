@@ -218,7 +218,7 @@ private:
     auto& board = sctx.board_;
     pitem = hash_.get(board.fmgr().hashCode());
     auto const& hitem = *pitem;
-    if (hitem.hkey_ == (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8))
+    if (hitem.hkey_ == board.fmgr().hashKey())
     {
       singular = hitem.singular_;
       auto hflag = hitem.flag();
@@ -238,32 +238,6 @@ private:
             return Betta;
           else if (hscore < alpha && hflag == Alpha)
             return Alpha;
-//          if (hscore <= alpha)
-//          {
-//            X_ASSERT(!sctx.stop_ && alpha < -32760, "invalid hscore");
-//            return Alpha;
-//          }
-//
-//          if ((hflag == AlphaBetta || hflag == Betta) && hscore >= betta)// && hmove)
-//          {
-//            //if (betta > 0 && board.hasReps(hmove))
-//            //{
-//            //  return AlphaBetta;
-//            //}
-//#ifdef VERIFY_LMR
-//            else
-//            {
-//              /// danger move was reduced - recalculate it with full depth
-//              auto const& prev = board.lastUndo();
-//              if (hitem.threat_ && prev.is_reduced())
-//              {
-//                hscore = betta - 1;
-//                return Alpha;
-//              }
-//              return Betta;
-//            }
-//#endif
-//          }
         }
       }
       if (hitem.move_ && board.validateMoveExpress(hitem.move_)) {
@@ -282,8 +256,6 @@ private:
     auto& sctx = scontexts_[ictx];
 
     auto& board = sctx.board_;
-    //if (board.hasReps())
-    //  return;
 
     Flag flag = NoFlag;
     if (score != 0)
@@ -300,8 +272,11 @@ private:
     else if (score <= -Figure::MatScore + MaxPly)
       score -= ply;
     {
+      const auto hk = board.fmgr().hashKey();
       auto& hitem = *pitem;
-      HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8);
+      if (hitem.hkey_ != hk) {
+        hitem.eval_ = -ScoreMax;
+      }
       if (
         (hitem.hkey_ != hk) ||
         (depth > hitem.depth_) ||
@@ -309,7 +284,7 @@ private:
         )
       {
         X_ASSERT(score > 32760, "write wrong value to the hash");
-        hitem = HItem{ hk, score, depth, flag, move, threat, singular, pv/*, (uint16)hash_.moveCount()*/};
+        hitem = HItem{ hk, score, depth, flag, move, threat, singular, pv};
       }
 
     }
