@@ -237,53 +237,53 @@ struct SeeCalc
     return (r_moves & rq_mask) != 0ULL;
   }
 
-//  inline bool is_usual_check() const
-//  {
-//    if (usual_check_detected_)
-//      return usual_check_;
-//    usual_check_detected_ = true;
-//    return usual_check_ = detect_usual_check();
-//  }
-//
-//  inline bool detect_usual_check() const
-//  {
-//#ifndef NDEBUG
-//    SBoard<Board, UndoInfo, Board::GameLength> sbrd{ board_ };
-//    sbrd.makeMove(move_);
-//    bool check_detected = sbrd.underCheck();
-//    auto fen = toFEN(board_);
-//#endif
-//    auto ftype = board_.getField(move_.from()).type();
-//    if(ftype == Figure::TypeKing)
-//      return false;
-//    auto to = move_.to();
-//    if(ftype == Figure::TypePawn)
-//    {
-//      if(!move_.new_type())
-//      {
-//        bool result = (movesTable().pawnCaps(color_, to) & board_.fmgr().king_mask(ocolor_)) != 0ULL;
-//        X_ASSERT(check_detected != result, "invalid check detected");
-//        return result;
-//      }
-//      ftype = (Figure::Type)move_.new_type();
-//    }
-//    if(ftype == Figure::TypeKnight)
-//    {
-//      bool result = (movesTable().caps(Figure::TypeKnight, to) & board_.fmgr().king_mask(ocolor_)) != 0ULL;
-//      X_ASSERT(check_detected != result, "invalid check detected");
-//      return result;
-//    }
-//    int ok_pos = board_.kingPos(ocolor_);
-//    int dir = figureDir().dir(ftype, color_, to, ok_pos);
-//    if(dir < 0)
-//    {
-//      X_ASSERT(check_detected, "check is not detected");
-//      return false;
-//    }
-//    auto result = board_.is_nothing_between(to, ok_pos, ~all_mask_ | set_mask_bit(move_.from()));
-//    X_ASSERT(check_detected != result, "invalid check detection");
-//    return result;
-//  }
+  inline bool is_usual_check() const
+  {
+    if (usual_check_detected_)
+      return usual_check_;
+    usual_check_detected_ = true;
+    return usual_check_ = detect_usual_check();
+  }
+
+  inline bool detect_usual_check() const
+  {
+#ifndef NDEBUG
+    SBoard<Board, UndoInfo, Board::GameLength> sbrd{ board_ };
+    sbrd.makeMove(move_);
+    bool check_detected = sbrd.underCheck();
+    auto fen = toFEN(board_);
+#endif
+    auto ftype = board_.getField(move_.from()).type();
+    if(ftype == Figure::TypeKing)
+      return false;
+    auto to = move_.to();
+    if(ftype == Figure::TypePawn)
+    {
+      if(!move_.new_type())
+      {
+        bool result = (movesTable().pawnCaps(color_, to) & board_.fmgr().king_mask(ocolor_)) != 0ULL;
+        X_ASSERT(check_detected != result, "invalid check detected");
+        return result;
+      }
+      ftype = (Figure::Type)move_.new_type();
+    }
+    if(ftype == Figure::TypeKnight)
+    {
+      bool result = (movesTable().caps(Figure::TypeKnight, to) & board_.fmgr().king_mask(ocolor_)) != 0ULL;
+      X_ASSERT(check_detected != result, "invalid check detected");
+      return result;
+    }
+    int ok_pos = board_.kingPos(ocolor_);
+    int dir = figureDir().dir(ftype, color_, to, ok_pos);
+    if(dir < 0)
+    {
+      X_ASSERT(check_detected, "check is not detected");
+      return false;
+    }
+    auto result = board_.is_nothing_between(to, ok_pos, ~all_mask_ | set_mask_bit(move_.from()));
+    X_ASSERT(check_detected != result, "invalid check detection");
+    return result;
+  }
 
   inline bool under_check(Figure::Color color, Figure::Color ocolor) const
   {
@@ -338,9 +338,9 @@ bool Board::see(const Move & move, int threshold) const
   if(see_calc.discovered_check_)
     return true;
 
-  //// could be checkmate
-  //if(threshold > 0 && see_calc.is_usual_check())
-  //  threshold = 0;
+  // could be checkmate
+  if(threshold > 0 && see_calc.is_usual_check())
+    threshold = 0;
 
   if(en_passant)
     return Figure::figureWeight_[Figure::TypePawn] >= threshold;
