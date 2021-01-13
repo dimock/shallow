@@ -104,7 +104,7 @@ public:
         ecbk("invalid fen: " + fstr);
         continue;
       }
-      epd.fen_ = sline;
+      epd.fen_ = fstr;
       auto str_moves = NEngine::split(mstr, [](char c) { return NEngine::is_any_of(" \t", c); });
       for(auto const& smove : str_moves)
       {

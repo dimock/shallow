@@ -470,18 +470,18 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
     if(pv)
     {
       int depthInc = depthIncrement(ictx, move, true, false);
-      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true, 0);
     }
     else
     {
       int depthInc = depthIncrement(ictx, move, false, false);
 
-      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -alpha-1, -alpha, false, true);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -alpha-1, -alpha, false, true, 0);
 
       if(!sctx.stop_ && score > alpha)
       {
         depthInc = depthIncrement(ictx, move, true, false);
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, 1, -betta, -alpha, true, true, 0);
       }
     }
   }
@@ -491,7 +491,7 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
 }
 
 //////////////////////////////////////////////////////////////////////////
-ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm)
+ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm, int signular_count)
 {
   if(alpha >= Figure::MatScore-ply)
     return alpha;
@@ -594,7 +594,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       null_depth = null_depth;
     }
 #endif // RELEASEDEBUGINFO
-    ScoreType nullScore = -alphaBetta(ictx, null_depth, ply + 1, -betta, -(betta - 1), false, false);
+    ScoreType nullScore = -alphaBetta(ictx, null_depth, ply + 1, -betta, -(betta - 1), false, false, signular_count);
     board.unmakeNullMove();
 
     // verify null-move with shortened depth
@@ -628,7 +628,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_IID
   if(!hmove && depth >= (ONE_PLY<<2))
   {
-    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true);
+    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true, signular_count);
     if(const HItem * hitem = hash_.get(board.fmgr().hashCode()))
     {
       if (hitem->hkey_ == (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8)) {
@@ -688,8 +688,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
     if (!counter)
     {
-      depthInc = depthIncrement(ictx, move, pv, singular);
-      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm);
+      depthInc = depthIncrement(ictx, move, pv, singular && signular_count < NumSingularExts);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm, singular + signular_count);
     }
     else
     {
@@ -710,16 +710,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
 #endif
 
-      score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
+      score = -alphaBetta(ictx, depth + depthInc - R - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm, singular + signular_count);
       curr.mflags_ &= ~UndoInfo::Reduced;
 
       if (!sctx.stop_ && score > alpha && R > 0)
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -alpha - 1, -alpha, false, allow_nm, singular + signular_count);
 
       if (!sctx.stop_ && score > alpha && score < betta && pv)
       {
-        depthInc = depthIncrement(ictx, move, pv, singular);
-        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm);
+        depthInc = depthIncrement(ictx, move, pv, singular && signular_count < NumSingularExts);
+        score = -alphaBetta(ictx, depth + depthInc - ONE_PLY, ply + 1, -betta, -alpha, pv, allow_nm, singular + signular_count);
       }
     }
 
@@ -808,7 +808,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif // RELEASEDEBUGINFO
 
     alpha = alpha0;
-    ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true);
+    ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true, signular_count + 1);
 
     board.unmakeMove(best);
 

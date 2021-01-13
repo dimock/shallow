@@ -229,6 +229,7 @@ namespace nst
 static const SortValueType CaptureRecentlyBonus = 10;
 static const SortValueType PromotionBonus = 10;
 
+static const int NumSingularExts = 4;
 static const int NumUsualAfterHorizon = 3;
 static const int ONE_PLY = 16;
 static const int MaxPly = 64;
