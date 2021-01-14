@@ -64,8 +64,8 @@ namespace NEngine
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
   int EvalCoefficients::knightToPawnDistanceMulti_{ 1 };
-  int EvalCoefficients::kingToKingDistanceMulti_{ 2 };
-  int EvalCoefficients::figureToKingDistanceMulti_{ 2 };
+  int EvalCoefficients::kingToKingDistanceMulti_{ 3 };
+  int EvalCoefficients::figureToKingDistanceMulti_{ 3 };
 
   // arrays
   ScoreType32 EvalCoefficients::doubledPawn_ = { -6, -5 };

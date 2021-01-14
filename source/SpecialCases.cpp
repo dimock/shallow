@@ -154,6 +154,186 @@ namespace
     return score;
   };
 
+  ScoreType evalKings(Board const& board, Figure::Color winnerColor)
+  {
+    auto loserColor = Figure::otherColor(winnerColor);
+    auto kw = board.kingPos(winnerColor);
+    auto kl = board.kingPos(loserColor);
+    auto score = (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kl].eval1();
+    score += 30;
+    if (auto n_mask = board.fmgr().knight_mask(winnerColor))
+    {
+      auto np = _lsb64(n_mask);
+      score += (7 - distanceCounter().getDistance(kl, np)) * EvalCoefficients::figureToKingDistanceMulti_;
+    }
+    if (auto b_mask = board.fmgr().bishop_mask(winnerColor))
+    {
+      auto bp = _lsb64(b_mask);
+      score += (7 - distanceCounter().getDistance(kl, bp)) * EvalCoefficients::figureToKingDistanceMulti_;
+    }
+    if (auto n_mask = board.fmgr().knight_mask(loserColor))
+    {
+      auto np = _lsb64(n_mask);
+      score += distanceCounter().getDistance(kl, np) * EvalCoefficients::figureToKingDistanceMulti_;
+    }
+    if (auto b_mask = board.fmgr().bishop_mask(loserColor))
+    {
+      auto bp = _lsb64(b_mask);
+      score += distanceCounter().getDistance(kl, bp) * EvalCoefficients::figureToKingDistanceMulti_;
+    }
+    return score;
+  };
+
+  bool knighGoToPawn(Board const& board, Figure::Color pawnColor, BitMask const& blocked_additional)
+  {
+    int deltay = delta_y_[pawnColor];
+    auto knightColor = Figure::otherColor(pawnColor);
+    auto p = _lsb64(board.fmgr().pawn_mask(pawnColor));
+    auto n = _lsb64(board.fmgr().knight_mask(knightColor));
+    int kp = board.kingPos(pawnColor);
+    int kn = board.kingPos(knightColor);
+    BitMask current = set_mask_bit(n);
+    BitMask visited{ current };
+    int p1 = p + deltay * (board.color() == pawnColor);
+    BitMask blocked = ~(movesTable().pawnCaps(pawnColor, p1)
+      | board.fmgr().king_mask(pawnColor) | board.fmgr().king_mask(knightColor)
+      | (movesTable().caps(Figure::TypeKing, kp) & ~movesTable().caps(Figure::TypeKing, kn))
+      | blocked_additional);
+    BitMask target = (pawnMasks().mask_forward(pawnColor, p1) | set_mask_bit(p1));
+    for (; current != 0ULL;)
+    {
+      BitMask next{};
+      for (; current != 0ULL;)
+      {
+        int i = clear_lsb(current);
+        auto moves = movesTable().caps(Figure::TypeKnight, i);
+        if (moves & target)
+          return true;
+        next |= moves & blocked & (~visited);
+      }
+      blocked |= movesTable().pawnCaps(pawnColor, p1);
+      target &= ~set_mask_bit(p1);
+      if (target == 0ULL)
+        return false;
+      p1 += deltay;
+      if (p1 < 0 || p1 > 63)
+        return false;
+      blocked &= ~movesTable().pawnCaps(pawnColor, p1);
+      current = next;
+      visited |= current;
+    }
+    return false;
+  };
+
+  bool bishopGoToPawn(Board const& board, Figure::Color pawnColor, BitMask const& blocked_additional)
+  {
+    int deltay = delta_y_[pawnColor];
+    auto bishopColor = Figure::otherColor(pawnColor);
+    auto p = _lsb64(board.fmgr().pawn_mask(pawnColor));
+    auto b = _lsb64(board.fmgr().bishop_mask(bishopColor));
+    int kp = board.kingPos(pawnColor);
+    int kb = board.kingPos(bishopColor);
+    BitMask current = set_mask_bit(b);
+    BitMask visited{ current };
+    int p1 = p + deltay * (board.color() == pawnColor);
+    BitMask blocked = ~(movesTable().pawnCaps(pawnColor, p1)
+      | board.fmgr().king_mask(pawnColor) | board.fmgr().bishop_mask(bishopColor)
+      | (movesTable().caps(Figure::TypeKing, kp) & ~movesTable().caps(Figure::TypeKing, kb))
+      | blocked_additional);
+    BitMask target = (pawnMasks().mask_forward(pawnColor, p1) | set_mask_bit(p1));
+    BitMask mask_all = board.fmgr().mask(Figure::ColorBlack) | board.fmgr().mask(Figure::ColorWhite);
+    for (; current != 0ULL;)
+    {
+      BitMask next{};
+      for (; current != 0ULL;)
+      {
+        int i = clear_lsb(current);
+        auto moves = magic_ns::bishop_moves(i, mask_all);
+        if (moves & target)
+          return true;
+        next |= moves & blocked & (~visited);
+      }
+      blocked |= movesTable().pawnCaps(pawnColor, p1);
+      auto p1_mask_inv = ~set_mask_bit(p1);
+      target &= p1_mask_inv;
+      mask_all &= p1_mask_inv;
+      if (target == 0ULL)
+        return false;
+      p1 += deltay;
+      if (p1 < 0 || p1 > 63)
+        return false;
+      mask_all |= set_mask_bit(p1);
+      blocked &= ~movesTable().pawnCaps(pawnColor, p1);
+      current = next;
+      visited |= current;
+    }
+    return false;
+  };
+
+  ScoreType evalKings1Pawn(Board const& board, Figure::Color pawnColor)
+  {
+    Figure::Color ocolor = Figure::otherColor(pawnColor);
+    Index p(_lsb64(board.fmgr().pawn_mask(pawnColor)));
+    int kw = board.kingPos(pawnColor);
+    int kl = board.kingPos(ocolor);
+    Index pp(p.x(), pawnColor * 7);
+    int dist_w = distanceCounter().getDistance(kw, pp);
+    int dist_l = distanceCounter().getDistance(kl, pp);
+    int y = pawn_colored_y_[pawnColor][p.y()];
+    ScoreType score = (7 - dist_w + dist_l) * EvalCoefficients::kingToPawnDistanceMulti_ + EvalCoefficients::passerPawnSc_[y];
+    auto kn_mask = board.fmgr().knight_mask(ocolor);
+    for (; kn_mask;)
+    {
+      int n = clear_lsb(kn_mask);
+      score += distanceCounter().getDistance(n, pp) * EvalCoefficients::knightToPawnDistanceMulti_;
+    }
+    if (!pawnColor)
+      score = -score;
+    return score;
+  }
+
+  ScoreType bishopVsPawn(Board const& board, Figure::Color pawnColor)
+  {
+    ScoreType score = evalKings1Pawn(board, pawnColor);
+    if (!bishopGoToPawn(board, pawnColor, 0ULL))
+    {
+      if (kpkPassed(board, pawnColor))
+        return (pawnColor ? 50 : -50) + score;
+    }
+    return (pawnColor ? 20 : -20) + score / 2;
+  };
+
+  ScoreType knightVsPawn(Board const& board, Figure::Color pawnColor)
+  {
+    ScoreType score = evalKings1Pawn(board, pawnColor);
+    if (!knighGoToPawn(board, pawnColor, 0ULL))
+    {
+      if (kpkPassed(board, pawnColor))
+        return (pawnColor ? 50 : -50) + score;
+    }
+    return (pawnColor ? 20 : -20) + score / 2;
+  };
+
+  ScoreType figureVsPawns(Board const& board, Figure::Color winnerColor)
+  {
+    auto loserColor = Figure::otherColor(winnerColor);
+    int kw = board.kingPos(winnerColor);
+    int kl = board.kingPos(loserColor);
+    ScoreType score = board.fmgr().pawns(winnerColor) * 10;
+    auto pmask = board.fmgr().pawn_mask(winnerColor);
+    for (; pmask;)
+    {
+      Index p(clear_lsb(pmask));
+      Index pp(p.x(), winnerColor * 7);
+      int y = pawn_colored_y_[winnerColor][p.y()];
+      score += EvalCoefficients::passerPawnSc_[y];
+      score += (7 - distanceCounter().getDistance(kw, pp) + distanceCounter().getDistance(kl, pp)) * EvalCoefficients::kingToPawnDistanceMulti_;
+    }
+    if (winnerColor == Figure::ColorBlack)
+      score = -score;
+    return score;
+  };
 
 } // namespace {}
 
@@ -193,23 +373,23 @@ void SpecialCasesDetector::initCases()
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypeKnight, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    return { SpecialCaseResult::SCORE, evalKings(board, Figure::ColorWhite) };
   };
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypeBishop, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    return { SpecialCaseResult::SCORE, evalKings(board, Figure::ColorWhite) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
     { Figure::TypeKnight, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    return { SpecialCaseResult::SCORE, -evalKings(board, Figure::ColorBlack) };
   };
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
     { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    return { SpecialCaseResult::SCORE, -evalKings(board, Figure::ColorBlack) };
   };
 
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
@@ -395,6 +575,40 @@ void SpecialCasesDetector::initCases()
     [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
     return { SpecialCaseResult::SCORE, +bishopKnightMat(board, Figure::ColorWhite) };
+  };
+
+  // figure against pawns
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
+  { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    return { SpecialCaseResult::SCORE, bishopVsPawn(board, Figure::ColorBlack) };
+  };
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
+  { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    return { SpecialCaseResult::SCORE, bishopVsPawn(board, Figure::ColorWhite) };
+  };
+  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 1 },
+  { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    return { SpecialCaseResult::SCORE, knightVsPawn(board, Figure::ColorBlack) };
+  };
+  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 1 },
+  { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    return { SpecialCaseResult::SCORE, knightVsPawn(board, Figure::ColorWhite) };
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorWhite, 2 },
+  { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    return { SpecialCaseResult::SCORE, figureVsPawns(board, Figure::ColorBlack) };
+  };
+
+  scases_[format({ { Figure::TypeKnight, Figure::ColorBlack, 2 },
+  { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    return { SpecialCaseResult::SCORE, figureVsPawns(board, Figure::ColorWhite) };
   };
 
   // only 1 pawn
