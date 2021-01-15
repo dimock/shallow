@@ -218,7 +218,7 @@ namespace nst
 #undef USE_IID
 #define SINGULAR_EXT
 
-#undef USE_NULL_MOVE
+#define USE_NULL_MOVE
 #undef USE_LMR
 #undef VERIFY_LMR
 
