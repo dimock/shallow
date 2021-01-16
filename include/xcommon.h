@@ -219,7 +219,7 @@ namespace nst
 #define SINGULAR_EXT
 
 #define USE_NULL_MOVE
-#undef USE_LMR
+#define USE_LMR
 #undef VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
