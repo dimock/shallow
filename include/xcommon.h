@@ -224,7 +224,7 @@ namespace nst
 #undef VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
-#undef MOBILITY_EXTENDED
+#define MOBILITY_EXTENDED
 #define DO_KING_EVAL
 
 static const SortValueType CaptureRecentlyBonus = 10;
