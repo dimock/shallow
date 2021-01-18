@@ -99,7 +99,7 @@ namespace
       }
     }
     return { SpecialCaseResult::NO_RESULT, 0 };
-  };
+  }
 
   std::pair<SpecialCaseResult, ScoreType> queenAgainstRookVsPawnDraw(Board const& board, Figure::Color winnerColor)
   {
@@ -131,6 +131,36 @@ namespace
     return { fortress ? SpecialCaseResult::ALMOST_DRAW : SpecialCaseResult::NO_RESULT, 0 };
   }
   
+  std::pair<SpecialCaseResult, ScoreType> queenAgainstRook(Board const& board, Figure::Color winnerColor)
+  {
+    auto ocolor = Figure::otherColor(winnerColor);
+    ScoreType score = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypeRook];
+    Index kingW(board.kingPos(winnerColor));
+    Index kingL(board.kingPos(ocolor));
+    int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
+    int rookL = _lsb64(board.fmgr().rook_mask(ocolor));
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kingL].eval1();
+    score -= distanceCounter().getDistance(kingW, kingL) * 2;
+    score -= distanceCounter().getDistance(queenW, kingL) * 2;
+    score += distanceCounter().getDistance(rookL, kingL) * 2;
+    if (winnerColor == Figure::ColorBlack)
+      score = -score;
+    return { SpecialCaseResult::SCORE, score };
+  }
+  
+  std::pair<SpecialCaseResult, ScoreType> evalMatCases(Board const& board, Figure::Color winnerColor)
+  {
+    auto loserColor = Figure::otherColor(winnerColor);
+    auto kw = board.kingPos(winnerColor);
+    auto kl = board.kingPos(loserColor);
+    auto score = (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
+    score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kl].eval1();
+    score += board.fmgr().weight(winnerColor).eval1() + EvalCoefficients::additionalMatBonus_;
+    if (!winnerColor)
+      score = -score;
+    return { SpecialCaseResult::SCORE, score };
+  }
+
   // mat with Bishop & Knight
   ScoreType bishopKnightMat(Board const& board, Figure::Color winnerColor)
   {
@@ -640,6 +670,47 @@ void SpecialCasesDetector::initCases()
       return queenAgainstRookVsPawnDraw(board, Figure::ColorWhite);
     };
   }
+  
+  // queen vs. rook
+  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return queenAgainstRook(board, Figure::ColorBlack);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return queenAgainstRook(board, Figure::ColorWhite);
+  };
+
+  // some obvious mat cases
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return evalMatCases(board, Figure::ColorBlack);
+  };
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return evalMatCases(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return evalMatCases(board, Figure::ColorBlack);
+  };
+  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return evalMatCases(board, Figure::ColorWhite);
+  };
+
+  scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 } })] = [](Board const& board)
+  {
+    return evalMatCases(board, Figure::ColorBlack);
+  };
+  scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 2 } })] = [](Board const& board)
+  {
+    return evalMatCases(board, Figure::ColorWhite);
+  };
 
   // bishop and corner pawn draw
   for (int w = 1; w <= 6; ++w)
