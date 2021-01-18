@@ -566,10 +566,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
     }
     int d = depth >> 4;
+#ifdef FUTILITY_PRUNING_BETTA
     if ((int)score0 > (int)betta + Betta_ThresholdFP * d) {
       return score0;
     }
-    else if (depth <= 2*ONE_PLY && (int)score0 < (int)alpha - Position_GainFP * d) {
+    else
+#endif // FUTILITY_PRUNING_BETTA
+    if (d <= FutilityPruningPly && (int)score0 < (int)alpha - Position_GainFP * d) {
       return captures(ictx, depth, ply, alpha, betta, pv, score0);
     }
   }

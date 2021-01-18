@@ -213,6 +213,7 @@ namespace nst
 
 #define SEE_PRUNING
 #define USE_FUTILITY_PRUNING
+#undef FUTILITY_PRUNING_BETTA
 #define USE_HASH
 
 #undef USE_IID
@@ -231,6 +232,7 @@ static const SortValueType PromotionBonus = 10;
 
 static const int NumSingularExts = 4;
 static const int NumUsualAfterHorizon = 3;
+static const int FutilityPruningPly = 1;
 static const int ONE_PLY = 16;
 static const int MaxPly = 64;
 static const int LMR_DepthLimit = 3 * ONE_PLY;
