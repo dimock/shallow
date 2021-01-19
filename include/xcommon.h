@@ -221,7 +221,7 @@ namespace nst
 
 #define USE_NULL_MOVE
 #define USE_LMR
-#undef VERIFY_LMR
+#define VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
 #define MOBILITY_EXTENDED
