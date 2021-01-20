@@ -213,7 +213,7 @@ namespace nst
 
 #define SEE_PRUNING
 #define USE_FUTILITY_PRUNING
-#undef FUTILITY_PRUNING_BETTA
+#define FUTILITY_PRUNING_BETTA
 #define USE_HASH
 
 #undef USE_IID
@@ -221,7 +221,7 @@ namespace nst
 
 #define USE_NULL_MOVE
 #define USE_LMR
-#define VERIFY_LMR
+#undef VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
 #define MOBILITY_EXTENDED

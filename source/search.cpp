@@ -631,10 +631,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef USE_IID
   if(!hmove && depth >= (ONE_PLY<<2))
   {
-    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, true, signular_count);
-    if(const HItem * hitem = hash_.get(board.fmgr().hashCode()))
+    alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, allow_nm, signular_count);
+    if(const auto* hitem = hash_.get(board.fmgr().hashCode()))
     {
-      if (hitem->hkey_ == (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8)) {
+      if (hitem->hkey_ == board.fmgr().hashKey()) {
         (Move&)hmove = hitem->move_;
         singular = hitem->singular_;
       }
