@@ -216,7 +216,7 @@ namespace nst
 #define FUTILITY_PRUNING_BETTA
 #define USE_HASH
 
-#undef USE_IID
+#define USE_IID
 #define SINGULAR_EXT
 
 #define USE_NULL_MOVE
