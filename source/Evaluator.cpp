@@ -950,24 +950,26 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
     }
   }
 
-  //if (auto pfwd_attacks = ((finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].attack_mask_)) & ~finfo_[ocolor].pawnAttacks_)) {
-  //  if (color)
-  //    pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
-  //  else
-  //    pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
-  //  if (auto pawn_fork = (o_mask & pfwd_attacks)) {
-  //    counted_mask |= pawn_fork;
-  //    int pawnsN = pop_count(pawn_fork);
-  //    if (pawnsN > 1) {
-  //      forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
-  //    }
-  //    else if (pawnsN == 1) {
-  //      forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
-  //      if (color == board_->color())
-  //        forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
-  //    }
-  //  }
-  //}
+#ifdef EVAL_EXTENDED_PAWN_ATTACK
+  if (auto pfwd_attacks = ((finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].attack_mask_)) & ~finfo_[ocolor].pawnAttacks_)) {
+    if (color)
+      pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
+    else
+      pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
+    if (auto pawn_fork = (o_mask & pfwd_attacks)) {
+      counted_mask |= pawn_fork;
+      int pawnsN = pop_count(pawn_fork);
+      if (pawnsN > 1) {
+        forkScore += EvalCoefficients::doublePawnAttack_ >> 1;
+      }
+      else if (pawnsN == 1) {
+        forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
+        if (color == board_->color())
+          forkScore += EvalCoefficients::doublePawnAttack_ >> 4;
+      }
+    }
+  }
+#endif // EVAL_EXTENDED_PAWN_ATTACK
 
   if (auto kn_fork = (o_rq_mask & finfo_[color].knightMoves_)) {
     counted_mask |= kn_fork;
