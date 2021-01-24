@@ -208,7 +208,7 @@ namespace nst
 #endif
 
 #define SORT_MOVES_0_HIST
-#define EXTEND_CHECK_SEE_ONLY
+#undef EXTEND_CHECK_SEE_ONLY
 #define USE_EVAL_HASH
 
 #define SEE_PRUNING
