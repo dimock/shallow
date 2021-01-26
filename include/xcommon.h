@@ -208,7 +208,7 @@ namespace nst
 #endif
 
 #define SORT_MOVES_0_HIST
-#undef EXTEND_CHECK_SEE_ONLY
+#define EXTEND_CHECK_SEE_ONLY
 #define USE_EVAL_HASH
 
 #define SEE_PRUNING
@@ -247,6 +247,6 @@ static const int Position_GainFP = 300;
 static const int Position_GainThr = 300;
 static const int AlphaProbCutThreshold = 200;
 
-static const size_t N_THREADS_MAX = 8;
+static const size_t N_THREADS_MAX = 1;
 static const size_t N_THREADS_DEFAULT = 1;
 static const size_t HASH_SIZE_DEFAULT = 256;

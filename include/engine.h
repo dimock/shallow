@@ -222,7 +222,7 @@ private:
     {
       singular = hitem.singular_;
       auto hflag = hitem.flag();
-      if (!pv)// && board.fmgr().weight(Figure::ColorBlack).eval32_ && board.fmgr().weight(Figure::ColorWhite).eval32_)
+      if (!pv && board.fmgr().weight(Figure::ColorBlack).eval32_ && board.fmgr().weight(Figure::ColorWhite).eval32_)
       {
         X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
 

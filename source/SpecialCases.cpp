@@ -156,6 +156,7 @@ namespace
     auto score = (7 - distanceCounter().getDistance(kw, kl)) * EvalCoefficients::kingToKingDistanceMulti_;
     score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kl].eval1();
     score += board.fmgr().weight(winnerColor).eval1() + EvalCoefficients::additionalMatBonus_;
+    score -= board.fiftyMovesCount();
     if (!winnerColor)
       score = -score;
     return { SpecialCaseResult::SCORE, score };
@@ -181,6 +182,7 @@ namespace
     int bdist = distanceCounter().getDistance(bp, kl);
     score -= ndist;
     score -= bdist >> 1;
+    score -= board.fiftyMovesCount();
     return score;
   };
 
