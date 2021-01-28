@@ -40,22 +40,22 @@ namespace NEngine
   ScoreType32 EvalCoefficients::rookBlocked_{ 60, 60 };
 
   // king attacks
-  ScoreType32 EvalCoefficients::pawnKingAttack_{ 8, 0 };
-  ScoreType32 EvalCoefficients::knightKingAttack_{ 12, 0 };
-  ScoreType32 EvalCoefficients::bishopKingAttack_{ 12, 0 };
-  ScoreType32 EvalCoefficients::rookKingAttack_{ 12, 0 };
-  ScoreType32 EvalCoefficients::queenKingAttack_{ 15, 0 };
-  ScoreType32 EvalCoefficients::basicAttack_{ 3, 0 };
+  int EvalCoefficients::pawnKingAttack_{ 8 };
+  int EvalCoefficients::knightKingAttack_{ 12 };
+  int EvalCoefficients::bishopKingAttack_{ 12 };
+  int EvalCoefficients::rookKingAttack_{ 12 };
+  int EvalCoefficients::queenKingAttack_{ 15 };
+  int EvalCoefficients::basicAttack_{ 3 };
 
   int EvalCoefficients::generalKingPressure_{ 5 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
-  ScoreType32 EvalCoefficients::knightChecking_{ 40, 0 };
-  ScoreType32 EvalCoefficients::bishopChecking_{ 40, 0 };
-  ScoreType32 EvalCoefficients::rookChecking_{ 80, 0 };
-  ScoreType32 EvalCoefficients::queenChecking_{ 90, 0 };
-  ScoreType32 EvalCoefficients::checkedFieldBonus_{ 12, 0 };
+  int EvalCoefficients::knightChecking_{ 40 };
+  int EvalCoefficients::bishopChecking_{ 40 };
+  int EvalCoefficients::rookChecking_{ 80 };
+  int EvalCoefficients::queenChecking_{ 90 };
+  int EvalCoefficients::checkedFieldBonus_{ 12 };
   
   int EvalCoefficients::attackedNearKingCoeff_{ 25 };
   int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 64, 72, 72, 72, 72, 72 };

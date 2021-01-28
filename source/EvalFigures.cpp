@@ -48,7 +48,7 @@ ScoreType32 Evaluator::evaluateKnights()
     finfo_[color].knightMoves_ = BitMask{};
 #ifdef DO_KING_EVAL
     finfo_[color].num_attackers_ = 0;
-    finfo_[color].score_king_ = ScoreType32{};
+    finfo_[color].score_king_ = 0;
 #endif
 
     auto ocolor = Figure::otherColor(color);
@@ -428,7 +428,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
   score >>= 5;
-  return score;
+  return { score, 0 };
 }
 #endif
 } // NEngine

@@ -43,12 +43,12 @@ struct EvalCoefficients
   static ScoreType32 rookBlocked_;
 
   // king attacks
-  static ScoreType32 pawnKingAttack_;
-  static ScoreType32 knightKingAttack_;
-  static ScoreType32 bishopKingAttack_;
-  static ScoreType32 rookKingAttack_;
-  static ScoreType32 queenKingAttack_;
-  static ScoreType32 basicAttack_;
+  static int pawnKingAttack_;
+  static int knightKingAttack_;
+  static int bishopKingAttack_;
+  static int rookKingAttack_;
+  static int queenKingAttack_;
+  static int basicAttack_;
 
   static int generalKingPressure_;
   static int generalOpponentPressure_;
@@ -60,11 +60,11 @@ struct EvalCoefficients
   static int figureToKingDistanceMulti_;
 
   // king threat
-  static ScoreType32 knightChecking_;
-  static ScoreType32 bishopChecking_;
-  static ScoreType32 rookChecking_;
-  static ScoreType32 queenChecking_;
-  static ScoreType32 checkedFieldBonus_;
+  static int knightChecking_;
+  static int bishopChecking_;
+  static int rookChecking_;
+  static int queenChecking_;
+  static int checkedFieldBonus_;
   
   static int attackedNearKingCoeff_;
   static int kingCheckersCoefficients[8];
