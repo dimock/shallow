@@ -88,7 +88,7 @@ ScoreType32 Evaluator::evaluateKnights()
       {
         finfo_[color].num_attackers_++;
         auto n_attacks = pop_count(knight_moves & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_ * n_attacks + EvalCoefficients::basicAttack_;
+        finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
       }
 #endif
       
@@ -166,7 +166,7 @@ ScoreType32 Evaluator::evaluateBishops()
       {
         finfo_[color].num_attackers_++;
         auto n_attacks = pop_count(bishop_attacks & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * n_attacks + EvalCoefficients::basicAttack_;
+        finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
       }
 #endif
 
@@ -256,7 +256,7 @@ ScoreType32 Evaluator::evaluateRook()
       {
         finfo_[color].num_attackers_++;
         auto n_attacks = pop_count(rook_attacks & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * n_attacks + EvalCoefficients::basicAttack_;
+        finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
       }
 #endif
 
@@ -323,7 +323,7 @@ ScoreType32 Evaluator::evaluateQueens()
       {
         finfo_[color].num_attackers_++;
         auto n_attacks = pop_count(qx_attacks & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * n_attacks + EvalCoefficients::basicAttack_;
+        finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
       }
 #endif
 
@@ -419,7 +419,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   auto remaining_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_;
   remaining_oking |= protected_oking;
   if (remaining_oking)
-    attack_coeff += (pop_count(remaining_oking) * EvalCoefficients::attackedNearKingCoeff_ * 3) >> 4;
+    attack_coeff += (pop_count(remaining_oking) * EvalCoefficients::attackedNearKingCoeff_) >> 3;
   
   num_checkers = std::min(num_checkers, 4);
   auto check_coeff = EvalCoefficients::kingCheckersCoefficients[num_checkers] + (attack_coeff >> 1);

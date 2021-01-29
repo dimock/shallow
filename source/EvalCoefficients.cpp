@@ -40,26 +40,25 @@ namespace NEngine
   ScoreType32 EvalCoefficients::rookBlocked_{ 60, 60 };
 
   // king attacks
-  int EvalCoefficients::pawnKingAttack_{ 8 };
-  int EvalCoefficients::knightKingAttack_{ 12 };
-  int EvalCoefficients::bishopKingAttack_{ 12 };
+  int EvalCoefficients::pawnKingAttack_{ 7 };
+  int EvalCoefficients::knightKingAttack_{ 10 };
+  int EvalCoefficients::bishopKingAttack_{ 10 };
   int EvalCoefficients::rookKingAttack_{ 12 };
-  int EvalCoefficients::queenKingAttack_{ 15 };
-  int EvalCoefficients::basicAttack_{ 3 };
+  int EvalCoefficients::queenKingAttack_{ 14 };
+  int EvalCoefficients::basicAttack_{ 2 };
 
   int EvalCoefficients::generalKingPressure_{ 5 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
-  int EvalCoefficients::knightChecking_{ 40 };
-  int EvalCoefficients::bishopChecking_{ 40 };
-  int EvalCoefficients::rookChecking_{ 80 };
-  int EvalCoefficients::queenChecking_{ 90 };
-  int EvalCoefficients::checkedFieldBonus_{ 12 };
+  int EvalCoefficients::knightChecking_{ 45 };
+  int EvalCoefficients::bishopChecking_{ 45 };
+  int EvalCoefficients::rookChecking_{ 85 };
+  int EvalCoefficients::queenChecking_{ 95 };
   
-  int EvalCoefficients::attackedNearKingCoeff_{ 25 };
+  int EvalCoefficients::attackedNearKingCoeff_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 64, 72, 72, 72, 72, 72 };
-  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 38, 50, 56, 60, 62 };
+  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 32, 48, 56, 60, 62 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };

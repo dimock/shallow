@@ -889,6 +889,13 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
 #endif
 
+#ifdef RELEASEDEBUGINFO
+  if (board.fmgr().hashCode() == board.stestHashKey_)
+  {
+    int x = 0;
+  }
+#endif
+
   int counter = 0;
   ScoreType scoreBest = -ScoreMax;
   int threshold = 0;
