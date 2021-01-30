@@ -590,11 +590,14 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_);
     if (!(fwd_field & blockers_mask)) {
       pinfo.score_ += EvalCoefficients::passerPawnEx_[halfpasser][cy];
+
+#ifdef EVAL_CAN_PROMOTE
       // can promote on the next move and not attacked or it's turn
       if (cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
         !((o_attack_mask | mask_all_) & pawnMasks().mask_forward(color, n))) {
         pinfo.score_ += EvalCoefficients::passerPawnEx_[halfpasser][cy];
       }
+#endif
     }
     else {
       pinfo.score_ += EvalCoefficients::passerPawnBasic_[halfpasser][cy];
