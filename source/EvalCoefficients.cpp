@@ -51,12 +51,12 @@ namespace NEngine
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
-  int EvalCoefficients::knightChecking_{ 45 };
-  int EvalCoefficients::bishopChecking_{ 45 };
-  int EvalCoefficients::rookChecking_{ 85 };
-  int EvalCoefficients::queenChecking_{ 95 };
+  int EvalCoefficients::knightChecking_{ 40 };
+  int EvalCoefficients::bishopChecking_{ 40 };
+  int EvalCoefficients::rookChecking_{ 80 };
+  int EvalCoefficients::queenChecking_{ 90 };
   
-  int EvalCoefficients::attackedNearKingCoeff_{ 16 };
+  int EvalCoefficients::attackedNearKingCoeff_{ 20 };
   int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 64, 72, 72, 72, 72, 72 };
   int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 16, 32, 48, 56, 60, 62 };
 

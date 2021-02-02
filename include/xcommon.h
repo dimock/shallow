@@ -226,7 +226,7 @@ namespace nst
 #undef SYNCHRONIZE_LAST_ITER
 #define MOBILITY_EXTENDED
 #define DO_KING_EVAL
-#undef EVAL_EXTENDED_PAWN_ATTACK
+#define EVAL_EXTENDED_PAWN_ATTACK
 #define EVAL_CAN_PROMOTE
 
 static const SortValueType CaptureRecentlyBonus = 10;
