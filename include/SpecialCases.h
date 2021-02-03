@@ -8,7 +8,7 @@
 namespace NEngine
 {
 
-enum class SpecialCaseResult { SCORE, DRAW, ALMOST_DRAW, NO_RESULT };
+enum class SpecialCaseResult { SCORE, DRAW, ALMOST_DRAW, PROBABLE_DRAW, NO_RESULT };
 
 class SpecialCasesDetector
 {

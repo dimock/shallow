@@ -194,16 +194,21 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   int scoreOffset = 0;
   auto spec = specialCases().eval(*board_);
-  if (spec.first == SpecialCaseResult::SCORE) {
+  switch (spec.first) {
+  case SpecialCaseResult::SCORE: {
     ScoreType score = spec.second;
     score = considerColor(score);
     return score;
   }
-  else if (spec.first == SpecialCaseResult::DRAW) {
+  case SpecialCaseResult::DRAW: {
     scoreOffset = 5;
   }
-  else if (spec.first == SpecialCaseResult::ALMOST_DRAW) {
+  case SpecialCaseResult::ALMOST_DRAW: {
     scoreOffset = 3;
+  }
+  case SpecialCaseResult::PROBABLE_DRAW: {
+    scoreOffset = 1;
+  }
   }
 
   //// prepare lazy evaluation
