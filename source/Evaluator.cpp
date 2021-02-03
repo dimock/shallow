@@ -202,12 +202,18 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
   case SpecialCaseResult::DRAW: {
     scoreOffset = 5;
+    break;
   }
   case SpecialCaseResult::ALMOST_DRAW: {
     scoreOffset = 3;
+    break;
   }
   case SpecialCaseResult::PROBABLE_DRAW: {
     scoreOffset = 1;
+    break;
+  }
+  default: {
+    break;
   }
   }
 
