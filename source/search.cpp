@@ -908,17 +908,21 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
     // not initialized yet
     if (score0 == -ScoreMax) {
+#ifdef USE_HASH
       bool hashOk = pitem && pitem->hkey_ == board.fmgr().hashKey();
       if (hashOk && pitem->eval_ != -ScoreMax) {
         score0 = pitem->eval_;
         X_ASSERT_R(score0 != eval(alpha, betta), "incorrect evaluation in hash");
       }
       else {
+#endif
         score0 = eval(alpha, betta);
+#ifdef USE_HASH
         if (hashOk) {
           pitem->eval_ = score0;
         }
       }
+#endif
     }
 
     if (score0 >= betta) {
