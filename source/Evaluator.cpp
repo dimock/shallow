@@ -918,7 +918,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   }
 
   // Knight|Bishop vs. Rook
-  if (rooksDiff*figuresDiff == -1)
+  if (rooksDiff*figuresDiff == -1 && bishopsDiff != 2*figuresDiff)
   {
     Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
     Figure::Color fcolor = Figure::otherColor(rcolor);
