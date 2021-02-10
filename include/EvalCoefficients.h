@@ -112,8 +112,8 @@ struct EvalCoefficients
   static ScoreType32 passerPawnBasic_[2][8];
   static ScoreType32 kingToPasserDistanceBonus_[8];
   static ScoreType32 okingToPasserDistanceBonus_[8];
+  static ScoreType32 okingFarFromPasserBonus_[8];
   static int passerPawnSc_[8]; // special cases only
-  static int cangoPawn_[8];
   // distance between forwards
   static int closeToPromotion_[8];
   static int kingToPawnBonus_[8];

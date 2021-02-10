@@ -209,18 +209,17 @@ namespace nst
 
 #define SORT_MOVES_0_HIST
 #define EXTEND_CHECK_SEE_ONLY
-#define USE_EVAL_HASH
 
+#define USE_HASH
+#define USE_EVAL_HASH
 #define SEE_PRUNING
 #define USE_FUTILITY_PRUNING
 #define FUTILITY_PRUNING_BETTA
-#define USE_HASH
-
 #define USE_IID
-#define SINGULAR_EXT
-
 #define USE_NULL_MOVE
 #define USE_LMR
+
+#define SINGULAR_EXT
 #undef VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
