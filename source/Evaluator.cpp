@@ -254,6 +254,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   auto hashedScore = hashedEvaluation();
   score32 += hashedScore.score_;
 
+  prepareAttacksMasks();
+
   score32 += evaluateKnights();
   score32 += evaluateBishops();
   score32 += evaluateRook();

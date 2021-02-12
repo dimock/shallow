@@ -64,6 +64,10 @@ class Evaluator
     bool discoveredCheck_{};
   } finfo_[2];
 
+  BitMask moves_masks_[NumOfFields] = {};
+  BitMask attacks_masks_[NumOfFields] = {};
+  BitMask qr_attacks_masks_[NumOfFields] = {};
+
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
   int alpha_{};
@@ -146,6 +150,8 @@ private:
   bool blockedKnight(Figure::Color color, int n) const;
   bool blockedBishop(Figure::Color color, int n) const;
   bool blockedRook(Figure::Color color, Index rpos, BitMask rmask) const;
+
+  void prepareAttacksMasks();
 
   ScoreType32 evaluateKnights();
   ScoreType32 evaluateBishops();
