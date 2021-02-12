@@ -109,8 +109,8 @@ void Evaluator::prepare()
   
   // other mask
   {
-    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
-    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
+    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.mask(Figure::ColorBlack));
+    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.mask(Figure::ColorWhite));
 
     finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
     finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
@@ -430,8 +430,10 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
   int dy = delta_y_[color];
   int py = promo_y_[color];
+  int x_mask = 0;
 
   BitMask pawn_mask = pmask;
+  BitMask dbl_mask = pmask;
   for(; pawn_mask;)
   {
     int const n = clear_lsb(pawn_mask);
@@ -452,7 +454,13 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool blocked = backward && ((fwd_field & opmsk) != 0ULL);
     bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
     bool unprotected = !isolated && !backward && !pprotected;
-    bool doubled = !pprotected && (pop_count(pawnMasks().mask_doubled(x) & pmask) > 1);
+
+    if (!((1 << x) & x_mask)) {
+      x_mask |= 1 << x;
+      auto fist_pw = set_mask_bit(color ? _lsb64(pmask & pawnMasks().mask_column(x)) : _msb64(pmask & pawnMasks().mask_column(x)));
+      dbl_mask &= ~fist_pw;
+    }
+    bool doubled = !pprotected && (dbl_mask & pw_field);
 
     info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
     info.score_ += EvalCoefficients::backwardPawn_ * backward;

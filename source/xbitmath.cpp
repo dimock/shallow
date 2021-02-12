@@ -134,7 +134,6 @@ PawnMasks::PawnMasks()
         backward_msk |= set_mask_bit(Index(0, yy));
       }
 
-      pmask_doubled_[x] |= full_column_msk << x;
       pmask_column_[x] = full_column_msk << x;
       pmasks_forward_[color][i] = forward_msk << x;
       pmasks_passed_[color][i] = forward_msk << x;

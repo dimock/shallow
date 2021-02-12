@@ -43,6 +43,9 @@ void Evaluator::prepareAttacksMasks()
   for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
   {
     finfo_[color].knightMoves_ = BitMask{};
+#ifdef RELEASEDEBUGINFO
+    auto ocolor = Figure::otherColor(color);
+#endif
     BitMask nmask = board_->fmgr().knight_mask(color);
     for (; nmask;)
     {

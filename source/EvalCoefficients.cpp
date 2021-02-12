@@ -68,10 +68,10 @@ namespace NEngine
   int EvalCoefficients::figureToKingDistanceMulti_{ 3 };
 
   // arrays
-  ScoreType32 EvalCoefficients::doubledPawn_ = { -6, -5 };
+  ScoreType32 EvalCoefficients::doubledPawn_ = { -12, -10 };
   ScoreType32 EvalCoefficients::isolatedPawn_ = { -12, -11 };
-  ScoreType32 EvalCoefficients::backwardPawn_ = { -10, -9 };
-  ScoreType32 EvalCoefficients::blockedPawn_ = { -6, -4 };
+  ScoreType32 EvalCoefficients::backwardPawn_ = { -8, -6 };
+  ScoreType32 EvalCoefficients::blockedPawn_ = { -5, -4 };
   ScoreType32 EvalCoefficients::unprotectedPawn_ = { -3, -2 };
   ScoreType32 EvalCoefficients::hasneighborPawn_ = { 3, 2 };
 

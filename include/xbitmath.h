@@ -243,12 +243,6 @@ public:
     return pmask_isolated_[x];
   }
 
-  inline const BitMask & mask_doubled(int x) const
-  {
-    X_ASSERT((unsigned)x > 7, "invalid pawn x");
-    return pmask_doubled_[x];
-  }
-
   inline const BitMask & mask_column(int x) const
   {
     X_ASSERT((unsigned)x > 7, "invalid pawn x");
@@ -282,7 +276,6 @@ private:
   BitMask pmasks_guards_[2][64] = {};
   BitMask pmasks_backward_[2][64] = {};
   BitMask pmask_isolated_[8] = {};
-  BitMask pmask_doubled_[8] = {};
   BitMask pmask_column_[8] = {};
   BitMask pmask_row_[64] = {};
 };
