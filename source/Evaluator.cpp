@@ -109,8 +109,8 @@ void Evaluator::prepare()
   
   // other mask
   {
-    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.mask(Figure::ColorBlack));
-    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.mask(Figure::ColorWhite));
+    finfo_[0].cango_mask_ = ~(finfo_[1].pawnAttacks_ | fmgr.king_mask(Figure::ColorBlack) | fmgr.pawn_mask(Figure::ColorBlack));
+    finfo_[1].cango_mask_ = ~(finfo_[0].pawnAttacks_ | fmgr.king_mask(Figure::ColorWhite) | fmgr.pawn_mask(Figure::ColorWhite));
 
     finfo_[0].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
     finfo_[0].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
