@@ -226,7 +226,7 @@ namespace nst
 #define MOBILITY_EXTENDED
 #define DO_KING_EVAL
 #define EVAL_EXTENDED_PAWN_ATTACK
-#define EVAL_CAN_PROMOTE
+#undef EVAL_CAN_PROMOTE
 
 static const SortValueType CaptureRecentlyBonus = 10;
 static const SortValueType PromotionBonus = 10;

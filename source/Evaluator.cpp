@@ -430,10 +430,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 
   int dy = delta_y_[color];
   int py = promo_y_[color];
-  int x_mask = 0;
 
   BitMask pawn_mask = pmask;
-  BitMask dbl_mask = pmask;
   for(; pawn_mask;)
   {
     int const n = clear_lsb(pawn_mask);
@@ -455,12 +453,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
     bool unprotected = !isolated && !backward && !pprotected;
 
-    if (!((1 << x) & x_mask)) {
-      x_mask |= 1 << x;
-      auto fist_pw = set_mask_bit(color ? _lsb64(pmask & pawnMasks().mask_column(x)) : _msb64(pmask & pawnMasks().mask_column(x)));
-      dbl_mask &= ~fist_pw;
-    }
-    bool doubled = !pprotected && (dbl_mask & pw_field);
+    bool doubled = !pprotected && (pop_count(pawnMasks().mask_column(x) & pmask) > 1);
 
     info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
     info.score_ += EvalCoefficients::backwardPawn_ * backward;
