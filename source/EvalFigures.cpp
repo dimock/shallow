@@ -195,8 +195,8 @@ ScoreType32 Evaluator::evaluateKnights()
       if (knight_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        auto n_attacks = pop_count(knight_attacks & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+        bool b_attacks = (knight_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
+        finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
       }
 #endif
       
@@ -261,8 +261,8 @@ ScoreType32 Evaluator::evaluateBishops()
       if (bishop_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        auto n_attacks = pop_count(bishop_attacks & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+        bool b_attacks = (bishop_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
+        finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
       }
 #endif
 
@@ -342,8 +342,8 @@ ScoreType32 Evaluator::evaluateRook()
       if (rook_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        auto n_attacks = pop_count(rook_attacks & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+        bool b_attacks = (rook_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
+        finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
       }
 #endif
 
@@ -400,8 +400,8 @@ ScoreType32 Evaluator::evaluateQueens()
       if (qx_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        auto n_attacks = pop_count(qx_attacks & finfo_[ocolor].kingAttacks_);
-        finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+        bool b_attacks = (qx_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
+        finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
       }
 #endif
 
@@ -489,7 +489,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   }
 
   num_checkers = std::min(num_checkers, 4);
-  auto check_coeff = EvalCoefficients::kingCheckersCoefficients[num_checkers] + attack_coeff + (attack_coeff >> 2);
+  auto check_coeff = EvalCoefficients::kingCheckersCoefficients[num_checkers] + attack_coeff;
 
   auto king_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
   int num_king_moves = pop_count(king_moves);
