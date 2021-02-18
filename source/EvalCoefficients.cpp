@@ -23,7 +23,7 @@ namespace NEngine
   ScoreType EvalCoefficients::doublePawnAttack_{ 65 };
   ScoreType EvalCoefficients::generalAttackBonus_{ 10 };
   ScoreType EvalCoefficients::generalAttackBonus4_{ 2 };
-  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
+  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 40 };
 
   // immobility
   ScoreType32 EvalCoefficients::immobileAttackBonus_{ 30, 30 };
@@ -41,11 +41,20 @@ namespace NEngine
 
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 7 };
+
+#ifdef KING_EVAL_ATTACKED_MULTI_FIELD
+  int EvalCoefficients::knightKingAttack_{ 10 };
+  int EvalCoefficients::bishopKingAttack_{ 9 };
+  int EvalCoefficients::rookKingAttack_{ 10 };
+  int EvalCoefficients::queenKingAttack_{ 13 };
+  int EvalCoefficients::basicAttack_{ 2 };
+#else
   int EvalCoefficients::knightKingAttack_{ 17 };
   int EvalCoefficients::bishopKingAttack_{ 17 };
   int EvalCoefficients::rookKingAttack_{ 17 };
   int EvalCoefficients::queenKingAttack_{ 17 };
   int EvalCoefficients::basicAttack_{ 3 };
+#endif
 
   int EvalCoefficients::generalKingPressure_{ 5 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };

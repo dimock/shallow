@@ -227,6 +227,7 @@ namespace nst
 #define DO_KING_EVAL
 #define EVAL_EXTENDED_PAWN_ATTACK
 #undef EVAL_CAN_PROMOTE
+#define KING_EVAL_ATTACKED_MULTI_FIELD
 
 static const SortValueType CaptureRecentlyBonus = 10;
 static const SortValueType PromotionBonus = 10;

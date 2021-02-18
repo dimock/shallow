@@ -42,10 +42,9 @@ void Evaluator::prepareAttacksMasks()
   auto const& fmgr = board_->fmgr();
   for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
   {
-    finfo_[color].knightMoves_ = BitMask{};
-#ifdef RELEASEDEBUGINFO
     auto ocolor = Figure::otherColor(color);
-#endif
+    finfo_[color].knightMoves_ = BitMask{};
+
     BitMask nmask = board_->fmgr().knight_mask(color);
     for (; nmask;)
     {
@@ -63,7 +62,9 @@ void Evaluator::prepareAttacksMasks()
       moves_masks_[n] = knight_moves;
       finfo_[color].knightMoves_ |= knight_moves;
     }
-    
+    finfo_[color].nb_attacked_ = finfo_[color].knightMoves_;
+    finfo_[color].nbr_attacked_ = finfo_[color].knightMoves_;
+
     finfo_[color].bishopMoves_ = BitMask{};
     BitMask bimask = fmgr.bishop_mask(color);
     for (; bimask;)
@@ -72,21 +73,25 @@ void Evaluator::prepareAttacksMasks()
 
       auto const& bishop_attacks = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_);
       auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
+      auto bishop_moves_x = magic_ns::bishop_moves(n, mask_all_ & ~fmgr.queen_mask(ocolor));
 
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
         bishop_moves = 0ULL;
+        bishop_moves_x = 0ULL;
       }
 
       moves_masks_[n] = bishop_moves;
       attacks_masks_[n] = bishop_attacks;
+      finfo_[color].nbr_attacked_ |= bishop_moves_x;
 
       // mobility
       finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & bishop_attacks;
       finfo_[color].attack_mask_ |= bishop_attacks;
       finfo_[color].bishopMoves_ |= bishop_moves;
     }
-    
+    finfo_[color].nb_attacked_ |= finfo_[color].bishopMoves_;
+
     finfo_[color].rookMoves_ = BitMask{};
     auto rmask = fmgr.rook_mask(color);
     for (; rmask;)
@@ -95,14 +100,17 @@ void Evaluator::prepareAttacksMasks()
       // mobility
       auto const& rook_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
+      auto rook_moves_x = magic_ns::rook_moves(n, mask_all_ & ~fmgr.queen_mask(ocolor));
     
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
         rook_moves = 0ULL;
+        rook_moves_x = 0ULL;
       }
 
       moves_masks_[n] = rook_moves;
       attacks_masks_[n] = rook_attacks;
+      finfo_[color].nbr_attacked_ |= rook_moves_x;
     
       finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & rook_attacks;
       finfo_[color].attack_mask_ |= rook_attacks;
@@ -134,14 +142,6 @@ void Evaluator::prepareAttacksMasks()
       finfo_[color].attack_mask_ |= queen_attacks;
       finfo_[color].queenMoves_ |= queen_moves;
     }
-
-    finfo_[color].nb_attacked_ = finfo_[color].knightMoves_;
-    finfo_[color].nbr_attacked_ = finfo_[color].knightMoves_;
-
-    finfo_[color].nb_attacked_ |= finfo_[color].bishopMoves_;
-    finfo_[color].nbr_attacked_ |= finfo_[color].bishopMoves_;
-
-    finfo_[color].nbr_attacked_ |= finfo_[color].rookMoves_;
   }
 
   finfo_[Figure::ColorBlack].cango_mask_ &= ~(finfo_[Figure::ColorWhite].attack_mask_ & ~finfo_[Figure::ColorBlack].multiattack_mask_);
@@ -195,8 +195,14 @@ ScoreType32 Evaluator::evaluateKnights()
       if (knight_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
+
+#ifdef KING_EVAL_ATTACKED_MULTI_FIELD
+        auto n_attacks = pop_count(knight_attacks & finfo_[ocolor].kingAttacks_);
+        finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+#else
         bool b_attacks = (knight_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+#endif
       }
 #endif
       
@@ -261,8 +267,14 @@ ScoreType32 Evaluator::evaluateBishops()
       if (bishop_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
+
+#ifdef KING_EVAL_ATTACKED_MULTI_FIELD
+        auto n_attacks = pop_count(bishop_attacks & finfo_[ocolor].kingAttacks_);
+        finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+#else
         bool b_attacks = (bishop_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+#endif
       }
 #endif
 
@@ -342,8 +354,14 @@ ScoreType32 Evaluator::evaluateRook()
       if (rook_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
+
+#ifdef KING_EVAL_ATTACKED_MULTI_FIELD
+        auto n_attacks = pop_count(rook_attacks & finfo_[ocolor].kingAttacks_);
+        finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+#else
         bool b_attacks = (rook_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+#endif
       }
 #endif
 
@@ -400,8 +418,14 @@ ScoreType32 Evaluator::evaluateQueens()
       if (qx_attacks & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
+
+#ifdef KING_EVAL_ATTACKED_MULTI_FIELD
+        auto n_attacks = pop_count(qx_attacks & finfo_[ocolor].kingAttacks_);
+        finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
+#else
         bool b_attacks = (qx_attacks & finfo_[ocolor].kingAttacks_) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+#endif
       }
 #endif
 

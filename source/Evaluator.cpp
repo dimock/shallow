@@ -130,7 +130,10 @@ void Evaluator::prepare()
     finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
 
     finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
+    finfo_[0].pawns_fwd_ &= ~finfo_[Figure::ColorWhite].pawnAttacks_;
+
     finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ &= ~finfo_[Figure::ColorBlack].pawnAttacks_;
 
     auto const discovered_mask_bi_b = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
       (fmgr.knight_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | finfo_[0].nbrq_mask_ | fmgr.king_mask(Figure::ColorWhite));
@@ -965,7 +968,7 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
   BitMask o_rq_mask = board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor);
   BitMask o_mask = board_->fmgr().knight_mask(ocolor) | board_->fmgr().bishop_mask(ocolor) | o_rq_mask;
   
-  if (auto pawn_fork = (o_mask & (finfo_[color].pawnAttacks_))) {
+  if (auto pawn_fork = (o_mask & (finfo_[color].pawnAttacks_ & ~finfo_[ocolor].pawnAttacks_))) {
     int pawnsN = pop_count(pawn_fork);
     counted_mask = pawn_fork;
     if (pawnsN > 1) {
@@ -979,7 +982,7 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
   }
 
 #ifdef EVAL_EXTENDED_PAWN_ATTACK
-  if (auto pfwd_attacks = ((finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].attack_mask_)) & ~finfo_[ocolor].pawnAttacks_)) {
+  if (auto pfwd_attacks = (finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | ~finfo_[ocolor].attack_mask_))) {
     if (color)
       pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
     else
