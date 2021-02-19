@@ -138,7 +138,6 @@ bool compare_depth(int depth, int depthMin, int depthMax)
 
 bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
 {
-  bool identical = false;
   auto& board = scontexts_[ictx].board_;
   int depth = scontexts_[ictx].sdata_.depth_;
 
@@ -146,50 +145,31 @@ bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
     return false;
 
   const auto& sequence = board.stestMoves_;
-  if((ply < sequence.size() && !exactMatch) || (ply == sequence.size()-1 && exactMatch))
+  if (ply != sequence.size() - 1 || (sequence.back().empty() && exactMatch)) {
+    return false;
+  }
+  bool identical = true;
+  for(int i = ply; identical && i >= 0; --i)
   {
-    for(int i = ply; i >= 0; --i)
-    {
-      identical = true;
-      int j = ply-i;
-      if(j >= board.halfmovesCount())
-        break;
-      const UndoInfo & undo = board.reverseUndo(j);
-      auto smove = sequence[i];
-      if (!smove.empty()) {
-        if (undo.is_nullmove()) {
-          if (smove != "null")
-          {
-            identical = false;
-            break;
-          }
+    int j = ply-i;
+    if(j >= board.halfmovesCount())
+      break;
+    const UndoInfo & undo = board.reverseUndo(j);
+    auto smove = sequence[i];
+    if (!smove.empty()) {
+      if (undo.is_nullmove()) {
+        if (smove != "null") {
+          identical = false;
         }
-        else {
-          auto move = strToMove(smove);
-          if (undo.move_.from() != move.from() || undo.move_.to() != move.to())
-          {
-            identical = false;
-            break;
-          }
+      }
+      else {
+        auto move = strToMove(smove);
+        if (undo.move_.from() != move.from() || undo.move_.to() != move.to()) {
+          identical = false;
         }
       }
     }
-    return identical;
   }
-
-  //if(identical)
-  //{
-  //  std::ostringstream oss;
-  //  NEngine::save(board, oss, false);
-  //  oss << "PLY: " << ply << std::endl;
-  //  oss << "depth_ = " << sdata_.depth_ << "; depth = " << depth << "; ply = "
-  //    << ply << "; alpha = " << alpha << "; betta = " << betta << "; counter = " << counter << std::endl;
-  //  oss << "===================================================================" << std::endl << std::endl;
-
-  //  std::ofstream ofs("sequence.txt", std::ios_base::app);
-  //  ofs << oss.str();
-  //}
-
   return identical;
 }
 #endif // RELEASEDEBUGINFO

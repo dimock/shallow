@@ -407,8 +407,18 @@ ScoreType Engine::alphaBetta0(int ictx)
     hist.inc_score(sdata.depth_);
     sortMoves0(ictx);
 
+#ifdef RELEASEDEBUGINFO
+    auto ff = (FIELD_NAME)sdata.best_.from();
+    auto ft = (FIELD_NAME)sdata.best_.to();
+    if (findSequence(ictx, 0, false) && !board.stestBestMoveFileName_.empty()) {
+      std::ofstream ofs{ board.stestBestMoveFileName_ };
+      ofs << (sdata.depth_) << " " << moveToStr(sdata.best_, false);
+    }
+#endif
+
     X_ASSERT(!(scontexts_[ictx].moves_[0] == sdata.best_), "not best move first");
   }
+
   return alpha;
 }
 
@@ -459,9 +469,10 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
 #ifdef RELEASEDEBUGINFO
   auto ff = (FIELD_NAME)move.from();
   auto ft = (FIELD_NAME)move.to();
-  if (findSequence(ictx, 0, true))
+  if (!board.stestBestMoveFileName_.empty() && findSequence(ictx, 0, true))
   {
-    int t = 1;
+    std::ofstream ofs{ board.stestMovesFoundFileName_ };
+    ofs << (depth / ONE_PLY);
   }
 #endif
 
@@ -592,9 +603,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     // do null-move
     board.makeNullMove();
 #ifdef RELEASEDEBUGINFO
-    if (findSequence(ictx, ply, true))
+    if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
     {
-      null_depth = null_depth;
+      std::ofstream ofs{ board.stestMovesFoundFileName_ };
+      ofs << (depth / ONE_PLY);
     }
 #endif // RELEASEDEBUGINFO
     ScoreType nullScore = -alphaBetta(ictx, null_depth, ply + 1, -betta, -(betta - 1), false, false, signular_count);
@@ -650,7 +662,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifndef NDEBUG
   Board board0{ board };
 #endif
-  
+
+#ifdef RELEASEDEBUGINFO
+  bool sequenceFound = false;
+#endif
+
   bool check_escape = board.underCheck();
   FastGenerator<Board, SMove> fg(board, hmove, sctx.plystack_[ply].killer_);
   for (; alpha < betta && !checkForStop(ictx);)
@@ -683,9 +699,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef RELEASEDEBUGINFO
     auto ff = (FIELD_NAME)move.from();
     auto ft = (FIELD_NAME)move.to();
-    if (findSequence(ictx, ply, true))
+    if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
     {
-      depthInc = depthInc;
+      std::ofstream ofs{ board.stestMovesFoundFileName_ };
+      ofs << (depth / ONE_PLY);
     }
 #endif // RELEASEDEBUGINFO
 
@@ -727,9 +744,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     }
 
 #ifdef RELEASEDEBUGINFO
-    if (findSequence(ictx, ply, true) && score > alpha)
+    if (findSequence(ictx, ply, false) && score > alpha)
     {
-      depthInc = depthInc;
+      sequenceFound = true;
     }
 #endif // RELEASEDEBUGINFO
 
@@ -774,6 +791,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     ++counter;
   }
 
+#ifdef RELEASEDEBUGINFO
+  if (sequenceFound && best && !board.stestBestMoveFileName_.empty()) {
+    std::ofstream ofs{ board.stestBestMoveFileName_ };
+    ofs << (depth / ONE_PLY) << " " << moveToStr(best, false);
+  }
+#endif
+
   if(sctx.stop_)
     return scoreBest;
 
@@ -804,9 +828,10 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #ifdef RELEASEDEBUGINFO
     auto ff = (FIELD_NAME)best.from();
     auto ft = (FIELD_NAME)best.to();
-    if (findSequence(ictx, ply, true))
+    if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
     {
-      int y = 0;
+      std::ofstream ofs{ board.stestMovesFoundFileName_ };
+      ofs << (depth / ONE_PLY);
     }
 #endif // RELEASEDEBUGINFO
 
@@ -872,7 +897,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
   if (board.drawState() || board.hasReps() || sctx.stop_ || ply >= MaxPly)
     return Figure::DrawScore;
-
 
   SMove hmove{ true };
 
@@ -953,6 +977,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   Board board0{ board };
 #endif
 
+#ifdef RELEASEDEBUGINFO
+  bool sequenceFound = false;
+#endif
+
   int thr = std::min(threshold, 0);
   TacticalGenerator<Board, SMove> tg(board, hmove, depth);
   for(; alpha < betta && !checkForStop(ictx);)
@@ -989,18 +1017,19 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     sdata.inc_nc();
 
 #ifdef RELEASEDEBUGINFO
-    if (findSequence(ictx, ply, true))
+    if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
     {
-      thr = thr;
+      std::ofstream ofs{ board.stestMovesFoundFileName_ };
+      ofs << (depth / ONE_PLY);
     }
 #endif // RELEASEDEBUGINFO
 
     score = -captures(ictx, depth - ONE_PLY, ply + 1, -betta, -alpha, pv);
 
 #ifdef RELEASEDEBUGINFO
-    if (findSequence(ictx, ply, true) && score > alpha)
+    if (findSequence(ictx, ply, false) && score > alpha)
     {
-      thr = thr;
+      sequenceFound = true;
     }
 #endif // RELEASEDEBUGINFO
 
@@ -1023,6 +1052,13 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
     counter++;
   }
+
+#ifdef RELEASEDEBUGINFO
+  if (sequenceFound && best && !board.stestBestMoveFileName_.empty()) {
+    std::ofstream ofs{ board.stestBestMoveFileName_ };
+    ofs << (depth / ONE_PLY) << " " << moveToStr(best, false);
+  }
+#endif
 
   if (sctx.stop_)
     return scoreBest;

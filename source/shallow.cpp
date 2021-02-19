@@ -54,7 +54,7 @@ int main(int argn, char *argv[])
 #ifdef RELEASEDEBUGINFO
   if (argn > 1)
   {
-    NEngine::analyzeFen(argv[1]);
+    NEngine::analyzeFen(argv[1], argn > 2 ? argv[2] : "", argn > 3 ? argv[3] : "");
     return 0;
   }
 #endif

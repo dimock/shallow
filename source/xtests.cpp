@@ -249,7 +249,7 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
   std::cout << "average error: " << totalError/refEvals.size() << std::endl;
 }
 
-void analyzeFen(std::string const& fname)
+void analyzeFen(std::string const& fname, std::string const& bestfname, std::string const& seqfname)
 {
   NEngine::xCallback xcbk;
   xcbk.sendOutput_ = [](NEngine::SearchResult const& sres)
@@ -267,13 +267,17 @@ void analyzeFen(std::string const& fname)
   
   testFen<Board, Move, UndoInfo>(
     fname,
-    [&proc](size_t i, xEPD<Board, Move, UndoInfo>& e)
+    [&proc, &bestfname, &seqfname](size_t i, xEPD<Board, Move, UndoInfo>& e)
   {
     SBoard<Board, UndoInfo, 512> board{ e.board_, true };
     if (!board.invalidate())
       return;
     if (board.state() != State::Ok && board.state() != State::UnderCheck)
       return;
+#ifdef RELEASEDEBUGINFO
+    board.stestBestMoveFileName_ = bestfname;
+    board.stestMovesFoundFileName_ = seqfname;
+#endif
     proc.setBoard(board);
     proc.clear();
     proc.setThreadsNumber(1);
@@ -281,7 +285,11 @@ void analyzeFen(std::string const& fname)
       proc.makeMove(mv);
     }
     //proc.file2hash("D:\\Projects\\gitproj\\hash\\hash");
-    proc.analyze(NShallow::DepthMaximum);
+    int maxDepth = NShallow::DepthMaximum;
+#ifdef RELEASEDEBUGINFO
+    maxDepth = e.board_.stestDepthMax_;
+#endif
+    proc.analyze(maxDepth);
   },
     [](std::string const& err_str)
   {
