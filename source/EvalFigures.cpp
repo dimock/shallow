@@ -524,6 +524,18 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
   score >>= 5;
+
+  auto king_left = (oki_pos & 7) < 4;
+  auto general_pressure_mask = (/*(finfo_[color].attack_mask_ & ~attacked_any_but_oking) |*/
+    (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_;
+  auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_left];
+  int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
+  auto attacks_opponent_other = general_pressure_mask & Figure::quaterBoard_[ocolor][!king_left];
+  //auto attacks_king_other = finfo_[color].attack_mask_ & Figure::quaterBoard_[ocolor][king_left] & ~attacks_king_side;
+  int general_opponent_pressure = pop_count(attacks_opponent_other/* | attacks_king_other*/) * EvalCoefficients::generalOpponentPressure_;
+  int general_score = general_king_attacks_score + general_opponent_pressure;
+  score += general_score;
+
   return { score, 0 };
 }
 #endif
