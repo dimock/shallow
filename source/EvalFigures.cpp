@@ -469,7 +469,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   finfo_[color].num_attackers_ += (finfo_[color].pawnAttacks_ & near_oking) != 0ULL;
   finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
+
+#ifdef KING_EVAL_ATTACKED_MULTI_FIELD
   finfo_[color].score_king_ += EvalCoefficients::pawnKingAttack_ * pop_count(finfo_[color].pawnAttacks_ & near_oking_pw);
+#else
+  finfo_[color].score_king_ += EvalCoefficients::pawnKingAttack_ * ((finfo_[color].pawnAttacks_ & near_oking_pw) != 0ULL);
+#endif
 
   auto kn_check = movesTable().caps(Figure::TypeKnight, oki_pos) & finfo_[color].knightMoves_;
   auto bi_check = magic_ns::bishop_moves(oki_pos, mask_all_);
