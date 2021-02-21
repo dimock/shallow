@@ -17,17 +17,19 @@ elseif(MSVC)
   set(OUTPUT_EXEC_NAME ${PROJECT_NAME})
 
   # configurations
-  set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseDebugInfo")
+  set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseDebugInfo;ReleaseSpecial")
    
   # Cxx-flags
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} /D_DEBUG /MTd /Zi /Ob0 /Od /RTC1")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} /GL /Oi /Ot /MT /Ox /Ob2 /D NDEBUG")
   set(CMAKE_CXX_FLAGS_RELEASEDEBUGINFO "${CMAKE_CXX_FLAGS} /DRELEASEDEBUGINFO /MT /Zi /Ob0 /Od /D NDEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASESPECIAL "${CMAKE_CXX_FLAGS} /DRELEASESPECIAL /GL /Oi /Ot /MT /Ox /Ob2 /D NDEBUG")
 
   # linker flags
   set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} /debug")
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /LTCG /INCREMENTAL:NO")
   set(CMAKE_EXE_LINKER_FLAGS_RELEASEDEBUGINFO "${CMAKE_EXE_LINKER_FLAGS} /debug")
+  set(CMAKE_EXE_LINKER_FLAGS_RELEASESPECIAL "${CMAKE_EXE_LINKER_FLAGS} /LTCG /INCREMENTAL:NO")
 
   add_definitions(-D_SBCS)
 endif()
@@ -54,5 +56,6 @@ message(status " Git hash commit: " ${VERSION})
 message(status " Executable file name: " ${OUTPUT_EXEC_NAME})
 
 add_executable(${OUTPUT_EXEC_NAME} ${SOURCE_FILES} ${INCLUDE_FILES})
-target_link_libraries(${OUTPUT_EXEC_NAME} ${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY})
+target_link_libraries(${OUTPUT_EXEC_NAME})
+#${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY})
 # ${Boost_SYSTEM_LIBRARY})

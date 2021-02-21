@@ -17,6 +17,10 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
 #include <random>
 #include <functional>
 
+#if ((defined RELEASEDEBUGINFO) || (defined RELEASESPECIAL))
+#define PROCESS_MOVES_SEQ
+#endif
+
 
 #ifdef _MSC_VER
 
@@ -43,7 +47,7 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
   #define TIMING_FLAG 0x3FFF
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   #define X_ASSERT_R(v, msg) if ( v ) throw std::runtime_error(msg); else;
 #else
   #define X_ASSERT_R(v, msg)
@@ -210,6 +214,7 @@ namespace nst
 #define SORT_MOVES_0_HIST
 #define EXTEND_CHECK_SEE_ONLY
 
+#ifndef PROCESS_MOVES_SEQ
 #define USE_HASH
 #define USE_EVAL_HASH
 #define SEE_PRUNING
@@ -218,6 +223,7 @@ namespace nst
 #define USE_IID
 #define USE_NULL_MOVE
 #define USE_LMR
+#endif
 
 #define SINGULAR_EXT
 #undef VERIFY_LMR

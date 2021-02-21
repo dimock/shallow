@@ -776,7 +776,7 @@ private:
 protected:
   UndoInfo* g_undoStack{};
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
 public:
   std::vector<std::string> stestMoves_;
   int stestDepthMin_{};

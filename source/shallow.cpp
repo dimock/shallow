@@ -51,7 +51,7 @@ int main(int argn, char *argv[])
   }
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   if (argn > 1)
   {
     NEngine::analyzeFen(argv[1], argn > 2 ? argv[2] : "", argn > 3 ? argv[3] : "");

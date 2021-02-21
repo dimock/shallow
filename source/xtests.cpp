@@ -274,7 +274,7 @@ void analyzeFen(std::string const& fname, std::string const& bestfname, std::str
       return;
     if (board.state() != State::Ok && board.state() != State::UnderCheck)
       return;
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     board.stestBestMoveFileName_ = bestfname;
     board.stestMovesFoundFileName_ = seqfname;
 #endif
@@ -286,7 +286,7 @@ void analyzeFen(std::string const& fname, std::string const& bestfname, std::str
     }
     //proc.file2hash("D:\\Projects\\gitproj\\hash\\hash");
     int maxDepth = NShallow::DepthMaximum;
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     maxDepth = e.board_.stestDepthMax_;
 #endif
     proc.analyze(maxDepth);

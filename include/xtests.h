@@ -62,7 +62,7 @@ using xDoOptimize_Callback = std::function<bool(int)>;
 template <typename B, typename M, typename U>
 inline void appendMove(xEPD<B, M, U>& epd, std::string const& smove)
 {
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   epd.board_.stestMoves_.push_back(smove == "_" ? "" : smove);
 #endif
   if(Move move = strToMove(smove, epd.board_))
@@ -112,7 +112,7 @@ public:
           continue;
         appendMove(epd, smove);
       }
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
       if (m.size() > 5 && ((std::string)m[4]).find("dmin") != std::string::npos) {
         epd.board_.stestDepthMin_ = std::stoi(m[5]);
       }

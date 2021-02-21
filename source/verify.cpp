@@ -124,7 +124,7 @@ void Engine::logMovies(int ictx)
 }
 
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
 
 static int TEST_DEPTH_MIN = 7;
 static int TEST_DEPTH_MAX = 12;
@@ -172,6 +172,6 @@ bool Engine::findSequence(int ictx, int ply, bool exactMatch) const
   }
   return identical;
 }
-#endif // RELEASEDEBUGINFO
+#endif // PROCESS_MOVES_SEQ
 
 } // NEngine

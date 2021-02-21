@@ -197,7 +197,7 @@ private:
   GHashTable hash_;
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   bool findSequence(int ictx, int ply, bool exactMatch) const;
 #endif
 

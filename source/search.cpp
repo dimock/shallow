@@ -407,7 +407,7 @@ ScoreType Engine::alphaBetta0(int ictx)
     hist.inc_score(sdata.depth_);
     sortMoves0(ictx);
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     auto ff = (FIELD_NAME)sdata.best_.from();
     auto ft = (FIELD_NAME)sdata.best_.to();
     if (findSequence(ictx, 0, false) && !board.stestBestMoveFileName_.empty()) {
@@ -466,7 +466,7 @@ ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alph
   board.makeMove(move);
   sdata.inc_nc();
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   auto ff = (FIELD_NAME)move.from();
   auto ft = (FIELD_NAME)move.to();
   if (!board.stestBestMoveFileName_.empty() && findSequence(ictx, 0, true))
@@ -543,7 +543,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   if (board.fmgr().hashCode() == board.stestHashKey_)
   {
     int x = 0;
@@ -602,13 +602,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     int null_depth = board.nullMoveDepth(depth, betta);
     // do null-move
     board.makeNullMove();
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
     {
       std::ofstream ofs{ board.stestMovesFoundFileName_ };
       ofs << (depth / ONE_PLY);
     }
-#endif // RELEASEDEBUGINFO
+#endif // PROCESS_MOVES_SEQ
     ScoreType nullScore = -alphaBetta(ictx, null_depth, ply + 1, -betta, -(betta - 1), false, false, signular_count);
     board.unmakeNullMove();
 
@@ -663,7 +663,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   Board board0{ board };
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   bool sequenceFound = false;
 #endif
 
@@ -696,7 +696,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& curr = board.lastUndo();
     bool check_or_cap = curr.capture() || board.underCheck();
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     auto ff = (FIELD_NAME)move.from();
     auto ft = (FIELD_NAME)move.to();
     if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
@@ -704,7 +704,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       std::ofstream ofs{ board.stestMovesFoundFileName_ };
       ofs << (depth / ONE_PLY);
     }
-#endif // RELEASEDEBUGINFO
+#endif // PROCESS_MOVES_SEQ
 
     if (!counter)
     {
@@ -743,12 +743,12 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
     }
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     if (findSequence(ictx, ply, false) && score > alpha)
     {
       sequenceFound = true;
     }
-#endif // RELEASEDEBUGINFO
+#endif // PROCESS_MOVES_SEQ
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
@@ -791,7 +791,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     ++counter;
   }
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   if (sequenceFound && best && !board.stestBestMoveFileName_.empty()) {
     std::ofstream ofs{ board.stestBestMoveFileName_ };
     ofs << (depth / ONE_PLY) << " " << moveToStr(best, false);
@@ -825,7 +825,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     board.makeMove(best);
     sdata.inc_nc();
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     auto ff = (FIELD_NAME)best.from();
     auto ft = (FIELD_NAME)best.to();
     if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
@@ -833,7 +833,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       std::ofstream ofs{ board.stestMovesFoundFileName_ };
       ofs << (depth / ONE_PLY);
     }
-#endif // RELEASEDEBUGINFO
+#endif // PROCESS_MOVES_SEQ
 
     alpha = alpha0;
     ScoreType score = -alphaBetta(ictx, depth+depthIncBest, ply+1, -betta, -alpha, pv, true, signular_count + 1);
@@ -867,7 +867,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
   }
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   if (board.fmgr().hashCode() == board.stestHashKey_)
   {
     int x = 0;
@@ -913,7 +913,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   X_ASSERT(hmove && !board.possibleMove(hmove), "impossible move in hash");
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   if (board.fmgr().hashCode() == board.stestHashKey_)
   {
     int x = 0;
@@ -977,7 +977,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   Board board0{ board };
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   bool sequenceFound = false;
 #endif
 
@@ -996,7 +996,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     hash_.prefetch(board.hashAfterMove(move));
 #endif
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     auto ff = (FIELD_NAME)move.from();
     auto ft = (FIELD_NAME)move.to();
 #endif
@@ -1016,22 +1016,22 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
     sdata.inc_nc();
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     if (!board.stestMovesFoundFileName_.empty() && findSequence(ictx, ply, true))
     {
       std::ofstream ofs{ board.stestMovesFoundFileName_ };
       ofs << (depth / ONE_PLY);
     }
-#endif // RELEASEDEBUGINFO
+#endif // PROCESS_MOVES_SEQ
 
     score = -captures(ictx, depth - ONE_PLY, ply + 1, -betta, -alpha, pv);
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
     if (findSequence(ictx, ply, false) && score > alpha)
     {
       sequenceFound = true;
     }
-#endif // RELEASEDEBUGINFO
+#endif // PROCESS_MOVES_SEQ
 
     board.unmakeMove(move);
     X_ASSERT(board != board0, "board undo error");
@@ -1053,7 +1053,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     counter++;
   }
 
-#ifdef RELEASEDEBUGINFO
+#ifdef PROCESS_MOVES_SEQ
   if (sequenceFound && best && !board.stestBestMoveFileName_.empty()) {
     std::ofstream ofs{ board.stestBestMoveFileName_ };
     ofs << (depth / ONE_PLY) << " " << moveToStr(best, false);
