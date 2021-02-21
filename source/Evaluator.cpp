@@ -1040,9 +1040,9 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
   if (auto treat_mask = ((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_))) {
     treat_mask &= ~counted_mask;
     auto generalScore = EvalCoefficients::generalAttackBonus_ * pop_count(treat_mask & finfo_[ocolor].nbrq_mask_);
-    if (auto min_treat_mask = ((finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask)) {
-      generalScore += (EvalCoefficients::generalAttackBonus_ * pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_)) >> 2;
-    }
+    //if (auto min_treat_mask = ((finfo_[color].attack_mask_ & ~treat_mask) & ~counted_mask)) {
+    //  generalScore += (EvalCoefficients::generalAttackBonus_ * pop_count(min_treat_mask & finfo_[ocolor].nbrq_mask_)) >> 2;
+    //}
     if (generalScore > 0 && color == board_->color()) {
       generalScore += generalScore >> 1;
     }
