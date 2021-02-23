@@ -524,8 +524,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   int num_king_moves = pop_count(king_moves);
   check_coeff += EvalCoefficients::kingPossibleMovesCoefficients[num_king_moves];
   
-  if (num_attackers == 0)
+  if (num_attackers == 0) {
     check_coeff >>= 3;
+  }
+  else if (num_attackers == 1) {
+    check_coeff >>= 1;
+  }
   
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
   score >>= 5;

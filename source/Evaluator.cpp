@@ -565,7 +565,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   const auto& ofgs = fmgr.mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
   
-  while(pawn_mask)
+  while (pawn_mask)
   {
     const int n = clear_lsb(pawn_mask);
     const auto& halfpassmsk = pawnMasks().mask_forward(color, n);
@@ -576,7 +576,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     auto n1 = n + (dy << 3);
     auto fwd_field = set_mask_bit(n1);
 
-    if (fwd_field & ofgs)
+    if (fwd_field & mask_all_)
       continue;
 
     auto attack_mask = finfo_[color].attack_mask_;
@@ -591,7 +591,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       if (!(multiattack_mask & fwd_field)) {
         behind_msk1 = ~behind_msk1;
         auto behind_msk2 = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_ & behind_msk1) & behind_msk1;
-        if(behind_msk2 & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
+        if (behind_msk2 & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
           multiattack_mask |= fwd_field;
       }
     }
@@ -610,23 +610,28 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     }
 
     const bool halfpasser = halfpassmsk & finfo_[ocolor].pawnAttacks_;
-    auto blockers_mask = (o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask) | (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_);
-    if (!(fwd_field & blockers_mask)) {
-      pinfo.score_ += EvalCoefficients::passerPawnEx_[halfpasser][cy];
+    if (halfpasser) {
+      pinfo.score_ += EvalCoefficients::passerPawnBasic_[halfpasser][cy];
+      continue;
+    }
 
-#ifdef EVAL_CAN_PROMOTE
-      // can promote on the next move and not attacked or it's turn
-      if (cy == 6 && (!(set_mask_bit(n) & o_attack_mask) || color == board_->color()) &&
-        !((o_attack_mask | mask_all_) & pawnMasks().mask_forward(color, n))) {
-        pinfo.score_ += EvalCoefficients::passerPawnEx_[halfpasser][cy];
-      }
-#endif
+    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo_[color].pawnAttacks_;
+    blockers_mask |= mask_all_;
+    // all forward fields are not blocked by opponent
+    auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
+    if (!fwd_mask) {
+      pinfo.score_ += EvalCoefficients::passerPawnEx_[halfpasser][cy];
     }
     else {
-      pinfo.score_ += EvalCoefficients::passerPawnBasic_[halfpasser][cy];
+      int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
+      int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
+      int steps = last_cango - cy;
+      if (steps > 0) {
+        pinfo.score_ += EvalCoefficients::passerPawnExS_[cy][steps];
+      }
     }
   }
-  
+
   return pinfo;
 }
 
