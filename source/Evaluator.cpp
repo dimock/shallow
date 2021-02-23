@@ -660,12 +660,12 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   if (ctype == 0) // king side
   {
     Index kingPos6{ 6, ky };
-    score = evaluateKingSafety(color, kingPos6) - opponentPawnsPressure(color, kingPos6) + evaluateKingsPawn(color, kingPos);
+    score = evaluateKingSafety(color, kingPos6) - opponentPawnsPressure(color, kingPos) + evaluateKingsPawn(color, kingPos);
   }
   else if (ctype == 1) // queen side
   {
     Index kingPos1{ 1, ky };
-    score = evaluateKingSafety(color, kingPos1) - opponentPawnsPressure(color, kingPos1) + evaluateKingsPawn(color, kingPos);
+    score = evaluateKingSafety(color, kingPos1) - opponentPawnsPressure(color, kingPos) + evaluateKingsPawn(color, kingPos);
   }
   else
   {
@@ -783,6 +783,8 @@ int Evaluator::opponentPawnsPressure(Figure::Color color, Index const& kingPos) 
       {
         int y = std::max(0, Index(_lsb64(m)).y());
         auto penalty = EvalCoefficients::opponentPawnPressure_[y];
+        if (x == xk)
+          penalty >>= 2;
         opponent_penalty += penalty;
       }
     }
@@ -798,7 +800,7 @@ int Evaluator::opponentPawnsPressure(Figure::Color color, Index const& kingPos) 
         int y = std::max(0, 7 - Index(_msb64(m)).y());
         auto penalty = EvalCoefficients::opponentPawnPressure_[y];
         if (x == xk)
-          penalty >>= 1;
+          penalty >>= 2;
         opponent_penalty += penalty;
       }
     }
@@ -827,7 +829,7 @@ int Evaluator::evaluateKingsPawn(Figure::Color color, Index const& kingPos) cons
     mabove3 = set_mask_bit((above2 + delta_y[color]) & 63);
   
   int score = 0;
-  if (mabove1 & pmask)
+  if (mabove1 & (pmask | opmask))
     score += EvalCoefficients::pawnShieldAbove_[0];
   else if (mabove2 & pmask)
     score += EvalCoefficients::pawnShieldAbove_[1];
