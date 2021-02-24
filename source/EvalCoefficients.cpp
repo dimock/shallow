@@ -64,6 +64,7 @@ namespace NEngine
   int EvalCoefficients::bishopChecking_{ 40 };
   int EvalCoefficients::rookChecking_{ 80 };
   int EvalCoefficients::queenChecking_{ 90 };
+  int EvalCoefficients::weakChecking_{ 10 };
   
   int EvalCoefficients::attackedNearKingCoeff_{ 23 };
   int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };

@@ -489,16 +489,18 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     finfo_[color].discoveredCheck_ = discoveredCheck(ki_pos, ocolor);
   }
 
+  bool canCheck = finfo_[color].discoveredCheck_ || ((kn_check | bi_check | r_check | q_check) != 0ULL);
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
   r_check &= can_check_r;
   q_check &= can_check_q;
-  int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL) + finfo_[color].discoveredCheck_;
+  int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL) + canCheck;
   
   auto check_score = EvalCoefficients::knightChecking_ * (kn_check != 0) +
                      EvalCoefficients::bishopChecking_ * (bi_check != 0) +
                      EvalCoefficients::rookChecking_ * (r_check != 0) +
-                     EvalCoefficients::queenChecking_ * (q_check != 0);
+                     EvalCoefficients::queenChecking_ * (q_check != 0) +
+                     EvalCoefficients::weakChecking_ * canCheck;
   
   int num_attackers = std::min(finfo_[color].num_attackers_, 7);
   auto attack_coeff = EvalCoefficients::kingAttackersCoefficients[num_attackers];
