@@ -21,8 +21,7 @@ namespace NEngine
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 65 };
   ScoreType EvalCoefficients::knightForkBonus_{ 65 };
   ScoreType EvalCoefficients::doublePawnAttack_{ 65 };
-  ScoreType EvalCoefficients::generalAttackBonus_{ 10 };
-  ScoreType EvalCoefficients::generalAttackBonus4_{ 2 };
+  ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 25 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 40 };
 
   // immobility
@@ -32,7 +31,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::discoveredCheckBonus_{ 20, 20 };
 
   // king
-  ScoreType32 EvalCoefficients::fakeCastle_{ -15, 0 };
+  ScoreType32 EvalCoefficients::fakeCastle_{ -30, 0 };
 
   // blocked figure
   ScoreType32 EvalCoefficients::knightBlocked_{ 60, 50 };
@@ -56,7 +55,7 @@ namespace NEngine
   int EvalCoefficients::basicAttack_{ 3 };
 #endif
 
-  int EvalCoefficients::generalKingPressure_{ 9 };
+  int EvalCoefficients::generalKingPressure_{ 6 };
   int EvalCoefficients::generalOpponentPressure_{ 2 };
 
   // king threat
@@ -66,7 +65,7 @@ namespace NEngine
   int EvalCoefficients::queenChecking_{ 90 };
   int EvalCoefficients::weakChecking_{ 10 };
   
-  int EvalCoefficients::attackedNearKingCoeff_{ 23 };
+  int EvalCoefficients::attackedNearKingCoeff_{ 32 };
   int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };
   int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 15, 32, 48, 56, 60, 62 };
   int EvalCoefficients::kingPossibleMovesCoefficients[10] = { 24,  12, 4, 2, 1, 0, 0, 0, 0, 0 };
@@ -78,11 +77,11 @@ namespace NEngine
   int EvalCoefficients::figureToKingDistanceMulti_{ 3 };
 
   // arrays
-  ScoreType32 EvalCoefficients::doubledPawn_ = { -6, -4 };
-  ScoreType32 EvalCoefficients::isolatedPawn_ = { -12, -11 };
-  ScoreType32 EvalCoefficients::backwardPawn_ = { -8, -6 };
-  ScoreType32 EvalCoefficients::blockedPawn_ = { -5, -4 };
-  ScoreType32 EvalCoefficients::unprotectedPawn_ = { -5, -2 };
+  ScoreType32 EvalCoefficients::doubledPawn_ = { -7, -4 };
+  ScoreType32 EvalCoefficients::isolatedPawn_ = { -16, -12 };
+  ScoreType32 EvalCoefficients::backwardPawn_ = { -16, -12 };
+  //ScoreType32 EvalCoefficients::blockedPawn_ = { -5, -4 };
+  ScoreType32 EvalCoefficients::unprotectedPawn_ = { -3, -2 };
   ScoreType32 EvalCoefficients::hasneighborPawn_ = { 3, 2 };
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 10, 5, 1, 0, 0, 0 };

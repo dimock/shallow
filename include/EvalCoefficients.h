@@ -24,9 +24,8 @@ struct EvalCoefficients
   static ScoreType bishopsAttackBonus_;
   static ScoreType knightForkBonus_;
   static ScoreType doublePawnAttack_;
+  static ScoreType rookQueenAttackedBonus_;
   static ScoreType queenUnderRookAttackBonus_;
-  static ScoreType generalAttackBonus_;
-  static ScoreType generalAttackBonus4_;
 
   // immobility
   static ScoreType32 immobileAttackBonus_;
@@ -74,7 +73,7 @@ struct EvalCoefficients
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_;
   static ScoreType32 backwardPawn_;
-  static ScoreType32 blockedPawn_;
+  //static ScoreType32 blockedPawn_;
   static ScoreType32 unprotectedPawn_;
   static ScoreType32 hasneighborPawn_;
   

@@ -47,7 +47,10 @@ class Evaluator
     BitMask mask_xray_r_{};
     BitMask nb_attacked_{};
     BitMask nbr_attacked_{};
+    BitMask rq_attacked_{};
+    BitMask r_attacked_{};
     BitMask ki_fields_{};
+    BitMask ki_fields_no_pw_{};
     BitMask brq_mask_{};
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
