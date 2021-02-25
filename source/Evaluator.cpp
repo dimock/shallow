@@ -450,22 +450,17 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     auto fwd_field = set_mask_bit(n1);
 
     auto const& protectMask = movesTable().pawnCaps(ocolor, n);
-    bool pprotected = (protectMask & pmask) != 0ULL;
-
+    int protectorsN = pop_count(protectMask & pmask);
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
-    //bool blocked = backward && ((fwd_field & opmsk) != 0ULL);
-    bool neighbors = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
-    bool unprotected = !isolated && !backward && !pprotected;
-
-    bool doubled = !pprotected && (pop_count(pawnMasks().mask_column(x) & pmask) > 1);
+    int neighborsN = pop_count(pawnMasks().mask_neighbor(color, n) & pmask);
+    bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1);
 
     info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
     info.score_ += EvalCoefficients::backwardPawn_ * backward;
-    //info.score_ += EvalCoefficients::blockedPawn_ * blocked;
-    info.score_ += EvalCoefficients::unprotectedPawn_ * unprotected;
-    info.score_ += EvalCoefficients::hasneighborPawn_ * neighbors;
+    info.score_ += EvalCoefficients::protectedPawn_ * protectorsN;
+    info.score_ += EvalCoefficients::hasneighborPawn_ * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
     // passer pawn
@@ -663,25 +658,26 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   if (ctype == 0) // king side
   {
     Index kingPos6{ 6, ky };
-    score = evaluateKingSafety(color, kingPos6) - opponentPawnsPressure(color, kingPos6) + evaluateKingsPawn(color, kingPos);
+    score = evaluateKingSafety(color, kingPos6) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos6);
   }
   else if (ctype == 1) // queen side
   {
     Index kingPos1{ 1, ky };
-    score = evaluateKingSafety(color, kingPos1) - opponentPawnsPressure(color, kingPos1) + evaluateKingsPawn(color, kingPos);
+    score = evaluateKingSafety(color, kingPos1) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos1);
   }
   else
   {
-    score = evaluateKingSafety(color, kingPos) >> 1;
+    score = ((evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos)) >> 1) - opponentPawnsPressure(color, kingPos);
     if (board_->castling(color, 0)) {
-      int scoreK = evaluateKingSafety(color, Index{6, promo_y_[Figure::otherColor(color)]});
+      Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
+      int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
       score = std::max(score, scoreK);
     }
     if (board_->castling(color, 1)) {
-      int scoreQ = evaluateKingSafety(color, Index{1, promo_y_[Figure::otherColor(color)]});
+      Index kingPosQ{ 1, promo_y_[Figure::otherColor(color)] };
+      int scoreQ = evaluateKingSafety(color, kingPosQ) + evaluateKingsPawn(color, kingPosQ) - opponentPawnsPressure(color, kingPosQ);
       score = std::max(score, scoreQ);
     }
-    score -= opponentPawnsPressure(color, kingPos);
   }
   return score;
 }
