@@ -516,7 +516,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_;
   if (near_oking_att) {
     auto near_king_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & finfo_[color].multiattack_mask_);
-    near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 1;
+    near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 2;
     attack_coeff += near_king_coeff;
   }
       
@@ -533,7 +533,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients[num_king_moves];
 
   num_checkers = std::min(num_checkers, 4);
-  auto check_coeff = EvalCoefficients::kingCheckersCoefficients[num_checkers] + (attack_coeff >> 1);
+  auto check_coeff = EvalCoefficients::kingCheckersCoefficients[num_checkers] + attack_coeff;
   
   if (num_attackers == 0) {
     check_coeff >>= 3;
