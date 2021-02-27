@@ -609,7 +609,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
     const bool halfpasser = halfpassmsk & finfo_[ocolor].pawnAttacks_;
     if (halfpasser) {
-      pinfo.score_ += EvalCoefficients::passerPawnBasic_[halfpasser][cy];
+      pinfo.score_ += EvalCoefficients::passerPawnBasic_[cy];
       continue;
     }
 
@@ -618,7 +618,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     // all forward fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
     if (!fwd_mask) {
-      pinfo.score_ += EvalCoefficients::passerPawnEx_[halfpasser][cy];
+      pinfo.score_ += EvalCoefficients::passerPawnEx_[cy];
     }
     else {
       int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
@@ -667,7 +667,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   }
   else
   {
-    score = ((evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos)) >> 1) - opponentPawnsPressure(color, kingPos);
+    score = evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos);
     if (board_->castling(color, 0)) {
       Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
       int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
