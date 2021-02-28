@@ -77,11 +77,15 @@ class Evaluator
   int betta_{};
   Board const* board_{ nullptr };
 
-#ifdef USE_EVAL_HASH
+#ifdef USE_EVAL_HASH_PW
   PHashTable ehash_{ 18 };
-  FHashTable fhash_{ 18 };
 #else
   PHashTable ehash_{ 0 };
+#endif
+
+#ifdef USE_EVAL_HASH_MD
+  FHashTable fhash_{ 18 };
+#else
   FHashTable fhash_{ 0 };
 #endif
 
@@ -94,13 +98,16 @@ public:
   ScoreType operator () (ScoreType alpha, ScoreType betta);
   ScoreType materialScore() const;
 
-#ifdef USE_EVAL_HASH
   inline void prefetch()
   {
+#ifdef USE_EVAL_HASH_PW
     ehash_.prefetch(board_->fmgr().kpwnCode());
-    fhash_.prefetch(board_->fmgr().fgrsCode());
-  }
 #endif
+
+#ifdef USE_EVAL_HASH_MD
+    fhash_.prefetch(board_->fmgr().fgrsCode());
+#endif
+  }
 
   static const int colored_y_[2][8];
   static const int promo_y_[2];

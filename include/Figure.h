@@ -27,6 +27,7 @@ namespace Figure
   extern const uint8     mirrorIndex_[64];
   // color, castle (K = 0, Q = 1)
   extern const BitMask   quaterBoard_[2][2];
+  extern const BitMask   kingAuxBoard_[2][2];
 
   inline Figure::Color otherColor(Figure::Color color)
   {
@@ -250,6 +251,7 @@ public:
   inline void hashColor()
   {
     hashCode_ ^= colorCode();
+    kpwnCode_ ^= colorCode();
   }
 
   inline void hashNullmove()

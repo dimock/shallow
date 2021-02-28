@@ -564,18 +564,22 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && ply > 1
     && board.allowNullMove())
   {
-    bool hashOk = pitem && pitem->hkey_ == board.fmgr().hashKey();
     ScoreType score0 = Figure::MatScore;
+#ifdef USE_HASH
+    bool hashOk = pitem && pitem->hkey_ == board.fmgr().hashKey();
     if (hashOk && pitem->eval_ != -ScoreMax) {
       score0 = pitem->eval_;
       X_ASSERT_R(score0 != sctx.eval_(alpha, betta), "incorrect evaluation in hash");
     }
     else {
+#endif // USE_HASH
       score0 = sctx.eval_(alpha, betta);
+#ifdef USE_HASH
       if (hashOk) {
         pitem->eval_ = score0;
       }
     }
+#endif // USE_HASH
     int d = depth >> 4;
 #ifdef FUTILITY_PRUNING_BETTA
     if ((int)score0 > (int)betta + Betta_ThresholdFP * d) {

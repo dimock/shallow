@@ -22,8 +22,8 @@ struct EvalCoefficients
 
   // forks & other treats
   static ScoreType bishopsAttackBonus_;
-  static ScoreType knightForkBonus_;
-  static ScoreType doublePawnAttack_;
+  static ScoreType knightAttack_;
+  static ScoreType pawnAttack_;
   static ScoreType rookQueenAttackedBonus_;
   static ScoreType queenUnderRookAttackBonus_;
 
@@ -50,7 +50,7 @@ struct EvalCoefficients
   static int basicAttack_;
 
   static int generalKingPressure_;
-  static int generalOpponentPressure_;
+  static int generalKingAuxPressure_;
 
     // for special cases
   static int kingToPawnDistanceMulti_;
@@ -72,9 +72,9 @@ struct EvalCoefficients
 
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_;
-  static ScoreType32 backwardPawn_;
-  static ScoreType32 protectedPawn_;
-  static ScoreType32 hasneighborPawn_;
+  static ScoreType32 backwardPawn_[8];
+  static ScoreType32 protectedPawn_[8];
+  static ScoreType32 hasneighborPawn_[8];
   
   static int opponentPawnPressure_[8];
 
@@ -107,7 +107,9 @@ struct EvalCoefficients
   static ScoreType32 passerPawn2_[8];
   static ScoreType32 passerPawn4_[8];
   static ScoreType32 passerPawnEx_[8];
+  static ScoreType32 passerPawnExP_[8];
   static ScoreType32 passerPawnExS_[8][8];
+  static ScoreType32 passerPawnExSp_[8][8];
   static ScoreType32 passerPawnBasic_[8];
   static ScoreType32 kingToPasserDistanceBonus_[8];
   static ScoreType32 okingToPasserDistanceBonus_[8];

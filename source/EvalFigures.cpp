@@ -493,18 +493,19 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     finfo_[color].discoveredCheck_ = discoveredCheck(ki_pos, ocolor);
   }
 
-  bool canCheck = finfo_[color].discoveredCheck_ || ((kn_check | bi_check) != 0ULL) ||
-    ((r_check != 0) && fmgr.rooks(color) + fmgr.queens(color) > 1) || ((q_check != 0) && fmgr.queens(color) > 1);
+  bool canCheck = ((kn_check | bi_check) != 0ULL) || ((r_check != 0) && fmgr.rooks(color) + fmgr.queens(color) > 1) ||
+    ((q_check != 0) && fmgr.queens(color) > 1);
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
   r_check &= can_check_r;
   q_check &= can_check_q;
-  int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL);
+  int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL) + finfo_[color].discoveredCheck_;
   
   auto check_score = EvalCoefficients::knightChecking_ * (kn_check != 0) +
                      EvalCoefficients::bishopChecking_ * (bi_check != 0) +
                      EvalCoefficients::rookChecking_ * (r_check != 0) +
-                     EvalCoefficients::queenChecking_ * (q_check != 0);
+                     EvalCoefficients::queenChecking_ * (q_check != 0) +
+                     EvalCoefficients::weakChecking_ * finfo_[color].discoveredCheck_;
   
   auto check_coeff = 0;
   if (!num_checkers && canCheck) {
@@ -532,7 +533,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   remaining_oking |= protected_oking;
   if (remaining_oking) {
     auto remaining_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(remaining_oking);
-    attack_coeff += remaining_coeff >> 4;
+    attack_coeff += remaining_coeff >> 3;
   }
 
   auto king_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
@@ -556,8 +557,8 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
       ~finfo_[ocolor].pawnAttacks_ & ~(near_oking_att | remaining_oking);
   auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_left];
   int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
-  auto attacks_opponent_other = general_pressure_mask & Figure::quaterBoard_[ocolor][!king_left];
-  int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalOpponentPressure_;
+  auto attacks_opponent_other = general_pressure_mask & Figure::kingAuxBoard_[ocolor][king_left];
+  int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalKingAuxPressure_;
   int general_score = general_king_attacks_score + general_opponent_pressure;
   score += general_score;
 

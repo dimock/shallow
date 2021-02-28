@@ -216,7 +216,8 @@ namespace nst
 
 #ifndef PROCESS_MOVES_SEQ
 #define USE_HASH
-#define USE_EVAL_HASH
+#define USE_EVAL_HASH_PW
+#define USE_EVAL_HASH_MD
 #define SEE_PRUNING
 #define USE_FUTILITY_PRUNING
 #define FUTILITY_PRUNING_BETTA
