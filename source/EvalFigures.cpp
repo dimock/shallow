@@ -325,10 +325,10 @@ ScoreType32 Evaluator::evaluateRook()
       auto const& rook_moves = moves_masks_[n];
 
       // open column
-      auto const& mask_col = pawnMasks().mask_column(n & 7);
-      if(!(mask_col & fmgr.pawn_mask(color)))
+      auto const& mask_fwd = pawnMasks().mask_forward(color, n);
+      if(!(mask_fwd & fmgr.pawn_mask(color)))
       {
-        bool pw_ocolor_n = (mask_col & fmgr.pawn_mask(ocolor)) != 0ULL;
+        bool pw_ocolor_n = (mask_fwd & fmgr.pawn_mask(ocolor)) != 0ULL;
         score[color] += EvalCoefficients::openRook_[pw_ocolor_n];
       }
 

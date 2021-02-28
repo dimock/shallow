@@ -26,6 +26,7 @@ struct EvalCoefficients
   static ScoreType pawnAttack_;
   static ScoreType rookQueenAttackedBonus_;
   static ScoreType queenUnderRookAttackBonus_;
+  static ScoreType multiattackedBonus_;
 
   // immobility
   static ScoreType32 immobileAttackBonus_;
@@ -106,6 +107,7 @@ struct EvalCoefficients
   static ScoreType32 passerPawn_[8];
   static ScoreType32 passerPawn2_[8];
   static ScoreType32 passerPawn4_[8];
+  static ScoreType32 passerPawnPr_[8];
   static ScoreType32 passerPawnEx_[8];
   static ScoreType32 passerPawnExP_[8];
   static ScoreType32 passerPawnExS_[8][8];
