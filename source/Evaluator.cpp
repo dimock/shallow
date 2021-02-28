@@ -1049,8 +1049,26 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
     forkScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
   }
 
-  forkScore += EvalCoefficients::multiattackedBonus_ * attackedN;
-  forkScore += forkScore * (board_->color() == color);
+  auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightMoves_ &
+    strong_attacks & ~fmgr.mask(color) & ~finfo_[ocolor].nb_attacked_;
+  int possibleNN = 0;
+  while (possible_kn_att) {
+    int n = clear_lsb(possible_kn_att);
+    auto kn_fork = o_rq_mask & movesTable().caps(Figure::TypeKnight, n) & ~counted_mask;
+    if (!kn_fork) {
+      continue;
+    }
+    int knightsN = pop_count(kn_fork);
+    possibleNN = std::max(possibleNN, knightsN);
+  }
+  forkScore += (EvalCoefficients::knightAttack_ * possibleNN) >> 1;
+
+  if (attackedN > 1) {
+    forkScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
+  }
+  if (board_->color() == color) {
+    forkScore += forkScore >> 1;
+  }
   return ScoreType32{ forkScore, forkScore };
 }
 

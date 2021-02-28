@@ -23,7 +23,7 @@ namespace NEngine
   ScoreType EvalCoefficients::pawnAttack_{ 40 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
-  ScoreType EvalCoefficients::multiattackedBonus_{ 20 };
+  ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
 
   // immobility
   ScoreType32 EvalCoefficients::immobileAttackBonus_{ 30, 30 };

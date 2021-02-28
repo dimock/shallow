@@ -44,6 +44,7 @@ void Evaluator::prepareAttacksMasks()
   {
     auto ocolor = Figure::otherColor(color);
     finfo_[color].knightMoves_ = BitMask{};
+    finfo_[color].attackedByKnightRq_ = BitMask{};
 
     BitMask nmask = board_->fmgr().knight_mask(color);
     for (; nmask;)
@@ -97,6 +98,8 @@ void Evaluator::prepareAttacksMasks()
     for (; rmask;)
     {
       auto n = clear_lsb(rmask);
+      finfo_[color].attackedByKnightRq_ |= movesTable().caps(Figure::TypeKnight, n);
+
       // mobility
       auto const& rook_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
@@ -123,6 +126,8 @@ void Evaluator::prepareAttacksMasks()
     for (; qmask;)
     {
       auto n = clear_lsb(qmask);
+      finfo_[color].attackedByKnightRq_ |= movesTable().caps(Figure::TypeKnight, n);
+
       // mobility
       auto qr_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
       auto const queen_attacks = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_) | qr_attacks;

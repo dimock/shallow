@@ -57,6 +57,7 @@ class Evaluator
     BitMask pawns_fwd_{};
     BitMask discovered_attackers_{};
     BitMask discovered_mask_{};
+    BitMask attackedByKnightRq_{};
     ScoreType32 score_mob_{};
 #ifdef DO_KING_EVAL
     int num_attackers_{};
