@@ -837,16 +837,33 @@ void SpecialCasesDetector::initCases()
     for (int l = 0; l < 6-l; ++l)
     {
       scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 1 },
-        { Figure::TypePawn, Figure::ColorWhite, static_cast<char>(w) },
-        { Figure::TypePawn, Figure::ColorBlack, static_cast<char>(l) } })] = [](Board const& board)
+        { Figure::TypePawn, Figure::ColorWhite, w },
+        { Figure::TypePawn, Figure::ColorBlack, l } })] = [](Board const& board)
       {
         return bishopAndPawnsDraw(board, Figure::ColorWhite);
       };
       scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 1 },
-        { Figure::TypePawn, Figure::ColorBlack, static_cast<char>(w) },
-        { Figure::TypePawn, Figure::ColorWhite, static_cast<char>(l) } })] = [](Board const& board)
+        { Figure::TypePawn, Figure::ColorBlack, w },
+        { Figure::TypePawn, Figure::ColorWhite, l } })] = [](Board const& board)
       {
         return bishopAndPawnsDraw(board, Figure::ColorBlack);
+      };
+    }
+  }
+
+  // bishops and pawns. probable draw
+  for (int w = 0; w <= 8; ++w)
+  {
+    for (int b = 0; b <= 8; ++b)
+    {
+      scases_[format({
+        { Figure::TypeBishop, Figure::ColorWhite, 1 },
+        { Figure::TypeBishop, Figure::ColorBlack, 1 },
+        { Figure::TypePawn, Figure::ColorWhite, static_cast<char>(w) },
+        { Figure::TypePawn, Figure::ColorBlack, static_cast<char>(b) } })] =
+        [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+      {
+        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
       };
     }
   }

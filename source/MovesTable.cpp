@@ -84,7 +84,7 @@ void MovesTable::resetAllTables(int pos)
   for (int type = 0; type < 8; ++type)
     s_otherCaps_[type][pos] = 0;
 
-  s_kingPressure_[pos] = 0;
+  s_kingPressure_[0][pos] = s_kingPressure_[1][pos] = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -211,45 +211,49 @@ void MovesTable::initKings(int pos)
     s_otherCaps_[Figure::TypeKing][pos] |= set_mask_bit(s_tableKing_[pos][i]);
 
   // fill pressure mask
-  int xp = pos & 7;
-  int yp = pos >>3;
-  for (int x = xp-2; x < xp+2; ++x)
-  {
-    if ( x < 0 || x > 7 )
-      continue;
-
-    int y = yp-2;
-    if ( y >= 0 )
+  for (int color = 0; color < 2; ++color) {
+    int xp = pos & 7;
+    int yp = pos >> 3;
+    for (int x = xp - 2; x <= xp + 2; ++x)
     {
-      int p = x | (y<<3);
-      s_kingPressure_[pos] |= set_mask_bit(p);
+      if (x < 0 || x > 7)
+        continue;
+
+      int y = yp - 2;
+      if (y >= 0) {
+        int p = x | (y << 3);
+        s_kingPressure_[color][pos] |= set_mask_bit(p);
+      }
+
+      y = yp + 2;
+      if (y < 8) {
+        int p = x | (y << 3);
+        s_kingPressure_[color][pos] |= set_mask_bit(p);
+      }
+
+      y = yp + (color ? 3 : -3);
+      if (y >= 0 && y < 8) {
+        int p = x | (y << 3);
+        s_kingPressure_[color][pos] |= set_mask_bit(p);
+      }
     }
 
-    y = yp+2;
-    if ( y < 8 )
+    for (int y = yp - 2; y < yp + 2; ++y)
     {
-      int p = x | (y<<3);
-      s_kingPressure_[pos] |= set_mask_bit(p);
-    }
-  }
+      if (y < 0 || y > 7)
+        continue;
 
-  for (int y = yp-2; y < yp+2; ++y)
-  {
-    if ( y < 0 || y > 7 )
-      continue;
+      int x = xp - 2;
+      if (x >= 0) {
+        int p = x | (y << 3);
+        s_kingPressure_[color][pos] |= set_mask_bit(p);
+      }
 
-    int x = xp-2;
-    if ( x >= 0 )
-    {
-      int p = x | (y<<3);
-      s_kingPressure_[pos] |= set_mask_bit(p);
-    }
-
-    x = xp+2;
-    if ( x < 8 )
-    {
-      int p = x | (y<<3);
-      s_kingPressure_[pos] |= set_mask_bit(p);
+      x = xp + 2;
+      if (x < 8) {
+        int p = x | (y << 3);
+        s_kingPressure_[color][pos] |= set_mask_bit(p);
+      }
     }
   }
 

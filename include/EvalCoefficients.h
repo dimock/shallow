@@ -15,10 +15,9 @@ struct EvalCoefficients
   static int additionalMatBonus_;
 
   // pawns
-  static ScoreType32 protectedPawnPressure_;
-  static ScoreType32 unprotectedPawnPressure_;
-  static ScoreType32 semiprotectedPawnPressure_;
-  static ScoreType32 unprotectedPawnBishopTreat_;
+  static ScoreType32 pawnPressureStrong_;
+  static ScoreType32 pawnPressureWeak_;
+  static ScoreType32 pawnBishopTreat_;
 
   // forks & other treats
   static ScoreType bishopsAttackBonus_;

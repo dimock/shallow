@@ -29,7 +29,7 @@ class MovesTable
   BitMask s_blockedRook_[64];
 
   // king pressure mask: +1 square around king
-  BitMask s_kingPressure_[64];
+  BitMask s_kingPressure_[2][64];
 
   // bits between king and rook (color, type - kqkQ)
   BitMask s_castleMasks_[2][2];
@@ -111,10 +111,10 @@ public:
     return s_otherCaps_[type][pos];
   }
 
-  inline const BitMask & king_pressure(int pos) const
+  inline const BitMask & king_pressure(int color, int pos) const
   {
-    X_ASSERT((unsigned)pos > 63, "try to get mask for invalid position");
-    return s_kingPressure_[pos];
+    X_ASSERT((unsigned)pos > 63 || (unsigned)color > 1, "try to get mask for invalid position");
+    return s_kingPressure_[color][pos];
   }
 
   inline const BitMask & blocked_rook(int pos) const
