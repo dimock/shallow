@@ -23,8 +23,8 @@ extern const uint8 Figure::mirrorIndex_[64] =
 
 extern const BitMask Figure::pawnCutoffMasks_[2] = { 0xfefefefefefefefe /* left */, 0x7f7f7f7f7f7f7f7f /* right */ };
 extern const BitMask Figure::pawns2ndLineMask_[2] = { 0x0000ff0000000000, 0x0000000000ff0000 };
-extern const BitMask Figure::kingQuaterBoard_[2][2] = { { 0xf0f0f0f0f0000000, 0x0f0f0f0f0f000000 },
-                                                    { 0x000000f0f0f0f0f0, 0x0000000f0f0f0f0f } };
+extern const BitMask Figure::kingQuaterBoard_[2][2] = { { 0xf0f0f0f000000000, 0x0f0f0f0f00000000 },
+                                                    { 0x00000000f0f0f0f0, 0x000000000f0f0f0f } };
 
 extern const ScoreType32 Figure::figureWeight32_[7] = { {0, 0}, {85, 102}, {345, 350}, {360, 360}, {560, 560}, {1120, 1120}, {0, 0} };
 
@@ -121,7 +121,7 @@ int8 FiguresCounter::s_whiteColors_[] =
   1, 0, 1, 0, 1, 0, 1, 0
 };
 
-uint64 FiguresCounter::s_whiteMask_       = 0x5ba304de617258c9ULL;
+uint64 FiguresCounter::s_whiteMask_       = 0x55aa55aa55aa55aaULL;
 uint64 FiguresManager::s_zobristColor_    = 0x421d03167393eb95ULL;
 uint64 FiguresManager::s_zobristNullmove_ = 0x823fb7585a2139eaULL;
 

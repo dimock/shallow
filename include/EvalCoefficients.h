@@ -66,9 +66,10 @@ struct EvalCoefficients
   static int weakChecking_;
   
   static int attackedNearKingCoeff_;
-  static int kingCheckersCoefficients[8];
-  static int kingAttackersCoefficients[8];
-  static int kingPossibleMovesCoefficients[10];
+  static int kingWeakCheckersCoefficients_;
+  static int kingCheckersCoefficients_[8];
+  static int kingAttackersCoefficients_[8];
+  static int kingPossibleMovesCoefficients_[10];
 
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_;

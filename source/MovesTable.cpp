@@ -230,12 +230,6 @@ void MovesTable::initKings(int pos)
         int p = x | (y << 3);
         s_kingPressure_[color][pos] |= set_mask_bit(p);
       }
-
-      y = yp + (color ? 3 : -3);
-      if (y >= 0 && y < 8) {
-        int p = x | (y << 3);
-        s_kingPressure_[color][pos] |= set_mask_bit(p);
-      }
     }
 
     for (int y = yp - 2; y < yp + 2; ++y)

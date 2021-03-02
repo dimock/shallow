@@ -1001,8 +1001,7 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
     else
       pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
     if (auto pawn_fork = (o_mask & pfwd_attacks)) {
-      int pawnsN = pop_count(pawn_fork);
-      forkScore += (EvalCoefficients::pawnAttack_ * pawnsN) >> 1;
+      forkScore += (EvalCoefficients::pawnAttack_ * (pawn_fork != 0ULL)) >> 1;
     }
   }
 #endif // EVAL_EXTENDED_PAWN_ATTACK
@@ -1042,11 +1041,12 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
   }
   
   BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
-  if (auto treat_mask = finfo_[color].attack_mask_ & strong_attacks & ~counted_mask) {
-    treat_mask &= (finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor));
-    int rqtreatsN = pop_count(treat_mask);
+  if (auto treat_mask = finfo_[color].attack_mask_ & strong_attacks & ~counted_mask &
+    ((finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor)))) {
+    int rqtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
     attackedN += rqtreatsN;
     forkScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
+    forkScore += (EvalCoefficients::rookQueenAttackedBonus_ * ((treat_mask & finfo_[ocolor].attack_mask_) != 0ULL)) >> 1;
   }
 
   auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightMoves_ &

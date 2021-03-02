@@ -48,10 +48,10 @@ namespace NEngine
   int EvalCoefficients::queenKingAttack_{ 13 };
   int EvalCoefficients::basicAttack_{ 2 };
 #else
-  int EvalCoefficients::knightKingAttack_{ 17 };
-  int EvalCoefficients::bishopKingAttack_{ 17 };
-  int EvalCoefficients::rookKingAttack_{ 18 };
-  int EvalCoefficients::queenKingAttack_{ 21 };
+  int EvalCoefficients::knightKingAttack_{ 16 };
+  int EvalCoefficients::bishopKingAttack_{ 16 };
+  int EvalCoefficients::rookKingAttack_{ 17 };
+  int EvalCoefficients::queenKingAttack_{ 19 };
   int EvalCoefficients::basicAttack_{ 3 };
 #endif
 
@@ -66,9 +66,10 @@ namespace NEngine
   int EvalCoefficients::weakChecking_{ 9 };
   
   int EvalCoefficients::attackedNearKingCoeff_{ 30 };
-  int EvalCoefficients::kingCheckersCoefficients[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };
-  int EvalCoefficients::kingAttackersCoefficients[8] = { 0,  0, 15, 32, 48, 56, 60, 62 };
-  int EvalCoefficients::kingPossibleMovesCoefficients[10] = { 24,  16, 4, 2, 1, 0, 0, 0, 0, 0 };
+  int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
+  int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };
+  int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0, 15, 32, 48, 56, 60, 62 };
+  int EvalCoefficients::kingPossibleMovesCoefficients_[10] = { 18,  12, 4, 2, 1, 0, 0, 0, 0, 0 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
@@ -85,10 +86,10 @@ namespace NEngine
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 7, 1, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[4] = { 30, 26, 5, 0 };
-  int EvalCoefficients::pawnShieldB_[4] = { 30, 26, 5, 0 };
+  int EvalCoefficients::pawnShieldA_[4] = { 27, 23, 5, 0 };
+  int EvalCoefficients::pawnShieldB_[4] = { 27, 23, 5, 0 };
   int EvalCoefficients::pawnShieldC_[4] = { 20, 16, 3, 0 };
-  int EvalCoefficients::pawnShieldAbove_[4] = { 12, 5, 1, 0 };
+  int EvalCoefficients::pawnShieldAbove_[4] = { 12, 9, 2, 0 };
 
   // rook on open column
   ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {10, 4} };
@@ -100,7 +101,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
   ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
-  ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {10, 5}, {20, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20} };
+  ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {20, 10}, {30, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20} };
   ScoreType32 EvalCoefficients::figuresAgainstRookBonus_[10] = { {0, 0}, {30, 20}, {50, 40}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50} };
   ScoreType32 EvalCoefficients::knightsAgainstRookBonus_[10] = { {0, 0}, {12, 12}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20} };
   ScoreType32 EvalCoefficients::rookAgainstFigureBonus_[10][10] = {
