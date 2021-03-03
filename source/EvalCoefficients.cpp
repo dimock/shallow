@@ -12,9 +12,9 @@ namespace NEngine
   // single vars
   int EvalCoefficients::additionalMatBonus_{ 150 };
   // pawns
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 10, 40 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 10 };
-  ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 4 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 8, 25 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 9 };
+  ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
   // forks
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };

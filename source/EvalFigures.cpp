@@ -548,7 +548,9 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }
-  else if (num_attackers == 1 || num_checkers == 0) {
+  else if ((num_attackers == 1 || num_checkers == 0) &&
+    !(q_check && !(finfo_[color].queenMoves_ & oki_fields)) &&
+    !(r_check && !(finfo_[color].rookMoves_ & oki_fields))) {
     check_coeff >>= 1;
   }
   

@@ -859,12 +859,32 @@ void SpecialCasesDetector::initCases()
       scases_[format({
         { Figure::TypeBishop, Figure::ColorWhite, 1 },
         { Figure::TypeBishop, Figure::ColorBlack, 1 },
-        { Figure::TypePawn, Figure::ColorWhite, static_cast<char>(w) },
-        { Figure::TypePawn, Figure::ColorBlack, static_cast<char>(b) } })] =
+        { Figure::TypePawn, Figure::ColorWhite, w },
+        { Figure::TypePawn, Figure::ColorBlack, b } })] =
         [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
       {
         return { SpecialCaseResult::PROBABLE_DRAW, 0 };
       };
+    }
+  }
+
+  // bishop|knight + rook (+pawn?) vs. rook + pawns -> probable draw
+  for (Figure::Type ft : {Figure::TypeKnight, Figure::TypeBishop}) {
+    for (Figure::Color fc : {Figure::ColorBlack, Figure::ColorWhite}) {
+      for (int fp = 0; fp <= 1; ++fp) {
+        for (int rp = fp+1; rp <= fp+3; ++rp) {
+          scases_[format({
+            { ft, fc, 1 },
+            { Figure::TypeRook, fc, 1 },
+            { Figure::TypePawn, fc, fp },
+            { Figure::TypeRook, Figure::otherColor(fc), 1 },
+            { Figure::TypePawn, Figure::otherColor(fc), rp } })] =
+            [fp](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+          {
+            return { fp ? SpecialCaseResult::PROBABLE_DRAW : SpecialCaseResult::ALMOST_DRAW, 0 };
+          };
+        }
+      }
     }
   }
 }

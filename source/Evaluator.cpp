@@ -505,7 +505,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         pwscore = EvalCoefficients::passerPawn_[cy];
         int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
         int king_dist = distanceCounter().getDistance(board_->kingPos(color), n1);
-        pwscore += EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
+        pwscore +=
+          EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
           EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
         Index pp{ x, py };
         int oking_dist_pp = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (ocolor == board_->color());
@@ -1040,13 +1041,14 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
     ++attackedN;
   }
   
-  BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
+  BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_;
   if (auto treat_mask = finfo_[color].attack_mask_ & strong_attacks & ~counted_mask &
     ((finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor)))) {
-    int rqtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
+    auto strong_mask = treat_mask & ~finfo_[ocolor].attack_mask_;
+    int rqtreatsN = pop_count(strong_mask);
     attackedN += rqtreatsN;
     forkScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
-    forkScore += (EvalCoefficients::rookQueenAttackedBonus_ * ((treat_mask & finfo_[ocolor].attack_mask_) != 0ULL)) >> 1;
+    forkScore += (EvalCoefficients::rookQueenAttackedBonus_ * ((treat_mask & ~strong_mask) != 0ULL)) >> 1;
   }
 
   auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightMoves_ &
