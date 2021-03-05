@@ -126,7 +126,6 @@ namespace NEngine
   ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  2,   2}, {  5,   5}, { 13,  13}, { 28,  28}, { 48,  48}, { 75,  75}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  1,   1}, {  2,   2}, {  6,   6}, { 14,  14}, { 24,  24}, { 37,  37}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn4_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  3,   3}, {  7,   7}, { 12,  12}, { 18,  18}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerPawnPr_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  2,   2}, {  5,   5}, {  9,   9}, { 15,  15}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnEx_[8] = { {  0,   0}, {  0,   3}, {  1,   8}, {  3,  22}, {  7,  45}, { 13,  78}, { 24, 144}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnExP_[8] = { {  0,   0}, {  2,   1}, {  5,   3}, { 14,   9}, { 30,  18}, { 52,  32}, { 80,  50}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnBasic_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  2,   3}, {  5,   7}, {  9,  13}, { 15,  20}, {  0,   0} };

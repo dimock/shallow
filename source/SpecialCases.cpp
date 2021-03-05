@@ -863,7 +863,10 @@ void SpecialCasesDetector::initCases()
         { Figure::TypePawn, Figure::ColorBlack, b } })] =
         [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
       {
-        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+        auto const& fmgr = board.fmgr();
+        bool w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
+        bool b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
+        return { (b != w) ? SpecialCaseResult::PROBABLE_DRAW : SpecialCaseResult::NO_RESULT, 0 };
       };
     }
   }
