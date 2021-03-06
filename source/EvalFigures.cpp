@@ -460,7 +460,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   const auto ocolor = Figure::otherColor(color);
   const auto  ki_pos = board_->kingPos(color);
   const auto oki_pos = board_->kingPos(ocolor);
-  const auto fmask_no_check = ~fmgr.mask(color) & ~finfo_[ocolor].pawnAttacks_;
+  const auto fmask_no_check = ~fmgr.mask(color);
 
   const auto& oki_fields = finfo_[ocolor].ki_fields_;
   const auto& near_oking = oki_fields & finfo_[ocolor].kingAttacks_;
@@ -548,9 +548,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }
-  else if ((num_attackers == 1 || num_checkers == 0) &&
-    !(q_check && !(finfo_[color].queenMoves_ & oki_fields)) &&
-    !(r_check && !(finfo_[color].rookMoves_ & oki_fields))) {
+  else if (num_attackers == 1) {
     check_coeff >>= 1;
   }
   
@@ -558,14 +556,18 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   score >>= 5;
 
   auto king_left = (oki_pos & 7) < 4;
-  Index oki_aux{ Index{oki_pos}.x(), promo_y_[color] };
-  auto around_oking = movesTable().king_pressure(ocolor, oki_aux) | Figure::kingQuaterBoard_[ocolor][king_left];
   auto general_pressure_mask =
     ((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_) | finfo_[color].pawnAttacks_) &
       ~finfo_[ocolor].pawnAttacks_ & ~(near_oking_att | remaining_oking);
-  auto attacks_king_side = general_pressure_mask & around_oking;
-  int general_king_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
-  score += general_king_score;
+
+  auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_left];
+  int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
+
+  auto attacks_opponent_other = general_pressure_mask & Figure::kingAuxBoard_[ocolor][king_left];
+  int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalKingAuxPressure_;
+  int general_score = general_king_attacks_score + general_opponent_pressure;
+
+  score += general_score;
 
   return { score, 0 };
 }

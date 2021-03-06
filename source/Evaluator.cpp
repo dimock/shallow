@@ -106,8 +106,8 @@ void Evaluator::prepare()
     finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
     finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
 
-    finfo_[0].ki_fields_no_pw_ = finfo_[0].ki_fields_ & ~finfo_[0].pawnAttacks_ & ~fmgr.pawn_mask(Figure::ColorWhite);
-    finfo_[1].ki_fields_no_pw_ = finfo_[1].ki_fields_ & ~finfo_[1].pawnAttacks_ & ~fmgr.pawn_mask(Figure::ColorBlack);
+    finfo_[0].ki_fields_no_pw_ = finfo_[0].ki_fields_ & ~finfo_[0].pawnAttacks_;
+    finfo_[1].ki_fields_no_pw_ = finfo_[1].ki_fields_ & ~finfo_[1].pawnAttacks_;
   }
   
   // other mask
@@ -326,22 +326,22 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
 {
   auto const& fmgr = board_->fmgr();
   auto const ocolor = Figure::otherColor(color);
-  auto pw_mask = fmgr.pawn_mask(ocolor) & ~finfo_[ocolor].pawnAttacks_;
-  auto strong_attackers = ~finfo_[color].pawnAttacks_ &
-    ((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_));
-  auto weak_attackers = ~finfo_[color].pawnAttacks_ & finfo_[color].attack_mask_ & ~strong_attackers;
-  ScoreType32 score{};
-  score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_mask & strong_attackers);
-  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_mask & weak_attackers);
+  auto const& pw_mask = fmgr.pawn_mask(ocolor);
+  auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
+  auto pw_unprotected = pw_mask ^ pw_protected;
+  auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
+  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & attackers);;
+  score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & attackers & ~finfo_[ocolor].attack_mask_);
+  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_);
   // bishop treat
   if(fmgr.bishops(color))
   {
     auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
     auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
     if(bi_mask_w)
-      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_mask &  FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_mask_);
+      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers);
     if(bi_mask_b)
-      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_mask & ~FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_mask_);
+      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers);
   }
   return score;
 }
@@ -1041,14 +1041,12 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
     ++attackedN;
   }
   
-  BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_;
-  if (auto treat_mask = finfo_[color].attack_mask_ & strong_attacks & ~counted_mask &
-    ((finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor)))) {
-    auto strong_mask = treat_mask & ~finfo_[ocolor].attack_mask_;
-    int rqtreatsN = pop_count(strong_mask);
+  BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
+  if (auto treat_mask = finfo_[color].attack_mask_ & strong_attacks & ~counted_mask) {
+    treat_mask &= (finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor));
+    int rqtreatsN = pop_count(treat_mask);
     attackedN += rqtreatsN;
     forkScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
-    forkScore += (EvalCoefficients::rookQueenAttackedBonus_ * ((treat_mask & ~strong_mask) != 0ULL)) >> 1;
   }
 
   auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightMoves_ &
