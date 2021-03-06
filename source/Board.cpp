@@ -448,7 +448,7 @@ void Board::verifyState()
 /// slow, but verify all the conditions
 bool Board::validateMoveBruteforce(const Move & move) const
 {
-  if(drawState() || matState())
+  if(matState())
     return false;
   const auto & ffrom = getField(move.from());
   X_ASSERT(ffrom.type() != Figure::TypePawn && move.new_type() > 0, "not a pawn promotion");
@@ -586,7 +586,7 @@ bool Board::validateMoveBruteforce(const Move & move) const
 
 bool Board::validateMove(const Move & move) const
 {
-  if(drawState() || matState())
+  if(matState())
     return false;
 
   X_ASSERT((unsigned)move.from() > 63 || (unsigned)move.to() > 63, "invalid move positions");

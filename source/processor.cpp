@@ -252,7 +252,7 @@ ReplyStruct Processor::reply(bool winboardFormat)
   rep.white_ = NEngine::Figure::ColorWhite == board.color();
   rep.state_ = board.state();
 
-  if(board.drawState() || board.matState())
+  if(board.matState())
     return rep;
 
   engine_.setAnalyzeMode(false);

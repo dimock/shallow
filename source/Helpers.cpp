@@ -325,8 +325,8 @@ std::string printSAN(Board & board, const Move & move)
 
 std::string moveToStr(const Move & move, bool wbf)
 {
-  if(move.from() < 0 || move.to() < 0 || move.from() == move.to())
-    return "";
+  if(!move || move.from() < 0 || move.to() < 0 || move.from() == move.to())
+    return s_nullmove;
 
   Index from(move.from());
   Index to(move.to());

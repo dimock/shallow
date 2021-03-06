@@ -213,7 +213,7 @@ bool xProtocolMgr::uciGo(const xCmd & cmd)
       return true;
     }
   }
-  std::string outstr("bestmove null");
+  std::string outstr("bestmove 0000");
   os_ << outstr << std::endl;
   return false;
 }
