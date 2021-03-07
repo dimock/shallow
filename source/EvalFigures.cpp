@@ -78,8 +78,9 @@ void Evaluator::prepareAttacksMasks()
 
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
-        bishop_moves = 0ULL;
-        bishop_moves_x = 0ULL;
+        auto const& from_mask = betweenMasks().from(board_->kingPos(color), n);
+        bishop_moves &= from_mask;
+        bishop_moves_x &= from_mask;
       }
 
       moves_masks_[n] = bishop_moves;
@@ -107,8 +108,9 @@ void Evaluator::prepareAttacksMasks()
     
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
-        rook_moves = 0ULL;
-        rook_moves_x = 0ULL;
+        auto const& from_mask = betweenMasks().from(board_->kingPos(color), n);
+        rook_moves &= from_mask;
+        rook_moves_x &= from_mask;
       }
 
       moves_masks_[n] = rook_moves;
@@ -138,7 +140,7 @@ void Evaluator::prepareAttacksMasks()
       // pinned
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
-        auto from_mask = betweenMasks().from(board_->kingPos(color), n);
+        auto const& from_mask = betweenMasks().from(board_->kingPos(color), n);
         queen_moves &= from_mask;
       }
 

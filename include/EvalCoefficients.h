@@ -27,6 +27,7 @@ struct EvalCoefficients
   static ScoreType rookQueenAttackedBonus_;
   static ScoreType queenUnderRookAttackBonus_;
   static ScoreType multiattackedBonus_;
+  static ScoreType attackedByKingBonus_;
 
   // immobility
   static ScoreType32 immobileAttackBonus_;
