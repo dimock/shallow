@@ -279,10 +279,10 @@ ScoreType32 Evaluator::evaluateBishops()
         finfo_[color].num_attackers_++;
 
 #ifdef KING_EVAL_ATTACKED_MULTI_FIELD
-        auto n_attacks = pop_count(bishop_attacks & finfo_[ocolor].ki_fields_no_pw_);
+        auto n_attacks = pop_count(bishop_moves & finfo_[ocolor].ki_fields_no_pw_);
         finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
 #else
-        bool b_attacks = (bishop_attacks & (finfo_[ocolor].ki_fields_no_pw_)) != 0ULL;
+        bool b_attacks = (bishop_moves & (finfo_[ocolor].ki_fields_no_pw_)) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
 #endif
       }
@@ -366,10 +366,10 @@ ScoreType32 Evaluator::evaluateRook()
         finfo_[color].num_attackers_++;
 
 #ifdef KING_EVAL_ATTACKED_MULTI_FIELD
-        auto n_attacks = pop_count(rook_attacks & finfo_[ocolor].ki_fields_no_pw_);
+        auto n_attacks = pop_count(rook_moves & finfo_[ocolor].ki_fields_no_pw_);
         finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
 #else
-        bool b_attacks = (rook_attacks & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
+        bool b_attacks = (rook_moves & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
 #endif
       }
@@ -412,6 +412,7 @@ ScoreType32 Evaluator::evaluateQueens()
   ScoreType32 score[2];
   for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
   {
+    finfo_[color].qkingAttack_ = false;
     auto mask = fmgr.queen_mask(color);
     auto ocolor = Figure::otherColor(color);
     for (; mask;)
@@ -425,15 +426,17 @@ ScoreType32 Evaluator::evaluateQueens()
 
 #ifdef DO_KING_EVAL
       auto qx_attacks = queen_moves | qr_attacks_masks_[n];
-      if (qx_attacks & finfo_[ocolor].ki_fields_)
+      bool qkattack = qx_attacks & finfo_[ocolor].ki_fields_;
+      finfo_[color].qkingAttack_ |= qkattack;
+      if (qkattack)
       {
         finfo_[color].num_attackers_++;
 
 #ifdef KING_EVAL_ATTACKED_MULTI_FIELD
-        auto n_attacks = pop_count(qx_attacks & finfo_[ocolor].ki_fields_no_pw_);
+        auto n_attacks = pop_count(queen_moves & finfo_[ocolor].ki_fields_no_pw_);
         finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
 #else
-        bool b_attacks = (qx_attacks & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
+        bool b_attacks = (queen_moves & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
 #endif
       }
@@ -550,7 +553,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }
-  else if (num_attackers == 1) {
+  else if ((num_attackers == 1) && (!q_check || (q_check && finfo_[color].qkingAttack_))) {
     check_coeff >>= 1;
   }
   

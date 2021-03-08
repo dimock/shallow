@@ -1041,7 +1041,7 @@ ScoreType32 Evaluator::evaluateForks(Figure::Color color)
     ++attackedN;
   }
   
-  BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_;
+  BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
   if (auto treat_mask = finfo_[color].attack_mask_ & strong_attacks & ~counted_mask) {
     treat_mask &= (finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor));
     int rqtreatsN = pop_count(treat_mask);

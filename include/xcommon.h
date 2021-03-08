@@ -251,8 +251,8 @@ static const int NullMove_PlyReduce = 4 * ONE_PLY;
 static const int Probcut_Depth = 7 * ONE_PLY;
 static const int Probcut_PlyReduce = 4 * ONE_PLY;
 static const int Betta_ThresholdFP = 160;
-static const int Position_GainFP = 300;
-static const int Position_GainThr = 300;
+static const int Position_GainFP = 330;
+static const int Position_GainThr = 330;
 static const int AlphaProbCutThreshold = 200;
 
 static const size_t N_THREADS_MAX = 1;

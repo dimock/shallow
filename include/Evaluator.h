@@ -62,6 +62,7 @@ class Evaluator
 #ifdef DO_KING_EVAL
     int num_attackers_{};
     int score_king_{};
+    bool qkingAttack_{};
     //int score_opening_{};
     //bool matTreat_{};
 #endif
