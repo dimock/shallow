@@ -279,10 +279,10 @@ ScoreType32 Evaluator::evaluateBishops()
         finfo_[color].num_attackers_++;
 
 #ifdef KING_EVAL_ATTACKED_MULTI_FIELD
-        auto n_attacks = pop_count(bishop_moves & finfo_[ocolor].ki_fields_no_pw_);
+        auto n_attacks = pop_count(bishop_attacks & finfo_[ocolor].ki_fields_no_pw_);
         finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
 #else
-        bool b_attacks = (bishop_moves & (finfo_[ocolor].ki_fields_no_pw_)) != 0ULL;
+        bool b_attacks = (bishop_attacks & (finfo_[ocolor].ki_fields_no_pw_)) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
 #endif
       }
@@ -366,10 +366,10 @@ ScoreType32 Evaluator::evaluateRook()
         finfo_[color].num_attackers_++;
 
 #ifdef KING_EVAL_ATTACKED_MULTI_FIELD
-        auto n_attacks = pop_count(rook_moves & finfo_[ocolor].ki_fields_no_pw_);
+        auto n_attacks = pop_count(rook_attacks & finfo_[ocolor].ki_fields_no_pw_);
         finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * n_attacks + EvalCoefficients::basicAttack_ * (!n_attacks);
 #else
-        bool b_attacks = (rook_moves & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
+        bool b_attacks = (rook_attacks & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
         finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
 #endif
       }

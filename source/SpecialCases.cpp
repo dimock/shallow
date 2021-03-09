@@ -97,38 +97,55 @@ namespace
     return NEngine::couldIntercept(board, inv_mask_all, attack_mask, pawnColor, pawnPos, promo_pos, stepsMax);
   }
 
-  std::pair<SpecialCaseResult, ScoreType> pawnAndHeavy(Board const& board, Figure::Color pawnColor)
+  std::pair<SpecialCaseResult, ScoreType> pawnsAndHeavy(Board const& board, Figure::Color pawnColor)
   {
-    ScoreType score{ 0 };
-    if (board.fmgr().rooks(pawnColor))
-      score += Figure::figureWeight_[Figure::TypePawn];
-    else if (board.fmgr().queens(pawnColor))
-      score += (Figure::figureWeight_[Figure::TypePawn] * 3) / 2;
-    auto ocolor = Figure::otherColor(pawnColor);
-    Index index(_lsb64(board.fmgr().pawn_mask(pawnColor)));
-    Index kingP(board.kingPos(pawnColor));
-    Index kingO(board.kingPos(ocolor));
-    int pcy = pawn_colored_y_[pawnColor][index.y()];
-    score += EvalCoefficients::passerPawn_[pcy].eval1();
-    int pp = index.x() | (pawnColor * 56);
-    int o_dist_promo = distanceCounter().getDistance(kingO, pp) - (board.color() == ocolor);
-    int dist_promo = distanceCounter().getDistance(kingP, pp);
-    score += (o_dist_promo - dist_promo) * 3;
-    if (std::abs(kingO.x() - index.x()) < 2 && pawn_colored_y_[pawnColor][kingO.y()] >= pcy) {
-      score /= 4;
+    auto const& fmgr = board.fmgr();
+    auto pmask = fmgr.pawn_mask(pawnColor);
+    int xmin = 7;
+    int xmax = 0;
+    int ymin = 7;
+    int ymax = 0;
+    while (pmask) {
+      auto n = clear_lsb(pmask);
+      Index index{ n };
+      xmin = std::min(xmin, index.x());
+      xmax = std::max(xmax, index.x());
+      ymin = std::min(ymin, index.y());
+      ymax = std::max(ymax, index.y());
     }
-    else if (couldIntercept(board, pawnColor, index)) {
-      score = (score * 3) / 4;
+    if (std::abs(xmax - xmin) > 1) {
+      return { SpecialCaseResult::NO_RESULT, 0 };
+    }
+
+    Index pkpos{ board.kingPos(pawnColor) };
+    Index okpos{ board.kingPos(Figure::otherColor(pawnColor)) };
+    if (xmin == xmax) {
+        if (xmin == 0 || xmin == 7) {
+          if(std::abs(okpos.x() - xmin) > std::abs(pkpos.x() - xmin))
+            return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+          else
+            return { SpecialCaseResult::ALMOST_DRAW, 0 };
+        }
+        else {
+          if (std::abs(okpos.x() - xmin) > 1 || std::abs(okpos.x() - xmax) > 1) {
+            return { SpecialCaseResult::NO_RESULT, 0 };
+          }
+          if ((pawnColor == Figure::ColorBlack && okpos.y() < ymin && okpos.y() < pkpos.y()) ||
+              (pawnColor == Figure::ColorWhite && okpos.y() > ymax && okpos.y() > pkpos.y())) {
+            return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+          }
+        }
     }
     else {
-      score += EvalCoefficients::passerPawn2_[pcy].eval1();
+      if (std::abs(okpos.x() - xmin) > 1 || std::abs(okpos.x() - xmax) > 1) {
+        return { SpecialCaseResult::NO_RESULT, 0 };
+      }
+      if ((pawnColor == Figure::ColorBlack && okpos.y() < ymin && pkpos.y() >= ymax) ||
+          (pawnColor == Figure::ColorWhite && okpos.y() > ymax && pkpos.y() <= ymin)) {
+        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+      }
     }
-    if (index.x() == 0 || index.x() == 7) {
-      score = (score * 3) / 4;
-    }
-    if (pawnColor == Figure::ColorBlack)
-      score = -score;
-    return { SpecialCaseResult::SCORE, score };
+    return { SpecialCaseResult::NO_RESULT, 0 };
   }
 
   std::pair<SpecialCaseResult, ScoreType> bishopAndPawnsDraw(Board const& board, Figure::Color winColor)
@@ -701,34 +718,36 @@ void SpecialCasesDetector::initCases()
     return { SpecialCaseResult::SCORE, figureVsPawns(board, Figure::ColorWhite) };
   };
   
-  // rook against pawn & rook
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-  { Figure::TypePawn, Figure::ColorBlack, 1 },
-  { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return pawnAndHeavy(board, Figure::ColorBlack);
-  };
+  // rook against pawns & rook
+  for (int n = 1; n <= 2; ++n) {
+    scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypePawn, Figure::ColorBlack, n },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return pawnsAndHeavy(board, Figure::ColorBlack);
+    };
 
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return pawnAndHeavy(board, Figure::ColorWhite);
-  };
+    scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
+      { Figure::TypePawn, Figure::ColorWhite, n },
+      { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return pawnsAndHeavy(board, Figure::ColorWhite);
+    };
+  }
 
   // queen against pawn & queen
   scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
     { Figure::TypePawn, Figure::ColorBlack, 1 },
     { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return pawnAndHeavy(board, Figure::ColorBlack);
+    return pawnsAndHeavy(board, Figure::ColorBlack);
   };
 
   scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
     { Figure::TypePawn, Figure::ColorWhite, 1 },
     { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return pawnAndHeavy(board, Figure::ColorWhite);
+    return pawnsAndHeavy(board, Figure::ColorWhite);
   };
 
   // queen against figure & queen
@@ -851,7 +870,7 @@ void SpecialCasesDetector::initCases()
     }
   }
 
-  // bishops and pawns. probable draw
+  // bishops and pawns. may be draw
   for (int w = 0; w <= 8; ++w)
   {
     for (int b = 0; b <= 8; ++b)
@@ -866,7 +885,7 @@ void SpecialCasesDetector::initCases()
         auto const& fmgr = board.fmgr();
         bool w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
         bool b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
-        return { (b != w) ? SpecialCaseResult::PROBABLE_DRAW : SpecialCaseResult::NO_RESULT, 0 };
+        return { (b != w) ? SpecialCaseResult::MAYBE_DRAW : SpecialCaseResult::NO_RESULT, 0 };
       };
     }
   }

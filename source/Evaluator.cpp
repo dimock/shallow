@@ -199,6 +199,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 #endif
 
   int scoreOffset = 0;
+  int scoreMultip = 1;
   auto spec = specialCases().eval(*board_);
   switch (spec.first) {
   case SpecialCaseResult::SCORE: {
@@ -216,6 +217,12 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
   case SpecialCaseResult::PROBABLE_DRAW: {
     scoreOffset = 1;
+    break;
+  }
+
+  case SpecialCaseResult::MAYBE_DRAW: {
+    scoreMultip = 3;
+    scoreOffset = 2;
     break;
   }
   default: {
@@ -291,7 +298,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
-  return result >> scoreOffset;
+  return (result * scoreMultip) >> scoreOffset;
 }
 
 Evaluator::PhaseInfo Evaluator::detectPhase() const
