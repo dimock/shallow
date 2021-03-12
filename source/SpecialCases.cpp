@@ -953,6 +953,47 @@ void SpecialCasesDetector::initCases()
       }
     }
   }
+
+  // pawns only
+  for (int pw = 1; pw <= 8; ++pw)
+  {
+    for (int pb = 1; pb <= 8; ++pb)
+    {
+      scases_[format({
+        { Figure::TypePawn, Figure::ColorWhite, pw },
+        { Figure::TypePawn, Figure::ColorBlack, pb } })] =
+        [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+      {
+        return { SpecialCaseResult::POSSIBLE_WIN, 0 };
+      };
+    }
+  }
+
+  // bishop|knight + (+pawn?) vs. knight|bishop + pawns -> probable draw
+  for (Figure::Type wft : {Figure::TypeKnight, Figure::TypeBishop}) {
+    for (Figure::Color wfc : {Figure::ColorBlack, Figure::ColorWhite}) {
+      for (int wfp = 0; wfp <= 2; ++wfp) {
+        for (int lfp = 0; lfp <= 2; ++lfp) {
+          if (wfp == 0 && lfp == 0) {
+            continue;
+          }
+          auto lfc = Figure::otherColor(wfc);
+          auto lft = (wft == Figure::TypeKnight) ? Figure::TypeBishop : Figure::TypeKnight;
+          scases_[format({
+            { wft, wfc, 1 },
+            { Figure::TypePawn, wfc, wfp },
+            { lft, lfc, 1 },
+            { Figure::TypePawn, lfc, lfp },
+            })] =
+            [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+          {
+            return { SpecialCaseResult::MAYBE_DRAW, 0 };
+          };
+        }
+      }
+    }
+  }
+  ///
 }
 
 } // NEngine
