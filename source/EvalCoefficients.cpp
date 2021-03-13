@@ -67,11 +67,11 @@ namespace NEngine
   int EvalCoefficients::queenChecking_{ 90 };
   int EvalCoefficients::weakChecking_{ 9 };
   
-  int EvalCoefficients::attackedNearKingCoeff_{ 30 };
+  int EvalCoefficients::attackedNearKingCoeff_{ 40 };
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };
   int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0, 15, 32, 48, 56, 60, 62 };
-  int EvalCoefficients::kingPossibleMovesCoefficients_[10] = { 24,  16, 4, 2, 1, 0, 0, 0, 0, 0 };
+  int EvalCoefficients::kingPossibleMovesCoefficients_[10] = { 16,  8, 4, 2, 1, 0, 0, 0, 0, 0 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
