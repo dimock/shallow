@@ -189,8 +189,8 @@ private:
 
   ScoreType32 evaluateMaterialDiff();
 
-  /// find knight and pawn forks
-  ScoreType32 evaluateForks(Figure::Color color);
+  /// find knight and pawn forks and other attacks
+  ScoreType32 evaluateAttacks(Figure::Color color);
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
