@@ -213,11 +213,13 @@ namespace nst
 
 #define SORT_MOVES_0_HIST
 #define EXTEND_CHECK_SEE_ONLY
+#define USE_LAZY_EVAL
 
 #ifndef PROCESS_MOVES_SEQ
 #define USE_HASH
 #define USE_EVAL_HASH_PW
 #define USE_EVAL_HASH_MD
+#define USE_EVAL_HASH_ALL
 #define SEE_PRUNING
 #define USE_FUTILITY_PRUNING
 #define FUTILITY_PRUNING_BETTA

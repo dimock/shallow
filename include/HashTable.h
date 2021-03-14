@@ -20,12 +20,11 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
   ScoreType  score_{};
 
   int16      depth_   : 11,
-             xflag_    : 2,
+             xflag_   : 2,
              threat_  : 1,
              singular_: 1,
              pv_      : 1;
 
-  ScoreType  eval_{ -ScoreMax };
   Move       move_;
 
   HItem() {}
@@ -166,6 +165,7 @@ ALIGN_MSC(8) struct ALIGN_GCC(8) PHEval
 class PHashTable : public HashTable<PHEval>
 {
 public:
+  using ItemType = PHEval;
 
   PHashTable(int size) : HashTable<PHEval>(size)
   {}
@@ -186,11 +186,32 @@ ALIGN_MSC(8) struct ALIGN_GCC(8) FHEval
 class FHashTable : public HashTable<FHEval>
 {
 public:
+  using ItemType = FHEval;
 
   FHashTable(int size) : HashTable<FHEval>(size)
   {}
 
   inline FHEval* get(const uint64 & code)
+  {
+    return &(operator [] (code));
+  }
+};
+
+ALIGN_MSC(4) struct ALIGN_GCC(8) AHEval
+{
+  uint32    hkey_{};
+  ScoreType score_;
+};
+
+class AHashTable : public HashTable<AHEval>
+{
+public:
+  using ItemType = AHEval;
+
+  AHashTable(int size) : HashTable<AHEval>(size)
+  {}
+
+  inline AHEval* get(const uint64 & code)
   {
     return &(operator [] (code));
   }

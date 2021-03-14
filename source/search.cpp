@@ -564,22 +564,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     && ply > 1
     && board.allowNullMove())
   {
-    ScoreType score0 = Figure::MatScore;
-#ifdef USE_HASH
-    bool hashOk = pitem && pitem->hkey_ == board.fmgr().hashKey();
-    if (hashOk && pitem->eval_ != -ScoreMax) {
-      score0 = pitem->eval_;
-      X_ASSERT_R(score0 != sctx.eval_(alpha, betta), "incorrect evaluation in hash");
-    }
-    else {
-#endif // USE_HASH
-      score0 = sctx.eval_(alpha, betta);
-#ifdef USE_HASH
-      if (hashOk) {
-        pitem->eval_ = score0;
-      }
-    }
-#endif // USE_HASH
+    ScoreType score0 = sctx.eval_(alpha, betta);
     int d = depth >> 4;
 #ifdef FUTILITY_PRUNING_BETTA
     if ((int)score0 > (int)betta + Betta_ThresholdFP * d) {
@@ -688,7 +673,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
 #ifdef USE_HASH
-    hash_.prefetch(board.hashAfterMove(move));
+    auto pfhkey = board.hashAfterMove(move);
+    hash_.prefetch(pfhkey);
+#ifdef USE_EVAL_HASH_ALL
+    ev_hash_.prefetch(pfhkey);
+#endif
 #endif
 
     bool danger_pawn = board.isDangerPawn(move);
@@ -823,7 +812,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     singular = true;
 
 #ifdef USE_HASH
-    hash_.prefetch(board.hashAfterMove(best));
+    auto pfhkey = board.hashAfterMove(best);
+    hash_.prefetch(pfhkey);
+#ifdef USE_EVAL_HASH_ALL
+    ev_hash_.prefetch(pfhkey);
+#endif
 #endif
 
     board.makeMove(best);
@@ -936,21 +929,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
     // not initialized yet
     if (score0 == -ScoreMax) {
-#ifdef USE_HASH
-      bool hashOk = pitem && pitem->hkey_ == board.fmgr().hashKey();
-      if (hashOk && pitem->eval_ != -ScoreMax) {
-        score0 = pitem->eval_;
-        X_ASSERT_R(score0 != eval(alpha, betta), "incorrect evaluation in hash");
-      }
-      else {
-#endif
-        score0 = eval(alpha, betta);
-#ifdef USE_HASH
-        if (hashOk) {
-          pitem->eval_ = score0;
-        }
-      }
-#endif
+      score0 = eval(alpha, betta);
     }
 
     if (score0 >= betta) {
@@ -997,7 +976,11 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
 #ifdef USE_HASH
-    hash_.prefetch(board.hashAfterMove(move));
+    auto pfhkey = board.hashAfterMove(move);
+    hash_.prefetch(pfhkey);
+#ifdef USE_EVAL_HASH_ALL
+    ev_hash_.prefetch(pfhkey);
+#endif
 #endif
 
 #ifdef PROCESS_MOVES_SEQ

@@ -91,10 +91,18 @@ class Evaluator
   FHashTable fhash_{ 0 };
 #endif
 
-public:
-  static const int lazyThreshold_ = 1000;
+#ifdef USE_EVAL_HASH_ALL
+  AHashTable * ev_hash_{ nullptr };
+#endif
 
-  void initialize(Board const* board);
+public:
+  static const int lazyThreshold_ = 1200;
+
+  void initialize(Board const* board
+#ifdef USE_EVAL_HASH_ALL
+  , AHashTable* evh
+#endif
+    );
   void reset();
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);

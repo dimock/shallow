@@ -56,8 +56,15 @@ const BitMask Evaluator::blocked_rook_mask_[2][2] = {
   }
 };
 
-void Evaluator::initialize(Board const* board)
+void Evaluator::initialize(Board const* board
+#ifdef USE_EVAL_HASH_ALL
+, AHashTable* evh
+#endif
+)
 {
+#ifdef USE_EVAL_HASH_ALL
+  ev_hash_ = evh;
+#endif
   board_ = board;
 }
 
@@ -198,6 +205,15 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
+#ifdef USE_EVAL_HASH_ALL
+  const uint64 & code = board_->fmgr().hashCode();
+  uint32 hkey = (uint32)(code >> 32);
+  auto* heval = ev_hash_->get(code);
+  if (heval && heval->hkey_ == hkey) {
+    return heval->score_;
+  }
+#endif
+
   int scoreOffset = 0;
   int scoreMultip = 1;
   auto spec = specialCases().eval(*board_);
@@ -237,20 +253,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
   }
 
-  //// prepare lazy evaluation
-  //if(alpha > -Figure::MatScore) {
-  //  alpha_ = (int)alpha - lazyThreshold_;
-  //}
-  //else {
-  //  alpha_ = -ScoreMax;
-  //}
-
-  //if(betta < +Figure::MatScore) {
-  //  betta_ = (int)betta + lazyThreshold_;
-  //}
-  //else {
-  //  betta_ = +ScoreMax;
-  //}
+#ifdef USE_LAZY_EVAL
+  // prepare lazy evaluation
+  alpha_ = (alpha > -Figure::MatScore) ? (int)alpha - lazyThreshold_ : -ScoreMax;
+  betta_ = (betta < +Figure::MatScore) ? (int)betta + lazyThreshold_ : +ScoreMax;
+#endif
 
   // determine game phase (opening, middle or end game)
   auto phaseInfo = detectPhase();
@@ -261,12 +268,14 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score32 += fmgr.score();
   score32 += evaluateMaterialDiff();
 
-  ///// use lazy evaluation
-  //{
-  //  auto score0 = considerColor(lipolScore(score32, phaseInfo));
-  //  if(score0 < alpha_ || score0 > betta_)
-  //    return score0;
-  //}
+  /// use lazy evaluation
+#ifdef USE_LAZY_EVAL
+  {
+    auto score0 = considerColor(lipolScore(score32, phaseInfo));
+    if(score0 < alpha_ || score0 > betta_)
+      return score0;
+  }
+#endif
 
   prepare();
 
@@ -305,7 +314,17 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
-  return (result * scoreMultip) >> scoreOffset;
+  result *= scoreMultip;
+  result >>= scoreOffset;
+
+#ifdef USE_EVAL_HASH_ALL
+  if (heval) {
+    heval->hkey_ = hkey;
+    heval->score_ = result;
+  }
+#endif
+
+  return result;
 }
 
 Evaluator::PhaseInfo Evaluator::detectPhase() const

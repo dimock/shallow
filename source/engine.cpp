@@ -46,6 +46,9 @@ Engine::SearchContext& Engine::SearchContext::operator = (SearchContext const& o
 Engine::Engine()
 #ifdef USE_HASH
   : hash_(0)
+#ifdef USE_EVAL_HASH_ALL
+  , ev_hash_(0)
+#endif
 #endif
 {
   setMemory(HASH_SIZE_DEFAULT);
@@ -68,8 +71,16 @@ void Engine::setMemory(int mb)
 #ifdef USE_HASH
   size_t bytesN = mb*1024*1024;
   size_t hitemSize = sizeof(NEngine::GHashTable::ItemType);
-  size_t hsize = log2((uint64)(bytesN)/hitemSize);
-  hash_.resize(hsize);
+  size_t hitemsN = log2((uint64)(bytesN)/hitemSize);
+  hash_.resize(hitemsN);
+#ifdef USE_EVAL_HASH_ALL
+  int evbytesN = (int)bytesN - (1<<hitemsN)*hitemSize;
+  if (evbytesN > 0) {
+    size_t evitemSize = sizeof(NEngine::FHashTable::ItemType);
+    size_t evitemsN = log2((uint64)(evbytesN) / evitemSize);
+    ev_hash_.resize(evitemsN);
+  }
+#endif
 #endif
 }
 
@@ -96,7 +107,11 @@ void Engine::setThreadsNumber(int n)
   for (auto& scontext : scontexts_)
   {
     scontext.clearStack();
-    scontext.eval_.initialize(&scontext.board_);
+    scontext.eval_.initialize(&scontext.board_
+#ifdef USE_EVAL_HASH_ALL
+      , &ev_hash_
+#endif
+    );
   }
 }
 

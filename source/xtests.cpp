@@ -225,7 +225,11 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
     [&totalError, &refEvals](size_t i, xEPD<Board, Move, UndoInfo>& e)
   {
     NEngine::Evaluator eval;
-    eval.initialize(&e.board_);
+    eval.initialize(&e.board_
+#ifdef USE_EVAL_HASH_ALL
+    ,nullptr
+#endif
+    );
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     ChecksGenerator<Board, SMove> ck{ e.board_ };
     ck.generate();
@@ -535,7 +539,11 @@ void processBoardPGN(std::string const& pgn_file)
 
       SBoard<Board, UndoInfo, Board::GameLength> sboard(board, true);
       NEngine::Evaluator eval;
-      eval.initialize(&sboard);
+      eval.initialize(&sboard
+#ifdef USE_EVAL_HASH_ALL
+        , nullptr
+#endif
+        );
       auto score0 = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
 
       NShallow::Processor proc;
