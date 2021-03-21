@@ -37,6 +37,7 @@ class Evaluator
     BitMask bishopMoves_{};
     BitMask rookMoves_{};
     BitMask queenMoves_{};
+    BitMask behindPawnAttacks_{};
     BitMask bishopTreatAttacks_{};
     BitMask rookTreatAttacks_{};
     BitMask kingAttacks_{};
