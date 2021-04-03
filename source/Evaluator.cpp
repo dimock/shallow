@@ -1140,8 +1140,10 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 
   attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> 1;
-  attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN > 1);
 
+  if (attackedN > 1) {
+    attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
+  }
   if (board_->color() == color) {
     attackScore += attackScore >> 1;
   }
