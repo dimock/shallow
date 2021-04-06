@@ -1059,8 +1059,9 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int knightsN = pop_count(kn_fork & ~finfo_[ocolor].attack_mask_);
     attackedN += knightsN;
     attackScore += EvalCoefficients::knightAttack_ * knightsN;
-    knightsN = pop_count(kn_fork & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::knightAttack_ * knightsN) >> 2;
+    const auto mattacked = finfo_[ocolor].attack_mask_ & finfo_[color].multiattack_mask_;
+    knightsN = pop_count(kn_fork & mattacked);
+    attackScore += (EvalCoefficients::knightAttack_ * knightsN) >> 1;
   }
   
   if (auto bi_treat = (o_rq_mask & finfo_[color].bishopTreatAttacks_ & ~counted_mask)) {
@@ -1075,34 +1076,17 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int bishopsN = pop_count(bi_treat & ~finfo_[ocolor].attack_mask_);
     attackedN += bishopsN;
     attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
-    bishopsN = pop_count(bi_treat & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::bishopsAttackBonus_ * bishopsN) >> 2;
+    const auto mattacked = finfo_[ocolor].attack_mask_ & finfo_[color].multiattack_mask_;
+    bishopsN = pop_count(bi_treat & mattacked);
+    attackScore += (EvalCoefficients::bishopsAttackBonus_ * bishopsN) >> 1;
   }
-
-  //auto possible_mask = ~finfo_[ocolor].attack_mask_ & ~counted_mask;
-  //if (board_->color() == color && possible_mask) {
-  //  if (auto kn_fork = (fmgr.knight_mask(ocolor) & finfo_[color].knightMoves_ & possible_mask)) {
-  //    counted_mask |= kn_fork;
-  //    ++attackedN;
-  //    attackScore += EvalCoefficients::knightAttack_;
-  //  }
-  //  if (auto bi_treat = (fmgr.bishop_mask(ocolor) & finfo_[color].bishopTreatAttacks_ & possible_mask)) {
-  //    counted_mask |= bi_treat;
-  //    ++attackedN;
-  //    attackScore += EvalCoefficients::bishopsAttackBonus_;
-  //  }
-  //  if (auto r_attack = ((fmgr.queen_mask(ocolor)|fmgr.rook_mask(ocolor)) & finfo_[color].rookMoves_  & possible_mask)) {
-  //    counted_mask |= r_attack;
-  //    possible_mask &= ~r_attack;
-  //    ++attackedN;
-  //    attackScore += EvalCoefficients::rookQueenAttackedBonus_;
-  //  }
-  //  if (auto q_attack = ((fmgr.queen_mask(ocolor) | fmgr.rook_mask(ocolor)) & finfo_[color].queenMoves_  & possible_mask)) {
-  //    counted_mask |= q_attack;
-  //    ++attackedN;
-  //    attackScore += EvalCoefficients::rookQueenAttackedBonus_;
-  //  }
-  //}
+    
+  auto possible_mask = ~finfo_[ocolor].attack_mask_ & ~counted_mask;
+  if (auto qr_attack = (fmgr.rook_mask(ocolor) & finfo_[color].queenMoves_  & possible_mask)) {
+    counted_mask |= qr_attack;
+    ++attackedN;
+    attackScore += EvalCoefficients::rookQueenAttackedBonus_;
+  }
 
   if (auto r2q_treat = (fmgr.queen_mask(ocolor) & finfo_[color].rookMoves_ & ~counted_mask)) {
     counted_mask |= r2q_treat;

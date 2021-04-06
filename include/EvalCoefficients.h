@@ -65,8 +65,10 @@ struct EvalCoefficients
   static int bishopChecking_;
   static int rookChecking_;
   static int queenChecking_;
+  static int discoveredChecking_;
   static int weakChecking_;
   
+  static int possibleMatTreat_;
   static int attackedNearKingCoeff_;
   static int kingWeakCheckersCoefficients_;
   static int kingCheckersCoefficients_[8];

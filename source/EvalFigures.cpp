@@ -522,7 +522,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
                      EvalCoefficients::bishopChecking_ * (bi_check != 0) +
                      EvalCoefficients::rookChecking_ * (r_check != 0) +
                      EvalCoefficients::queenChecking_ * (q_check != 0) +
-                     EvalCoefficients::weakChecking_ * finfo_[color].discoveredCheck_;
+                     EvalCoefficients::discoveredChecking_ * finfo_[color].discoveredCheck_;
   
   int num_attackers = std::min(finfo_[color].num_attackers_, 7);
   auto attack_coeff = EvalCoefficients::kingAttackersCoefficients_[num_attackers];
@@ -554,16 +554,43 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += remaining_coeff;
   }
 
-  auto king_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
-  int num_king_moves = pop_count(king_moves);
-  attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_king_moves];
-  check_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_king_moves];
+  auto oking_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
+  int num_oking_moves = pop_count(oking_moves);
+  attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
+  check_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
  
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }
   else if ((num_attackers == 1) && (!q_check || (q_check && finfo_[color].qkingAttack_))) {
     check_coeff >>= 1;
+  }
+
+  // mat is possible
+  if (num_checkers) {
+    auto const oking_possible_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].multiattack_mask_ | mask_all_);
+    int mat_treat_coef = 0;
+    const auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_) & ~fmgr.king_mask(ocolor);
+    q_check &= ~attacked_any_but_oking;
+    while (q_check) {
+      auto n = clear_lsb(q_check);
+      const auto& qmat_attacks = magic_ns::queen_moves(n, mat_fields_mask);
+      if ((qmat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~qmat_attacks)) {
+        mat_treat_coef = 1;
+        break;
+      }
+    }
+    r_check &= ~attacked_any_but_oking;
+    while (!mat_treat_coef && r_check) {
+      auto n = clear_lsb(r_check);
+      const auto& rmat_attacks = magic_ns::rook_moves(n, mat_fields_mask);
+      if ((rmat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~rmat_attacks)) {
+        mat_treat_coef = 1;
+        break;
+      }
+    }
+    mat_treat_coef += board_->color() == color;
+    check_coeff += EvalCoefficients::possibleMatTreat_ * mat_treat_coef;
   }
   
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
