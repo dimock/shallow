@@ -510,8 +510,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     finfo_[color].discoveredCheck_ = discoveredCheck(ki_pos, ocolor);
   }
 
-  bool canCheck = ((kn_check | bi_check) != 0ULL) || ((r_check != 0) && fmgr.rooks(color) + fmgr.queens(color) > 1) ||
-    ((q_check != 0) && fmgr.queens(color) > 1);
+  bool canCheck = ((kn_check | bi_check | r_check) != 0ULL) || ((q_check & finfo_[color].multiattack_mask_) != 0);
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
   r_check &= can_check_r;
@@ -545,6 +544,13 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 1;
     attack_coeff += near_king_coeff;
     check_coeff += near_king_coeff;
+  }
+
+  const auto near_oking_rem = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_ & finfo_[color].attack_mask_ & ~near_oking_att;
+  if (near_oking_rem) {
+    auto rem_king_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_rem)) >> 2;
+    attack_coeff += rem_king_coeff;
+    check_coeff += rem_king_coeff;
   }
 
   auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_;
