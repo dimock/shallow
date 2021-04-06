@@ -595,7 +595,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
         break;
       }
     }
-    mat_treat_coef += board_->color() == color;
+    mat_treat_coef += (board_->color() == color) * mat_treat_coef;
     check_coeff += EvalCoefficients::possibleMatTreat_ * mat_treat_coef;
   }
   
