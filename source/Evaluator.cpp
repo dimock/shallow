@@ -604,7 +604,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   const auto& opmsk = fmgr.pawn_mask(ocolor);
   const auto& ofgs = fmgr.mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
-  
+
   while (pawn_mask)
   {
     const int n = clear_lsb(pawn_mask);
@@ -655,25 +655,37 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       continue;
     }
 
+    const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~o_multiattack_mask;
     auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo_[color].pawnAttacks_;
     blockers_mask |= mask_all_;
+
+    ScoreType32 pwscore{};
+
+    // bonus for possibility to go
+    pwscore += EvalCoefficients::passerPawnFwd_[cy];
+    // forward field is not attacked
+    if (!(fwd_field & o_attack_mask) || ((fwd_field & attacked_oking_only) && (fwd_field & attack_mask))) {
+      pwscore += EvalCoefficients::passerPawnNatt_[cy];
+      // my side to move
+      pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
+    }
+
     // all forward fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
     if (!fwd_mask) {
-      pinfo.score_ += EvalCoefficients::passerPawnEx_[cy];
-      pinfo.score_ += EvalCoefficients::passerPawnExP_[cy] * ((fwd_field & attack_mask) != 0ULL);
-      pinfo.score_ += EvalCoefficients::passerPawn4_[cy] * (color == board_->color());
+      pwscore += EvalCoefficients::passerPawnEx_[cy];
     }
+    // only few fields are free
     else {
       int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
       int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
       int steps = last_cango - cy;
       if (steps > 0) {
-        pinfo.score_ += EvalCoefficients::passerPawnExS_[cy][steps];
-        pinfo.score_ += EvalCoefficients::passerPawnExSp_[cy][steps] * ((fwd_field & attack_mask) != 0ULL);
-        pinfo.score_ += EvalCoefficients::passerPawn4_[cy] * (color == board_->color());
+        pwscore += EvalCoefficients::passerPawnExS_[cy][steps];
       }
     }
+    
+    pinfo.score_ += pwscore;
   }
 
   return pinfo;
