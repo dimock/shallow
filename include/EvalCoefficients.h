@@ -68,6 +68,7 @@ struct EvalCoefficients
   static int discoveredChecking_;
   static int weakChecking_;
   
+  static int checkMyMoveBonus_;
   static int possibleMatTreat_;
   static int attackedNearKingCoeff_;
   static int kingWeakCheckersCoefficients_;

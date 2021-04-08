@@ -510,6 +510,28 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     finfo_[color].discoveredCheck_ = discoveredCheck(ki_pos, ocolor);
   }
 
+  if (!finfo_[color].discoveredCheck_) {
+    auto mask_all_npw = mask_all_ & ~fmgr.pawn_mask(color);
+    auto bi_check_npw = magic_ns::bishop_moves(oki_pos, mask_all_npw) & (fmgr.bishop_mask(color) | fmgr.queen_mask(color));
+    auto r_check_npw = magic_ns::rook_moves(oki_pos, mask_all_npw) & (fmgr.rook_mask(color) | fmgr.queen_mask(color)) & pawnMasks().mask_row(oki_pos);
+    auto check_npw = bi_check_npw | r_check_npw;
+    while (check_npw && !finfo_[color].discoveredCheck_) {
+      auto n = clear_lsb(check_npw);
+      auto const& btw_mask = betweenMasks().between(n, oki_pos);
+      auto mpawn = btw_mask & fmgr.pawn_mask(color);
+      if (!mpawn || !one_bit_set(mpawn))
+        continue;
+      int from = _lsb64(mpawn);
+      if (color) {
+        mpawn <<= 8;
+      }
+      else {
+        mpawn >>= 8;
+      }
+      finfo_[color].discoveredCheck_ = ((mpawn & mask_all_) == 0ULL);
+    }
+  }
+
   bool canCheck = ((kn_check | bi_check | r_check) != 0ULL) || ((q_check & finfo_[color].multiattack_mask_) != 0);
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
@@ -595,8 +617,10 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
         break;
       }
     }
-    mat_treat_coef += (board_->color() == color) * mat_treat_coef;
+    const bool my_move = (board_->color() == color);
+    mat_treat_coef += my_move * mat_treat_coef;
     check_coeff += EvalCoefficients::possibleMatTreat_ * mat_treat_coef;
+    check_coeff += EvalCoefficients::checkMyMoveBonus_ * my_move;
   }
   
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
