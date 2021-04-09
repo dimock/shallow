@@ -276,7 +276,7 @@ void analyzeFen(std::string const& fname, std::string const& bestfname, std::str
     SBoard<Board, UndoInfo, 512> board{ e.board_, true };
     if (!board.invalidate())
       return;
-    if (board.state() != State::Ok && board.state() != State::UnderCheck)
+    if (board.matState() || board.drawState())
       return;
 #ifdef PROCESS_MOVES_SEQ
     board.stestBestMoveFileName_ = bestfname;
