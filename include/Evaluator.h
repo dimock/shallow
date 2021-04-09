@@ -195,6 +195,7 @@ private:
 
   PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);
   ScoreType32 passerEvaluation(PasserInfo const&);
+  bool pawnUnstoppable(Index const& pidx, Figure::Color pwcolor) const;
 
   ScoreType32 evaluateMaterialDiff();
 

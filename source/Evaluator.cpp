@@ -540,12 +540,12 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore = EvalCoefficients::passerPawn_[cy];
-        int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
-        int king_dist = distanceCounter().getDistance(board_->kingPos(color), n1);
+        Index pp{ x, py };
+        int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
+        int king_dist = distanceCounter().getDistance(board_->kingPos(color), pp);
         pwscore +=
           EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
           EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
-        Index pp{ x, py };
         int oking_dist_pp = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (ocolor == board_->color());
         int dist_pp = color ? py - y : y - py;
         if (oking_dist_pp > dist_pp)
@@ -585,6 +585,74 @@ ScoreType32 Evaluator::passerEvaluation(PasserInfo const& pi)
   auto infoB = passerEvaluation(Figure::ColorBlack, pi);
   infoW.score_ -= infoB.score_;
   return infoW.score_;
+}
+
+bool Evaluator::pawnUnstoppable(Index const& pidx, Figure::Color color) const
+{
+  // next field is not attacked by opponent
+  const auto& fmgr = board_->fmgr();
+  Figure::Color ocolor = Figure::otherColor(color);
+  const int py = promo_y_[color];
+  Index pp{ pidx.x(), py };
+  int oking_dist_pp = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (ocolor == board_->color());
+  int dist_pp = color ? py - pidx.y() : pidx.y() - py;
+  bool king_far = oking_dist_pp > dist_pp;
+  if (!king_far) {
+    return false;
+  }
+  // next move is promotion
+  if (color == board_->color() && dist_pp == 1) {
+    return true;
+  }
+  if (fmgr.queens(ocolor) || fmgr.rooks(ocolor)) {
+    return false;
+  }
+  bool cant_attack_pp = true;
+  if (fmgr.knights(ocolor)) {
+    cant_attack_pp = (movesTable().caps(Figure::TypeKnight, pp) & finfo_[ocolor].knightMoves_ & ~finfo_[color].attack_mask_) == 0ULL;
+  }
+  if (cant_attack_pp && fmgr.bishops(ocolor)) {
+    cant_attack_pp = (magic_ns::bishop_moves(pp, mask_all_) & finfo_[ocolor].bishopMoves_ & ~finfo_[color].attack_mask_) == 0ULL;
+  }
+  if (dist_pp == 1) {
+    return cant_attack_pp;
+  }
+  else if (dist_pp == 2) {
+    if (!cant_attack_pp) {
+      return false;
+    }
+    if (board_->color() == color) {
+      return true;
+    }
+    else {
+      const int dy = delta_y_[color];
+      auto n1 = pidx + (dy << 3);
+      bool cant_attack_n1 = true;
+      if (fmgr.knights(ocolor)) {
+        cant_attack_n1 = (movesTable().caps(Figure::TypeKnight, pp) & finfo_[ocolor].knightMoves_ & ~finfo_[color].attack_mask_) == 0ULL;
+      }
+      if (cant_attack_n1 && fmgr.bishops(ocolor)) {
+        cant_attack_n1 = (magic_ns::bishop_moves(pp, mask_all_) & finfo_[ocolor].bishopMoves_ & ~finfo_[color].attack_mask_) == 0ULL;
+      }
+      if (!cant_attack_n1) {
+        return false;
+      }
+      if (fmgr.bishops(ocolor)) {
+        bool bi_white = fmgr.bishop_mask(ocolor) &  FiguresCounter::s_whiteMask_;
+        bool pp_white = set_mask_bit(pp) &  FiguresCounter::s_whiteMask_;
+        if (bi_white != pp_white) {
+          return true;
+        }
+      }
+      if (fmgr.knights(ocolor) == 1) {
+        Index n{ _lsb64(fmgr.knight_mask(ocolor)) };
+        if (distanceCounter().getDistance(n, pp) > 4) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInfo const& pi)
@@ -668,6 +736,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       pwscore += EvalCoefficients::passerPawnNatt_[cy];
       // my side to move
       pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
+      //// unstoppable
+      //const bool unstoppable = pawnUnstoppable(idx, color);
+      //pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
     }
 
     // all forward fields are not blocked by opponent
