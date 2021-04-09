@@ -954,6 +954,21 @@ void SpecialCasesDetector::initCases()
     }
   }
 
+  // bishop|knight + pawn vs. rook + pawns -> may be draw
+  for (Figure::Type ft : {Figure::TypeKnight, Figure::TypeBishop}) {
+    for (Figure::Color fc : {Figure::ColorBlack, Figure::ColorWhite}) {
+        scases_[format({
+          { ft, fc, 1 },
+          { Figure::TypePawn, fc, 1 },
+          { Figure::TypeRook, Figure::otherColor(fc), 1 },
+          { Figure::TypePawn, Figure::otherColor(fc), 1 } })] =
+          [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+        {
+          return { SpecialCaseResult::MAYBE_DRAW, 0 };
+        };
+    }
+  }
+
   // pawns only
   for (int pw = 1; pw <= 8; ++pw)
   {

@@ -1105,13 +1105,14 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
   
-  BitMask strong_attacks = (~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & finfo_[color].rookMoves_)) & ~finfo_[ocolor].pawnAttacks_;
-  if (auto treat_mask = finfo_[color].attack_mask_ & strong_attacks & ~counted_mask) {
-    treat_mask &= (finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor));
+  if (auto treat_mask = ~finfo_[ocolor].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask &
+          (finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor))) {
     counted_mask |= treat_mask;
-    int rqtreatsN = pop_count(treat_mask);
+    int rqtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
     attackedN += rqtreatsN;
     attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
+    rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
+    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 2;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
@@ -1120,6 +1121,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::attackedByKingBonus_ * ktreatsN;
   }
 
+  const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;
   auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
   auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightMoves_ &
     strong_nattacks & ~fmgr.mask(color) & ~finfo_[ocolor].nb_attacked_;
@@ -1134,7 +1136,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     possibleNN = std::max(possibleNN, knightsN);
   }
 
-  attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> 1;
+  attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> (1 + knight_protects);
 
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
