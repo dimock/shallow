@@ -483,10 +483,8 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   const auto onbrp_attacked = finfo_[ocolor].nbr_attacked_ | finfo_[ocolor].pawnAttacks_;
   const auto onbp_attacked  = finfo_[ocolor].nb_attacked_ | finfo_[ocolor].pawnAttacks_;
   const auto can_check_q = ~(attacked_any_but_oking | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
-  const auto can_check_r = ~(onbrp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_)) |
-    fmgr.queen_mask(ocolor);
-  const auto can_check_nb = ~(onbp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_)) |
-    fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
+  const auto can_check_r = ~(onbrp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
+  const auto can_check_nb = ~(onbp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
 
   finfo_[color].num_attackers_ += (finfo_[color].pawnAttacks_ & near_oking) != 0ULL;
   finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
@@ -596,6 +594,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   // mat is possible
   if (num_checkers) {
+    const bool my_move = (board_->color() == color) && (q_check | r_check);
     auto const oking_possible_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].multiattack_mask_ | mask_all_);
     int mat_treat_coef = 0;
     const auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_) & ~fmgr.king_mask(ocolor);
@@ -617,7 +616,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
         break;
       }
     }
-    const bool my_move = (board_->color() == color);
     mat_treat_coef += my_move * mat_treat_coef;
     check_coeff += EvalCoefficients::possibleMatTreat_ * mat_treat_coef;
     check_coeff += EvalCoefficients::checkMyMoveBonus_ * my_move;

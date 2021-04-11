@@ -18,8 +18,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
   // forks
-  ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };
-  ScoreType EvalCoefficients::knightAttack_{ 32 };
+  ScoreType EvalCoefficients::bishopKnightAttack_{ 32 };
   ScoreType EvalCoefficients::pawnAttack_{ 40 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
@@ -69,7 +68,7 @@ namespace NEngine
   int EvalCoefficients::discoveredChecking_{ 40 };
   
   int EvalCoefficients::checkMyMoveBonus_{ 10 };
-  int EvalCoefficients::possibleMatTreat_{ 50 };
+  int EvalCoefficients::possibleMatTreat_{ 80 };
   int EvalCoefficients::attackedNearKingCoeff_{ 40 };
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };
@@ -83,8 +82,8 @@ namespace NEngine
   int EvalCoefficients::figureToKingDistanceMulti_{ 3 };
 
   // arrays
-  ScoreType32 EvalCoefficients::doubledPawn_ = {-7, -5};
-  ScoreType32 EvalCoefficients::isolatedPawn_ = {-16, -12};
+  ScoreType32 EvalCoefficients::doubledPawn_ = {-10, -8};
+  ScoreType32 EvalCoefficients::isolatedPawn_[2] = { {-10, -8}, {-16, -12} };
   ScoreType32 EvalCoefficients::backwardPawn_[8] = { {0, 0}, {-16, -12}, {-14, -10}, {-12, -10}, {-10, -8}, {-10, -8}, {0, 0}, {0, 0} };
   ScoreType32 EvalCoefficients::protectedPawn_[8] = { {0, 0}, {0, 0}, {4, 3}, {6, 4}, {8, 6}, {10, 8}, {10, 8}, {0, 0} };
   ScoreType32 EvalCoefficients::hasneighborPawn_[8] = { {0, 0}, {3, 2}, {3, 2}, {4, 3}, {4, 3}, {5, 4}, {5, 4}, {0, 0} };
