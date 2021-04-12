@@ -226,7 +226,7 @@ ScoreType32 Evaluator::evaluateKnights()
       auto n_moves_mask = knight_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
       auto n_moves = pop_count(n_moves_mask);
 
-      finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[pop_count(knight_moves) & 15];
+      finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[n_moves & 15];
 
       if ((n_moves < 2 || !(n_moves_mask & ~finfo_[ocolor].attack_mask_)) && blockedKnight(color, n)) {
         finfo_[color].score_mob_ -= EvalCoefficients::knightBlocked_;
@@ -305,7 +305,7 @@ ScoreType32 Evaluator::evaluateBishops()
       // mobility
       auto b_moves_mask = bishop_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
       int n_moves = pop_count(b_moves_mask);
-      finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[pop_count(bishop_moves) & 15];
+      finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[n_moves & 15];
 
       if ((n_moves < 2 || !(b_moves_mask & ~finfo_[ocolor].attack_mask_)) && blockedBishop(color, n)) {
         finfo_[color].score_mob_ -= EvalCoefficients::bishopBlocked_;
@@ -390,7 +390,7 @@ ScoreType32 Evaluator::evaluateRook()
       
       auto r_moves_mask = rook_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_) | finfo_[ocolor].rq_mask_);
       int n_moves = pop_count(r_moves_mask);
-      finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[pop_count(rook_moves) & 15];
+      finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[n_moves & 15];
 
       // fake castle possible
       if (n_moves < 3) {
@@ -450,7 +450,7 @@ ScoreType32 Evaluator::evaluateQueens()
 #endif
 
       auto q_moves_mask = queen_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_) | fmgr.queen_mask(ocolor));
-      auto n_moves = pop_count(queen_moves);
+      auto n_moves = pop_count(q_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::queenMobility_[n_moves & 31];
 
 #ifdef MOBILITY_EXTENDED

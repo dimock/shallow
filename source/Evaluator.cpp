@@ -1039,16 +1039,6 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int pawnsN = fmgr.pawns(bcolor);
     score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
-
-  // bonus for 2 knights difference
-  if (knightsDiff >= 2 || knightsDiff <= -2)
-  {
-    int ndiff = sign(knightsDiff);
-    Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
-    const int pawnsN = fmgr.pawns(ncolor);
-    score += EvalCoefficients::twoKnightsBonus_[pawnsN] * ndiff;
-  }
-  
   // bonus for 2 rooks
   if (rooksDiff >= 2 || rooksDiff <= -2)
   {
@@ -1173,7 +1163,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += (attacksN != 0);
     // all remaining
     attacksN = pop_count(bn_nb & ~(strong_mask | pw_only));
-    attackScore += (EvalCoefficients::bishopKnightAttack_ * attacksN) >> 3;
+    attackScore += (EvalCoefficients::bishopKnightAttack_ * attacksN) >> 2;
   }
 
   auto qr_possible_mask = ~finfo_[ocolor].attack_mask_ & ~counted_mask;
@@ -1196,7 +1186,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += rqtreatsN;
     attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
     rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 3;
+    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 2;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
