@@ -212,7 +212,7 @@ namespace nst
 #endif
 
 #define SORT_MOVES_0_HIST
-#undef EXTEND_CHECK_SEE_ONLY
+#define EXTEND_CHECK_SEE_ONLY
 #define USE_LAZY_EVAL
 
 #ifndef PROCESS_MOVES_SEQ
@@ -229,7 +229,7 @@ namespace nst
 #endif
 
 #define SINGULAR_EXT
-#undef VERIFY_LMR
+#define VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
 #define MOBILITY_EXTENDED
