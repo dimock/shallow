@@ -229,7 +229,7 @@ namespace nst
 #endif
 
 #define SINGULAR_EXT
-#define VERIFY_LMR
+#undef VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
 #define MOBILITY_EXTENDED
