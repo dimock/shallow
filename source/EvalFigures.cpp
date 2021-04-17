@@ -555,7 +555,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   else {
     num_checkers = std::min(num_checkers, 4);
     check_coeff = EvalCoefficients::kingCheckersCoefficients_[num_checkers];
-    check_coeff += attack_coeff >> 1;
+    check_coeff += attack_coeff >> 2;
   }
 
   const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_;
@@ -568,7 +568,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   const auto near_oking_rem = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_ & finfo_[color].attack_mask_ & ~near_oking_att;
   if (near_oking_rem) {
-    auto rem_king_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_rem)) >> 2;
+    auto rem_king_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_rem)) >> 3;
     attack_coeff += rem_king_coeff;
     check_coeff += rem_king_coeff;
   }
@@ -580,10 +580,10 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += remaining_coeff;
   }
 
-  auto oking_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
-  int num_oking_moves = pop_count(oking_moves);
-  attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
-  check_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
+  //auto oking_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
+  //int num_oking_moves = pop_count(oking_moves);
+  //attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
+  //check_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
  
   if (num_attackers == 0) {
     check_coeff >>= 3;
