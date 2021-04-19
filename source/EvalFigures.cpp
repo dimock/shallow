@@ -583,9 +583,10 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   // mat is possible
   if (num_checkers) {
     const bool my_move = (board_->color() == color) && (q_check | r_check);
-    auto const oking_possible_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].multiattack_mask_ | mask_all_);
+    auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
+      ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].queenMoves_));
     int mat_treat_coef = 0;
-    const auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_) & ~fmgr.king_mask(ocolor);
+    auto mat_fields_mask = (mask_all_ | (finfo_[ocolor].multiattack_mask_ & ~(finfo_[color].attack_mask_ & ~finfo_[color].queenMoves_))) & ~fmgr.king_mask(ocolor);
     q_check &= ~attacked_any_but_oking;
     while (q_check) {
       auto n = clear_lsb(q_check);
@@ -596,6 +597,9 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
         break;
       }
     }
+    oking_possible_moves = finfo_[ocolor].kingAttacks_ &
+      ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].rookMoves_));
+    mat_fields_mask = (mask_all_ | (finfo_[ocolor].multiattack_mask_ & ~finfo_[color].attack_mask_)) & ~fmgr.king_mask(ocolor);
     r_check &= ~attacked_any_but_oking;
     while (!mat_treat_coef && r_check) {
       auto n = clear_lsb(r_check);
