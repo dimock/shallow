@@ -542,9 +542,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore = EvalCoefficients::passerPawn_[cy];
-        Index pp{ x, py };
-        int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), pp);
-        int king_dist = distanceCounter().getDistance(board_->kingPos(color), pp);
+        int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
+        int king_dist = distanceCounter().getDistance(board_->kingPos(color), n1);
         pwscore +=
           EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
           EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
@@ -737,14 +736,6 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       //// unstoppable
       //const bool unstoppable = pawnUnstoppable(idx, color);
       //pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
-    }
-
-    if (fmgr.allFigures(ocolor) == 0) {
-      Index pp{ idx.x(), py };
-      int oking_dist_pp = distanceCounter().getDistance(board_->kingPos(ocolor), pp) - (ocolor == board_->color());
-      int dist_pp = color ? py - idx.y() : idx.y() - py;
-      if (oking_dist_pp > dist_pp)
-        pwscore += EvalCoefficients::okingFarFromPasserBonus_[cy];
     }
 
     // all forward fields are not blocked by opponent

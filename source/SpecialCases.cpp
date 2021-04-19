@@ -473,6 +473,31 @@ namespace
     return score;
   };
 
+  std::pair<SpecialCaseResult, ScoreType> evalRookPawn(Board const& board, Figure::Color rcolor)
+  {
+    auto pcolor = Figure::otherColor(rcolor);
+    bool rmove = rcolor == board.color();
+    Index kr{ board.kingPos(rcolor) };
+    Index kp{ board.kingPos(pcolor) };
+    Index r{ _lsb64(board.fmgr().rook_mask(rcolor)) };
+    Index p{ _lsb64(board.fmgr().pawn_mask(pcolor)) };
+    Index pp(p.x(), pcolor * 7);
+    auto dist_kp = distanceCounter().getDistance(kp, p);
+    auto dist_kr = distanceCounter().getDistance(kr, p);
+    auto dist_kpp = distanceCounter().getDistance(kp, pp);
+    auto dist_krp = distanceCounter().getDistance(kr, pp);
+    auto dist_pp = distanceCounter().getDistance(p, pp);
+    if (dist_pp+rmove < dist_krp && dist_kp+rmove <= 3 && dist_pp <= 4) {
+      if (dist_kp + rmove + 1 < dist_kr) {
+        return { SpecialCaseResult::ALMOST_DRAW, 0 };
+      }
+      if ((dist_kp + rmove < dist_kr)) {
+        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+      }
+    }
+    return { SpecialCaseResult::NO_RESULT, 0 };
+  }
+
 } // namespace {}
 
 SpecialCasesDetector::SpecialCasesDetector()
@@ -993,6 +1018,16 @@ void SpecialCasesDetector::initCases()
       }
     }
   }
+
+  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 }, { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [](Board const& board)
+  {
+    return evalRookPawn(board, Figure::ColorBlack);
+  };
+  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 }, { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [](Board const& board)
+  {
+    return evalRookPawn(board, Figure::ColorWhite);
+  };
+
   ///
 }
 
