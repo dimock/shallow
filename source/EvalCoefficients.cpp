@@ -26,7 +26,7 @@ namespace NEngine
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
 
   // immobility
-  ScoreType32 EvalCoefficients::immobileAttackBonus_{ 30, 30 };
+  ScoreType32 EvalCoefficients::immobileAttackBonus_[4] = { { 30, 30 }, { 30, 30 }, { 50, 50 }, { 70, 70 } };
 
   // check & mat treat
   ScoreType32 EvalCoefficients::discoveredCheckBonus_{ 20, 20 };

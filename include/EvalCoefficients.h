@@ -29,7 +29,7 @@ struct EvalCoefficients
   static ScoreType attackedByKingBonus_;
 
   // immobility
-  static ScoreType32 immobileAttackBonus_;
+  static ScoreType32 immobileAttackBonus_[4];
 
   // check & mat treat
   static ScoreType32 discoveredCheckBonus_;

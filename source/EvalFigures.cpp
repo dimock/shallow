@@ -234,7 +234,7 @@ ScoreType32 Evaluator::evaluateKnights()
 
 #ifdef MOBILITY_EXTENDED
       if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n))) {
-        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_;
+        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[0];
       }
 #endif // king protection, discovered checks etc...
     }
@@ -313,7 +313,7 @@ ScoreType32 Evaluator::evaluateBishops()
 
 #ifdef MOBILITY_EXTENDED
       if ((q_pinned || !(b_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
-        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_;
+        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[1];
       }
 #endif // king protection, discovered checks etc...
     }
@@ -405,7 +405,7 @@ ScoreType32 Evaluator::evaluateRook()
       if ((q_pinned || !(r_moves_mask & ~fmgr.mask(color) & ~finfo_[ocolor].bishopTreatAttacks_)) &&
           ((finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].nb_attacked_) & set_mask_bit(n)) != 0ULL)
       {
-        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_;
+        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[2];
       }
 #endif // king protection, discovered checks etc...
     }
@@ -457,7 +457,7 @@ ScoreType32 Evaluator::evaluateQueens()
       if (!(q_moves_mask & ~fmgr.mask(color) & ~finfo_[ocolor].rookTreatAttacks_ & ~finfo_[ocolor].bishopTreatAttacks_) &&
         (((finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].nbr_attacked_) & set_mask_bit(n)) != 0ULL))
       {
-        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_;
+        finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[3];
       }
 #endif // king protection, discovered checks etc...
     }
