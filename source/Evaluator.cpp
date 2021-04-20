@@ -726,17 +726,17 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
     ScoreType32 pwscore{};
 
-    //// bonus for possibility to go
-    //pwscore += EvalCoefficients::passerPawnFwd_[cy];
-    //// forward field is not attacked
-    //if (!(fwd_field & o_attack_mask) || ((fwd_field & attacked_oking_only) && (fwd_field & attack_mask))) {
-    //  pwscore += EvalCoefficients::passerPawnNatt_[cy];
-    //  // my side to move
-    //  pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
-    //  //// unstoppable
-    //  //const bool unstoppable = pawnUnstoppable(idx, color);
-    //  //pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
-    //}
+    // bonus for possibility to go
+    pwscore += EvalCoefficients::passerPawnFwd_[cy];
+    // forward field is not attacked
+    if (!(fwd_field & o_attack_mask) || ((fwd_field & attacked_oking_only) && (fwd_field & attack_mask))) {
+      pwscore += EvalCoefficients::passerPawnNatt_[cy];
+      // my side to move
+      pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
+      //// unstoppable
+      //const bool unstoppable = pawnUnstoppable(idx, color);
+      //pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
+    }
 
     // all forward fields are not blocked by opponent
     auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
