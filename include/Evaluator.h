@@ -33,6 +33,7 @@ class Evaluator
   struct FieldsInfo
   {
     BitMask pawnAttacks_{};
+    BitMask pawnPossibleAttacks_{};
     BitMask knightMoves_{};
     BitMask bishopMoves_{};
     BitMask rookMoves_{};

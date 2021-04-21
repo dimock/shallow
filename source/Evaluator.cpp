@@ -94,6 +94,24 @@ void Evaluator::prepare()
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
 
+    finfo_[Figure::ColorWhite].pawnPossibleAttacks_ = finfo_[Figure::ColorWhite].pawnAttacks_ |
+      (finfo_[Figure::ColorWhite].pawnAttacks_ & ~0xff00000000000000) << 8;
+    finfo_[Figure::ColorWhite].pawnPossibleAttacks_ = finfo_[Figure::ColorWhite].pawnPossibleAttacks_ |
+      (finfo_[Figure::ColorWhite].pawnPossibleAttacks_ & ~0xff00000000000000) << 8;
+    finfo_[Figure::ColorWhite].pawnPossibleAttacks_ = finfo_[Figure::ColorWhite].pawnPossibleAttacks_ |
+      (finfo_[Figure::ColorWhite].pawnPossibleAttacks_ & ~0xff00000000000000) << 8;
+    finfo_[Figure::ColorWhite].pawnPossibleAttacks_ = finfo_[Figure::ColorWhite].pawnPossibleAttacks_ |
+      (finfo_[Figure::ColorWhite].pawnPossibleAttacks_ & ~0xff00000000000000) << 8;
+
+    finfo_[Figure::ColorBlack].pawnPossibleAttacks_ = finfo_[Figure::ColorBlack].pawnAttacks_ |
+      (finfo_[Figure::ColorBlack].pawnAttacks_ & ~0xff) >> 8;
+    finfo_[Figure::ColorBlack].pawnPossibleAttacks_ = finfo_[Figure::ColorBlack].pawnPossibleAttacks_ |
+      (finfo_[Figure::ColorBlack].pawnPossibleAttacks_ & ~0xff) >> 8;
+    finfo_[Figure::ColorBlack].pawnPossibleAttacks_ = finfo_[Figure::ColorBlack].pawnPossibleAttacks_ |
+      (finfo_[Figure::ColorBlack].pawnPossibleAttacks_ & ~0xff) >> 8;
+    finfo_[Figure::ColorBlack].pawnPossibleAttacks_ = finfo_[Figure::ColorBlack].pawnPossibleAttacks_ |
+      (finfo_[Figure::ColorBlack].pawnPossibleAttacks_ & ~0xff) >> 8;
+
     finfo_[0].attack_mask_ = finfo_[0].pawnAttacks_;
     finfo_[1].attack_mask_ = finfo_[1].pawnAttacks_;
   }
@@ -1034,6 +1052,16 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int pawnsN = fmgr.pawns(bcolor);
     score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
+
+  // bonus for 2 knights difference
+  if (knightsDiff >= 2 || knightsDiff <= -2)
+  {
+    int ndiff = sign(knightsDiff);
+    Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
+    const int pawnsN = fmgr.pawns(ncolor);
+    score += EvalCoefficients::twoKnightsBonus_[pawnsN] * ndiff;
+  }
+
   // bonus for 2 rooks
   if (rooksDiff >= 2 || rooksDiff <= -2)
   {

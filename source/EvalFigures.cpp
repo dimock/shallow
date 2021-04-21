@@ -181,11 +181,18 @@ ScoreType32 Evaluator::evaluateKnights()
 
     auto ocolor = Figure::otherColor(color);
     BitMask mask = board_->fmgr().knight_mask(color);
+    BitMask outpost_mask = finfo_[color].pawnAttacks_ & ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
+   
     for (; mask;)
     {
       const int n = clear_lsb(mask);
       auto const& knight_moves = moves_masks_[n];
       auto const& knight_attacks = attacks_masks_[n];
+
+      // outpost
+      const auto nbit = set_mask_bit(n);
+      bool boutpost = ((nbit | (knight_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
+      score[color] += EvalCoefficients::knightOutpost_ * boutpost;
 
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
@@ -581,11 +588,11 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   }
 
   // mat is possible
+  int mat_treat_coef = 0;
   if (num_checkers) {
     const bool my_move = (board_->color() == color) && (q_check | r_check);
     auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
       ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].queenMoves_));
-    int mat_treat_coef = 0;
     auto mat_fields_mask = (mask_all_ | (finfo_[ocolor].multiattack_mask_ & ~(finfo_[color].attack_mask_ & ~finfo_[color].queenMoves_))) & ~fmgr.king_mask(ocolor);
     q_check &= ~attacked_any_but_oking;
     while (q_check) {
@@ -614,11 +621,13 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += EvalCoefficients::checkMyMoveBonus_ * my_move;
   }
 
-  if (num_attackers == 0) {
-    check_coeff >>= 3;
-  }
-  else if ((num_attackers == 1) && (!q_check || (q_check && finfo_[color].qkingAttack_))) {
-    check_coeff >>= 1;
+  if (mat_treat_coef == 0 || board_->color() != color) {
+    if (num_attackers == 0) {
+      check_coeff >>= 3;
+    }
+    else if ((num_attackers == 1) && (!q_check || (q_check && finfo_[color].qkingAttack_))) {
+      check_coeff >>= 1;
+    }
   }
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;

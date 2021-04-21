@@ -17,6 +17,9 @@ namespace NEngine
   ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 8 };
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
+  // outpost
+  ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
+
   // forks
   ScoreType EvalCoefficients::bishopKnightAttack_{ 32 };
   ScoreType EvalCoefficients::pawnAttack_{ 45 };
@@ -56,8 +59,8 @@ namespace NEngine
   int EvalCoefficients::basicAttack_{ 3 };
 #endif
 
-  int EvalCoefficients::generalKingPressure_{ 6 };
-  int EvalCoefficients::generalKingAuxPressure_{ 3 };
+  int EvalCoefficients::generalKingPressure_{ 4 };
+  int EvalCoefficients::generalKingAuxPressure_{ 2 };
 
   // king threat
   int EvalCoefficients::knightChecking_{ 40 };
@@ -102,7 +105,7 @@ namespace NEngine
   // opening, endgame
   ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {0, 0}, {10, 10}, {12, 12}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} };
   ScoreType32 EvalCoefficients::doubleKnightBonus_[10] = { {0, 0}, {3, 3}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
-  ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
+  ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
   ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
   ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {40, 15}, {45, 25}, {55, 25}, {55, 25}, {55, 25}, {55, 25}, {55, 25}, {55, 25}, {55, 25} };
