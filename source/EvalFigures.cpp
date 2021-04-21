@@ -191,7 +191,7 @@ ScoreType32 Evaluator::evaluateKnights()
 
       // outpost
       const auto nbit = set_mask_bit(n);
-      bool boutpost = ((nbit | (knight_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
+      const bool boutpost = ((nbit | (knight_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
       score[color] += EvalCoefficients::knightOutpost_ * boutpost;
 
       // king protection
@@ -621,7 +621,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += EvalCoefficients::checkMyMoveBonus_ * my_move;
   }
 
-  if (mat_treat_coef == 0 || board_->color() != color) {
+  if (mat_treat_coef == 0) {
     if (num_attackers == 0) {
       check_coeff >>= 3;
     }

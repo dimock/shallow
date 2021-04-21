@@ -518,7 +518,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
 
     info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
-    info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
+    info.score_ += EvalCoefficients::backwardPawn_[opened][cy] * backward;
     info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
     info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
@@ -751,9 +751,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       pwscore += EvalCoefficients::passerPawnNatt_[cy];
       // my side to move
       pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
-      //// unstoppable
-      //const bool unstoppable = pawnUnstoppable(idx, color);
-      //pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
+      // unstoppable
+      const bool unstoppable = pawnUnstoppable(idx, color);
+      pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
     }
 
     // all forward fields are not blocked by opponent

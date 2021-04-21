@@ -28,7 +28,7 @@ extern const BitMask Figure::quaterBoard_[2][3] = { { 0xf0f0f0f000000000, 0x0f0f
 extern const BitMask Figure::kingAuxBoard_[2][3] = { { 0x00000000f0000000, 0x000000000f000000, 0x000000003c000000 },
                                                      { 0x000000f000000000, 0x0000000f00000000, 0x0000003c00000000 } };
 
-extern const BitMask Figure::outpostMask_[2] = { 0x000000ffffffff00, 0x00ffffffff000000 };
+extern const BitMask Figure::outpostMask_[2] = { 0x000000ffffff0000, 0x0000ffffff000000 };
 
 extern const ScoreType32 Figure::figureWeight32_[7] = { {0, 0}, {85, 102}, {345, 350}, {360, 360}, {560, 560}, {1120, 1120}, {0, 0} };
 
