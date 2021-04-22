@@ -518,7 +518,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
 
     info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
-    info.score_ += EvalCoefficients::backwardPawn_[opened][cy] * backward;
+    info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
     info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
     info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
@@ -1053,15 +1053,6 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
 
-  // bonus for 2 knights difference
-  if (knightsDiff >= 2 || knightsDiff <= -2)
-  {
-    int ndiff = sign(knightsDiff);
-    Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
-    const int pawnsN = fmgr.pawns(ncolor);
-    score += EvalCoefficients::twoKnightsBonus_[pawnsN] * ndiff;
-  }
-
   // bonus for 2 rooks
   if (rooksDiff >= 2 || rooksDiff <= -2)
   {
@@ -1155,38 +1146,36 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 #endif // EVAL_EXTENDED_PAWN_ATTACK
 
-  // RQ attacked by knight
   if (auto kn_fork = (o_rq_mask & finfo_[color].knightMoves_)) {
     counted_mask |= kn_fork;
     int knightsN = pop_count(kn_fork);
     attackedN += knightsN;
-    attackScore += EvalCoefficients::bishopKnightAttack_ * knightsN;
+    attackScore += EvalCoefficients::knightAttack_ * knightsN;
   }
 
-  // RQ attacked by bishop
+  const auto stong_bn_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].multiattack_mask_;
+  if (auto kn_fork = (fmgr.bishop_mask(ocolor) & finfo_[color].knightMoves_ & ~counted_mask)) {
+    counted_mask |= kn_fork;
+    int knightsN = pop_count(kn_fork & stong_bn_attacks);
+    attackedN += knightsN;
+    attackScore += EvalCoefficients::knightAttack_ * knightsN;
+    knightsN = pop_count(kn_fork & ~stong_bn_attacks);
+    attackScore += (EvalCoefficients::knightAttack_ * knightsN) >> 2;
+  }
   if (auto bi_treat = (o_rq_mask & finfo_[color].bishopTreatAttacks_ & ~counted_mask)) {
     counted_mask |= bi_treat;
     int bishopsN = pop_count(bi_treat);
     attackedN += bishopsN;
-    attackScore += EvalCoefficients::bishopKnightAttack_ * bishopsN;
+    attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
   }
   
-  // bishop attacked by knight | knight attacked by bishop
-  if (auto bn_nb = (((fmgr.bishop_mask(ocolor) & finfo_[color].knightMoves_) | (fmgr.knight_mask(ocolor) & finfo_[color].bishopTreatAttacks_)) & ~counted_mask)) {
-    counted_mask |= bn_nb;
-    const auto strong_mask = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].multiattack_mask_;
-    // not protected | multiattacked
-    int attacksN = pop_count(bn_nb & strong_mask);
-    attackedN += attacksN;
-    attackScore += EvalCoefficients::bishopKnightAttack_ * attacksN;
-    // protected by pawn only
-    const auto pw_only = finfo_[ocolor].pawnAttacks_ & ~finfo_[ocolor].multiattack_mask_;
-    attacksN = pop_count(bn_nb & pw_only & ~strong_mask);
-    attackScore += (EvalCoefficients::bishopKnightAttack_ * attacksN) >> 1;
-    attackedN += (attacksN != 0);
-    // all remaining
-    attacksN = pop_count(bn_nb & ~(strong_mask | pw_only));
-    attackScore += (EvalCoefficients::bishopKnightAttack_ * attacksN) >> 2;
+  if (auto bi_treat = (fmgr.knight_mask(ocolor) & finfo_[color].bishopTreatAttacks_ & ~counted_mask)) {
+    counted_mask |= bi_treat;
+    int bishopsN = pop_count(bi_treat & stong_bn_attacks);
+    attackedN += bishopsN;
+    attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
+    bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
+    attackScore += (EvalCoefficients::bishopsAttackBonus_ * bishopsN) >> 2;
   }
 
   auto qr_possible_mask = ~finfo_[ocolor].attack_mask_ & ~counted_mask;
@@ -1233,7 +1222,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     possibleNN = std::max(possibleNN, knightsN);
   }
 
-  attackScore += (EvalCoefficients::bishopKnightAttack_ * possibleNN) >> (1 + knight_protects);
+  attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> (1 + knight_protects);
 
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
