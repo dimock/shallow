@@ -511,16 +511,15 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     auto const& protectMask = movesTable().pawnCaps(ocolor, n);
     int protectorsN = pop_count(protectMask & pmask);
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
-    bool opened = (opmsk & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
     int neighborsN = pop_count(pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask);
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
 
-    info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
-    info.score_ += EvalCoefficients::backwardPawn_[opened][cy] * backward;
-    info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
-    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
+    info.score_ += EvalCoefficients::isolatedPawn_ * isolated;
+    info.score_ += EvalCoefficients::backwardPawn_ * backward;
+    info.score_ += EvalCoefficients::protectedPawn_ * protectorsN;
+    info.score_ += EvalCoefficients::hasneighborPawn_ * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
     // passer pawn
