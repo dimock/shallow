@@ -88,7 +88,10 @@ namespace NEngine
   // arrays
   ScoreType32 EvalCoefficients::doubledPawn_ = {-10, -8};
   ScoreType32 EvalCoefficients::isolatedPawn_[2] = { {-10, -8}, {-16, -12} };
-  ScoreType32 EvalCoefficients::backwardPawn_[8] = { {0, 0}, {-16, -12}, {-14, -10}, {-12, -10}, {-10, -8}, {-10, -8}, {0, 0}, {0, 0} };
+  ScoreType32 EvalCoefficients::backwardPawn_[2][8] = {
+    { {0, 0}, {-10, -8},  { -9,  -7}, { -8,  -6}, { -7, -5}, { -7, -5}, {0, 0}, {0, 0} },
+    { {0, 0}, {-16, -12}, {-14, -10}, {-12, -10}, {-10, -8}, {-10, -8}, {0, 0}, {0, 0} }
+  };
   ScoreType32 EvalCoefficients::protectedPawn_[8] = { {0, 0}, {0, 0}, {4, 3}, {6, 4}, {8, 6}, {10, 8}, {10, 8}, {0, 0} };
   ScoreType32 EvalCoefficients::hasneighborPawn_[8] = { {0, 0}, {3, 2}, {3, 2}, {4, 3}, {4, 3}, {5, 4}, {5, 4}, {0, 0} };
 

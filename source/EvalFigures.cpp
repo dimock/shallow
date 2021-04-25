@@ -562,27 +562,27 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   else {
     num_checkers = std::min(num_checkers, 4);
     check_coeff = EvalCoefficients::kingCheckersCoefficients_[num_checkers];
-    check_coeff += attack_coeff >> 2;
+    check_coeff += attack_coeff >> 1;
   }
 
   const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_;
   if (near_oking_att) {
     auto near_king_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & finfo_[color].multiattack_mask_);
-    near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 2;
+    near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 1;
     attack_coeff += near_king_coeff;
     check_coeff += near_king_coeff;
   }
 
   const auto near_oking_rem = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_ & finfo_[color].attack_mask_ & ~near_oking_att;
   if (near_oking_rem) {
-    auto rem_king_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_rem)) >> 3;
+    auto rem_king_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_rem)) >> 2;
     attack_coeff += rem_king_coeff;
     check_coeff += rem_king_coeff;
   }
 
   auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_;
   if (around_oking) {
-    auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 2;
+    auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 1;
     attack_coeff += remaining_coeff;
     check_coeff += remaining_coeff;
   }

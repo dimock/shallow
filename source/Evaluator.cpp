@@ -518,7 +518,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
 
     info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
-    info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
+    info.score_ += EvalCoefficients::backwardPawn_[opened][cy] * backward;
     info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
     info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
