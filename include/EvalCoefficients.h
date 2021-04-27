@@ -80,10 +80,10 @@ struct EvalCoefficients
   static int kingPossibleMovesCoefficients_[10];
 
   static ScoreType32 doubledPawn_;
-  static ScoreType32 isolatedPawn_;
-  static ScoreType32 backwardPawn_;
-  static ScoreType32 protectedPawn_;
-  static ScoreType32 hasneighborPawn_;
+  static ScoreType32 isolatedPawn_[2];
+  static ScoreType32 backwardPawn_[8];
+  static ScoreType32 protectedPawn_[8];
+  static ScoreType32 hasneighborPawn_[8];
   
   static int opponentPawnPressure_[8];
 

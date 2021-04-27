@@ -87,10 +87,10 @@ namespace NEngine
 
   // arrays
   ScoreType32 EvalCoefficients::doubledPawn_ = {-10, -8};
-  ScoreType32 EvalCoefficients::isolatedPawn_ = { -16, -12 };
-  ScoreType32 EvalCoefficients::backwardPawn_ = { -16, -12 };
-  ScoreType32 EvalCoefficients::protectedPawn_ = { 4, 3 };
-  ScoreType32 EvalCoefficients::hasneighborPawn_ = { 3, 2 };
+  ScoreType32 EvalCoefficients::isolatedPawn_[2] = { {-10, -8}, {-16, -12} };
+  ScoreType32 EvalCoefficients::backwardPawn_[8] = { {0, 0}, {-16, -12}, {-14, -10}, {-12, -10}, {-10, -8}, {-10, -8}, {0, 0}, {0, 0} };
+  ScoreType32 EvalCoefficients::protectedPawn_[8] = { {0, 0}, {0, 0}, {4, 3}, {6, 4}, {8, 6}, {10, 8}, {10, 8}, {0, 0} };
+  ScoreType32 EvalCoefficients::hasneighborPawn_[8] = { {0, 0}, {3, 2}, {3, 2}, {4, 3}, {4, 3}, {5, 4}, {5, 4}, {0, 0} };
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 7, 1, 0, 0 };
 
@@ -109,7 +109,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
   ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
-  ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {20, 10}, {30, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20}, {35, 20} };
+  ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {25, 10}, {35, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20} };
   ScoreType32 EvalCoefficients::figuresAgainstRookBonus_[10] = { {0, 0}, {30, 20}, {50, 40}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50} };
   ScoreType32 EvalCoefficients::knightsAgainstRookBonus_[10] = { {0, 0}, {12, 12}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20} };
   ScoreType32 EvalCoefficients::rookAgainstFigureBonus_[10][10] = {
