@@ -565,18 +565,18 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
         pwscore +=
           EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
           EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
-        if (protectorsN > 0) {
-          pwscore += EvalCoefficients::passerPawn4_[cy];
-        }
-        else if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
-          while (guards) {
-            int g = clear_lsb(guards);
-            if (!(pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
-              pwscore += EvalCoefficients::passerPawn4_[cy];
-              break;
-            }
-          }
-        }
+        //if (protectorsN > 0) {
+        //  pwscore += EvalCoefficients::passerPawn4_[cy];
+        //}
+        //else if (BitMask guards = (pawnMasks().mask_guards(color, n) & pmask)) {
+        //  while (guards) {
+        //    int g = clear_lsb(guards);
+        //    if (!(pawnMasks().mask_forward(color, g) & (opmsk | finfo_[ocolor].pawnAttacks_))) {
+        //      pwscore += EvalCoefficients::passerPawn4_[cy];
+        //      break;
+        //    }
+        //  }
+        //}
       }
       info.score_ += pwscore;
     }
