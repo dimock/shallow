@@ -498,6 +498,33 @@ namespace
     return { SpecialCaseResult::NO_RESULT, 0 };
   }
 
+  std::pair<SpecialCaseResult, ScoreType> bishopRooks(Board const& board, Figure::Color bishopColor)
+  {
+    auto const& fmgr = board.fmgr();
+    auto loserColor = Figure::otherColor(bishopColor);
+    Index bi{ _lsb64(fmgr.bishop_mask(bishopColor)) };
+    Index kw{ board.kingPos(bishopColor) };
+    Index kl{ board.kingPos(loserColor) };
+    Index rw{ _lsb64(fmgr.rook_mask(bishopColor)) };
+    Index rl{ _lsb64(fmgr.rook_mask(loserColor)) };
+    if (kl.x() != 0 && kl.x() != 7 && kl.y() != 0 && kl.y() != 7) {
+      return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    }
+    if (kl.x() == 0 && kl.y() == kw.y() && kw.x() == 2 && bi.x() == 3 && bi.y() == kl.y() && rw.x() == 1) {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    }
+    if (kl.x() == 7 && kl.y() == kw.y() && kw.x() == 5 && bi.x() == 4 && bi.y() == kl.y() && rw.x() == 6) {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    }
+    if (kl.y() == 0 && kl.x() == kw.x() && kw.y() == 2 && bi.y() == 3 && bi.x() == kl.x() && rw.y() == 1) {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    }
+    if (kl.y() == 7 && kl.x() == kw.x() && kw.y() == 5 && bi.y() == 4 && bi.x() == kl.x() && rw.y() == 6) {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    }
+    return { SpecialCaseResult::ALMOST_DRAW, 0 };
+  }
+
 } // namespace {}
 
 SpecialCasesDetector::SpecialCasesDetector()
@@ -616,13 +643,13 @@ void SpecialCasesDetector::initCases()
     { Figure::TypeRook, Figure::ColorWhite, 1 },
     { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    return bishopRooks(board, Figure::ColorWhite);
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorBlack, 2 },
     { Figure::TypeBishop, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
   {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    return bishopRooks(board, Figure::ColorBlack);
   };
 
   scases_[format({ { Figure::TypeBishop, Figure::ColorWhite, 2 },
