@@ -523,6 +523,10 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
+    int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
+    int king_dist = distanceCounter().getDistance(board_->kingPos(color), n1);
+    info.score_ += EvalCoefficients::okingToPawnDistanceBonus_ * oking_dist - EvalCoefficients::kingToPawnDistanceBonus_ * king_dist;
+
     // passer pawn
     if(!(fwd_mask & (opmsk|pmask)))
     {
@@ -560,8 +564,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore = EvalCoefficients::passerPawn_[cy];
-        int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
-        int king_dist = distanceCounter().getDistance(board_->kingPos(color), n1);
         pwscore +=
           EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
           EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
@@ -699,78 +701,81 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     auto n1 = n + (dy << 3);
     auto fwd_field = set_mask_bit(n1);
 
-    if (fwd_field & mask_all_)
-      continue;
+    ScoreType32 pwscore{};
 
-    auto attack_mask = finfo_[color].attack_mask_;
-    auto multiattack_mask = finfo_[color].multiattack_mask_;
-    auto o_attack_mask = finfo_[ocolor].attack_mask_;
-    auto o_multiattack_mask = finfo_[ocolor].multiattack_mask_;
-    auto behind_msk = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_);
-    auto behind_msk1 = behind_msk & (fmgr.rook_mask(color) | fmgr.queen_mask(color));
-    if (behind_msk1) {
-      multiattack_mask |= attack_mask & fwd_fields;
-      attack_mask |= fwd_fields;
-      if (!(multiattack_mask & fwd_fields)) {
-        behind_msk1 = ~behind_msk1;
-        auto behind_msk2 = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_ & behind_msk1) & behind_msk1;
-        if (behind_msk2 & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
-          multiattack_mask |= fwd_fields;
+    if (auto fwd_msk = (fwd_field & mask_all_)) {
+      if(fwd_msk & ~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_) {
+        pwscore = EvalCoefficients::passerPawn2_[cy];
       }
     }
     else {
-      behind_msk1 = behind_msk & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor));
+      auto attack_mask = finfo_[color].attack_mask_;
+      auto multiattack_mask = finfo_[color].multiattack_mask_;
+      auto o_attack_mask = finfo_[ocolor].attack_mask_;
+      auto o_multiattack_mask = finfo_[ocolor].multiattack_mask_;
+      auto behind_msk = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_);
+      auto behind_msk1 = behind_msk & (fmgr.rook_mask(color) | fmgr.queen_mask(color));
       if (behind_msk1) {
-        o_multiattack_mask |= o_attack_mask & fwd_fields;
-        o_attack_mask |= fwd_fields;
-        if (!(o_multiattack_mask & fwd_fields)) {
+        multiattack_mask |= attack_mask & fwd_fields;
+        attack_mask |= fwd_fields;
+        if (!(multiattack_mask & fwd_fields)) {
           behind_msk1 = ~behind_msk1;
           auto behind_msk2 = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_ & behind_msk1) & behind_msk1;
-          if (behind_msk2 & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)))
-            o_multiattack_mask |= fwd_fields;
+          if (behind_msk2 & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
+            multiattack_mask |= fwd_fields;
+        }
+      }
+      else {
+        behind_msk1 = behind_msk & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor));
+        if (behind_msk1) {
+          o_multiattack_mask |= o_attack_mask & fwd_fields;
+          o_attack_mask |= fwd_fields;
+          if (!(o_multiattack_mask & fwd_fields)) {
+            behind_msk1 = ~behind_msk1;
+            auto behind_msk2 = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_ & behind_msk1) & behind_msk1;
+            if (behind_msk2 & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)))
+              o_multiattack_mask |= fwd_fields;
+          }
+        }
+      }
+
+      const bool halfpasser = fwd_fields & finfo_[ocolor].pawnAttacks_;
+      if (halfpasser) {
+        pinfo.score_ += EvalCoefficients::passerPawnBasic_[cy];
+        continue;
+      }
+
+      const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~o_multiattack_mask;
+      auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo_[color].pawnAttacks_;
+      blockers_mask |= mask_all_;
+
+      // bonus for possibility to go
+      pwscore += EvalCoefficients::passerPawnFwd_[cy];
+      // forward field is not attacked
+      if (!(fwd_field & o_attack_mask) || ((fwd_field & attacked_oking_only) && (fwd_field & attack_mask))) {
+        pwscore += EvalCoefficients::passerPawnNatt_[cy];
+        // my side to move
+        pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
+        // unstoppable
+        const bool unstoppable = pawnUnstoppable(idx, color);
+        pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
+      }
+
+      // all forward fields are not blocked by opponent
+      auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
+      if (!fwd_mask) {
+        pwscore += EvalCoefficients::passerPawnEx_[cy];
+      }
+      // only few fields are free
+      else {
+        int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
+        int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
+        int steps = last_cango - cy;
+        if (steps > 0) {
+          pwscore += EvalCoefficients::passerPawnExS_[cy][steps];
         }
       }
     }
-
-    const bool halfpasser = fwd_fields & finfo_[ocolor].pawnAttacks_;
-    if (halfpasser) {
-      pinfo.score_ += EvalCoefficients::passerPawnBasic_[cy];
-      continue;
-    }
-
-    const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~o_multiattack_mask;
-    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo_[color].pawnAttacks_;
-    blockers_mask |= mask_all_;
-
-    ScoreType32 pwscore{};
-
-    // bonus for possibility to go
-    pwscore += EvalCoefficients::passerPawnFwd_[cy];
-    // forward field is not attacked
-    if (!(fwd_field & o_attack_mask) || ((fwd_field & attacked_oking_only) && (fwd_field & attack_mask))) {
-      pwscore += EvalCoefficients::passerPawnNatt_[cy];
-      // my side to move
-      pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
-      // unstoppable
-      const bool unstoppable = pawnUnstoppable(idx, color);
-      pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
-    }
-
-    // all forward fields are not blocked by opponent
-    auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
-    if (!fwd_mask) {
-      pwscore += EvalCoefficients::passerPawnEx_[cy];
-    }
-    // only few fields are free
-    else {
-      int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
-      int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
-      int steps = last_cango - cy;
-      if (steps > 0) {
-        pwscore += EvalCoefficients::passerPawnExS_[cy][steps];
-      }
-    }
-    
     pinfo.score_ += pwscore;
   }
 
@@ -1193,6 +1198,12 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
   
+  if (auto r2r_treat = (fmgr.rook_mask(ocolor) & finfo_[color].rookMoves_ & ~counted_mask & ~finfo_[ocolor].attack_mask_)) {
+    counted_mask |= r2r_treat;
+    ++attackedN;
+    attackScore += EvalCoefficients::rookUnderRookAttackBonus_;
+  }
+
   if (auto treat_mask = ~finfo_[ocolor].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask &
           (finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor))) {
     counted_mask |= treat_mask;
