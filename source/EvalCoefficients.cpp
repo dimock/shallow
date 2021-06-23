@@ -13,22 +13,20 @@ namespace NEngine
   int EvalCoefficients::additionalMatBonus_{ 150 };
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 6, 25 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 6 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 6, 16 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 8 };
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
-  ScoreType32 EvalCoefficients::kingToPawnDistanceBonus_ = {0, 1};
-  ScoreType32 EvalCoefficients::okingToPawnDistanceBonus_ = {0, 2};
 
 
   // outpost
   ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
 
   // forks
-  ScoreType EvalCoefficients::bishopsAttackBonus_{ 35 };
-  ScoreType EvalCoefficients::knightAttack_{ 35 };
+  ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };
+  ScoreType EvalCoefficients::knightAttack_{ 32 };
   ScoreType EvalCoefficients::pawnAttack_{ 40 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
-  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 25 };
+  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::rookUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
@@ -111,14 +109,9 @@ namespace NEngine
   ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {0, 0}, {10, 10}, {12, 12}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} };
   ScoreType32 EvalCoefficients::doubleKnightBonus_[10] = { {0, 0}, {3, 3}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
   ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
-  ScoreType32 EvalCoefficients::twoBishopsBonus_[4][10] = {
-    { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} },
-    { {5, 5}, {15, 15}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25} },
-    { {0, 0}, {10, 10}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} },
-    { {0, 0}, {10, 10}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} }
-  };
+  ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
-  ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {35, 15}, {45, 25}, {50, 25}, {50, 25}, {50, 25}, {50, 25}, {50, 25}, {50, 25}, {50, 25} };
+  ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {25, 10}, {35, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20} };
   ScoreType32 EvalCoefficients::figuresAgainstRookBonus_[10] = { {0, 0}, {30, 20}, {50, 40}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50} };
   ScoreType32 EvalCoefficients::knightsAgainstRookBonus_[10] = { {0, 0}, {12, 12}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20}, {25, 20} };
   ScoreType32 EvalCoefficients::rookAgainstFigureBonus_[10][10] = {

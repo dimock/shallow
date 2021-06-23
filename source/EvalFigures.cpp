@@ -44,6 +44,7 @@ void Evaluator::prepareAttacksMasks()
   {
     auto ocolor = Figure::otherColor(color);
     finfo_[color].knightMoves_ = BitMask{};
+    finfo_[color].knightSafeMoves_ = BitMask{};
     finfo_[color].attackedByKnightRq_ = BitMask{};
     finfo_[color].behindPawnAttacks_ = BitMask{};
 
@@ -204,17 +205,6 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].discoveredCheck_ = true;
       }
       
-#ifdef MOBILITY_EXTENDED
-      bool qpinned = false;
-      if(knight_moves)
-      {
-        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none)) {
-          qpinned = true;
-          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
-        }
-      }
-#endif // king protection, discovered checks etc...
-
 #ifdef DO_KING_EVAL
       if (knight_attacks & finfo_[ocolor].ki_fields_)
       {
@@ -239,11 +229,24 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].score_mob_ -= EvalCoefficients::knightBlocked_;
       }
 
+      auto kn_safe_moves = n_moves_mask;
 #ifdef MOBILITY_EXTENDED
-      if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n))) {
+      bool qpinned = false;
+      if (kn_safe_moves)
+      {
+        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_ & ~finfo_[color].attack_mask_, finfo_[ocolor].brq_mask_, nst::none)) {
+          qpinned = true;
+          kn_safe_moves = 0ULL;
+          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
+        }
+      }
+      if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && 
+          ((finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].multiattack_mask_ | finfo_[ocolor].nb_attacked_) & set_mask_bit(n))) {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[0];
       }
 #endif // king protection, discovered checks etc...
+
+      finfo_[color].knightSafeMoves_ |= kn_safe_moves;
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
@@ -319,7 +322,8 @@ ScoreType32 Evaluator::evaluateBishops()
       }
 
 #ifdef MOBILITY_EXTENDED
-      if ((q_pinned || !(b_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
+      if ((q_pinned || !(b_moves_mask & ~fmgr.mask(color))) &&
+          ((finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].multiattack_mask_ | finfo_[ocolor].nb_attacked_) & set_mask_bit(n)) != 0ULL) {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[1];
       }
 #endif // king protection, discovered checks etc...

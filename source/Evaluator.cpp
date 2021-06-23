@@ -154,8 +154,15 @@ void Evaluator::prepare()
     finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
     finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
 
-    finfo_[0].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorBlack) >> 8) & inv_mask_all_;
-    finfo_[1].pawns_fwd_ = (fmgr.pawn_mask(Figure::ColorWhite) << 8) & inv_mask_all_;
+    auto pawn_msk_wa = fmgr.pawn_mask(Figure::ColorWhite) & finfo_[Figure::ColorBlack].pawnAttacks_;
+    auto pawn_msk_ba = fmgr.pawn_mask(Figure::ColorBlack) & finfo_[Figure::ColorWhite].pawnAttacks_;
+    auto pw_protect_w = ((pawn_msk_wa >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_wa >> 9) & Figure::pawnCutoffMasks_[1]);
+    auto pw_protect_b = ((pawn_msk_ba << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_ba << 7) & Figure::pawnCutoffMasks_[1]);    
+
+    auto pw_fwd_w = fmgr.pawn_mask(Figure::ColorWhite) & ~pw_protect_w;
+    auto pw_fwd_b = fmgr.pawn_mask(Figure::ColorBlack) & ~pw_protect_b;
+    finfo_[0].pawns_fwd_ = (pw_fwd_b >> 8) & inv_mask_all_;
+    finfo_[1].pawns_fwd_ = (pw_fwd_w << 8) & inv_mask_all_;
 
     finfo_[0].pawns_fwd_ |= ((finfo_[0].pawns_fwd_ & Figure::pawns2ndLineMask_[0]) >> 8) & inv_mask_all_;
     finfo_[0].pawns_fwd_ &= ~finfo_[Figure::ColorWhite].pawnAttacks_;
@@ -523,9 +530,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
-    int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
-    int king_dist = distanceCounter().getDistance(board_->kingPos(color), n1);
-    info.score_ += EvalCoefficients::okingToPawnDistanceBonus_ * oking_dist - EvalCoefficients::kingToPawnDistanceBonus_ * king_dist;
 
     // passer pawn
     if(!(fwd_mask & (opmsk|pmask)))
@@ -564,6 +568,8 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       else
       {
         pwscore = EvalCoefficients::passerPawn_[cy];
+        int oking_dist = distanceCounter().getDistance(board_->kingPos(ocolor), n1);
+        int king_dist = distanceCounter().getDistance(board_->kingPos(color), n1);
         pwscore +=
           EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
           EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
@@ -701,79 +707,74 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     auto n1 = n + (dy << 3);
     auto fwd_field = set_mask_bit(n1);
 
-    ScoreType32 pwscore{};
+    if (fwd_field & mask_all_)
+      continue;
 
-    if (auto fwd_msk = (fwd_field & mask_all_)) {
-      if(fwd_msk & ~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_) {
-        pwscore = EvalCoefficients::passerPawn2_[cy];
+    auto attack_mask = finfo_[color].attack_mask_;
+    auto multiattack_mask = finfo_[color].multiattack_mask_;
+    auto o_attack_mask = finfo_[ocolor].attack_mask_;
+    auto o_multiattack_mask = finfo_[ocolor].multiattack_mask_;
+    auto behind_msk = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_);
+    auto behind_msk1 = behind_msk & (fmgr.rook_mask(color) | fmgr.queen_mask(color));
+    if (behind_msk1) {
+      multiattack_mask |= attack_mask & fwd_fields;
+      attack_mask |= fwd_fields;
+      if (!(multiattack_mask & fwd_fields)) {
+        behind_msk1 = ~behind_msk1;
+        auto behind_msk2 = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_ & behind_msk1) & behind_msk1;
+        if (behind_msk2 & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
+          multiattack_mask |= fwd_fields;
       }
     }
     else {
-      auto attack_mask = finfo_[color].attack_mask_;
-      auto multiattack_mask = finfo_[color].multiattack_mask_;
-      auto o_attack_mask = finfo_[ocolor].attack_mask_;
-      auto o_multiattack_mask = finfo_[ocolor].multiattack_mask_;
-      auto behind_msk = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_);
-      auto behind_msk1 = behind_msk & (fmgr.rook_mask(color) | fmgr.queen_mask(color));
+      behind_msk1 = behind_msk & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor));
       if (behind_msk1) {
-        multiattack_mask |= attack_mask & fwd_fields;
-        attack_mask |= fwd_fields;
-        if (!(multiattack_mask & fwd_fields)) {
+        o_multiattack_mask |= o_attack_mask & fwd_fields;
+        o_attack_mask |= fwd_fields;
+        if (!(o_multiattack_mask & fwd_fields)) {
           behind_msk1 = ~behind_msk1;
           auto behind_msk2 = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_ & behind_msk1) & behind_msk1;
-          if (behind_msk2 & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
-            multiattack_mask |= fwd_fields;
+          if (behind_msk2 & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)))
+            o_multiattack_mask |= fwd_fields;
         }
       }
-      else {
-        behind_msk1 = behind_msk & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor));
-        if (behind_msk1) {
-          o_multiattack_mask |= o_attack_mask & fwd_fields;
-          o_attack_mask |= fwd_fields;
-          if (!(o_multiattack_mask & fwd_fields)) {
-            behind_msk1 = ~behind_msk1;
-            auto behind_msk2 = betweenMasks().from_dir(n, dir_behind_[color]) & magic_ns::rook_moves(n, mask_all_ & behind_msk1) & behind_msk1;
-            if (behind_msk2 & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)))
-              o_multiattack_mask |= fwd_fields;
-          }
-        }
-      }
+    }
 
-      const bool halfpasser = fwd_fields & finfo_[ocolor].pawnAttacks_;
-      if (halfpasser) {
-        pinfo.score_ += EvalCoefficients::passerPawnBasic_[cy];
-        continue;
-      }
+    const bool halfpasser = fwd_fields & finfo_[ocolor].pawnAttacks_;
+    if (halfpasser) {
+      pinfo.score_ += EvalCoefficients::passerPawnBasic_[cy];
+      continue;
+    }
 
-      const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~o_multiattack_mask;
-      auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo_[color].pawnAttacks_;
-      blockers_mask |= mask_all_;
+    const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~o_multiattack_mask;
+    auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo_[color].pawnAttacks_;
+    blockers_mask |= mask_all_;
 
-      // bonus for possibility to go
-      pwscore += EvalCoefficients::passerPawnFwd_[cy];
-      // forward field is not attacked
-      if (!(fwd_field & o_attack_mask) || ((fwd_field & attacked_oking_only) && (fwd_field & attack_mask))) {
-        pwscore += EvalCoefficients::passerPawnNatt_[cy];
-        // my side to move
-        pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
-        // unstoppable
-        const bool unstoppable = pawnUnstoppable(idx, color);
-        pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
-      }
+    ScoreType32 pwscore{};
+    // bonus for possibility to go
+    pwscore += EvalCoefficients::passerPawnFwd_[cy];
+    // forward field is not attacked
+    if (!(fwd_field & o_attack_mask) || ((fwd_field & attacked_oking_only) && (fwd_field & attack_mask))) {
+      pwscore += EvalCoefficients::passerPawnNatt_[cy];
+      // my side to move
+      pwscore += EvalCoefficients::passerPawnMyMove_[cy] * (color == board_->color());
+      // unstoppable
+      const bool unstoppable = pawnUnstoppable(idx, color);
+      pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
+    }
 
-      // all forward fields are not blocked by opponent
-      auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
-      if (!fwd_mask) {
-        pwscore += EvalCoefficients::passerPawnEx_[cy];
-      }
-      // only few fields are free
-      else {
-        int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
-        int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
-        int steps = last_cango - cy;
-        if (steps > 0) {
-          pwscore += EvalCoefficients::passerPawnExS_[cy][steps];
-        }
+    // all forward fields are not blocked by opponent
+    auto fwd_mask = pawnMasks().mask_forward(color, n) & blockers_mask;
+    if (!fwd_mask) {
+      pwscore += EvalCoefficients::passerPawnEx_[cy];
+    }
+    // only few fields are free
+    else {
+      int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
+      int last_cango = colored_y_[color][Index(closest_blocker).y()] - 1;
+      int steps = last_cango - cy;
+      if (steps > 0) {
+        pwscore += EvalCoefficients::passerPawnExS_[cy][steps];
       }
     }
     pinfo.score_ += pwscore;
@@ -1053,11 +1054,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
   {
     int bdiff = sign(bishopsDiff);
-    auto bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
-    auto ncolor = Figure::otherColor(bcolor);
+    Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
     const int pawnsN = fmgr.pawns(bcolor);
-    const int knightsN = fmgr.knights(ncolor) & 3;
-    score += EvalCoefficients::twoBishopsBonus_[knightsN][pawnsN] * bdiff;
+    score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
 
   // bonus for 2 rooks
@@ -1222,7 +1221,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 
   const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;
   auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
-  auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightMoves_ &
+  auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightSafeMoves_ &
     strong_nattacks & ~fmgr.mask(color) & ~finfo_[ocolor].nb_attacked_;
   int possibleNN = 0;
   while (possible_kn_att) {
