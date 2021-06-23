@@ -707,8 +707,12 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     auto n1 = n + (dy << 3);
     auto fwd_field = set_mask_bit(n1);
 
-    if (fwd_field & mask_all_)
+    if (auto fwd_msk = (fwd_field & mask_all_)) {
+      if(fwd_msk & ~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_) {
+        pinfo.score_ += EvalCoefficients::passerPawn2_[cy];
+      }
       continue;
+    }
 
     auto attack_mask = finfo_[color].attack_mask_;
     auto multiattack_mask = finfo_[color].multiattack_mask_;
@@ -1054,9 +1058,11 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
   {
     int bdiff = sign(bishopsDiff);
-    Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
+    auto bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
+    auto ncolor = Figure::otherColor(bcolor);
     const int pawnsN = fmgr.pawns(bcolor);
-    score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
+    const int knightsN = fmgr.knights(ncolor) & 3;
+    score += EvalCoefficients::twoBishopsBonus_[knightsN][pawnsN] * bdiff;
   }
 
   // bonus for 2 rooks

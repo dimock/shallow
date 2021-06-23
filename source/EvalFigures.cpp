@@ -574,21 +574,21 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     auto near_king_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & finfo_[color].multiattack_mask_);
     near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 2;
     attack_coeff += near_king_coeff;
-    check_coeff += near_king_coeff;
+    check_coeff += (near_king_coeff >> 1);
   }
 
   const auto near_oking_rem = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_ & finfo_[color].attack_mask_ & ~near_oking_att & ~fmgr.pawn_mask(color);
   if (near_oking_rem) {
     auto rem_king_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_rem)) >> 2;
     attack_coeff += rem_king_coeff;
-    check_coeff += rem_king_coeff;
+    //check_coeff += rem_king_coeff;
   }
 
   auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_;
   if (around_oking) {
     auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 2;
     attack_coeff += remaining_coeff;
-    check_coeff += remaining_coeff;
+    //check_coeff += remaining_coeff;
   }
 
   //auto oking_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
