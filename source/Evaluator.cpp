@@ -1194,7 +1194,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   if (auto qr_attack = (fmgr.rook_mask(ocolor) & finfo_[color].queenMoves_ & qr_possible_mask)) {
     counted_mask |= qr_attack;
     ++attackedN;
-    attackScore += EvalCoefficients::rookQueenAttackedBonus_;
+    attackScore += EvalCoefficients::queenAttackedBonus_;
   }
 
   if (auto r2q_treat = (fmgr.queen_mask(ocolor) & finfo_[color].rookMoves_ & ~counted_mask)) {
@@ -1209,14 +1209,22 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::rookUnderRookAttackBonus_;
   }
 
-  auto rq2bn_attack = (finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor));
-  if (auto treat_mask = ~finfo_[ocolor].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask & rq2bn_attack) {
+  auto r2bn_attack = finfo_[color].r_attacked_ & (fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor));
+  if (auto treat_mask = r2bn_attack & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask) {
     counted_mask |= treat_mask;
-    int rqtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
-    attackedN += rqtreatsN;
-    attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
-    rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 2;
+    int rtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
+    attackedN += rtreatsN;
+    attackScore += EvalCoefficients::rookAttackedBonus_ * rtreatsN;
+    rtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
+    attackScore += (EvalCoefficients::rookAttackedBonus_ * rtreatsN) >> 1;
+  }
+
+  auto q2bn_attack = finfo_[color].queenMoves_  & ~finfo_[ocolor].attack_mask_& (fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor));
+  if (auto treat_mask = q2bn_attack & ~counted_mask) {
+    counted_mask |= treat_mask;
+    int qtreatsN = pop_count(treat_mask);
+    attackedN += qtreatsN;
+    attackScore += EvalCoefficients::queenAttackedBonus_ * qtreatsN;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
@@ -1236,11 +1244,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     if (!kn_fork) {
       continue;
     }
-    int knightsN = pop_count(kn_fork);
-    possibleNN = std::max(possibleNN, knightsN);
+    if (pop_count(kn_fork) > 1) {
+      attackScore += EvalCoefficients::knightAttack_ >> (1 + knight_protects);
+      break;
+    }
   }
-
-  attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> (1 + knight_protects);
 
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);

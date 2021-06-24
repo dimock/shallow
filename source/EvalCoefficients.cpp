@@ -13,8 +13,8 @@ namespace NEngine
   int EvalCoefficients::additionalMatBonus_{ 150 };
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 6, 16 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 8 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 8, 20 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 7 };
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
 
@@ -25,7 +25,8 @@ namespace NEngine
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };
   ScoreType EvalCoefficients::knightAttack_{ 32 };
   ScoreType EvalCoefficients::pawnAttack_{ 40 };
-  ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
+  ScoreType EvalCoefficients::rookAttackedBonus_{ 30 };
+  ScoreType EvalCoefficients::queenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::rookUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
@@ -69,7 +70,7 @@ namespace NEngine
   int EvalCoefficients::knightChecking_{ 40 };
   int EvalCoefficients::bishopChecking_{ 40 };
   int EvalCoefficients::rookChecking_{ 70 };
-  int EvalCoefficients::queenChecking_{ 85 };
+  int EvalCoefficients::queenChecking_{ 90 };
   int EvalCoefficients::weakChecking_{ 9 };
   int EvalCoefficients::discoveredChecking_{ 40 };
   
@@ -94,12 +95,12 @@ namespace NEngine
   ScoreType32 EvalCoefficients::protectedPawn_[8] = { {0, 0}, {0, 0}, {4, 3}, {6, 4}, {8, 6}, {10, 8}, {10, 8}, {0, 0} };
   ScoreType32 EvalCoefficients::hasneighborPawn_[8] = { {0, 0}, {3, 2}, {3, 2}, {4, 3}, {4, 3}, {5, 4}, {5, 4}, {0, 0} };
 
-  int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 7, 1, 0, 0 };
+  int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 10, 8, 5, 1, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[4] = { 30, 26, 5, 0 };
-  int EvalCoefficients::pawnShieldB_[4] = { 30, 26, 5, 0 };
+  int EvalCoefficients::pawnShieldA_[4] = { 32, 28, 8, 0 };
+  int EvalCoefficients::pawnShieldB_[4] = { 32, 28, 8, 0 };
   int EvalCoefficients::pawnShieldC_[4] = { 20, 16, 3, 0 };
-  int EvalCoefficients::pawnShieldAbove_[4] = { 12, 5, 1, 0 };
+  int EvalCoefficients::pawnShieldAbove_[4] = { 8, 5, 1, 0 };
 
   // rook on open column
   ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {10, 4} };
