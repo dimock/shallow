@@ -56,6 +56,17 @@ const BitMask Evaluator::blocked_rook_mask_[2][2] = {
   }
 };
 
+const BitMask Evaluator::blocking_pw4r_mask_[2][2][2] = {
+  {
+    {set_mask_bit(G2) | set_mask_bit(G3), set_mask_bit(H2) | set_mask_bit(H3)},
+    {set_mask_bit(A2) | set_mask_bit(A3), set_mask_bit(B2) | set_mask_bit(B3)}
+  },
+  {
+    {set_mask_bit(G7) | set_mask_bit(G6), set_mask_bit(H7) | set_mask_bit(H6)},
+    {set_mask_bit(A7) | set_mask_bit(A6), set_mask_bit(B7) | set_mask_bit(B6)}
+  }
+};
+
 void Evaluator::initialize(Board const* board
 #ifdef USE_EVAL_HASH_ALL
 , AHashTable* evh
@@ -516,18 +527,18 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     const auto & bkw_mask = pawnMasks().mask_forward(ocolor, n);
 
     auto const& protectMask = movesTable().pawnCaps(ocolor, n);
-    int protectorsN = pop_count(protectMask & pmask);
+    int protectorsN = std::min(pop_count(protectMask & pmask), 3);
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool opened = (opmsk & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
-    int neighborsN = pop_count(pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask);
+    int neighborsN = std::min(pop_count(pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask), 3);
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
 
     info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
     info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
-    info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
-    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
+    info.score_ += EvalCoefficients::protectedPawn_[protectorsN][cy];
+    info.score_ += EvalCoefficients::hasneighborPawn_[neighborsN][cy];
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
 
@@ -1000,13 +1011,17 @@ bool Evaluator::fakeCastle(Figure::Color color, int rpos, BitMask rmask) const
   if ((color == Figure::ColorWhite && ki_pos.y() != 0) || (color == Figure::ColorBlack && ki_pos.y() != 7))
     return false;
   auto ocolor = Figure::otherColor(color);
-  return ((blocked_rook_mask_[ocolor][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[ocolor][ctype]) == 0ULL);
+  return ((blocked_rook_mask_[ocolor][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[ocolor][ctype]) == 0ULL) &&
+    ((blocking_pw4r_mask_[ocolor][ctype][0] & fmgr.pawn_mask(color)) != 0ULL) && ((blocking_pw4r_mask_[ocolor][ctype][1] & fmgr.pawn_mask(color)) != 0ULL);
 }
 
 bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) const
 {
   const int ctype = rpos.x() < 4;
-  return ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL);
+  const FiguresManager & fmgr = board_->fmgr();
+  auto ocolor = Figure::otherColor(color);
+  return ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL) &&
+    ((blocking_pw4r_mask_[color][ctype][0] & fmgr.pawn_mask(ocolor)) != 0ULL) && ((blocking_pw4r_mask_[color][ctype][1] & fmgr.pawn_mask(ocolor)) != 0ULL);
 }
 
 ScoreType32 Evaluator::evaluateMaterialDiff()
@@ -1166,12 +1181,15 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 
   const auto stong_bn_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].multiattack_mask_;
+  const auto good_bn_attacks = ~stong_bn_attacks & ~finfo_[ocolor].multiattack_mask_ & finfo_[ocolor].pawnAttacks_;
   if (auto kn_fork = (fmgr.bishop_mask(ocolor) & finfo_[color].knightMoves_ & ~counted_mask)) {
     counted_mask |= kn_fork;
     int knightsN = pop_count(kn_fork & stong_bn_attacks);
     attackedN += knightsN;
     attackScore += EvalCoefficients::knightAttack_ * knightsN;
-    knightsN = pop_count(kn_fork & ~stong_bn_attacks);
+    knightsN = pop_count(kn_fork & good_bn_attacks);
+    attackScore += (EvalCoefficients::knightAttack_ * knightsN) >> 1;
+    knightsN = pop_count(kn_fork & ~stong_bn_attacks & ~good_bn_attacks);
     attackScore += (EvalCoefficients::knightAttack_ * knightsN) >> 2;
   }
   if (auto bi_treat = (o_rq_mask & finfo_[color].bishopTreatAttacks_ & ~counted_mask)) {
@@ -1186,7 +1204,9 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int bishopsN = pop_count(bi_treat & stong_bn_attacks);
     attackedN += bishopsN;
     attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
-    bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
+    bishopsN = pop_count(bi_treat & good_bn_attacks);
+    attackScore += (EvalCoefficients::bishopsAttackBonus_ * bishopsN) >> 1;
+    bishopsN = pop_count(bi_treat & ~stong_bn_attacks & ~good_bn_attacks);
     attackScore += (EvalCoefficients::bishopsAttackBonus_ * bishopsN) >> 2;
   }
 
@@ -1209,14 +1229,16 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::rookUnderRookAttackBonus_;
   }
 
-  auto r2bn_attack = finfo_[color].r_attacked_ & (fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor));
+  auto r2bn_attack = finfo_[color].rookMoves_ & (fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor));
   if (auto treat_mask = r2bn_attack & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask) {
     counted_mask |= treat_mask;
     int rtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
     attackedN += rtreatsN;
     attackScore += EvalCoefficients::rookAttackedBonus_ * rtreatsN;
-    rtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
+    rtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_ & ~finfo_[ocolor].multiattack_mask_);
     attackScore += (EvalCoefficients::rookAttackedBonus_ * rtreatsN) >> 1;
+    rtreatsN = pop_count(treat_mask & finfo_[ocolor].multiattack_mask_);
+    attackScore += (EvalCoefficients::rookAttackedBonus_ * rtreatsN) >> 2;
   }
 
   auto q2bn_attack = finfo_[color].queenMoves_  & ~finfo_[ocolor].attack_mask_& (fmgr.bishop_mask(ocolor) | fmgr.knight_mask(ocolor));

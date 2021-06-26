@@ -57,7 +57,6 @@ struct EvalCoefficients
   static int basicAttack_;
 
   static int generalKingPressure_;
-  static int generalKingAuxPressure_;
 
     // for special cases
   static int kingToPawnDistanceMulti_;
@@ -72,7 +71,8 @@ struct EvalCoefficients
   static int queenChecking_;
   static int discoveredChecking_;
   static int weakChecking_;
-  
+  static int potentialChecksScore_;
+
   static int checkMyMoveBonus_;
   static int possibleMatTreat_;
   static int attackedNearKingCoeff_;
@@ -84,8 +84,8 @@ struct EvalCoefficients
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_[2];
   static ScoreType32 backwardPawn_[8];
-  static ScoreType32 protectedPawn_[8];
-  static ScoreType32 hasneighborPawn_[8];
+  static ScoreType32 protectedPawn_[4][8];
+  static ScoreType32 hasneighborPawn_[4][8];
   
   static int opponentPawnPressure_[8];
 
