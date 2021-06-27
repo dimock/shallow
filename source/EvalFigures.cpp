@@ -570,7 +570,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += attack_coeff >> 1;
   }
 
-  const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
+  const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_ & ~fmgr.mask(color);
   if (near_oking_att) {
     auto near_king_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & finfo_[color].multiattack_mask_);
     near_king_coeff += (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_)) >> 1;

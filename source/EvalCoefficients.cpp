@@ -149,24 +149,26 @@ namespace NEngine
   ScoreType32 EvalCoefficients::noQueensPenalty_ = {15, 15};
 
   // passer pawns
-  ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  2,   2}, {  5,   5}, { 13,  15}, { 28,  31}, { 48,  53}, { 75,  82}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  1,   1}, {  2,   2}, {  6,   7}, { 14,  15}, { 24,  26}, { 37,  41}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  2,   2}, {  5,   5}, { 13,  15}, { 28,  31}, { 48,  53}, { 85,  92}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  1,   1}, {  2,   2}, {  6,   7}, { 14,  15}, { 24,  26}, { 40,  45}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn4_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  3,   3}, {  7,   7}, { 12,  13}, { 18,  20}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerPawnEx_[8] = { {  0,   0}, {  1,   3}, {  3,   6}, {  8,  18}, { 17,  37}, { 29,  65}, { 67, 150}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerPawnFwd_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   1}, {  1,   3}, {  2,   6}, {  6,  15}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerPawnBasic_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  1,   2}, {  3,   4}, {  6,   7}, { 10,  12}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawnEx_[8] = { {  0,   0}, {  1,   3}, {  3,   8}, {  8,  24}, { 17,  49}, { 35, 101}, { 56, 162}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawnFwd_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  1,   3}, {  2,   7}, {  5,  15}, {  8,  24}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawnNatt_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  1,   3}, {  2,   7}, {  4,  12}, {  6,  19}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawnMyMove_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   2}, {  1,   4}, {  2,   8}, {  4,  13}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawnBasic_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  2,   3}, {  4,   6}, {  7,  11}, { 12,  17}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnExS_[8][8] = {
     { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, {  0,   0}, {  0,   1}, {  0,   1}, {  0,   1}, {  0,   1}, {  1,   3}, {  0,   0} },
-    { {  0,   0}, {  0,   2}, {  1,   2}, {  1,   2}, {  1,   3}, {  3,   6}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, {  2,   5}, {  3,   6}, {  3,   8}, {  8,  18}, {  0,   0}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, {  5,  12}, {  7,  15}, { 17,  37}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, { 10,  24}, { 29,  65}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, { 67, 150}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, {  0,   1}, {  0,   1}, {  0,   1}, {  0,   1}, {  0,   1}, {  1,   3}, {  0,   0} },
+    { {  0,   0}, {  0,   2}, {  1,   3}, {  1,   3}, {  1,   4}, {  3,   8}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, {  2,   7}, {  3,   9}, {  3,  10}, {  8,  24}, {  0,   0}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, {  5,  16}, {  7,  20}, { 17,  49}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, { 13,  38}, { 45, 101}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, { 56, 162}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
     { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} }
   };
-  ScoreType32 EvalCoefficients::kingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   1}, {  0,   3}, {  0,   6}, {  0,  10}, {  0,   0} };
-  ScoreType32 EvalCoefficients::okingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  0,   2}, {  0,   5}, {  0,   9}, {  0,  15}, {  0,   0} };
+  ScoreType32 EvalCoefficients::kingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  0,   2}, {  0,   5}, {  0,   9}, {  0,  15}, {  0,   0} };
+  ScoreType32 EvalCoefficients::okingToPasserDistanceBonus_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  0,   4}, {  0,   9}, {  0,  16}, {  0,  25}, {  0,   0} };
   // end of passer pawns
 
 

@@ -120,6 +120,8 @@ struct EvalCoefficients
   static ScoreType32 passerPawnEx_[8];
   static ScoreType32 passerPawnEx2_[8];
   static ScoreType32 passerPawnFwd_[8];
+  static ScoreType32 passerPawnNatt_[8];
+  static ScoreType32 passerPawnMyMove_[8];
   static ScoreType32 passerPawnExS_[8][8];
   static ScoreType32 passerPawnBasic_[8];
   static ScoreType32 kingToPasserDistanceBonus_[8];
