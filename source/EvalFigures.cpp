@@ -107,7 +107,7 @@ void Evaluator::prepareAttacksMasks()
       auto const& rook_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
       auto rook_moves_x = magic_ns::rook_moves(n, mask_all_ & ~fmgr.queen_mask(ocolor));
-      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color));
+      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color)) & pawnMasks().mask_forward(color, n);
     
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
@@ -136,7 +136,7 @@ void Evaluator::prepareAttacksMasks()
 
       // mobility
       auto qr_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
-      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color));
+      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color)) & pawnMasks().mask_forward(color, n);
       auto const queen_attacks = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_) | qr_attacks;
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
 
