@@ -63,8 +63,8 @@ namespace NEngine
   int EvalCoefficients::basicAttack_{ 3 };
 #endif
 
-  int EvalCoefficients::generalKingPressure_{ 6 };
-  int EvalCoefficients::generalKingAuxPressure_{ 3 };
+  int EvalCoefficients::strongKingPressure_{ 7 };
+  int EvalCoefficients::weakKingPressure_{ 2 };
 
   // king threat
   int EvalCoefficients::knightChecking_{ 40 };
@@ -113,8 +113,8 @@ namespace NEngine
   ScoreType32 EvalCoefficients::twoBishopsBonus_[4][10] = {
     { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} },
     { {5, 5}, {15, 15}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25} },
-    { {0, 0}, { 5, 5},  { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5} },
-    { {0, 0}, { 5, 5},  { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5}, { 5,  5} }
+    { {0, 0}, {10, 10}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} },
+    { {0, 0}, {10, 10}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} }
   };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
   ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {35, 30}, {50, 50}, {55, 55}, {55, 55}, {55, 55}, {55, 55}, {55, 55}, {55, 55}, {55, 55} };
