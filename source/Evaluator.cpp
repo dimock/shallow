@@ -407,7 +407,7 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
     ~finfo_[color].pawnAttacks_;
   ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & attackers);;
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & strong_attackers);
-  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_);
+  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & attackers & ~strong_attackers & finfo_[ocolor].attack_mask_);
   // bishop treat
   if(fmgr.bishops(color))
   {
@@ -710,7 +710,8 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
     auto fwd_field = set_mask_bit(n1);
 
     if (auto fwd_msk = (fwd_field & mask_all_)) {
-      if(!halfpasser && (fwd_msk & ~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_)) {
+      auto b = fwd_msk & ((~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_) | (fmgr.mask(color) & ~finfo_[ocolor].attack_mask_));
+      if(!halfpasser && b) {
         pinfo.score_ += EvalCoefficients::passerPawn2_[cy];
       }
       continue;
@@ -1062,11 +1063,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
   {
     int bdiff = sign(bishopsDiff);
-    auto bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
-    auto ncolor = Figure::otherColor(bcolor);
+    Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
     const int pawnsN = fmgr.pawns(bcolor);
-    const int knightsN = fmgr.knights(ncolor) & 3;
-    score += EvalCoefficients::twoBishopsBonus_[knightsN][pawnsN] * bdiff;
+    score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
 
   // bonus for 2 rooks

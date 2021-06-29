@@ -590,9 +590,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   if (around_oking) {
     auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 2;
     attack_coeff += remaining_coeff;
-    const int queen_is_close = (around_oking & ~fmgr.mask(color) & finfo_[color].queenMoves_) != 0ULL;
-    const int is_near_king = (near_oking_att & ~finfo_[color].queenMoves_ & ~fmgr.mask(color)) != 0ULL;
-    attack_coeff += (EvalCoefficients::attackedNearKingCoeff_ * (queen_is_close + is_near_king)) >> 1;
     check_coeff += remaining_coeff >> 1;
   }
 
