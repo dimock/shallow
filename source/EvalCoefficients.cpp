@@ -72,7 +72,7 @@ namespace NEngine
   int EvalCoefficients::rookChecking_{ 70 };
   int EvalCoefficients::queenChecking_{ 85 };
   int EvalCoefficients::weakChecking_{ 9 };
-  int EvalCoefficients::discoveredChecking_{ 40 };
+  int EvalCoefficients::discoveredChecking_{ 60 };
   
   int EvalCoefficients::checkMyMoveBonus_{ 10 };
   int EvalCoefficients::possibleMatTreat_{ 50 };
@@ -110,7 +110,12 @@ namespace NEngine
   ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {0, 0}, {10, 10}, {12, 12}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} };
   ScoreType32 EvalCoefficients::doubleKnightBonus_[10] = { {0, 0}, {3, 3}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
   ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
-  ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} };
+  ScoreType32 EvalCoefficients::twoBishopsBonus_[4][10] = {
+    { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} },
+    { {5, 5}, {15, 15}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25}, {25, 25} },
+    { {0, 0}, {10, 10}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} },
+    { {0, 0}, {10, 10}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} }
+  };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
   ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {35, 30}, {50, 50}, {55, 55}, {55, 55}, {55, 55}, {55, 55}, {55, 55}, {55, 55}, {55, 55} };
   ScoreType32 EvalCoefficients::figuresAgainstRookBonus_[10] = { {0, 0}, {30, 20}, {50, 40}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50}, {60, 50} };

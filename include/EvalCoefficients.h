@@ -96,7 +96,7 @@ struct EvalCoefficients
   static ScoreType32 doubleBishopBonus_[10];
   static ScoreType32 doubleKnightBonus_[10];
   static ScoreType32 twoKnightsBonus_[10];
-  static ScoreType32 twoBishopsBonus_[10];
+  static ScoreType32 twoBishopsBonus_[4][10];
   static ScoreType32 twoRooksBonus_[10];
   static ScoreType32 figureAgainstPawnBonus_[10];
   static ScoreType32 figuresAgainstRookBonus_[10];
