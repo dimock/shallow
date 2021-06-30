@@ -708,11 +708,18 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
     auto n1 = n + (dy << 3);
     auto fwd_field = set_mask_bit(n1);
+    auto pw_field = set_mask_bit(n);
 
     if (auto fwd_msk = (fwd_field & mask_all_)) {
-      auto b = fwd_msk & ((~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_) | (fmgr.mask(color) & ~finfo_[ocolor].attack_mask_));
-      if(!halfpasser && b) {
-        pinfo.score_ += EvalCoefficients::passerPawn2_[cy];
+      if(!halfpasser) {
+        auto pr_msk = (finfo_[color].attack_mask_ & ~finfo_[ocolor].multiattack_mask_) | finfo_[color].multiattack_mask_;
+        if (pw_field & pr_msk) {
+          pinfo.score_ += EvalCoefficients::passerPawn4_[cy];
+        }
+        auto b = fwd_msk & ((~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_) | (fmgr.mask(color) & ~finfo_[ocolor].attack_mask_));
+        if (b) {
+          pinfo.score_ += EvalCoefficients::passerPawn4_[cy];
+        }
       }
       continue;
     }
@@ -1262,10 +1269,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     possibleNN = std::max(possibleNN, knightsN);
   }
   attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> (1 + knight_protects);
-
-  if (attackedN > 1) {
-    attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
-  }
+  attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN > 1);
   if (board_->color() == color) {
     attackScore += attackScore >> 1;
   }
