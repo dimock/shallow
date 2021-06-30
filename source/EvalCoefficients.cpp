@@ -25,11 +25,10 @@ namespace NEngine
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };
   ScoreType EvalCoefficients::knightAttack_{ 32 };
   ScoreType EvalCoefficients::pawnAttack_{ 40 };
-  ScoreType EvalCoefficients::rookAttackedBonus_{ 30 };
-  ScoreType EvalCoefficients::queenAttackedBonus_{ 30 };
+  ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::rookUnderRookAttackBonus_{ 20 };
-  ScoreType EvalCoefficients::multiattackedBonus_{ 20 };
+  ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
 
   // immobility
@@ -72,7 +71,7 @@ namespace NEngine
   int EvalCoefficients::rookChecking_{ 70 };
   int EvalCoefficients::queenChecking_{ 85 };
   int EvalCoefficients::weakChecking_{ 9 };
-  int EvalCoefficients::discoveredChecking_{ 60 };
+  int EvalCoefficients::discoveredChecking_{ 40 };
   
   int EvalCoefficients::checkMyMoveBonus_{ 10 };
   int EvalCoefficients::possibleMatTreat_{ 50 };
@@ -237,14 +236,14 @@ namespace NEngine
         {-48, -30}, {-36, -15}, {-24, -10}, {-18, -10}, {-18, -10}, {-24, -10}, {-36, -15}, {-48, -30}
       },
       {
-        {-10,  -8}, { -8,  -3}, { -8,  -2}, { -8,  -1}, { -8,  -1}, { -8,  -2}, { -8,  -3}, {-10,  -8},
+        {-15,  -8}, { -8,  -3}, { -8,  -2}, { -8,  -1}, { -8,  -1}, { -8,  -2}, { -8,  -3}, {-15,  -8},
         { -2,  -3}, {  5,   4}, {  3,   3}, {  0,   3}, {  0,   3}, {  3,   3}, {  5,   4}, { -2,  -3},
         {  2,  -2}, {  8,   3}, {  7,   5}, {  5,   5}, {  5,   5}, {  7,   5}, {  8,   3}, {  2,  -2},
         {  2,  -1}, {  7,   3}, { 10,   5}, { 10,   6}, { 10,   6}, { 10,   5}, {  7,   3}, {  2,  -1},
         {  0,  -1}, {  6,   3}, {  9,   5}, { 10,   6}, { 10,   6}, {  9,   5}, {  6,   3}, {  0,  -1},
         {  0,  -2}, {  8,   3}, { 10,   5}, {  8,   5}, {  8,   5}, { 10,   5}, {  8,   3}, {  0,  -2},
         {  0,  -3}, { 10,   4}, {  5,   3}, {  2,   3}, {  2,   3}, {  5,   3}, { 10,   4}, {  0,  -3},
-        {-10,  -8}, { -5,  -3}, { -8,  -2}, { -9,  -1}, { -9,  -1}, { -8,  -2}, { -5,  -3}, {-10,  -8}
+        {-15,  -8}, { -5,  -3}, { -8,  -2}, { -9,  -1}, { -9,  -1}, { -8,  -2}, { -5,  -3}, {-15,  -8}
       },
       {
         {  2,  -3}, {  2,   2}, {  5,   4}, {  7,   4}, {  7,   4}, {  5,   4}, {  2,   2}, {  2,  -3},

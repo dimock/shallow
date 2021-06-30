@@ -126,6 +126,7 @@ void Evaluator::prepareAttacksMasks()
       finfo_[color].rookMoves_ |= rook_moves;
       finfo_[color].behindPawnAttacks_ |= rook_moves_p;
     }
+    finfo_[color].rq_attacked_ = finfo_[color].r_attacked_ = finfo_[color].rookMoves_;
     
     finfo_[color].queenMoves_ = BitMask{};
     auto qmask = fmgr.queen_mask(color);
@@ -139,6 +140,8 @@ void Evaluator::prepareAttacksMasks()
       auto queen_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color)) & pawnMasks().mask_forward(color, n);
       auto const queen_attacks = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_) | qr_attacks;
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
+      finfo_[color].rq_attacked_ |= queen_attacks;
+      finfo_[color].r_attacked_ |= qr_attacks;
 
       // pinned
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
@@ -569,28 +572,26 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += attack_coeff >> 1;
   }
 
-  const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_ &
-    ~(fmgr.pawn_mask(color) | fmgr.knight_mask(color));
+  const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
     auto near_king_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & finfo_[color].multiattack_mask_);
-    near_king_coeff += (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_)) >> 1;
+    near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 2;
     attack_coeff += near_king_coeff;
-    check_coeff += near_king_coeff >> 1;
+    check_coeff += near_king_coeff;
   }
 
-  const auto near_oking_rem = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_ & finfo_[color].attack_mask_ & ~near_oking_att &
-    ~(fmgr.pawn_mask(color) | fmgr.knight_mask(color));
+  const auto near_oking_rem = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_ & finfo_[color].attack_mask_ & ~near_oking_att & ~fmgr.pawn_mask(color);
   if (near_oking_rem) {
     auto rem_king_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_rem)) >> 2;
     attack_coeff += rem_king_coeff;
-    check_coeff += rem_king_coeff >> 1;
+    check_coeff += rem_king_coeff;
   }
 
   auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_;
   if (around_oking) {
     auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 2;
     attack_coeff += remaining_coeff;
-    check_coeff += remaining_coeff >> 1;
+    check_coeff += remaining_coeff;
   }
 
   if (num_attackers == 0) {
