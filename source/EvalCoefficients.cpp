@@ -25,11 +25,12 @@ namespace NEngine
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };
   ScoreType EvalCoefficients::knightAttack_{ 32 };
   ScoreType EvalCoefficients::pawnAttack_{ 40 };
-  ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
-  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
+  ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 20 };
+  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
   ScoreType EvalCoefficients::rookUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
+  ScoreType EvalCoefficients::pinnedFigureAttack_{ 10 };
 
   // immobility
   ScoreType32 EvalCoefficients::immobileAttackBonus_[4] = { { 30, 30 }, { 30, 30 }, { 30, 30 }, { 30, 30 } };
@@ -73,7 +74,7 @@ namespace NEngine
   int EvalCoefficients::weakChecking_{ 9 };
   int EvalCoefficients::discoveredChecking_{ 40 };
   
-  int EvalCoefficients::checkMyMoveBonus_{ 10 };
+  int EvalCoefficients::checkMyMoveBonus_{ 15 };
   int EvalCoefficients::possibleMatTreat_{ 50 };
   int EvalCoefficients::attackedNearKingCoeff_{ 40 };
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
