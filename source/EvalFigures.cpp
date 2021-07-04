@@ -583,7 +583,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
     auto near_king_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & finfo_[color].multiattack_mask_);
-    near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 2;
+    near_king_coeff += (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_)) >> 1;
     attack_coeff += near_king_coeff;
     check_coeff += near_king_coeff;
   }
@@ -597,7 +597,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_ & ~fmgr.pawn_mask(color);
   if (around_oking) {
-    auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 2;
+    auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 1;
     attack_coeff += remaining_coeff;
     check_coeff += remaining_coeff;
   }

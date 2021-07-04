@@ -395,21 +395,19 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto const& pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
   auto pw_unprotected = pw_mask ^ pw_protected;
-  auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
-  auto strong_attackers = ((finfo_[color].attack_mask_& ~finfo_[ocolor].attack_mask_) | finfo_[color].multiattack_mask_) &
-    ~finfo_[color].pawnAttacks_;
-  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & attackers);;
+  auto strong_attackers = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | finfo_[color].multiattack_mask_;
+  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected & finfo_[color].attack_mask_);
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & strong_attackers);
-  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & attackers & ~strong_attackers & finfo_[ocolor].attack_mask_);
+  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & finfo_[color].attack_mask_ & ~strong_attackers & finfo_[ocolor].attack_mask_);
   // bishop treat
   if(fmgr.bishops(color))
   {
     auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
     auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
     if(bi_mask_w)
-      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers);
+      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_mask_);
     if(bi_mask_b)
-      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers);
+      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~finfo_[color].attack_mask_);
   }
   return score;
 }
@@ -527,13 +525,14 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool opened = (opmsk & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
-    int neighborsN = pop_count(pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask);
+    bool neighbors = pawnMasks().mask_neighbor(color, n) & pmask;
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
+    bool unprotected = !protectorsN && !backward && !isolated;
 
     info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
     info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
-    info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
-    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
+    info.score_ -= EvalCoefficients::unprotectedPawn_[cy] * unprotected;
+    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighbors;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
 
@@ -823,7 +822,8 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   }
   else
   {
-    score = evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos);
+    Index kingPosC{ kingPos.x(), ky };
+    score = evaluateKingSafety(color, kingPosC) + evaluateKingsPawn(color, kingPosC) - opponentPawnsPressure(color, kingPosC);
     if (board_->castling(color, 0)) {
       Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
       int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
