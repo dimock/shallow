@@ -1223,17 +1223,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
  
-  if (auto r2r_treat = (fmgr.rook_mask(ocolor) & finfo_[color].rookMoves_ & ~counted_mask & ~finfo_[ocolor].attack_mask_)) {
-    counted_mask |= r2r_treat;
-    ++attackedN;
-    attackScore += EvalCoefficients::rookUnderRookAttackBonus_;
-  }
-
-  if (auto n2n_treat = (fmgr.knight_mask(ocolor) & finfo_[color].knightMoves_ & ~counted_mask & ~finfo_[ocolor].attack_mask_)) {
-    counted_mask |= n2n_treat;
-    ++attackedN;
-    attackScore += EvalCoefficients::knightUnderKnightAttackBonus_;
-  }
 
   auto rq_exclude_msk = ~finfo_[ocolor].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask;
   if (auto treat_mask = rq_exclude_msk & ((finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor)))) {
