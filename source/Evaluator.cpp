@@ -805,35 +805,16 @@ int Evaluator::getCastleType(Figure::Color color) const
 int Evaluator::evaluateKingSafety(Figure::Color color) const
 {
   Index kingPos(board_->kingPos(color));
-  int ky = kingPos.y();
-  if((ky < 2 && color) || (ky > 5 && !color))
-    ky = promo_y_[Figure::otherColor(color)];
-  int ctype = getCastleType(color);
-  int score = 0;
-  if (ctype == 0) // king side
-  {
-    Index kingPos6{ 6, ky };
-    score = evaluateKingSafety(color, kingPos6) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos6);
+  auto score = evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos);
+  if (board_->castling(color, 0)) {
+    Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
+    int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
+    score = std::max(score, scoreK);
   }
-  else if (ctype == 1) // queen side
-  {
-    Index kingPos1{ 1, ky };
-    score = evaluateKingSafety(color, kingPos1) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos1);
-  }
-  else
-  {
-    Index kingPosC{ kingPos.x(), ky };
-    score = evaluateKingSafety(color, kingPosC) + evaluateKingsPawn(color, kingPosC) - opponentPawnsPressure(color, kingPosC);
-    if (board_->castling(color, 0)) {
-      Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
-      int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
-      score = std::max(score, scoreK);
-    }
-    if (board_->castling(color, 1)) {
-      Index kingPosQ{ 1, promo_y_[Figure::otherColor(color)] };
-      int scoreQ = evaluateKingSafety(color, kingPosQ) + evaluateKingsPawn(color, kingPosQ) - opponentPawnsPressure(color, kingPosQ);
-      score = std::max(score, scoreQ);
-    }
+  if (board_->castling(color, 1)) {
+    Index kingPosQ{ 1, promo_y_[Figure::otherColor(color)] };
+    int scoreQ = evaluateKingSafety(color, kingPosQ) + evaluateKingsPawn(color, kingPosQ) - opponentPawnsPressure(color, kingPosQ);
+    score = std::max(score, scoreQ);
   }
   return score;
 }
@@ -1138,18 +1119,27 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   BitMask o_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | o_rq_mask;
   bool pinnedAttacked = false;
 
-  auto pw_attacks = fmgr.pawn_mask(color) &(~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_);
+  auto pw_attacks = fmgr.pawn_mask(color) & (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_);
+  if (board_->color() != color) {
+    pw_attacks &= (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_);
+  }
   if (color) {
     pw_attacks = ((pw_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pw_attacks << 7) & Figure::pawnCutoffMasks_[1]);
   }
   else {
     pw_attacks = ((pw_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pw_attacks >> 9) & Figure::pawnCutoffMasks_[1]);
   }
-  counted_mask |= pw_attacks;
   if (auto pawn_fork = (o_mask & pw_attacks)) {
+    counted_mask |= pawn_fork;
     int pawnsN = pop_count(pawn_fork);
     attackedN += pawnsN;
     attackScore += EvalCoefficients::pawnAttack_ * pawnsN;
+  }
+  if (auto pawn_fork = (o_mask & finfo_[color].pawnAttacks_ & ~counted_mask)) {
+    counted_mask |= pawn_fork;
+    int pawnsN = pop_count(pawn_fork);
+    attackedN += pawnsN;
+    attackScore += (EvalCoefficients::pawnAttack_ * pawnsN) >> 2;
   }
 
 #ifdef EVAL_EXTENDED_PAWN_ATTACK
@@ -1213,7 +1203,19 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     ++attackedN;
     attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
-  
+ 
+  if (auto r2r_treat = (fmgr.rook_mask(ocolor) & finfo_[color].rookMoves_ & ~counted_mask & ~finfo_[ocolor].attack_mask_)) {
+    counted_mask |= r2r_treat;
+    ++attackedN;
+    attackScore += EvalCoefficients::rookUnderRookAttackBonus_;
+  }
+
+  if (auto n2n_treat = (fmgr.knight_mask(ocolor) & finfo_[color].knightMoves_ & ~counted_mask & ~finfo_[ocolor].attack_mask_)) {
+    counted_mask |= n2n_treat;
+    ++attackedN;
+    attackScore += EvalCoefficients::knightUnderKnightAttackBonus_;
+  }
+
   auto rq_exclude_msk = ~finfo_[ocolor].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask;
   if (auto treat_mask = rq_exclude_msk & ((finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor)))) {
     counted_mask |= treat_mask;
