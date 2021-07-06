@@ -39,7 +39,7 @@ namespace NEngine
   ScoreType EvalCoefficients::knightUnderKnightAttackBonus_{ 15 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
-  ScoreType EvalCoefficients::pinnedFigureAttack_{ 20 };
+  ScoreType EvalCoefficients::pinnedFigureAttack_{ 10 };
 
   // immobility
   ScoreType32 EvalCoefficients::immobileAttackBonus_[4] = { { 30, 30 }, { 30, 30 }, { 30, 30 }, { 30, 30 } };
@@ -86,6 +86,7 @@ namespace NEngine
   int EvalCoefficients::checkMyMoveBonus_{ 15 };
   int EvalCoefficients::possibleMatTreat_{ 50 };
   int EvalCoefficients::attackedNearKingCoeff_{ 40 };
+  int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };
   int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0, 16, 32, 48, 56, 60, 62 };
   int EvalCoefficients::kingPossibleMovesCoefficients_[10] = { 16,  8, 4, 2, 1, 0, 0, 0, 0, 0 };
@@ -105,8 +106,8 @@ namespace NEngine
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 7, 1, 0, 0 };
 
-  int EvalCoefficients::pawnShieldA_[4] = { 20, 16, 3, 0 };
-  int EvalCoefficients::pawnShieldB_[4] = { 32, 28, 5, 0 };
+  int EvalCoefficients::pawnShieldA_[4] = { 30, 26, 5, 0 };
+  int EvalCoefficients::pawnShieldB_[4] = { 30, 26, 5, 0 };
   int EvalCoefficients::pawnShieldC_[4] = { 20, 16, 3, 0 };
   int EvalCoefficients::pawnShieldAbove_[4] = { 12, 5, 1, 0 };
 
@@ -235,14 +236,14 @@ namespace NEngine
         {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}
       },
       {
-        {-50, -50}, {-25, -30}, {-15, -10}, {-10, -10}, {-10, -10}, {-15, -10}, {-25, -30}, {-50, -50},
-        {-20, -25}, { -7, -10}, {  0,  -5}, {  5,   0}, {  5,   0}, {  0,  -5}, { -7, -10}, {-20, -25},
-        { -8, -10}, { 10,  -5}, { 12,  10}, { 12,  10}, { 12,  10}, { 12,  10}, { 10,  -5}, { -8, -10},
-        { -5, -10}, {  8,  -2}, {  9,   8}, { 15,  12}, { 15,  12}, {  9,   8}, {  8,  -2}, { -5, -10},
-        { -5, -10}, {  3,   0}, {  8,   8}, { 15,  10}, { 15,  10}, {  8,   8}, {  3,   0}, { -5, -10},
-        {-10, -10}, {  1,  -7}, {  5,  -4}, {  7,   6}, {  7,   6}, {  5,  -4}, {  1,  -7}, {-10, -10},
-        {-20, -20}, { -5, -10}, {  0,  -6}, {  2,  -3}, {  2,  -3}, {  0,  -6}, { -5, -10}, {-20, -20},
-        {-40, -30}, {-20, -15}, {-12, -10}, {-10, -10}, {-10, -10}, {-12, -10}, {-20, -15}, {-40, -30}
+        {-60, -50}, {-30, -30}, {-18, -10}, {-12, -10}, {-12, -10}, {-18, -10}, {-30, -30}, {-60, -50},
+        {-24, -25}, { -8, -10}, {  0,  -5}, {  6,   0}, {  6,   0}, {  0,  -5}, { -8, -10}, {-24, -25},
+        { -9, -10}, { 12,  -5}, { 14,  10}, { 14,  10}, { 14,  10}, { 14,  10}, { 12,  -5}, { -9, -10},
+        { -6, -10}, {  9,  -2}, { 10,   8}, { 18,  12}, { 18,  12}, { 10,   8}, {  9,  -2}, { -6, -10},
+        { -6, -10}, {  3,   0}, {  9,   8}, { 18,  10}, { 18,  10}, {  9,   8}, {  3,   0}, { -6, -10},
+        {-12, -10}, {  1,  -7}, {  6,  -4}, {  8,   6}, {  8,   6}, {  6,  -4}, {  1,  -7}, {-12, -10},
+        {-24, -20}, { -6, -10}, {  0,  -6}, {  2,  -3}, {  2,  -3}, {  0,  -6}, { -6, -10}, {-24, -20},
+        {-48, -30}, {-24, -15}, {-14, -10}, {-12, -10}, {-12, -10}, {-14, -10}, {-24, -15}, {-48, -30}
       },
       {
         {-15,  -8}, { -8,  -3}, { -8,  -2}, { -8,  -1}, { -8,  -1}, { -8,  -2}, { -8,  -3}, {-15,  -8},

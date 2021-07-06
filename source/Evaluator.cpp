@@ -805,16 +805,35 @@ int Evaluator::getCastleType(Figure::Color color) const
 int Evaluator::evaluateKingSafety(Figure::Color color) const
 {
   Index kingPos(board_->kingPos(color));
-  auto score = evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos);
-  if (board_->castling(color, 0)) {
-    Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
-    int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
-    score = std::max(score, scoreK);
+  int ky = kingPos.y();
+  if ((ky < 2 && color) || (ky > 5 && !color))
+    ky = promo_y_[Figure::otherColor(color)];
+  int ctype = getCastleType(color);
+  int score = 0;
+  if (ctype == 0) // king side
+  {
+    Index kingPos6{ 6, ky };
+    score = evaluateKingSafety(color, kingPos6) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos6);
   }
-  if (board_->castling(color, 1)) {
-    Index kingPosQ{ 1, promo_y_[Figure::otherColor(color)] };
-    int scoreQ = evaluateKingSafety(color, kingPosQ) + evaluateKingsPawn(color, kingPosQ) - opponentPawnsPressure(color, kingPosQ);
-    score = std::max(score, scoreQ);
+  else if (ctype == 1) // queen side
+  {
+    Index kingPos1{ 1, ky };
+    score = evaluateKingSafety(color, kingPos1) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos1);
+  }
+  else
+  {
+    Index kingPosC{ kingPos.x(), ky };
+    score = evaluateKingSafety(color, kingPosC) + evaluateKingsPawn(color, kingPosC) - opponentPawnsPressure(color, kingPosC);
+    if (board_->castling(color, 0)) {
+      Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
+      int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
+      score = std::max(score, scoreK);
+    }
+    if (board_->castling(color, 1)) {
+      Index kingPosQ{ 1, promo_y_[Figure::otherColor(color)] };
+      int scoreQ = evaluateKingSafety(color, kingPosQ) + evaluateKingsPawn(color, kingPosQ) - opponentPawnsPressure(color, kingPosQ);
+      score = std::max(score, scoreQ);
+    }
   }
   return score;
 }

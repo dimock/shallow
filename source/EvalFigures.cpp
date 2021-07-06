@@ -582,6 +582,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   auto check_coeff = 0;
   if (!num_checkers && canCheck) {
     check_score = EvalCoefficients::weakChecking_;
+    check_coeff = EvalCoefficients::kingWeakCheckersCoefficients_;
     check_coeff += attack_coeff >> 2;
   }
   else {
