@@ -187,11 +187,17 @@ ScoreType32 Evaluator::evaluateKnights()
 
     auto ocolor = Figure::otherColor(color);
     BitMask mask = board_->fmgr().knight_mask(color);
+    BitMask outpost_mask = finfo_[color].pawnAttacks_ & ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
     for (; mask;)
     {
       const int n = clear_lsb(mask);
       auto const& knight_moves = moves_masks_[n];
       auto const& knight_attacks = attacks_masks_[n];
+
+      // outpost
+      const auto nbit = set_mask_bit(n);
+      const bool boutpost = ((nbit | (knight_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
+      score[color] += EvalCoefficients::knightOutpost_ * boutpost;
 
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
@@ -221,14 +227,6 @@ ScoreType32 Evaluator::evaluateKnights()
       auto n_moves_mask = knight_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
       auto n_moves = pop_count(n_moves_mask);
 
-      // outpost
-      const auto nbit = set_mask_bit(n);
-      BitMask outpost_mask = ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
-      auto m_outpost = (nbit | (n_moves_mask & ~fmgr.mask(color))) & outpost_mask;
-      const bool boutpost = m_outpost != 0ULL;
-      const bool pprotected = finfo_[color].pawnAttacks_ & m_outpost;
-      const bool on_outpost = (nbit & outpost_mask) != 0ULL;
-      score[color] += EvalCoefficients::knightOutpost_[on_outpost][pprotected] * boutpost;
 
       finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[n_moves & 15];
 
@@ -236,7 +234,7 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].score_mob_ -= EvalCoefficients::knightBlocked_;
       }
 
-      auto kn_safe_moves = n_moves_mask & ~fmgr.mask(color);
+      auto kn_safe_moves = n_moves_mask;
 #ifdef MOBILITY_EXTENDED
       bool qpinned = false;
       if (kn_safe_moves)
@@ -270,6 +268,7 @@ ScoreType32 Evaluator::evaluateBishops()
 
     auto ocolor = Figure::otherColor(color);
     BitMask mask = fmgr.bishop_mask(color);
+
     for (; mask;)
     {
       int n = clear_lsb(mask);
@@ -328,14 +327,6 @@ ScoreType32 Evaluator::evaluateBishops()
       int n_moves = pop_count(b_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[n_moves & 15];
 
-      // outpost
-      const auto nbit = set_mask_bit(n);
-      BitMask outpost_mask = ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
-      auto m_outpost = (nbit | (b_moves_mask & ~fmgr.mask(color))) & outpost_mask;
-      const bool boutpost = m_outpost != 0ULL;
-      const bool pprotected = finfo_[color].pawnAttacks_ & m_outpost;
-      const bool on_outpost = (nbit & outpost_mask) != 0ULL;
-      score[color] += EvalCoefficients::bishopOutpost_[on_outpost][pprotected] * boutpost;
 
       if ((n_moves < 2 || !(b_moves_mask & ~finfo_[ocolor].attack_mask_)) && blockedBishop(color, n)) {
         finfo_[color].score_mob_ -= EvalCoefficients::bishopBlocked_;

@@ -1139,26 +1139,17 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   bool pinnedAttacked = false;
 
   auto pw_attacks = fmgr.pawn_mask(color) & (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_);
-  if (board_->color() != color) {
-    pw_attacks &= (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_);
-  }
   if (color) {
     pw_attacks = ((pw_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pw_attacks << 7) & Figure::pawnCutoffMasks_[1]);
   }
   else {
     pw_attacks = ((pw_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pw_attacks >> 9) & Figure::pawnCutoffMasks_[1]);
   }
+  counted_mask |= pw_attacks;
   if (auto pawn_fork = (o_mask & pw_attacks)) {
-    counted_mask |= pawn_fork;
     int pawnsN = pop_count(pawn_fork);
     attackedN += pawnsN;
     attackScore += EvalCoefficients::pawnAttack_ * pawnsN;
-  }
-  if (auto pawn_fork = (o_mask & finfo_[color].pawnAttacks_ & ~counted_mask)) {
-    counted_mask |= pawn_fork;
-    int pawnsN = pop_count(pawn_fork);
-    attackedN += pawnsN;
-    attackScore += (EvalCoefficients::pawnAttack_ * pawnsN) >> 2;
   }
 
 #ifdef EVAL_EXTENDED_PAWN_ATTACK
@@ -1222,7 +1213,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     ++attackedN;
     attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
- 
 
   auto rq_exclude_msk = ~finfo_[ocolor].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_ & ~counted_mask;
   if (auto treat_mask = rq_exclude_msk & ((finfo_[color].r_attacked_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_attacked_ & fmgr.knight_mask(ocolor)))) {
