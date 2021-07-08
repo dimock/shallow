@@ -39,13 +39,11 @@ bool Evaluator::blockedBishop(Figure::Color color, int n) const
 
 void Evaluator::prepareAttacksMasks()
 {
-  fpinned_mask_ = BitMask{};
   auto const& fmgr = board_->fmgr();
   for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
   {
     auto ocolor = Figure::otherColor(color);
     finfo_[color].knightMoves_ = BitMask{};
-    finfo_[color].knightSafeMoves_ = BitMask{};
     finfo_[color].attackedByKnightRq_ = BitMask{};
     finfo_[color].behindPawnAttacks_ = BitMask{};
 
@@ -61,7 +59,6 @@ void Evaluator::prepareAttacksMasks()
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
         knight_moves = 0ULL;
-        fpinned_mask_ |= set_mask_bit(n);
       }
       
       moves_masks_[n] = knight_moves;
@@ -85,7 +82,6 @@ void Evaluator::prepareAttacksMasks()
         auto const& from_mask = betweenMasks().from(board_->kingPos(color), n);
         bishop_moves &= from_mask;
         bishop_moves_x &= from_mask;
-        fpinned_mask_ |= set_mask_bit(n);
       }
 
       moves_masks_[n] = bishop_moves;
@@ -118,7 +114,6 @@ void Evaluator::prepareAttacksMasks()
         rook_moves &= from_mask;
         rook_moves_x &= from_mask;
         rook_moves_p &= from_mask;
-        fpinned_mask_ |= set_mask_bit(n);
       }
 
       moves_masks_[n] = rook_moves;
@@ -153,7 +148,6 @@ void Evaluator::prepareAttacksMasks()
         auto const& from_mask = betweenMasks().from(board_->kingPos(color), n);
         queen_moves &= from_mask;
         queen_moves_p &= from_mask;
-        fpinned_mask_ |= set_mask_bit(n);
       }
 
       moves_masks_[n] = queen_moves;
@@ -237,14 +231,12 @@ ScoreType32 Evaluator::evaluateKnights()
       auto kn_safe_moves = n_moves_mask;
 #ifdef MOBILITY_EXTENDED
       bool qpinned = false;
-      if (kn_safe_moves)
+      if (n_moves_mask)
       {
         if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none) ||
             isPinned(n, color, ocolor, fmgr.queen_mask(color) | (fmgr.rook_mask(color) & ~finfo_[color].attack_mask_),
                                        fmgr.rook_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::none)) {
           qpinned = true;
-          kn_safe_moves = 0ULL;
-          fpinned_mask_ |= set_mask_bit(n);
           finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
         }
       }
@@ -252,7 +244,6 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[0];
       }
 #endif // king protection, discovered checks etc...
-      finfo_[color].knightSafeMoves_ |= kn_safe_moves;
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
@@ -294,7 +285,6 @@ ScoreType32 Evaluator::evaluateBishops()
             isPinned(n, color, ocolor, fmgr.queen_mask(color) & ~finfo_[color].attack_mask_,
                                        fmgr.queen_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::rook)) {
           q_pinned = true;
-          fpinned_mask_ |= set_mask_bit(n);
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
         }
       }
@@ -384,7 +374,6 @@ ScoreType32 Evaluator::evaluateRook()
       {
         if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::bishop)) {
           q_pinned = true;
-          fpinned_mask_ |= set_mask_bit(n);
           finfo_[color].score_mob_ -= EvalCoefficients::rookPinned_;
         }
       }

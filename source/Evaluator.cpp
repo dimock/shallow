@@ -822,8 +822,7 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   }
   else
   {
-    Index kingPosC{ kingPos.x(), ky };
-    score = evaluateKingSafety(color, kingPosC) + evaluateKingsPawn(color, kingPosC) - opponentPawnsPressure(color, kingPosC);
+    score = evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure(color, kingPos);
     if (board_->castling(color, 0)) {
       Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
       int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure(color, kingPosK);
@@ -1136,7 +1135,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   Figure::Color ocolor = Figure::otherColor(color);
   BitMask o_rq_mask = fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
   BitMask o_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | o_rq_mask;
-  bool pinnedAttacked = false;
 
   auto pw_attacks = fmgr.pawn_mask(color) & (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_);
   if (color) {
@@ -1181,14 +1179,12 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::knightAttack_ * knightsN;
     knightsN = pop_count(kn_fork & ~stong_bn_attacks);
     attackScore += (EvalCoefficients::knightAttack_ * knightsN) >> 2;
-    pinnedAttacked |= (kn_fork & fpinned_mask_) != 0ULL;
   }
   if (auto bi_treat = (o_rq_mask & finfo_[color].bishopTreatAttacks_ & ~counted_mask)) {
     counted_mask |= bi_treat;
     int bishopsN = pop_count(bi_treat);
     attackedN += bishopsN;
     attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
-    pinnedAttacked |= (bi_treat & fpinned_mask_) != 0ULL;
   }
   
   if (auto bi_treat = (fmgr.knight_mask(ocolor) & finfo_[color].bishopTreatAttacks_ & ~counted_mask)) {
@@ -1198,7 +1194,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
     bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
     attackScore += (EvalCoefficients::bishopsAttackBonus_ * bishopsN) >> 2;
-    pinnedAttacked |= (bi_treat & fpinned_mask_) != 0ULL;
   }
 
   auto qr_possible_mask = ~finfo_[ocolor].attack_mask_ & ~counted_mask;
@@ -1232,7 +1227,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 
   const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;
-  const bool knight_pinned = (fpinned_mask_ & fmgr.knight_mask(color)) && (fmgr.knights(color) == 1);
   auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
   auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].knightMoves_ &
     strong_nattacks & ~fmgr.mask(color) & ~finfo_[ocolor].nb_attacked_;
@@ -1246,11 +1240,10 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int knightsN = pop_count(kn_fork);
     possibleNN = std::max(possibleNN, knightsN);
   }
-  attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> (1 + knight_protects + knight_pinned);
+  attackScore += (EvalCoefficients::knightAttack_ * possibleNN) >> (1 + knight_protects);
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
   }
-  attackScore += EvalCoefficients::pinnedFigureAttack_ * pinnedAttacked;
   if (board_->color() == color) {
     attackScore += attackScore >> 1;
   }
