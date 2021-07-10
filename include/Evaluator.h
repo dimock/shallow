@@ -74,7 +74,6 @@ class Evaluator
   BitMask moves_masks_[NumOfFields] = {};
   BitMask attacks_masks_[NumOfFields] = {};
   BitMask qr_attacks_masks_[NumOfFields] = {};
-  BitMask fpinned_mask_ = {};
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
