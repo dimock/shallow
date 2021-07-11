@@ -525,13 +525,14 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool opened = (opmsk & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
-    int neighborsN = pop_count(pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask);
+    bool neighbors = pawnMasks().mask_neighbor(color, n) & pmask;
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
+    bool unprotected = !protectorsN && !backward && !isolated;
 
     info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
     info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
-    info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
-    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
+    info.score_ -= EvalCoefficients::unprotectedPawn_[cy] * unprotected;
+    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighbors;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
 

@@ -586,13 +586,17 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += rem_king_coeff;
   }
 
-  auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_ & ~fmgr.pawn_mask(color);
+  auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_;
   if (around_oking) {
     auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 1;
     attack_coeff += remaining_coeff;
     check_coeff += remaining_coeff;
   }
 
+  auto oking_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
+  int num_oking_moves = pop_count(oking_moves);
+  attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
+  check_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }
@@ -602,7 +606,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   // mat is possible
   if (num_checkers) {
-    const bool my_move = (board_->color() == color);
     int mat_treat_coef = 0;
     auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
       ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].queenMoves_));
@@ -613,41 +616,26 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
       const auto& qmat_attacks = magic_ns::queen_moves(n, mat_fields_mask);
       const auto attacked_ok_field = qmat_attacks & fmgr.king_mask(ocolor);
       if (attacked_ok_field && !(oking_possible_moves & ~qmat_attacks)) {
-        if (!my_move) {
-          auto btw_qmsk = betweenMasks().between(n, _lsb64(fmgr.queen_mask(color)));
-          auto block_msk = finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].pawns_fwd_ & finfo_[ocolor].attack_mask_);
-          if (btw_qmsk & block_msk) {
-            continue;
-          }
-        }
         mat_treat_coef = 1;
         break;
       }
     }
-    if (!mat_treat_coef) {
-      oking_possible_moves = finfo_[ocolor].kingAttacks_ &
-        ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].rookMoves_));
-      mat_fields_mask = (mask_all_ | (finfo_[ocolor].multiattack_mask_ & ~finfo_[color].attack_mask_)) & ~fmgr.king_mask(ocolor);
-      r_check &= ~attacked_any_but_oking;
-      while (r_check) {
-        auto n = clear_lsb(r_check);
-        const auto& rmat_attacks = magic_ns::rook_moves(n, mat_fields_mask);
-        if ((rmat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~rmat_attacks)) {
-          if (!my_move) {
-            auto btw_rmsk = magic_ns::rook_moves(n, mask_all_) & finfo_[color].rookMoves_;
-            auto block_msk = finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].pawns_fwd_ & finfo_[ocolor].attack_mask_);
-            if (btw_rmsk & block_msk) {
-              continue;
-            }
-          }
-          mat_treat_coef = 1;
-          break;
-        }
+    oking_possible_moves = finfo_[ocolor].kingAttacks_ &
+      ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].rookMoves_));
+    mat_fields_mask = (mask_all_ | (finfo_[ocolor].multiattack_mask_ & ~finfo_[color].attack_mask_)) & ~fmgr.king_mask(ocolor);
+    r_check &= ~attacked_any_but_oking;
+    while (!mat_treat_coef && r_check) {
+      auto n = clear_lsb(r_check);
+      const auto& rmat_attacks = magic_ns::rook_moves(n, mat_fields_mask);
+      if ((rmat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~rmat_attacks)) {
+        mat_treat_coef = 1;
+        break;
       }
     }
+    const bool my_move = (board_->color() == color);
+    mat_treat_coef += my_move * mat_treat_coef;
     check_coeff += EvalCoefficients::possibleMatTreat_ * mat_treat_coef;
-    check_coeff += EvalCoefficients::possibleMatTreat_ * my_move * mat_treat_coef;
-    check_coeff += EvalCoefficients::checkMyMoveBonus_ * my_move * (!mat_treat_coef);
+    check_coeff += EvalCoefficients::checkMyMoveBonus_ * my_move;
   }
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
