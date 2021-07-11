@@ -525,14 +525,13 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     bool opened = (opmsk & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward(idx, color, pmask, opmsk, fwd_field);
-    bool neighbors = pawnMasks().mask_neighbor(color, n) & pmask;
+    int neighborsN = pop_count(pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask);
     bool doubled = (!protectorsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
-    bool unprotected = !protectorsN && !backward && !isolated;
 
     info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
     info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
-    info.score_ -= EvalCoefficients::unprotectedPawn_[cy] * unprotected;
-    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighbors;
+    info.score_ += EvalCoefficients::protectedPawn_[cy] * protectorsN;
+    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
     info.score_ += EvalCoefficients::doubledPawn_ * doubled;
 
 
@@ -693,15 +692,29 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   {
     const int n = clear_lsb(pawn_mask);
     const auto& fwd_fields = pawnMasks().mask_forward(color, n);
+    const bool halfpasser = fwd_fields & finfo_[ocolor].pawnAttacks_;
 
     const Index idx(n);
     const int cy = colored_y_[color][idx.y()];
 
     auto n1 = n + (dy << 3);
     auto fwd_field = set_mask_bit(n1);
+    auto pw_field = set_mask_bit(n);
 
-    if (fwd_field & mask_all_)
+    if (auto fwd_msk = (fwd_field & mask_all_)) {
+      if(!halfpasser) {
+        auto pr_msk = ((finfo_[color].attack_mask_ & ~finfo_[ocolor].multiattack_mask_) | finfo_[color].multiattack_mask_) &
+          (~finfo_[ocolor].pawnAttacks_ | finfo_[color].pawnAttacks_);
+        if (pw_field & pr_msk) {
+          pinfo.score_ += EvalCoefficients::passerPawn4_[cy];
+        }
+        auto b = fwd_msk & ((~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_) | (fmgr.mask(color) & ~finfo_[ocolor].attack_mask_));
+        if (b) {
+          pinfo.score_ += EvalCoefficients::passerPawn4_[cy];
+        }
+      }
       continue;
+    }
 
     auto attack_mask = finfo_[color].attack_mask_;
     auto multiattack_mask = finfo_[color].multiattack_mask_;
@@ -733,7 +746,6 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
       }
     }
 
-    const bool halfpasser = fwd_fields & finfo_[ocolor].pawnAttacks_;
     if (halfpasser) {
         pinfo.score_ += EvalCoefficients::passerPawnBasic_[cy];
       continue;
