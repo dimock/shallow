@@ -203,16 +203,6 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].discoveredCheck_ = true;
       }
       
-#ifdef MOBILITY_EXTENDED
-      bool qpinned = false;
-      if(knight_moves)
-      {
-        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none)) {
-          qpinned = true;
-          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
-        }
-      }
-#endif // king protection, discovered checks etc...
 #ifdef DO_KING_EVAL
       if (knight_attacks & finfo_[ocolor].ki_fields_)
       {
@@ -238,7 +228,18 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].score_mob_ -= EvalCoefficients::knightBlocked_;
       }
 
+      auto kn_safe_moves = n_moves_mask;
 #ifdef MOBILITY_EXTENDED
+      bool qpinned = false;
+      if (n_moves_mask)
+      {
+        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none) ||
+            isPinned(n, color, ocolor, fmgr.queen_mask(color) | (fmgr.rook_mask(color) & ~finfo_[color].attack_mask_),
+                                       fmgr.rook_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::none)) {
+          qpinned = true;
+          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
+        }
+      }
       if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n))) {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[0];
       }
@@ -280,7 +281,9 @@ ScoreType32 Evaluator::evaluateBishops()
       bool q_pinned = false;
       if(bishop_moves)
       {
-        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook)) {
+        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook) ||
+            isPinned(n, color, ocolor, fmgr.queen_mask(color) & ~finfo_[color].attack_mask_,
+                                       fmgr.queen_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::rook)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
         }
