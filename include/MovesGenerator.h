@@ -319,7 +319,7 @@ struct TacticalGenerator
       order_ = oHash;
   }
 
-  MOVE* next()
+  MOVE* next(int threshold)
   {
     if (order_ == oEscape)
     {
@@ -356,6 +356,13 @@ struct TacticalGenerator
         ckg_.generate();
         order_ = oChecks;
       }
+#ifdef GENERATE_MAT_CHECK_AFTER_HORIZON
+      else
+      {
+        ckg_.generateMat(threshold);
+        order_ = oChecks;
+      }
+#endif // GENERATE_MAT_CHECK_AFTER_HORIZON
     }
     if (order_ == oChecks)
     {
