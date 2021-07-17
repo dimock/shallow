@@ -332,7 +332,7 @@ struct ChecksGenerator
     }
   }
 
-  void generateMat(int threshold)
+  void generateMat(int threshold, bool atLeast)
   {
     BitMask visited{};
     const auto& color = board_.color();
@@ -886,6 +886,9 @@ struct ChecksGenerator
         }
       }
     }
+    //if (moves_.empty() && best && atLeast) {
+    //  moves_.push_back(best);
+    //}
     iter_ = moves_.begin();
   }
 

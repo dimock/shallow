@@ -82,7 +82,7 @@ struct EvalCoefficients
   static ScoreType32 doubledPawn_;
   static ScoreType32 isolatedPawn_[2];
   static ScoreType32 backwardPawn_[8];
-  static ScoreType32 unprotectedPawn_[8];
+  static ScoreType32 protectedPawn_[8];
   static ScoreType32 hasneighborPawn_[8];
   
   static int opponentPawnPressure_[8];
@@ -94,7 +94,7 @@ struct EvalCoefficients
   static ScoreType32 doubleBishopBonus_[10];
   static ScoreType32 doubleKnightBonus_[10];
   static ScoreType32 twoKnightsBonus_[10];
-  static ScoreType32 twoBishopsBonus_[4][10];
+  static ScoreType32 twoBishopsBonus_[10];
   static ScoreType32 twoRooksBonus_[10];
   static ScoreType32 figureAgainstPawnBonus_[10];
   static ScoreType32 figuresAgainstRookBonus_[10];
