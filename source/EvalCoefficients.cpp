@@ -61,8 +61,8 @@ namespace NEngine
   int EvalCoefficients::basicAttack_{ 3 };
 #endif
 
-  int EvalCoefficients::strongKingPressure_{ 7 };
-  int EvalCoefficients::weakKingPressure_{ 2 };
+  int EvalCoefficients::generalKingPressure_{ 6 };
+  int EvalCoefficients::generalKingAuxPressure_{ 3 };
 
   // king threat
   int EvalCoefficients::knightChecking_{ 40 };

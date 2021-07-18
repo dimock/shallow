@@ -106,7 +106,7 @@ void Evaluator::prepareAttacksMasks()
       auto const& rook_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
       auto rook_moves_x = magic_ns::rook_moves(n, mask_all_ & ~fmgr.queen_mask(ocolor));
-      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color)) & pawnMasks().mask_forward(color, n);
+      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color));
     
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
@@ -136,7 +136,7 @@ void Evaluator::prepareAttacksMasks()
 
       // mobility
       auto qr_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
-      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color)) & pawnMasks().mask_forward(color, n);
+      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color));
       auto const queen_attacks = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_) | qr_attacks;
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
       finfo_[color].rq_attacked_ |= queen_attacks;
@@ -203,6 +203,16 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].discoveredCheck_ = true;
       }
       
+#ifdef MOBILITY_EXTENDED
+      bool qpinned = false;
+      if(knight_moves)
+      {
+        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none)) {
+          qpinned = true;
+          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
+        }
+      }
+#endif // king protection, discovered checks etc...
 #ifdef DO_KING_EVAL
       if (knight_attacks & finfo_[ocolor].ki_fields_)
       {
@@ -228,18 +238,7 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].score_mob_ -= EvalCoefficients::knightBlocked_;
       }
 
-      auto kn_safe_moves = n_moves_mask;
 #ifdef MOBILITY_EXTENDED
-      bool qpinned = false;
-      if (n_moves_mask)
-      {
-        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none) ||
-            isPinned(n, color, ocolor, fmgr.queen_mask(color) | (fmgr.rook_mask(color) & ~finfo_[color].attack_mask_),
-                                       fmgr.rook_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::none)) {
-          qpinned = true;
-          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
-        }
-      }
       if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n))) {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[0];
       }
@@ -281,9 +280,7 @@ ScoreType32 Evaluator::evaluateBishops()
       bool q_pinned = false;
       if(bishop_moves)
       {
-        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook) ||
-            isPinned(n, color, ocolor, fmgr.queen_mask(color) & ~finfo_[color].attack_mask_,
-                                       fmgr.queen_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::rook)) {
+        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
         }
@@ -342,7 +339,6 @@ ScoreType32 Evaluator::evaluateRook()
 
     auto mask = fmgr.rook_mask(color);
     auto ocolor = Figure::otherColor(color);
-    const auto r_cango_mask = (finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_) | finfo_[ocolor].rq_mask_;
     for (; mask;)
     {
       auto n = clear_lsb(mask);
@@ -400,7 +396,7 @@ ScoreType32 Evaluator::evaluateRook()
         finfo_[color].rookTreatAttacks_ |= rook_treat;
       }
       
-      auto r_moves_mask = rook_moves & r_cango_mask;
+      auto r_moves_mask = rook_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_) | finfo_[ocolor].rq_mask_);
       int n_moves = pop_count(r_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[n_moves & 15];
 
@@ -434,7 +430,6 @@ ScoreType32 Evaluator::evaluateQueens()
     finfo_[color].qkingAttack_ = false;
     auto mask = fmgr.queen_mask(color);
     auto ocolor = Figure::otherColor(color);
-    const auto q_cango_mask = (finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_) | fmgr.queen_mask(ocolor);
     for (; mask;)
     {
       auto n = clear_lsb(mask);
@@ -462,7 +457,7 @@ ScoreType32 Evaluator::evaluateQueens()
       }
 #endif
 
-      auto q_moves_mask = queen_moves & q_cango_mask;
+      auto q_moves_mask = queen_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_) | fmgr.queen_mask(ocolor));
       auto n_moves = pop_count(q_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::queenMobility_[n_moves & 31];
 
@@ -574,7 +569,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   const auto near_oking_att = (finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking) & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
     auto near_king_coeff = EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & finfo_[color].multiattack_mask_);
-    near_king_coeff += (EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_)) >> 1;
+    near_king_coeff += EvalCoefficients::attackedNearKingCoeff_ * pop_count(near_oking_att & ~finfo_[color].multiattack_mask_) >> 1;
     attack_coeff += near_king_coeff;
     check_coeff += near_king_coeff;
   }
@@ -586,13 +581,17 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += rem_king_coeff;
   }
 
-  auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_ & ~fmgr.pawn_mask(color);
+  auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_;
   if (around_oking) {
     auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 1;
     attack_coeff += remaining_coeff;
     check_coeff += remaining_coeff;
   }
 
+  auto oking_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
+  int num_oking_moves = pop_count(oking_moves);
+  attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
+  check_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }
@@ -639,19 +638,17 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   int oki_x = (oki_pos & 7);
   int king_side = (oki_x > 4) ? 0 : ((oki_x < 3) ? 1 : 2); // 0 = right, 1 = left, 2 = center
+  auto general_pressure_mask =
+    ((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_) | finfo_[color].pawnAttacks_) &
+      ~finfo_[ocolor].pawnAttacks_ & ~(near_oking_att | around_oking);
 
-  auto strong_pressure_mask = finfo_[color].multiattack_mask_ & ~(finfo_[ocolor].attack_mask_ | near_oking_att | around_oking);
-  auto weak_pressure_mask = finfo_[color].attack_mask_ &
-    ~(strong_pressure_mask | near_oking_att | around_oking | finfo_[ocolor].multiattack_mask_ |
-      (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_));
+  auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
+  int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
 
-  auto strong_attacks = strong_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
-  int strong_king_score = pop_count(strong_attacks) * EvalCoefficients::strongKingPressure_;
+  auto attacks_opponent_other = general_pressure_mask & Figure::kingAuxBoard_[ocolor][king_side];
+  int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalKingAuxPressure_;
+  int general_score = general_king_attacks_score + general_opponent_pressure;
 
-  auto weak_attacks = weak_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
-  int weak_king_score = pop_count(weak_attacks) * EvalCoefficients::weakKingPressure_;
-
-  int general_score = strong_king_score  + weak_king_score;
   score += general_score;
 
   return { score, 0 };
