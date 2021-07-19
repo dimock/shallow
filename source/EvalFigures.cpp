@@ -106,7 +106,7 @@ void Evaluator::prepareAttacksMasks()
       auto const& rook_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
       auto rook_moves_x = magic_ns::rook_moves(n, mask_all_ & ~fmgr.queen_mask(ocolor));
-      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color));
+      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color)) & pawnMasks().mask_forward(color, n);
     
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
@@ -136,7 +136,7 @@ void Evaluator::prepareAttacksMasks()
 
       // mobility
       auto qr_attacks = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
-      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color));
+      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_ & ~fmgr.pawn_mask(color)) & pawnMasks().mask_forward(color, n);
       auto const queen_attacks = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_) | qr_attacks;
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
       finfo_[color].rq_attacked_ |= queen_attacks;
@@ -638,17 +638,19 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   int oki_x = (oki_pos & 7);
   int king_side = (oki_x > 4) ? 0 : ((oki_x < 3) ? 1 : 2); // 0 = right, 1 = left, 2 = center
-  auto general_pressure_mask =
-    ((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_) | finfo_[color].pawnAttacks_) &
-      ~finfo_[ocolor].pawnAttacks_ & ~(near_oking_att | around_oking);
 
-  auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
-  int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
+  auto strong_pressure_mask = finfo_[color].multiattack_mask_ & ~(finfo_[ocolor].attack_mask_ | near_oking_att | around_oking);
+  auto weak_pressure_mask = finfo_[color].attack_mask_ &
+    ~(strong_pressure_mask | near_oking_att | around_oking | finfo_[ocolor].multiattack_mask_ |
+      (finfo_[ocolor].pawnAttacks_ & ~finfo_[color].pawnAttacks_));
 
-  auto attacks_opponent_other = general_pressure_mask & Figure::kingAuxBoard_[ocolor][king_side];
-  int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalKingAuxPressure_;
-  int general_score = general_king_attacks_score + general_opponent_pressure;
+  auto strong_attacks = strong_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
+  int strong_king_score = pop_count(strong_attacks) * EvalCoefficients::strongKingPressure_;
 
+  auto weak_attacks = weak_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
+  int weak_king_score = pop_count(weak_attacks) * EvalCoefficients::weakKingPressure_;
+
+  int general_score = strong_king_score  + weak_king_score;
   score += general_score;
 
   return { score, 0 };

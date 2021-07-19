@@ -227,6 +227,7 @@ private:
 
   static const BitMask castle_mask_[2][2];
   static const BitMask blocked_rook_mask_[2][2];
+  static const BitMask blocking_pw4r_mask_[2][2][2];
 
   static const int maximumAttackersWeight_ = 2 * Figure::figureWeight_[Figure::TypeKnight] +
     2 * Figure::figureWeight_[Figure::TypeBishop] +

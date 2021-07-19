@@ -54,8 +54,8 @@ struct EvalCoefficients
   static int queenKingAttack_;
   static int basicAttack_;
 
-  static int generalKingPressure_;
-  static int generalKingAuxPressure_;
+  static int strongKingPressure_;
+  static int weakKingPressure_;
 
     // for special cases
   static int kingToPawnDistanceMulti_;

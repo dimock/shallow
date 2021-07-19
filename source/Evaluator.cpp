@@ -56,6 +56,16 @@ const BitMask Evaluator::blocked_rook_mask_[2][2] = {
   }
 };
 
+const BitMask Evaluator::blocking_pw4r_mask_[2][2][2] = {
+  {
+    {set_mask_bit(G2) | set_mask_bit(G3), set_mask_bit(H2) | set_mask_bit(H3)},
+    {set_mask_bit(A2) | set_mask_bit(A3), set_mask_bit(B2) | set_mask_bit(B3)}
+  },
+  {
+    {set_mask_bit(G7) | set_mask_bit(G6), set_mask_bit(H7) | set_mask_bit(H6)},
+    {set_mask_bit(A7) | set_mask_bit(A6), set_mask_bit(B7) | set_mask_bit(B6)}
+  }
+};
 
 void Evaluator::initialize(Board const* board
 #ifdef USE_EVAL_HASH_ALL
@@ -977,13 +987,17 @@ bool Evaluator::fakeCastle(Figure::Color color, int rpos, BitMask rmask) const
   if ((color == Figure::ColorWhite && ki_pos.y() != 0) || (color == Figure::ColorBlack && ki_pos.y() != 7))
     return false;
   auto ocolor = Figure::otherColor(color);
-  return ((blocked_rook_mask_[ocolor][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[ocolor][ctype]) == 0ULL);
+  return ((blocked_rook_mask_[ocolor][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[ocolor][ctype]) == 0ULL) &&
+    ((blocking_pw4r_mask_[ocolor][ctype][0] & fmgr.pawn_mask(color)) != 0ULL) && ((blocking_pw4r_mask_[ocolor][ctype][1] & fmgr.pawn_mask(color)) != 0ULL);
 }
 
 bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) const
 {
   const int ctype = rpos.x() < 4;
-  return ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL);
+  const FiguresManager & fmgr = board_->fmgr();
+  auto ocolor = Figure::otherColor(color);
+  return ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL) &&
+    ((blocking_pw4r_mask_[color][ctype][0] & fmgr.pawn_mask(ocolor)) != 0ULL) && ((blocking_pw4r_mask_[color][ctype][1] & fmgr.pawn_mask(ocolor)) != 0ULL);
 }
 
 ScoreType32 Evaluator::evaluateMaterialDiff()
