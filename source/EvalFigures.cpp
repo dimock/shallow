@@ -203,6 +203,16 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].discoveredCheck_ = true;
       }
       
+#ifdef MOBILITY_EXTENDED
+      bool qpinned = false;
+      if(knight_moves)
+      {
+        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none)) {
+          qpinned = true;
+          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
+        }
+      }
+#endif // king protection, discovered checks etc...
 #ifdef DO_KING_EVAL
       if (knight_attacks & finfo_[ocolor].ki_fields_)
       {
@@ -229,16 +239,6 @@ ScoreType32 Evaluator::evaluateKnights()
       }
 
 #ifdef MOBILITY_EXTENDED
-      bool qpinned = false;
-      if (n_moves_mask)
-      {
-        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none) ||
-            isPinned(n, color, ocolor, fmgr.queen_mask(color) | (fmgr.rook_mask(color) & ~finfo_[color].attack_mask_),
-                                       fmgr.rook_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::none)) {
-          qpinned = true;
-          finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
-        }
-      }
       if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n))) {
         finfo_[color].score_mob_ -= EvalCoefficients::immobileAttackBonus_[0];
       }
@@ -280,9 +280,7 @@ ScoreType32 Evaluator::evaluateBishops()
       bool q_pinned = false;
       if(bishop_moves)
       {
-        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook) ||
-            isPinned(n, color, ocolor, fmgr.queen_mask(color) & ~finfo_[color].attack_mask_,
-                                       fmgr.queen_mask(ocolor) & finfo_[ocolor].attack_mask_, nst::rook)) {
+        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
         }
@@ -341,7 +339,6 @@ ScoreType32 Evaluator::evaluateRook()
 
     auto mask = fmgr.rook_mask(color);
     auto ocolor = Figure::otherColor(color);
-    const auto r_cango_mask = (finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_) | finfo_[ocolor].rq_mask_;
     for (; mask;)
     {
       auto n = clear_lsb(mask);
@@ -399,7 +396,7 @@ ScoreType32 Evaluator::evaluateRook()
         finfo_[color].rookTreatAttacks_ |= rook_treat;
       }
       
-      auto r_moves_mask = rook_moves & r_cango_mask;
+      auto r_moves_mask = rook_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_) | finfo_[ocolor].rq_mask_);
       int n_moves = pop_count(r_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[n_moves & 15];
 
@@ -433,7 +430,6 @@ ScoreType32 Evaluator::evaluateQueens()
     finfo_[color].qkingAttack_ = false;
     auto mask = fmgr.queen_mask(color);
     auto ocolor = Figure::otherColor(color);
-    const auto q_cango_mask = (finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_) | fmgr.queen_mask(ocolor);
     for (; mask;)
     {
       auto n = clear_lsb(mask);
@@ -461,7 +457,7 @@ ScoreType32 Evaluator::evaluateQueens()
       }
 #endif
 
-      auto q_moves_mask = queen_moves & q_cango_mask;
+      auto q_moves_mask = queen_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_) | fmgr.queen_mask(ocolor));
       auto n_moves = pop_count(q_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::queenMobility_[n_moves & 31];
 
