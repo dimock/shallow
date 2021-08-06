@@ -588,10 +588,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff += remaining_coeff;
   }
 
-  auto oking_moves = finfo_[ocolor].kingAttacks_ & ~(finfo_[color].attack_mask_ | mask_all_);
-  int num_oking_moves = pop_count(oking_moves);
-  attack_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
-  check_coeff += EvalCoefficients::kingPossibleMovesCoefficients_[num_oking_moves];
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }

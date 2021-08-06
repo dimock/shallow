@@ -886,9 +886,12 @@ struct ChecksGenerator
         }
       }
     }
-    //if (moves_.empty() && best && atLeast) {
-    //  moves_.push_back(best);
-    //}
+
+#ifdef AT_LEAST_ONE_MAT_MOVE
+    if (moves_.empty() && best && atLeast) {
+      moves_.push_back(best);
+    }
+#endif // AT_LEAST_ONE_MAT_MOVE
     iter_ = moves_.begin();
   }
 
