@@ -213,18 +213,22 @@ void saveFen(std::string const& ffname, std::string const& refname)
   testFen<Board, Move, UndoInfo>(
     ffname,
     [&ofs](size_t i, xEPD<Board, Move, UndoInfo>& e)
-  {
-    NEngine::Evaluator eval;
-    eval.initialize(&e.board_);
-    auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
-    if (ofs) {
-      ofs << i << ", " << score << std::endl;
-    }
-  },
+    {
+      NEngine::Evaluator eval;
+      eval.initialize(&e.board_
+#ifdef USE_EVAL_HASH_ALL
+      , nullptr
+#endif
+      );
+      auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
+      if (ofs) {
+        ofs << i << ", " << score << std::endl;
+      }
+    },
     [](std::string const& err_str)
-  {
-    std::cout << "Error: " << err_str << std::endl;
-  });
+    {
+      std::cout << "Error: " << err_str << std::endl;
+    });
 }
 
 void evaluateFen(std::string const& ffname, std::string const& refname)
