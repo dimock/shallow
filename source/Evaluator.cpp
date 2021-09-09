@@ -1034,11 +1034,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
   {
     int bdiff = sign(bishopsDiff);
-    auto bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
-    auto ncolor = Figure::otherColor(bcolor);
+    Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
     const int pawnsN = fmgr.pawns(bcolor);
-    const int knightsN = fmgr.knights(ncolor) & 3;
-    score += EvalCoefficients::twoBishopsBonus_[knightsN][pawnsN] * bdiff;
+    score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
 
   // bonus for 2 rooks
