@@ -6,16 +6,24 @@ project(shallow)
 if(UNIX)
   message(status " Setting GCC flags")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -g -Wall -std=c++14 -mpopcnt")
-  execute_process(COMMAND bash "-c" "git log -1 --format=\"%H\" | cut -c1-6" OUTPUT_VARIABLE VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND bash "-c" "git log -1 --format=\"%H\" | cut -c1-4" OUTPUT_VARIABLE VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
   message(status " Version: " ${VERSION})
   string(CONCAT OUTPUT_EXEC_NAME ${PROJECT_NAME} "_" ${VERSION})
   message(status " Executable name: " ${OUTPUT_EXEC_NAME})
+  message(status " Git hash commit: " ${VERSION})
+  message(status " Executable file name: " ${OUTPUT_EXEC_NAME})
   
 elseif(MSVC)
   message(status " Setting MSVC flags")
-
+  #log -1 --format=%H
+  message(${PROJECT_SOURCE_DIR})
+  execute_process(COMMAND "git.exe" "log" "-1" "--format=%H" WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE FULLVERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  message(status " Version: " ${FULLVERSION})
+  string(SUBSTRING ${FULLVERSION} 0 4 VERSION)
+  string(CONCAT MSVC_TARGET_NAME_POSTFIX ${PROJECT_NAME}.${VERSION})
+  message(status ${MSVC_TARGET_NAME_POSTFIX})
   set(OUTPUT_EXEC_NAME ${PROJECT_NAME})
-
+  
   # configurations
   set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseDebugInfo;ReleaseSpecial")
    
@@ -52,10 +60,6 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 file(GLOB_RECURSE SOURCE_FILES source/*)
 file(GLOB_RECURSE INCLUDE_FILES include/*)
 
-message(status " Git hash commit: " ${VERSION})
-message(status " Executable file name: " ${OUTPUT_EXEC_NAME})
-
 add_executable(${OUTPUT_EXEC_NAME} ${SOURCE_FILES} ${INCLUDE_FILES})
 target_link_libraries(${OUTPUT_EXEC_NAME})
-#${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY})
-# ${Boost_SYSTEM_LIBRARY})
+set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME ${MSVC_TARGET_NAME_POSTFIX})

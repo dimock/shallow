@@ -1,7 +1,6 @@
 /*************************************************************
 xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
-
 #include <xtests.h>
 #include <MovesGenerator.h>
 #include <xoptimize.h>

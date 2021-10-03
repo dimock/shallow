@@ -227,11 +227,10 @@ private:
       auto hflag = hitem.flag();
       if (!pv && board.fmgr().weight(Figure::ColorBlack).eval32_ && board.fmgr().weight(Figure::ColorWhite).eval32_)
       {
-        X_ASSERT(hscore > 32760 || hscore < -32760, "invalid value in hash");
-
         if (hflag != NoFlag && (int)hitem.depth_ >= depth && ply > 0)
         {
           hscore = hitem.score_;
+          X_ASSERT((hscore > 32760 || hscore < -32760), "invalid value in hash");
           if (hscore >= Figure::MatScore - MaxPly)
             hscore = hscore - ply;
           else if (hscore <= MaxPly - Figure::MatScore)

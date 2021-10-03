@@ -130,14 +130,14 @@ public:
   inline int allFigures() const { return knights() + bishops() + rooks() + queens(); }
   inline ScoreType32 weight() const { return weight32_; }
   inline ScoreType figuresWeight() const { return figuresWeight_; }
-  inline const BitMask & pawn_mask() const { return tmask_[Figure::TypePawn]; }
-  inline const BitMask & knight_mask() const { return tmask_[Figure::TypeKnight]; }
-  inline const BitMask & bishop_mask() const { return tmask_[Figure::TypeBishop]; }
-  inline const BitMask & rook_mask() const { return tmask_[Figure::TypeRook]; }
-  inline const BitMask & queen_mask() const { return tmask_[Figure::TypeQueen]; }
-  inline const BitMask & king_mask() const { return tmask_[Figure::TypeKing]; }
-  inline const BitMask & type_mask(const Figure::Type type) const { return tmask_[type]; }
-  inline const BitMask & mask_all() const { return mask_all_; }
+  inline const BitMask pawn_mask() const { return tmask_[Figure::TypePawn]; }
+  inline const BitMask knight_mask() const { return tmask_[Figure::TypeKnight]; }
+  inline const BitMask bishop_mask() const { return tmask_[Figure::TypeBishop]; }
+  inline const BitMask rook_mask() const { return tmask_[Figure::TypeRook]; }
+  inline const BitMask queen_mask() const { return tmask_[Figure::TypeQueen]; }
+  inline const BitMask king_mask() const { return tmask_[Figure::TypeKing]; }
+  inline const BitMask type_mask(const Figure::Type type) const { return tmask_[type]; }
+  inline const BitMask mask_all() const { return mask_all_; }
 
 private:
   BitMask   tmask_[8];
@@ -275,14 +275,14 @@ public:
   inline ScoreType32 weight(Figure::Color color) const { return fcounter_[color].weight(); }
   inline ScoreType figuresWeight(Figure::Color color) const { return fcounter_[color].figuresWeight(); }
   inline ScoreType32 weight() const { return weight(Figure::ColorWhite) - weight(Figure::ColorBlack); }
-  inline const BitMask & pawn_mask(Figure::Color color) const { return fcounter_[color].pawn_mask(); }
-  inline const BitMask & knight_mask(Figure::Color color) const { return fcounter_[color].knight_mask(); }
-  inline const BitMask & bishop_mask(Figure::Color color) const { return fcounter_[color].bishop_mask(); }
-  inline const BitMask & rook_mask(Figure::Color color) const { return fcounter_[color].rook_mask(); }
-  inline const BitMask & queen_mask(Figure::Color color) const { return fcounter_[color].queen_mask(); }
-  inline const BitMask & king_mask(Figure::Color color) const { return fcounter_[color].king_mask(); }
-  inline const BitMask & mask(Figure::Color color) const { return fcounter_[color].mask_all(); }
-  inline const BitMask & type_mask(const Figure::Type type, const Figure::Color color) const { return fcounter_[color].type_mask(type); }
+  inline const BitMask pawn_mask(Figure::Color color) const { return fcounter_[color].pawn_mask(); }
+  inline const BitMask knight_mask(Figure::Color color) const { return fcounter_[color].knight_mask(); }
+  inline const BitMask bishop_mask(Figure::Color color) const { return fcounter_[color].bishop_mask(); }
+  inline const BitMask rook_mask(Figure::Color color) const { return fcounter_[color].rook_mask(); }
+  inline const BitMask queen_mask(Figure::Color color) const { return fcounter_[color].queen_mask(); }
+  inline const BitMask king_mask(Figure::Color color) const { return fcounter_[color].king_mask(); }
+  inline const BitMask mask(Figure::Color color) const { return fcounter_[color].mask_all(); }
+  inline const BitMask type_mask(const Figure::Type type, const Figure::Color color) const { return fcounter_[color].type_mask(type); }
 
   inline const BitMask & hashCode() const { return hashCode_; }
   inline const BitMask & kpwnCode() const { return kpwnCode_; }

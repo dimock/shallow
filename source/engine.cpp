@@ -51,10 +51,9 @@ Engine::Engine()
 #endif
 #endif
 {
-  setMemory(HASH_SIZE_DEFAULT);
   setThreadsNumber(N_THREADS_DEFAULT);
-
   initGlobals();
+  setMemory(HASH_SIZE_DEFAULT);
 }
 
 //////////////////////////////////////////////////////////////////////////

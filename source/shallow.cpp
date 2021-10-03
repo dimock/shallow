@@ -61,6 +61,6 @@ int main(int argn, char *argv[])
 
   main_loop(xpr);
 
-	return 0;
+  return 0;
 }
 
