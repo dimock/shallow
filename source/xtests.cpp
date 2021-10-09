@@ -1,18 +1,21 @@
 /*************************************************************
 xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
-#include <xtests.h>
-#include <MovesGenerator.h>
-#include <xoptimize.h>
-#include <xprotocol.h>
-#include <kpk.h>
-#include <iostream>
-#include <fstream>
-#include <chrono>
-#include <iomanip>
-#include <sstream>
-#include <unordered_set>
-#include <boost/filesystem.hpp>
+
+#ifndef __ANDROID__
+
+#include "xtests.h"
+#include "MovesGenerator.h"
+#include "xoptimize.h"
+#include "xprotocol.h"
+#include "kpk.h"
+#include "iostream"
+#include "fstream"
+#include "chrono"
+#include "iomanip"
+#include "sstream"
+#include "unordered_set"
+#include "boost/filesystem.hpp"
 
 namespace NEngine
 {
@@ -24,7 +27,7 @@ template <typename BOARD, typename MOVE, typename UNDO>
 std::ostream& operator << (std::ostream& os, xEPD<BOARD, MOVE, UNDO> const& epd)
 {
   os << toFEN(epd.board_) << "; moves: ";
-  for(auto const& move : epd.moves_)
+  for(auto const move : epd.moves_)
     os << moveToStr(move, false) << " ";
   os << "; score = " << epd.score_ << std::endl;
   return os;
@@ -156,7 +159,7 @@ void testSee(std::string const& ffname)
   testFen<Board, Move, UndoInfo>(ffname,
                                  [](size_t i, xEPD<Board, Move, UndoInfo>& epd)
     {
-      for(auto const& move : epd.moves_)
+      for(auto const move : epd.moves_)
       {
         auto v= epd.board_.see(move, 500);
         std::cout << i << ": "
@@ -311,7 +314,7 @@ void analyzeFen(std::string const& fname, std::string const& bestfname, std::str
     proc.setBoard(board);
     proc.clear();
     proc.setThreadsNumber(1);
-    for (auto const& mv : e.imoves_) {
+    for (auto const mv : e.imoves_) {
       proc.makeMove(mv);
     }
     //proc.file2hash("D:\\Projects\\gitproj\\hash\\hash");
@@ -365,7 +368,7 @@ void kpkTable(std::string const& fname)
 {
   NShallow::Processor proc;
   //NTime::duration tm(NTime::from_milliseconds(500));
-  std::array<std::array<std::array<uint64, 2>, 64>, 64> kpk = {};
+  std::array<std::array<std::array<BitMask, 2>, 64>, 64> kpk = {};
   for(int kw = 0; kw < 64; ++kw)
   {
     for(int kl = 0; kl < 64; ++kl)
@@ -417,7 +420,7 @@ void kpkTable(std::string const& fname)
   f << "#include <kpk.h>" << std::endl << std::endl;
   f << "namespace NEngine" << std::endl;
   f << "{" << std::endl << std::endl;
-  f << "std::vector<std::vector<std::array<uint64, 2>>> kpk_ = {" << std::endl;
+  f << "std::vector<std::vector<std::array<BitMask, 2>>> kpk_ = {" << std::endl;
   for(size_t kw = 0; kw < 64; ++kw)
   {
     f << "  {";
@@ -626,3 +629,5 @@ void pgnFolder(std::string const& folder)
 }
 
 } // NEngine
+
+#endif // !__ANDROID__

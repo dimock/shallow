@@ -1,9 +1,9 @@
-#include <kpk.h>
+#include "kpk.h"
 
 namespace NEngine
 {
 
-std::vector<std::vector<std::array<uint64, 2>>> kpk_ = {
+std::vector<std::vector<std::array<BitMask, 2>>> kpk_ = {
   {
     { 0x0000000000000000ULL, 0x0000000000000000ULL },{ 0x0000000000000000ULL, 0x0000000000000000ULL },{ 0x00fffffffffff300ULL, 0x00ffffffffffff00ULL },{ 0x00ffffffffffe300ULL, 0x00ffffffffffff00ULL },
     { 0x00ffffffffffc700ULL, 0x00ffffffffffff00ULL },{ 0x00ffffffffff8f00ULL, 0x00ffffffffffff00ULL },{ 0x00ffffffffff1f00ULL, 0x00ffffffffffff00ULL },{ 0x00ffffffffff3f00ULL, 0x00ffffffffffff00ULL },

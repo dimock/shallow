@@ -2,9 +2,9 @@
   Figure.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <Figure.h>
-#include <Evaluator.h>
-#include <globals.h>
+#include "Figure.h"
+#include "Evaluator.h"
+#include "globals.h"
 
 namespace NEngine
 {
@@ -125,7 +125,7 @@ int8 FiguresCounter::s_whiteColors_[] =
   1, 0, 1, 0, 1, 0, 1, 0
 };
 
-uint64 FiguresCounter::s_whiteMask_       = 0x55aa55aa55aa55aaULL;
+BitMask FiguresCounter::s_whiteMask_       = 0x55aa55aa55aa55aaULL;
 uint64 FiguresManager::s_zobristColor_    = 0x421d03167393eb95ULL;
 uint64 FiguresManager::s_zobristNullmove_ = 0x823fb7585a2139eaULL;
 

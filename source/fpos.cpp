@@ -2,7 +2,7 @@
   fpos.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <fpos.h>
+#include "fpos.h"
 
 namespace NEngine
 {

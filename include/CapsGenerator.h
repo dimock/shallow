@@ -1,9 +1,9 @@
 #pragma once
 
-#include <xcommon.h>
-#include <xlist.h>
-#include <Board.h>
-#include <xalgorithm.h>
+#include "xcommon.h"
+#include "xlist.h"
+#include "Board.h"
+#include "xalgorithm.h"
 
 namespace NEngine
 {
@@ -41,14 +41,14 @@ struct CapsGenerator
 
     auto const& fmgr = board_.fmgr();
     auto opponent_mask = fmgr.mask(ocolor) ^ fmgr.king_mask(ocolor);
-    const auto& black = fmgr.mask(Figure::ColorBlack);
-    const auto& white = fmgr.mask(Figure::ColorWhite);
+    const auto black = fmgr.mask(Figure::ColorBlack);
+    const auto white = fmgr.mask(Figure::ColorWhite);
     auto mask_all = white | black;
-    auto const& ki_pos  = board_.kingPos(color);
-    auto const& oki_pos = board_.kingPos(ocolor);
+    auto const ki_pos  = board_.kingPos(color);
+    auto const oki_pos = board_.kingPos(ocolor);
 
     // generate pawn promotions
-    const auto& pawn_msk = fmgr.pawn_mask(color);
+    const auto pawn_msk = fmgr.pawn_mask(color);
     {
       static int pw_delta[] = { -8, +8 };
       auto promo_msk = movesTable().promote(color);
@@ -60,7 +60,7 @@ struct CapsGenerator
 
         X_ASSERT((unsigned)from > 63, "invalid promoted pawn's position");
 
-        const auto& field = board_.getField(from);
+        const auto field = board_.getField(from);
 
         X_ASSERT(!field || field.color() != color || field.type() != Figure::TypePawn, "there is no pawn to promote");
 
@@ -171,7 +171,7 @@ struct CapsGenerator
 
         X_ASSERT((unsigned)to > 63, "invalid field index while capture");
 
-        const auto& field = board_.getField(to);
+        const auto field = board_.getField(to);
         X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 
         add(kn_pos, to, Figure::TypeNone);
@@ -189,7 +189,7 @@ struct CapsGenerator
           auto to = clear_lsb(f_caps);
 
           X_ASSERT((unsigned)to > 63, "invalid field index while capture");
-          const auto& field = board_.getField(to);
+          const auto field = board_.getField(to);
           X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 
           add(from, to, Figure::TypeNone);
@@ -208,7 +208,7 @@ struct CapsGenerator
           int8 to = clear_lsb(f_caps);
 
           X_ASSERT((unsigned)to > 63, "invalid field index while capture");
-          const auto& field = board_.getField(to);
+          const auto field = board_.getField(to);
           X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 
           add(from, to, Figure::TypeNone);
@@ -227,7 +227,7 @@ struct CapsGenerator
           int8 to = clear_lsb(f_caps);
 
           X_ASSERT((unsigned)to > 63, "invalid field index while capture");
-          const auto& field = board_.getField(to);
+          const auto field = board_.getField(to);
           X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 
           add(from, to, Figure::TypeNone);
@@ -245,7 +245,7 @@ struct CapsGenerator
 
         X_ASSERT((unsigned)to > 63, "invalid field index while capture");
 
-        const auto& field = board_.getField(to);
+        const auto field = board_.getField(to);
 
         X_ASSERT(!field || field.color() != ocolor, "there is no opponent's figure on capturing field");
 

@@ -6,7 +6,7 @@ Helpers.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #undef _USE_LOG
 
-#include <Board.h>
+#include "Board.h"
 
 namespace NEngine
 {
@@ -23,13 +23,13 @@ enum class eMoveNotation
 eMoveNotation detectNotation(std::string const& str);
 
 /// e2e4 - Smith notation
-std::string moveToStr(Move const& move, bool wbf);
+std::string moveToStr(Move const move, bool wbf);
 Move strToMove(std::string const& str, Board const& board);
 Move strToMove(std::string const& str);
 
 /// Rxf5+ - Standard algebraic notation
 Move parseSAN(Board const& board, std::string const& str);
-std::string printSAN(Board & board, const Move & move);
+std::string printSAN(Board & board, const Move move);
 
 bool load(Board &, std::istream &);
 bool save(const Board &, std::ostream &, bool = true);
@@ -49,9 +49,9 @@ std::string toFEN(Board const& board);
 
 // check if there is nothing between 'from' and 'to'
 // inv_mask - inverted mask of all interesting figures
-inline bool is_nothing_between(int from, int to, const BitMask & inv_mask)
+inline bool is_nothing_between(int from, int to, const BitMask inv_mask)
 {
-  const BitMask & btw_msk = betweenMasks().between(from, to);
+  const BitMask btw_msk = betweenMasks().between(from, to);
   return (btw_msk & inv_mask) == btw_msk;
 }
 

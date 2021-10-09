@@ -2,18 +2,20 @@
 xtests.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
+#ifndef __ANDROID__
+
 #pragma once
 
-#include <Helpers.h>
-#include <xoptimize.h>
-#include <list>
-#include <functional>
-#include <regex>
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <string>
+#include "Helpers.h"
+#include "xoptimize.h"
+#include "list"
+#include "functional"
+#include "regex"
+#include "chrono"
+#include "fstream"
+#include "iostream"
+#include "vector"
+#include "string"
 
 namespace NEngine
 {
@@ -184,3 +186,5 @@ void generateMoves(std::string const& ffname, std::string const& ofname);
 void analyzeFen(std::string const& fname, std::string const& bestfname, std::string const& seqfname);
 
 } // NEngine
+
+#endif // !__ANDROID__

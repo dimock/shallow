@@ -2,9 +2,9 @@
   engine.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <engine.h>
-#include <MovesGenerator.h>
-#include <Helpers.h>
+#include "engine.h"
+#include "MovesGenerator.h"
+#include "Helpers.h"
 
 namespace NEngine
 {
@@ -70,13 +70,13 @@ void Engine::setMemory(int mb)
 #ifdef USE_HASH
   size_t bytesN = mb*1024*1024;
   size_t hitemSize = sizeof(NEngine::GHashTable::ItemType);
-  size_t hitemsN = log2((uint64)(bytesN)/hitemSize);
+  size_t hitemsN = log2((BitMask)(bytesN)/hitemSize);
   hash_.resize(hitemsN);
 #ifdef USE_EVAL_HASH_ALL
   int evbytesN = (int)bytesN - (1<<hitemsN)*hitemSize;
   if (evbytesN > 0) {
     size_t evitemSize = sizeof(NEngine::FHashTable::ItemType);
-    size_t evitemsN = log2((uint64)(evbytesN) / evitemSize);
+    size_t evitemsN = log2((BitMask)(evbytesN) / evitemSize);
     ev_hash_.resize(evitemsN);
   }
 #endif
@@ -276,7 +276,7 @@ void Engine::testInput(int ictx)
   }
 }
 
-void Engine::assemblePV(int ictx, const Move & move, bool checking, int ply)
+void Engine::assemblePV(int ictx, const Move move, bool checking, int ply)
 {
   if(ply >= MaxPly-1)
     return;

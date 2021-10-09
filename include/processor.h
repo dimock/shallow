@@ -3,9 +3,9 @@
  *************************************************************/
 #pragma once
 
-#include <engine.h>
-#include <xcommand.h>
-#include <xtime.h>
+#include "engine.h"
+#include "xcommand.h"
+#include "xtime.h"
 
 #undef  WRITE_LOG_FILE_
 #undef WRITE_ERROR_PGN

@@ -5,14 +5,14 @@
 
 #define NOMINMAX
 
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <processor.h>
-#include <Helpers.h>
-#include <xindex.h>
-#include <algorithm>
-#include <Helpers.h>
+#include "iostream"
+#include "fstream"
+#include "map"
+#include "processor.h"
+#include "Helpers.h"
+#include "xindex.h"
+#include "algorithm"
+#include "Helpers.h"
 
 namespace NShallow
 {

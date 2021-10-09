@@ -2,12 +2,12 @@
   Board.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <Board.h>
-#include <FigureDirs.h>
-#include <Evaluator.h>
-#include <xindex.h>
-#include <Helpers.h>
-#include <MovesGenerator.h>
+#include "Board.h"
+#include "FigureDirs.h"
+#include "Evaluator.h"
+#include "xindex.h"
+#include "Helpers.h"
+#include "MovesGenerator.h"
 
 namespace NEngine
 {
@@ -31,15 +31,15 @@ bool Board::addFigure(const Figure::Color color, const Figure::Type type, int po
 }
 
 // physically possible
-bool Board::possibleMove(const Move & move) const
+bool Board::possibleMove(const Move move) const
 {
   X_ASSERT(move.to() > 63 || move.from() > 63, "invalid move given");
 
-  const auto& fto = getField(move.to());
+  const auto fto = getField(move.to());
   if(fto && (fto.color() == color() || fto.type() == Figure::TypeKing))
     return false;
 
-  const auto& ffrom = getField(move.from());
+  const auto ffrom = getField(move.from());
   if(!ffrom || ffrom.color() != color())
     return false;
 
@@ -100,9 +100,9 @@ bool Board::possibleMove(const Move & move) const
   case Figure::TypeRook:
   case Figure::TypeQueen:
   {
-    const auto& mask = betweenMasks().between(move.from(), move.to());
-    const auto& black = fmgr_.mask(Figure::ColorBlack);
-    const auto& white = fmgr_.mask(Figure::ColorWhite);
+    const auto mask = betweenMasks().between(move.from(), move.to());
+    const auto black = fmgr_.mask(Figure::ColorBlack);
+    const auto white = fmgr_.mask(Figure::ColorWhite);
 
     bool ok = (mask & ~(black | white)) == mask;
     return ok;
@@ -113,7 +113,7 @@ bool Board::possibleMove(const Move & move) const
   return true;
 }
 
-bool Board::escapeMove(const Move& move) const
+bool Board::escapeMove(const Move move) const
 {
   X_ASSERT(!underCheck(), "do escape move but not under check");
   X_ASSERT(move.new_type() || getField(move.to())
@@ -124,11 +124,11 @@ bool Board::escapeMove(const Move& move) const
     return true;
   }
   X_ASSERT(doubleCheck(), "double check but no-king move");
-  auto const& mask = betweenMasks().between(kingPos(color()), checking());
+  auto const mask = betweenMasks().between(kingPos(color()), checking());
   return (mask & set_mask_bit(move.to())) != 0ULL;
 }
 
-bool Board::moveExists(const Move& move) const
+bool Board::moveExists(const Move move) const
 {
   bool found{ false };
   auto moves = generate<Board, Move>(*this);
@@ -157,10 +157,10 @@ bool Board::hasMove() const
   return false;
 }
 
-bool Board::hasReps(const Move & move) const
+bool Board::hasReps(const Move move) const
 {
-  const auto& ffrom = getField(move.from());
-  const auto& fto = getField(move.to());
+  const auto ffrom = getField(move.from());
+  const auto fto = getField(move.to());
 
   // capture or pawn movement
   if(ffrom.type() == Figure::TypePawn || fto)
@@ -225,7 +225,7 @@ bool Board::isCastlePossible(Figure::Color c, int t) const
   if(kingPos(c) != king_position[c])
     return false;
   X_ASSERT((unsigned)t > 1, "invalid castle type");
-  auto const& rfield = getField(rook_position[c][t]);
+  auto const rfield = getField(rook_position[c][t]);
   return rfield && rfield.type() == Figure::TypeRook && rfield.color() == c;
 }
 
@@ -277,32 +277,32 @@ bool Board::invalidate()
   return true;
 }
 
-bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_all_inv) const
+bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask mask_all_inv) const
 {
   auto ocolor = Figure::otherColor(c);
 
   {
     // knights
-    const BitMask & n_caps = movesTable().caps(Figure::TypeKnight, pos);
-    const BitMask & knight_msk = fmgr_.knight_mask(c);
+    const BitMask n_caps = movesTable().caps(Figure::TypeKnight, pos);
+    const BitMask knight_msk = fmgr_.knight_mask(c);
     if(n_caps & knight_msk)
       return true;
 
     // pawns
-    const BitMask & p_caps = movesTable().pawnCaps(ocolor, pos);
-    const BitMask & pawn_msk = fmgr_.pawn_mask(c);
+    const BitMask p_caps = movesTable().pawnCaps(ocolor, pos);
+    const BitMask pawn_msk = fmgr_.pawn_mask(c);
     if(p_caps & pawn_msk)
       return true;
 
     // king
-    const BitMask & k_caps = movesTable().caps(Figure::TypeKing, pos);
-    const BitMask & king_msk = fmgr_.king_mask(c);
+    const BitMask k_caps = movesTable().caps(Figure::TypeKing, pos);
+    const BitMask king_msk = fmgr_.king_mask(c);
     if(k_caps & king_msk)
       return true;
   }
 
   // all long-range figures
-  const BitMask & q_caps = movesTable().caps(Figure::TypeQueen, pos);
+  const BitMask q_caps = movesTable().caps(Figure::TypeQueen, pos);
   BitMask mask_brq = fmgr_.bishop_mask(c) | fmgr_.rook_mask(c) | fmgr_.queen_mask(c);
   mask_brq &= q_caps;
 
@@ -310,7 +310,7 @@ bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_
   if(mask_brq)
   {
     // rooks
-    const BitMask & r_caps = movesTable().caps(Figure::TypeRook, pos);
+    const BitMask r_caps = movesTable().caps(Figure::TypeRook, pos);
     BitMask rook_msk = fmgr_.rook_mask(c) & r_caps;
     for(; rook_msk;)
     {
@@ -325,7 +325,7 @@ bool Board::fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_
     }
 
     // bishops
-    const BitMask & b_caps = movesTable().caps(Figure::TypeBishop, pos);
+    const BitMask b_caps = movesTable().caps(Figure::TypeBishop, pos);
     BitMask bishop_msk = fmgr_.bishop_mask(c) & b_caps;
     for(; bishop_msk;)
     {
@@ -366,7 +366,7 @@ void Board::findCheckingFigures(Figure::Color ocolor, int ki_pos)
     for(; mask;)
     {
       int n = clear_lsb(mask);
-      const Field & field = getField(n);
+      const Field field = getField(n);
 
       X_ASSERT(field.color() != ocolor || field.type() != type, "invalid figures mask in check detector");
 
@@ -392,7 +392,7 @@ void Board::findCheckingFigures(Figure::Color ocolor, int ki_pos)
       bool have_figure = false;
       for(; p != figp; p += dp)
       {
-        const Field & field = getField(p.index());
+        const Field field = getField(p.index());
         if(field)
         {
           have_figure = true;
@@ -424,7 +424,7 @@ void Board::verifyState()
   bool found = false;
   for(auto it = moves.begin(); it != moves.end() && !found; ++it)
   {
-    auto const& move = *it;
+    auto const move = *it;
     if(validateMoveBruteforce(move))
       found = true;
   }
@@ -446,11 +446,11 @@ void Board::verifyState()
 }
 
 /// slow, but verify all the conditions
-bool Board::validateMoveBruteforce(const Move & move) const
+bool Board::validateMoveBruteforce(const Move move) const
 {
   if(matState())
     return false;
-  const auto & ffrom = getField(move.from());
+  const auto ffrom = getField(move.from());
   X_ASSERT(ffrom.type() != Figure::TypePawn && move.new_type() > 0, "not a pawn promotion");
   X_ASSERT(!ffrom || ffrom.color() != color(), "no moving figure or invalid color");
   switch (ffrom.type()) {
@@ -485,7 +485,7 @@ bool Board::validateMoveBruteforce(const Move & move) const
   auto mask_all = (fmgr_.mask(Figure::ColorWhite) | fmgr_.mask(Figure::ColorBlack));
   X_ASSERT(underCheck() != fieldAttacked(ocolor, kingPos(color()), ~mask_all), "king under attack differs from check flag");
   X_ASSERT(fieldAttacked(color(), kingPos(ocolor), ~mask_all), "opponents king is under check");
-  auto const& king_pos = kingPos(color());
+  auto const king_pos = kingPos(color());
   if(ffrom.type() == Figure::TypeKing)
   {
     X_ASSERT(move.from() != king_pos, "king position is invalid");
@@ -559,7 +559,7 @@ bool Board::validateMoveBruteforce(const Move & move) const
       {
         const auto* packed = reinterpret_cast<const int8*>(table);
         auto count = packed[0];
-        auto const& delta = packed[1];
+        auto const delta = packed[1];
         auto p = fg_pos;
         for(; count; --count)
         {
@@ -584,13 +584,13 @@ bool Board::validateMoveBruteforce(const Move & move) const
   return true;
 }
 
-bool Board::validateMove(const Move & move) const
+bool Board::validateMove(const Move move) const
 {
   if(matState())
     return false;
 
   X_ASSERT((unsigned)move.from() > 63 || (unsigned)move.to() > 63, "invalid move positions");
-  const auto& ffrom = getField(move.from());
+  const auto ffrom = getField(move.from());
   auto ocolor = Figure::otherColor(color());
   X_ASSERT(move.to() == kingPos(ocolor), "try to capture king");
   auto mask_all = (fmgr_.mask(Figure::ColorWhite) | fmgr_.mask(Figure::ColorBlack));
@@ -631,7 +631,7 @@ bool Board::validateMove(const Move & move) const
 
   // moving figure discovers check?
 
-  auto const& ki_pos = kingPos(color());
+  auto const ki_pos = kingPos(color());
   if(enpassant() > 0 && move.to() == enpassant() && Figure::TypePawn == ffrom.type())
   {
     int ep_pos = enpassantPos();
@@ -657,14 +657,14 @@ bool Board::verifyCheckingFigure(int ch_pos, Figure::Color checking_color) const
   int count = 0;
   int checking[2] = {};
   auto king_color = Figure::otherColor(checking_color);
-  auto const& king_pos = kingPos(king_color);
+  auto const king_pos = kingPos(king_color);
   for(int type = Figure::TypePawn; type < Figure::TypeKing; ++type)
   {
     BitMask mask = fmgr_.type_mask((Figure::Type)type, checking_color);
     for(; mask;)
     {
       int n = clear_lsb(mask);
-      const Field & field = getField(n);
+      const Field field = getField(n);
       X_ASSERT(field.color() != checking_color || field.type() != type, "invalid figures mask in check detector");
       int dir = figureDir().dir(field.type(), checking_color, n, king_pos);
       if((dir < 0) || (Figure::TypePawn == type && (2 == dir || 3 == dir)))
@@ -682,7 +682,7 @@ bool Board::verifyCheckingFigure(int ch_pos, Figure::Color checking_color) const
       bool have_figure = false;
       for(; p != figp; p += dp)
       {
-        const Field & field = getField(p.index());
+        const Field field = getField(p.index());
         if(field)
         {
           have_figure = true;
@@ -705,13 +705,13 @@ bool Board::verifyCheckingFigure(int ch_pos, Figure::Color checking_color) const
   return true;
 }
 
-void Board::detectCheck(Move const& move)
+void Board::detectCheck(Move const move)
 {
   data_.checking_ = 0;
   Figure::Color ocolor = Figure::otherColor(color());
-  const Field & fto = getField(move.to());
-  auto const& king_pos = kingPos(color());
-  auto const& king_mask = fmgr_.king_mask(color());
+  const Field fto = getField(move.to());
+  auto const king_pos = kingPos(color());
+  auto const king_mask = fmgr_.king_mask(color());
   auto mask_all = fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite);
   int epch{ -1 };
   // castle with check
@@ -734,7 +734,7 @@ void Board::detectCheck(Move const& move)
   }
   else if(fto.type() == Figure::TypePawn)
   {
-    auto const& pw_mask = movesTable().pawnCaps(ocolor, move.to());
+    auto const pw_mask = movesTable().pawnCaps(ocolor, move.to());
     if(pw_mask & king_mask)
     {
       data_.checking_ = move.to();
@@ -765,7 +765,7 @@ void Board::detectCheck(Move const& move)
   }
   else if(fto.type() == Figure::TypeKnight)
   {
-    const BitMask & kn_mask = movesTable().caps(Figure::TypeKnight, move.to());
+    const BitMask kn_mask = movesTable().caps(Figure::TypeKnight, move.to());
     if(kn_mask & king_mask)
     {
       data_.state_ |= UnderCheck;
@@ -872,7 +872,7 @@ bool Board::verifyCastling(const Figure::Color c, int t) const
 
 bool Board::ptAttackedBy(int8 pt, int p) const
 {
-  const Field & field = getField(p);
+  const Field field = getField(p);
   int dir = figureDir().dir(field.type(), field.color(), p, pt);
   if(dir < 0)
     return false;
@@ -880,12 +880,12 @@ bool Board::ptAttackedBy(int8 pt, int p) const
   if(field.type() == Figure::TypeKnight)
     return true;
 
-  const uint64 & mask = betweenMasks().between(p, pt);
-  const uint64 & black = fmgr_.mask(Figure::ColorBlack);
+  const BitMask mask = betweenMasks().between(p, pt);
+  const BitMask black = fmgr_.mask(Figure::ColorBlack);
   if((~black & mask) != mask)
     return false;
 
-  const uint64 & white = fmgr_.mask(Figure::ColorWhite);
+  const BitMask white = fmgr_.mask(Figure::ColorWhite);
   if((~white & mask) != mask)
     return false;
 
@@ -894,9 +894,9 @@ bool Board::ptAttackedBy(int8 pt, int p) const
 
 /// returns field index of checking figure or -1 if not found
 /// mask_all is completely prepared, all figures are on their places
-bool Board::findDiscovered(int from, Figure::Color acolor, const BitMask & mask_all, const BitMask & brq_mask, int ki_pos) const
+bool Board::findDiscovered(int from, Figure::Color acolor, const BitMask mask_all, const BitMask brq_mask, int ki_pos) const
 {
-  const BitMask & from_msk = betweenMasks().from(ki_pos, from);
+  const BitMask from_msk = betweenMasks().from(ki_pos, from);
   BitMask mask_all_ex = mask_all & from_msk;
   if((mask_all_ex & brq_mask) == 0)
     return false;
@@ -905,7 +905,7 @@ bool Board::findDiscovered(int from, Figure::Color acolor, const BitMask & mask_
   if((set_mask_bit(apos) & brq_mask) == 0) // no BRQ on this field
     return false;
 
-  const Field & afield = getField(apos);
+  const Field afield = getField(apos);
   X_ASSERT(afield.color() != acolor || afield.type() < Figure::TypeBishop || afield.type() > Figure::TypeQueen,
            "findDiscovered() - attacking figure isn't BRQ");
 
@@ -916,7 +916,7 @@ bool Board::ptAttackedFrom(Figure::Color acolor, int8 pt, int8 from) const
 {
   BitMask mask_all = fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite);
   BitMask brq_mask = fmgr_.bishop_mask(acolor) | fmgr_.rook_mask(acolor) | fmgr_.queen_mask(acolor);
-  const BitMask & btw_mask = betweenMasks().between(pt, from);
+  const BitMask btw_mask = betweenMasks().between(pt, from);
   brq_mask &= ~btw_mask; // exclude all figures, that are between 'pt' and 'from'
 
   return findDiscovered(from, acolor, mask_all, brq_mask, pt);
@@ -925,7 +925,7 @@ bool Board::ptAttackedFrom(Figure::Color acolor, int8 pt, int8 from) const
 
 bool Board::isDangerPawn(Move & move) const
 {
-  const Field & ffrom = getField(move.from());
+  const Field ffrom = getField(move.from());
   if(ffrom.type() != Figure::TypePawn)
     return false;
 
@@ -935,16 +935,16 @@ bool Board::isDangerPawn(Move & move) const
   Figure::Color ocolor = Figure::otherColor(color());
 
   // attacking
-  const uint64 & p_caps = movesTable().pawnCaps(ffrom.color(), move.to());
-  const uint64 & o_mask = fmgr_.mask(ocolor);
+  const BitMask p_caps = movesTable().pawnCaps(ffrom.color(), move.to());
+  const BitMask o_mask = fmgr_.mask(ocolor);
   if(p_caps & o_mask)
     return true;
 
   //// becomes passed
-  const uint64 & pmsk = fmgr_.pawn_mask(color());
-  const uint64 & opmsk = fmgr_.pawn_mask(ocolor);
-  const uint64 & passmsk = pawnMasks().mask_passed(color(), move.to());
-  const uint64 & blckmsk = pawnMasks().mask_forward(color(), move.to());
+  const BitMask pmsk = fmgr_.pawn_mask(color());
+  const BitMask opmsk = fmgr_.pawn_mask(ocolor);
+  const BitMask passmsk = pawnMasks().mask_passed(color(), move.to());
+  const BitMask blckmsk = pawnMasks().mask_forward(color(), move.to());
 
   if(!(opmsk & passmsk) && !(pmsk & blckmsk))
     return true;

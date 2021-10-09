@@ -3,12 +3,12 @@
  *************************************************************/
 #pragma once
 
-#include <xoptimize.h>
-#include <EvalCoefficients.h>
-#include <Board.h>
-#include <HashTable.h>
-#include <xindex.h>
-#include <xlist.h>
+#include "xoptimize.h"
+#include "EvalCoefficients.h"
+#include "Board.h"
+#include "HashTable.h"
+#include "xindex.h"
+#include "xlist.h"
 
 namespace NEngine
 {
@@ -158,8 +158,8 @@ private:
   // pawns structure for middle & end game + king's pawn shield
   PasserInfo hashedEvaluation();
   
-  int closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const;
-  bool isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const;
+  int closestToBackward(int x, int y, const BitMask pmask, Figure::Color color) const;
+  bool isPawnBackward(Index const idx, Figure::Color color, BitMask const pmask, BitMask const opmsk, BitMask const fwd_field) const;
 
   PasserInfo evaluatePawns(Figure::Color color) const;
   PasserInfo evaluatePawns() const;
@@ -182,9 +182,9 @@ private:
 
   bool discoveredCheck(int pos, Figure::Color color) const
   {
-    auto const& ki_pos = board_->kingPos(color);
+    auto const ki_pos = board_->kingPos(color);
     auto const pos_mask = set_mask_bit(pos);
-    auto const& from_mask = betweenMasks().from(ki_pos, pos);
+    auto const from_mask = betweenMasks().from(ki_pos, pos);
     return (from_mask & finfo_[color].discovered_attackers_ & ~pos_mask) && (from_mask & finfo_[color].discovered_mask_ & pos_mask);
   }
 
@@ -196,7 +196,7 @@ private:
 
   PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);
   ScoreType32 passerEvaluation(PasserInfo const&);
-  bool pawnUnstoppable(Index const& pidx, Figure::Color pwcolor) const;
+  bool pawnUnstoppable(Index const pidx, Figure::Color pwcolor) const;
 
   ScoreType32 evaluateMaterialDiff();
 
@@ -209,9 +209,9 @@ private:
   bool fakeCastle(Figure::Color color, int rpos, BitMask rmask) const;
 
   int evaluateKingSafety(Figure::Color color) const;
-  int evaluateKingSafety(Figure::Color color, Index const& kingPos) const;
-  int opponentPawnsPressure(Figure::Color color, Index const& kingPos) const;
-  int evaluateKingsPawn(Figure::Color color, Index const& kingPos) const;
+  int evaluateKingSafety(Figure::Color color, Index const kingPos) const;
+  int opponentPawnsPressure(Figure::Color color, Index const kingPos) const;
+  int evaluateKingsPawn(Figure::Color color, Index const kingPos) const;
 
   ScoreType32 evaluatePawnsPressure(Figure::Color color);
 

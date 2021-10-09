@@ -3,16 +3,16 @@
  *************************************************************/
 #pragma once
 
-#include <Board.h>
-#include <xlist.h>
-#include <algorithm>
-#include <MovesTable.h>
-#include <fstream>
-#include <CapsGenerator.h>
-#include <ChecksGenerator.h>
-#include <EscapeGenerator.h>
-#include <UsualGenerator.h>
-#include <engine.h>
+#include "Board.h"
+#include "xlist.h"
+#include "algorithm"
+#include "MovesTable.h"
+#include "fstream"
+#include "CapsGenerator.h"
+#include "ChecksGenerator.h"
+#include "EscapeGenerator.h"
+#include "UsualGenerator.h"
+#include "engine.h"
 
 namespace NEngine
 {
@@ -21,7 +21,7 @@ template <class BOARD, class MOVE, int NUM = BOARD::MovesMax>
 xlist<MOVE, NUM> generate(BOARD const& board)
 {
   xlist<MOVE, NUM> moves;
-  const auto& color = board.color();
+  const auto color = board.color();
   const auto ocolor = Figure::otherColor(color);
   auto const& fmgr = board.fmgr();
 
@@ -38,7 +38,7 @@ xlist<MOVE, NUM> generate(BOARD const& board)
         {
           if(*table < 0)
             continue;
-          const auto& field = board.getField(*table);
+          const auto field = board.getField(*table);
           bool capture = false;
           if((field && field.color() == ocolor) ||
              (board.enpassant() > 0 && *table == board.enpassant()))
@@ -91,7 +91,7 @@ xlist<MOVE, NUM> generate(BOARD const& board)
         const auto* table = movesTable().knight(kn_pos);
         for(; *table >= 0; ++table)
         {
-          const auto& field = board.getField(*table);
+          const auto field = board.getField(*table);
           bool capture = false;
           if(field)
           {
@@ -116,13 +116,13 @@ xlist<MOVE, NUM> generate(BOARD const& board)
         {
           const auto* packed = reinterpret_cast<const int8*>(table);
           auto count = packed[0];
-          auto const& delta = packed[1];
+          auto const delta = packed[1];
           auto p = fg_pos;
           bool capture = false;
           for(; count && !capture; --count)
           {
             p += delta;
-            const auto & field = board.getField(p);
+            const auto field = board.getField(p);
             if(field)
             {
               if(field.color() == color)
@@ -144,7 +144,7 @@ xlist<MOVE, NUM> generate(BOARD const& board)
     const auto* table = movesTable().king(ki_pos);
     for(; *table >= 0; ++table)
     {
-      const auto & field = board.getField(*table);
+      const auto field = board.getField(*table);
       bool capture = false;
       if(field)
       {
@@ -178,7 +178,7 @@ struct FastGenerator
 
   enum Order { oEscape, oHash, oGenCaps, oCaps, oKiller, oGenUsual, oUsual, oWeak, oWeakUsual } order_{ oEscape };
 
-  FastGenerator(BOARD const& board, MOVE const& hmove, MOVE const& killer) :
+  FastGenerator(BOARD const& board, MOVE const hmove, MOVE const killer) :
     board_(board),
     cg_(board), ug_(board), eg_(board, hmove, killer),
     hmove_(hmove),
@@ -311,7 +311,7 @@ struct TacticalGenerator
   enum Order { oEscape, oHash, oGenCaps, oCaps, oGenChecks, oChecks, oStop }
   order_{ oEscape };
 
-  TacticalGenerator(BOARD const& board, MOVE const& hmove, int depth) :
+  TacticalGenerator(BOARD const& board, MOVE const hmove, int depth) :
     board_(board),
     cg_(board), ckg_(board), eg_(board, hmove) ,hmove_(hmove), depth_(depth)
   {

@@ -2,13 +2,13 @@
 Helpers.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
-#include <Helpers.h>
-#include <xindex.h>
-#include <MovesGenerator.h>
-#include <locale>
+#include "Helpers.h"
+#include "xindex.h"
+#include "MovesGenerator.h"
+#include "locale"
 
 #ifdef _USE_LOG
-#include <fstream>
+#include "fstream"
 #endif
 
 
@@ -188,7 +188,7 @@ Move parseSAN(const Board & board, std::string const& str)
       continue;
 
     bool mcapture = board.getField(m.to()) || (board.enpassant() == m.to() && m.to() > 0);
-    const auto& field = board.getField(m.from());
+    const auto field = board.getField(m.from());
     if(to == m.to()
       && static_cast<Figure::Type>(m.new_type()) == new_type
       && field.type() == type
@@ -203,14 +203,14 @@ Move parseSAN(const Board & board, std::string const& str)
   return Move{true};
 }
 
-std::string printSAN(Board & board, const Move & move)
+std::string printSAN(Board & board, const Move move)
 {
   if(!move) // null-move passed
   {
     return s_nullmove;
   }
 
-  auto const& field = board.getField(move.from());
+  auto const field = board.getField(move.from());
   auto capture = board.getField(move.to()) || (board.enpassant() == move.to() && move.to() > 0);
 
   bool found = false;
@@ -240,7 +240,7 @@ std::string printSAN(Board & board, const Move & move)
       found = true;
     }
 
-    const auto& f = board.getField(m.from());
+    const auto f = board.getField(m.from());
     if(m.to() != move.to() || f.type() != field.type() || m.new_type() != move.new_type())
       continue;
 
@@ -323,7 +323,7 @@ std::string printSAN(Board & board, const Move & move)
 }
 //////////////////////////////////////////////////////////////////////////
 
-std::string moveToStr(const Move & move, bool wbf)
+std::string moveToStr(const Move move, bool wbf)
 {
   if(!move || move.from() < 0 || move.to() < 0 || move.from() == move.to())
     return s_nullmove;
@@ -419,7 +419,7 @@ Move strToMove(std::string const& str, const Board & board)
   if (!move)
     return move;
 
-  const Field & ffrom = board.getField(move.from());
+  const Field ffrom = board.getField(move.from());
   if(!ffrom || ffrom.color() != color)
     return Move{true};
 
@@ -565,7 +565,7 @@ bool fromFEN(std::string const& i_fen, Board& board)
 
       Index pawn_pos(cx, cy);
 
-      Field & fp = board.getField(pawn_pos);
+      const Field fp = board.getField(pawn_pos);
       if(fp.type() != Figure::TypePawn || fp.color() == board.color())
         return false;
 
@@ -617,7 +617,7 @@ std::string toFEN(Board const& board)
     for(int x = 0; x < 8; ++x)
     {
       Index idx(x, y);
-      const Field & field = board.getField(idx);
+      const Field field = board.getField(idx);
       if(!field)
       {
         ++n;
@@ -709,7 +709,7 @@ std::string toFEN(Board const& board)
       y++;
 
     Index pawn_pos(x, y);
-    const Field & ep_field = board.getField(pawn_pos);
+    const Field ep_field = board.getField(pawn_pos);
     if(ep_field.color() == board.color() || ep_field.type() != Figure::TypePawn)
       return "";
 

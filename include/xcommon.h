@@ -5,17 +5,17 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
-#include <string>
-#include <ostream>
-#include <istream>
-#include <limits>
-#include <algorithm>
-#include <set>
-#include <memory>
-#include <random>
-#include <functional>
+#include "cstdint"
+#include "vector"
+#include "string"
+#include "ostream"
+#include "istream"
+#include "limits"
+#include "algorithm"
+#include "set"
+#include "memory"
+#include "random"
+#include "functional"
 
 #if ((defined RELEASEDEBUGINFO) || (defined RELEASESPECIAL))
 #define PROCESS_MOVES_SEQ
@@ -261,4 +261,9 @@ static const int AlphaProbCutThreshold = 200;
 
 static const size_t N_THREADS_MAX = 1;
 static const size_t N_THREADS_DEFAULT = 1;
+
+#ifdef __ANDROID__
+static const size_t HASH_SIZE_DEFAULT = 64;
+#else
 static const size_t HASH_SIZE_DEFAULT = 256;
+#endif

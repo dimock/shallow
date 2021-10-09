@@ -3,9 +3,9 @@ xcmdqueue.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <queue>
-#include <xcommand.h>
-#include <xinput.h>
+#include "queue"
+#include "xcommand.h"
+#include "xinput.h"
 
 namespace NShallow
 {

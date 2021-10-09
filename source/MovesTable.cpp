@@ -2,8 +2,8 @@
   MovesTable.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <MovesTable.h>
-#include <Figure.h>
+#include "MovesTable.h"
+#include "Figure.h"
 
 namespace NEngine
 {

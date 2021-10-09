@@ -1,10 +1,10 @@
 #pragma once
 
-#include <xcommon.h>
-#include <xlist.h>
-#include <Board.h>
-#include <History.h>
-#include <xalgorithm.h>
+#include "xcommon.h"
+#include "xlist.h"
+#include "Board.h"
+#include "History.h"
+#include "xalgorithm.h"
 
 namespace NEngine
 {
@@ -35,7 +35,7 @@ struct UsualGenerator
     insert_sorted(moves_, MOVE{ from, to, Figure::TypeNone, history(board_.color(), from, to).score() });
   }
  
-  inline void generateBishops(Figure::Color color, BitMask const& mask_all, BitMask const& mask_all_inv)
+  inline void generateBishops(Figure::Color color, BitMask const mask_all, BitMask const mask_all_inv)
   {
     auto bmask = board_.fmgr().bishop_mask(color);
     for (; bmask;)
@@ -50,7 +50,7 @@ struct UsualGenerator
     }
   }
 
-  inline void generateRooks(Figure::Color color, BitMask const& mask_all, BitMask const& mask_all_inv)
+  inline void generateRooks(Figure::Color color, BitMask const mask_all, BitMask const mask_all_inv)
   {
     auto rmask = board_.fmgr().rook_mask(color);
     for (; rmask;)
@@ -65,7 +65,7 @@ struct UsualGenerator
     }
   }
 
-  inline void generateQueens(Figure::Color color, BitMask const& mask_all, BitMask const& mask_all_inv)
+  inline void generateQueens(Figure::Color color, BitMask const mask_all, BitMask const mask_all_inv)
   {
     auto qmask = board_.fmgr().queen_mask(color);
     for (; qmask;)
@@ -82,7 +82,7 @@ struct UsualGenerator
 
   inline void generate()
   {
-    const auto& color = board_.color();
+    const auto color = board_.color();
     const auto ocolor = Figure::otherColor(color);
     auto const& fmgr = board_.fmgr();
     auto mask_all = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
@@ -146,8 +146,8 @@ struct UsualGenerator
     generateQueens(color, mask_all, mask_all_inv);
 
     // kings movements
-    auto const& ki_pos  = board_.kingPos(color);
-    auto const& oki_pos = board_.kingPos(ocolor);
+    auto const ki_pos  = board_.kingPos(color);
+    auto const oki_pos = board_.kingPos(ocolor);
     auto ki_mask = movesTable().caps(Figure::TypeKing, ki_pos) & mask_all_inv & ~movesTable().caps(Figure::TypeKing, oki_pos);
     if(ki_mask)
     {

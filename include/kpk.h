@@ -1,7 +1,7 @@
-#include <array>
-#include <xcommon.h>
+#include "array"
+#include "xcommon.h"
 
 namespace NEngine
 {
-  extern std::vector<std::vector<std::array<uint64, 2>>> kpk_;
+  extern std::vector<std::vector<std::array<BitMask, 2>>> kpk_;
 } // NEngine

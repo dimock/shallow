@@ -4,8 +4,8 @@
   xparser.h - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <string>
-#include <xcommand.h>
+#include "string"
+#include "xcommand.h"
 
 namespace NShallow
 {

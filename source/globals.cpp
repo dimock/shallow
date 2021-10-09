@@ -2,9 +2,9 @@
 Board.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
-#include <globals.h>
-#include <memory>
-#include <SpecialCases.h>
+#include "globals.h"
+#include "memory"
+#include "SpecialCases.h"
 
 namespace NEngine
 {

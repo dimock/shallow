@@ -2,10 +2,10 @@
 EvalCoefficients.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
-#include <Figure.h>
-#include <fstream>
-#include <set>
-#include <algorithm>
+#include "Figure.h"
+#include "fstream"
+#include "set"
+#include "algorithm"
 
 namespace NEngine
 {

@@ -3,7 +3,7 @@
  *************************************************************/
 #pragma once
 
-#include <Figure.h>
+#include "Figure.h"
 
 namespace NEngine
 {

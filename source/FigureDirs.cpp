@@ -2,8 +2,8 @@
   FigureDirs.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <FigureDirs.h>
-#include <xindex.h>
+#include "FigureDirs.h"
+#include "xindex.h"
 
 namespace NEngine
 {

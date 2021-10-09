@@ -3,13 +3,13 @@
   *************************************************************/
 #pragma once
 
-#include <Move.h>
-#include <Field.h>
-#include <MovesTable.h>
-#include <FigureDirs.h>
-#include <globals.h>
-#include <magicbb.h>
-#include <History.h>
+#include "Move.h"
+#include "Field.h"
+#include "MovesTable.h"
+#include "FigureDirs.h"
+#include "globals.h"
+#include "magicbb.h"
+#include "History.h"
 
 namespace NEngine
 {
@@ -54,7 +54,7 @@ struct BoardSaveData
       /// color to make move from this position
       Figure::Color color_;
     };
-    uint64  mask_;
+    BitMask  mask_;
   };
 
   void clear()
@@ -138,32 +138,32 @@ struct Board
   }
 
   /// quick verification of move's possibility
-  inline bool validateMoveExpress(const Move& mv) const
+  inline bool validateMoveExpress(const Move mv) const
   {
     const auto from = mv.from();
-    const auto& ffrom = getField(from);
+    const auto ffrom = getField(from);
     const auto to = mv.to();
-    const auto& fto = getField(to);
+    const auto fto = getField(to);
     return (ffrom.color() == color()) && (movesTable().figure_moves(color(), ffrom.type(), from) & set_mask_bit(to)) && (!fto.type() || (fto.color() != color()));
   }
 
   /// is move meet rules. if under check verifies only discovered checks to my king
-  bool validateMove(const Move & mv) const;
+  bool validateMove(const Move mv) const;
 
   /// slow, but verify all the conditions
-  bool validateMoveBruteforce(const Move & mv) const;
+  bool validateMoveBruteforce(const Move mv) const;
 
   /// make move
-  void makeMove(const Move&);
-  void unmakeMove(const Move&);
+  void makeMove(const Move);
+  void unmakeMove(const Move);
 
   /// hash code for prefetch
-  inline uint64 hashAfterMove(const Move & move) const
+  inline uint64 hashAfterMove(const Move move) const
   {
     uint64 zcode = fmgr_.hashCode();
 
-    const Field & ffrom = getField(move.from());
-    const Field & fto = getField(move.to());
+    const Field ffrom = getField(move.from());
+    const Field fto = getField(move.to());
 
     // clear en-passant hash code
     if (enpassant() > 0)
@@ -172,22 +172,22 @@ struct Board
     // remove captured figure
     if (fto)
     {
-      const BitMask & uc = FiguresManager::code(fto.color(), fto.type(), move.to());
+      const BitMask uc = FiguresManager::code(fto.color(), fto.type(), move.to());
       zcode ^= uc;
     }
 
     // 'from' -> 'to'
     if (move.new_type() == 0) {
       // usual movement
-      const BitMask & uc0 = FiguresManager::code(ffrom.color(), ffrom.type(), move.from());
-      const BitMask & uc1 = FiguresManager::code(ffrom.color(), ffrom.type(), move.to());
+      const BitMask uc0 = FiguresManager::code(ffrom.color(), ffrom.type(), move.from());
+      const BitMask uc1 = FiguresManager::code(ffrom.color(), ffrom.type(), move.to());
       zcode ^= uc0;
       zcode ^= uc1;
     }
     else {
       // pawn promotion
-      const BitMask & uc0 = FiguresManager::code(ffrom.color(), ffrom.type(), move.from());
-      const BitMask & uc1 = FiguresManager::code(color(), (Figure::Type)move.new_type(), move.to());
+      const BitMask uc0 = FiguresManager::code(ffrom.color(), ffrom.type(), move.from());
+      const BitMask uc1 = FiguresManager::code(color(), (Figure::Type)move.new_type(), move.to());
       zcode ^= uc0;
       zcode ^= uc1;
     }
@@ -205,14 +205,14 @@ struct Board
   FiguresManager const& fmgr() const { return fmgr_; }
 
   /// always use this method to get field
-  inline const Field & getField(int index) const
+  inline const Field getField(int index) const
   {
     X_ASSERT((unsigned)index > 63, "field index is invalid");
     return fields_[index];
   }
 
   /// always use this method to get field
-  inline Field & getField(int index)
+  inline Field& getField(int index)
   {
     X_ASSERT((unsigned)index > 63, "field index is invalid");
     return fields_[index];
@@ -220,7 +220,7 @@ struct Board
 
   inline bool isFigure(int n, Figure::Color color, Figure::Type type) const
   {
-    const auto& field = getField(n);
+    const auto field = getField(n);
     return field.type() == type && field.color() == color;
   }
 
@@ -290,52 +290,52 @@ struct Board
 
   inline StateType state() const { return data_.state_; }
 
-  bool underCheck() const { return (data_.state_ & State::UnderCheck) != 0; }
-  bool doubleCheck() const
+  inline  bool underCheck() const { return (data_.state_ & State::UnderCheck) != 0; }
+  inline bool doubleCheck() const
   {
     X_ASSERT(!underCheck(), "not under check but double check");
     return (data_.state_ & State::DoubleCheck) != 0;
   }
   // 1st checking figure position
-  uint8 const& checking() const
+  inline uint8 const checking() const
   {
     X_ASSERT(!underCheck(), "get checking figure but not under check");
     return data_.checking_;
   }
 
   /// returns current move color
-  Figure::Color color() const { return data_.color_; }
+  inline Figure::Color color() const { return data_.color_; }
 
   // initialization methods
-  void setColor(Figure::Color c) { data_.color_ = c; }
+  inline void setColor(Figure::Color c) { data_.color_ = c; }
 
-  void hashColor() { fmgr_.hashColor(); }
+  inline void hashColor() { fmgr_.hashColor(); }
 
   bool verifyCastling(const Figure::Color, int t) const;
-  bool castling() const { return data_.castling_ != 0; }
+  inline bool castling() const { return data_.castling_ != 0; }
 
   // white
-  bool castling_K() const { return (data_.castling_ >> 2) & 1; }
-  bool castling_Q() const { return (data_.castling_ >> 3) & 1; }
+  inline bool castling_K() const { return (data_.castling_ >> 2) & 1; }
+  inline bool castling_Q() const { return (data_.castling_ >> 3) & 1; }
 
   // black
-  bool castling_k() const { return data_.castling_ & 1; }
-  bool castling_q() const { return (data_.castling_ >> 1) & 1; }
+  inline bool castling_k() const { return data_.castling_ & 1; }
+  inline bool castling_q() const { return (data_.castling_ >> 1) & 1; }
 
-  bool castling(Figure::Color c, int t /* 0 - short (K), 1 - long (Q) */) const
+  inline bool castling(Figure::Color c, int t /* 0 - short (K), 1 - long (Q) */) const
   {
     int offset = ((c<<1) | t);
     return (data_.castling_ >> offset) & 1;
   }
 
-  bool castling(Figure::Color c) const
+  inline bool castling(Figure::Color c) const
   {
     int offset = c<<1;
     return ((data_.castling_ >> offset) & 3) != 0;
   }
 
   /// set short/long castle
-  void set_castling(Figure::Color c, int t)
+  inline void set_castling(Figure::Color c, int t)
   {
     if(!isCastlePossible(c, t))
       return;
@@ -344,26 +344,26 @@ struct Board
     fmgr_.hashCastling(c, t);
   }
 
-  void clear_castling(Figure::Color c, int t)
+  inline void clear_castling(Figure::Color c, int t)
   {
     int offset = ((c<<1) | t);
     data_.castling_ &= ~set_bit(offset);
   }
 
-  void setEnpassant(int ep, Figure::Color c)
+  inline void setEnpassant(int ep, Figure::Color c)
   {
     data_.en_passant_ = ep;
     fmgr_.hashEnPassant(ep, c);
   }
 
-  int fiftyMovesCount() const { return data_.fiftyMovesCount_; }
-  void setFiftyMovesCount(int c) { data_.fiftyMovesCount_ = c; }
+  inline int fiftyMovesCount() const { return data_.fiftyMovesCount_; }
+  inline void setFiftyMovesCount(int c) { data_.fiftyMovesCount_ = c; }
 
-  int movesCounter() const { return movesCounter_; }
+  inline int movesCounter() const { return movesCounter_; }
   void setMovesCounter(int c);
 
   /// find king's position
-  inline int8 const& kingPos(Figure::Color c) const
+  inline int8 const kingPos(Figure::Color c) const
   {
     X_ASSERT(_lsb64(fmgr_.king_mask(c)) != king_pos_[c], "invalid king position");
     X_ASSERT(getField(king_pos_[c]).type() != Figure::TypeKing || getField(king_pos_[c]).color() != c, "no king on proper field");
@@ -376,8 +376,8 @@ struct Board
   void verifyChessDraw(bool irreversibleLast);
   void findCheckingFigures(Figure::Color ocolor, int ki_pos);
 
-  int halfmovesCount() const { return halfmovesCounter_; }
-  int movesCount() const { return movesCounter_; }
+  inline int halfmovesCount() const { return halfmovesCounter_; }
+  inline int movesCount() const { return movesCounter_; }
 
   inline bool hasReps() const
   {
@@ -385,7 +385,7 @@ struct Board
     return data_.repsCounter_ > 1;
   }
 
-  inline bool is_capture(Move const& move) const
+  inline bool is_capture(Move const move) const
   {
     X_ASSERT(!move || getField(move.to()) && getField(move.to()).color() == color(), "invalid move given");
     return getField(move.to())
@@ -393,10 +393,10 @@ struct Board
   }
 
   // after given move
-  bool hasReps(const Move & move) const;
+  bool hasReps(const Move move) const;
 
   /// with given zcode
-  int countReps(int from, const BitMask & zcode) const
+  inline int countReps(int from, const BitMask zcode) const
   {
     int reps = 1;
     int i = halfmovesCounter_ - from;
@@ -417,21 +417,21 @@ struct Board
 
   // is there some figure between 'from' and 'to'
   // inv_mask - inverted mask of all interesting figures
-  inline bool is_something_between(int from, int to, const BitMask & inv_mask) const
+  inline bool is_something_between(int from, int to, const BitMask inv_mask) const
   {
-    const BitMask & btw_msk = betweenMasks().between(from, to);
+    const BitMask btw_msk = betweenMasks().between(from, to);
     return (btw_msk & inv_mask) != btw_msk;
   }
 
   // is there nothing between 'from' and 'to'
   // inv_mask - inverted mask of all interesting figures
-  inline bool is_nothing_between(int from, int to, const BitMask & inv_mask) const
+  inline bool is_nothing_between(int from, int to, const BitMask inv_mask) const
   {
-    const BitMask & btw_msk = betweenMasks().between(from, to);
+    const BitMask btw_msk = betweenMasks().between(from, to);
     return (btw_msk & inv_mask) == btw_msk;
   }
 
-  inline bool discoveredCheck(int pos, BitMask const& mask_all, Figure::Color ocolor, int ki_pos) const
+  inline bool discoveredCheck(int pos, BitMask const mask_all, Figure::Color ocolor, int ki_pos) const
   {
     auto dir = figureDir().br_dir(ki_pos, pos);
     if(!dir)
@@ -442,18 +442,18 @@ struct Board
     if(dir == nst::bishop)
     {
       auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_t) & tail_mask;
-      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       return (bi_moves & (bi_mask | q_mask)) != 0ULL;
     }
     X_ASSERT(dir != nst::rook, "invalid direction from point to point");
     auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all_t) & tail_mask;
-    auto const& r_mask = fmgr_.rook_mask(ocolor);
-    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    auto const r_mask = fmgr_.rook_mask(ocolor);
+    auto const q_mask = fmgr_.queen_mask(ocolor);
     return (r_moves & (r_mask | q_mask)) != 0ULL;
   }
 
-  inline BitMask isPinned(int pos, BitMask const& mask_all, Figure::Color ocolor, int t_pos, nst::bishop_rook_dirs interestDir) const
+  inline BitMask isPinned(int pos, BitMask const mask_all, Figure::Color ocolor, int t_pos, nst::bishop_rook_dirs interestDir) const
   {
     auto dir = figureDir().br_dir(t_pos, pos);
     if (!dir)
@@ -463,30 +463,30 @@ struct Board
     if (dir == nst::bishop && interestDir != nst::rook)
     {
       auto const bi_moves = magic_ns::bishop_moves(t_pos, mask_all_t) & tail_mask;
-      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       return (bi_moves & (bi_mask | q_mask));
     }
     if (dir == nst::rook && interestDir != nst::bishop)
     {
       auto const r_moves = magic_ns::rook_moves(t_pos, mask_all_t) & tail_mask;
-      auto const& r_mask = fmgr_.rook_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const r_mask = fmgr_.rook_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       return (r_moves & (r_mask | q_mask));
     }
     return 0ULL;
   }
 
-  bool see(Move const& move, int threshold) const;
+  bool see(Move const move, int threshold) const;
 
-  bool possibleMove(const Move & move) const;
-  bool escapeMove(const Move& move) const;
+  bool possibleMove(const Move move) const;
+  bool escapeMove(const Move move) const;
 
   // for validation only
-  bool moveExists(const Move& move) const;
+  bool moveExists(const Move move) const;
   bool hasMove() const;
 
-  bool canBeReduced(Move const& move) const
+  inline bool canBeReduced(Move const move) const
   {
     auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
     auto const& undo = lastUndo();
@@ -534,8 +534,8 @@ struct Board
   
   inline SortValueType sortValueOfCap(int from, int to, Figure::Type new_type) const
   {
-    const auto& fto   = getField(to);
-    const auto& ffrom = getField(from);
+    const auto fto   = getField(to);
+    const auto ffrom = getField(from);
     X_ASSERT(fto.type() != Figure::TypeNone && fto.color() != Figure::otherColor(color()), "invalid color of captured figure");
     X_ASSERT(!ffrom, "no moving figure");
     //// en-passant case
@@ -561,7 +561,7 @@ struct Board
   bool ptAttackedBy(int8 pt, int p) const;
 
   /// mask_all is completely prepared, all figures are on their places
-  bool findDiscovered(int from, Figure::Color acolor, const BitMask & mask_all, const BitMask & brq_mask, int ki_pos) const;
+  bool findDiscovered(int from, Figure::Color acolor, const BitMask mask_all, const BitMask brq_mask, int ki_pos) const;
 
   /// is 'pt' attacked by figure of color 'acolor' if we remove figure from position 'from'
   /// returns 'false' if 'pt' was already attacked from this direction
@@ -577,7 +577,7 @@ private:
 
   bool verifyCheckingFigure(int ch_pos, Figure::Color checking_color) const;
 
-  inline bool discoveredCheckUsual(int from, int to, BitMask const& mask_all, Figure::Color ocolor, int ki_pos) const
+  inline bool discoveredCheckUsual(int from, int to, BitMask const mask_all, Figure::Color ocolor, int ki_pos) const
   {
     auto dir = figureDir().br_dir(ki_pos, from);
     if(!dir)
@@ -588,45 +588,45 @@ private:
     exclude = ~exclude;
     if(dir == nst::bishop)
     {
-      auto const& bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_t);
-      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_t);
+      auto const bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       return (bi_moves & through) && (bi_moves & exclude & (bi_mask | q_mask));
     }
     X_ASSERT(dir != nst::rook, "invalid direction from point to point");
-    auto const& r_moves = magic_ns::rook_moves(ki_pos, mask_all_t);
-    auto const& r_mask = fmgr_.rook_mask(ocolor);
-    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all_t);
+    auto const r_mask = fmgr_.rook_mask(ocolor);
+    auto const q_mask = fmgr_.queen_mask(ocolor);
     return ((r_moves & through) && (r_moves & exclude & (r_mask | q_mask)));
   }
 
-  inline bool discoveredCheckEp(BitMask const& through,
-                                BitMask const& mask_all,
+  inline bool discoveredCheckEp(BitMask const through,
+                                BitMask const mask_all,
                                 Figure::Color ocolor,
                                 int ki_pos) const
   {
-    auto const& bi_moves = magic_ns::bishop_moves(ki_pos, mask_all);
-    auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all);
+    auto const bi_mask = fmgr_.bishop_mask(ocolor);
+    auto const q_mask = fmgr_.queen_mask(ocolor);
     if((bi_moves & through) && (bi_moves & (bi_mask | q_mask)))
       return true;
-    auto const& r_moves = magic_ns::rook_moves(ki_pos, mask_all);
-    auto const& r_mask = fmgr_.rook_mask(ocolor);
+    auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all);
+    auto const r_mask = fmgr_.rook_mask(ocolor);
     if((r_moves & through) && (r_moves & (r_mask | q_mask)))
       return true;
     return false;
   }
 
-  inline uint8 findDiscoveredPtEp(int pos, BitMask const& mask_all, Figure::Color ocolor, int ki_pos) const
+  inline uint8 findDiscoveredPtEp(int pos, BitMask const mask_all, Figure::Color ocolor, int ki_pos) const
   {
     auto dir = figureDir().br_dir(ki_pos, pos);
     if(!dir)
       return 64;
     if(dir == nst::bishop)
     {
-      auto const& bi_moves = magic_ns::bishop_moves(ki_pos, mask_all);
-      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all);
+      auto const bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       auto m = bi_moves & (bi_mask | q_mask);
       if(m)
       {
@@ -637,9 +637,9 @@ private:
     else
     {
       X_ASSERT(dir != nst::rook, "invalid direction from point to point");
-      auto const& r_moves = magic_ns::rook_moves(ki_pos, mask_all);
-      auto const& r_mask = fmgr_.rook_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all);
+      auto const r_mask = fmgr_.rook_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       auto m = r_moves & (r_mask | q_mask);
       if(m)
       {
@@ -650,7 +650,7 @@ private:
     return 64;
   }
 
-  inline int findDiscoveredPt(int from, int to, BitMask const& mask_all, Figure::Color ocolor, int ki_pos) const
+  inline int findDiscoveredPt(int from, int to, BitMask const mask_all, Figure::Color ocolor, int ki_pos) const
   {
     auto dir = figureDir().br_dir(ki_pos, from);
     if(!dir)
@@ -658,9 +658,9 @@ private:
     auto exclude = ~set_mask_bit(to);
     if(dir == nst::bishop)
     {
-      auto const& bi_moves = magic_ns::bishop_moves(ki_pos, mask_all);
-      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const bi_moves = magic_ns::bishop_moves(ki_pos, mask_all);
+      auto const bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       auto m = bi_moves & exclude & (bi_mask | q_mask);
       if(m)
       {
@@ -671,9 +671,9 @@ private:
     else
     {
       X_ASSERT(dir != nst::rook, "invalid direction from point to point");
-      auto const& r_moves = magic_ns::rook_moves(ki_pos, mask_all);
-      auto const& r_mask = fmgr_.rook_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const r_moves = magic_ns::rook_moves(ki_pos, mask_all);
+      auto const r_mask = fmgr_.rook_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       auto m = r_moves & exclude & (r_mask | q_mask);
       if(m)
       {
@@ -684,55 +684,55 @@ private:
     return 64;
   }
 
-  inline bool isAttacked(int p, BitMask const& mask_all, Figure::Color ocolor) const
+  inline bool isAttacked(int p, BitMask const mask_all, Figure::Color ocolor) const
   {
-    auto const& ki_caps = movesTable().caps(Figure::TypeKing, p);
+    auto const ki_caps = movesTable().caps(Figure::TypeKing, p);
     if(ki_caps & fmgr_.king_mask(ocolor))
       return true;
-    auto const& pw_caps = movesTable().pawnCaps(color(), p);
+    auto const pw_caps = movesTable().pawnCaps(color(), p);
     if(pw_caps & mask_all & fmgr_.pawn_mask(ocolor))
       return true;
-    auto const& kn_caps = movesTable().caps(Figure::TypeKnight, p);
+    auto const kn_caps = movesTable().caps(Figure::TypeKnight, p);
     if(kn_caps & mask_all & fmgr_.knight_mask(ocolor))
       return true;
-    auto const& bi_moves = magic_ns::bishop_moves(p, mask_all);
-    auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    auto const bi_moves = magic_ns::bishop_moves(p, mask_all);
+    auto const bi_mask = fmgr_.bishop_mask(ocolor);
+    auto const q_mask = fmgr_.queen_mask(ocolor);
     if(bi_moves & (bi_mask | q_mask))
       return true;
-    auto const& r_moves = magic_ns::rook_moves(p, mask_all);
-    auto const& r_mask = fmgr_.rook_mask(ocolor);
+    auto const r_moves = magic_ns::rook_moves(p, mask_all);
+    auto const r_mask = fmgr_.rook_mask(ocolor);
     if(r_moves & (r_mask | q_mask))
       return true;
     return false;
   }
 
-  inline bool isAttacked(int p, BitMask const& mask_all, BitMask const& exclude, Figure::Color ocolor) const
+  inline bool isAttacked(int p, BitMask const mask_all, BitMask const exclude, Figure::Color ocolor) const
   {
-    auto const& ki_caps = movesTable().caps(Figure::TypeKing, p);
+    auto const ki_caps = movesTable().caps(Figure::TypeKing, p);
     if(ki_caps & fmgr_.king_mask(ocolor))
       return false;
-    auto const& pw_caps = movesTable().pawnCaps(color(), p);
+    auto const pw_caps = movesTable().pawnCaps(color(), p);
     if(pw_caps & mask_all & fmgr_.pawn_mask(ocolor) & exclude)
       return true;
-    auto const& kn_caps = movesTable().caps(Figure::TypeKnight, p);
+    auto const kn_caps = movesTable().caps(Figure::TypeKnight, p);
     if(kn_caps & mask_all & fmgr_.knight_mask(ocolor) & exclude)
       return true;
-    auto const& bi_moves = magic_ns::bishop_moves(p, mask_all);
-    auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    auto const bi_moves = magic_ns::bishop_moves(p, mask_all);
+    auto const bi_mask = fmgr_.bishop_mask(ocolor);
+    auto const q_mask = fmgr_.queen_mask(ocolor);
     if(bi_moves & (bi_mask | q_mask) & exclude)
       return true;
-    auto const& r_moves = magic_ns::rook_moves(p, mask_all);
-    auto const& r_mask = fmgr_.rook_mask(ocolor);
+    auto const r_moves = magic_ns::rook_moves(p, mask_all);
+    auto const r_mask = fmgr_.rook_mask(ocolor);
     if(r_moves & (r_mask | q_mask) & exclude)
       return true;
     return false;
   }
 
-  void detectCheck(Move const& move);
+  void detectCheck(Move const move);
 
-  int findDiscoveredPt()
+  inline int findDiscoveredPt()
   {
     return 64;
   }
@@ -742,7 +742,7 @@ private:
                             const Figure::Type type,
                             int from,
                             int king_pos,
-                            BitMask const& mask_all) const
+                            BitMask const mask_all) const
   {
     X_ASSERT(type != Figure::TypeBishop && type != Figure::TypeRook && type != Figure::TypeQueen, "");
     if(figureDir().dir(type, acolor, from, king_pos) < 0)
@@ -750,10 +750,10 @@ private:
     return is_nothing_between(from, king_pos, ~mask_all);
   }
 
-  bool fieldAttacked(const Figure::Color c, int8 pos, const BitMask & mask_all_inv) const;
+  bool fieldAttacked(const Figure::Color c, int8 pos, const BitMask mask_all_inv) const;
 
   /// is field 'pos' attacked by given color?
-  bool isAttacked(const Figure::Color c, int8 pos) const
+  inline bool isAttacked(const Figure::Color c, int8 pos) const
   {
     BitMask mask_all_inv = ~(fmgr_.mask(Figure::ColorBlack) | fmgr_.mask(Figure::ColorWhite));
     return fieldAttacked(c, pos, mask_all_inv);
@@ -887,8 +887,8 @@ private:
 };
 
 bool couldIntercept(Board const& board,
-  BitMask const& inv_mask_all,
-  BitMask const& attack_mask_c,
+  BitMask const inv_mask_all,
+  BitMask const attack_mask_c,
   int8 color,
   int pawn_pos,
   int promo_pos,

@@ -3,9 +3,9 @@ Board.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <MovesTable.h>
-#include <FigureDirs.h>
-#include <EvalCoefficients.h>
+#include "MovesTable.h"
+#include "FigureDirs.h"
+#include "EvalCoefficients.h"
 
 namespace NEngine
 {

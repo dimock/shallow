@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xcommon.h>
+#include "xcommon.h"
 
 namespace NEngine
 {
@@ -11,7 +11,7 @@ namespace NEngine
   }
   
   template <class MOVE, class LIST>
-  void insert_sorted(LIST& moves, MOVE const& move)
+  void insert_sorted(LIST& moves, MOVE const move)
   {
     if(moves.empty() || moves.back() >= move)
     {
@@ -37,7 +37,7 @@ namespace NEngine
   }
 
   template <class MOVE>
-  void bring_to_front(MOVE* b, MOVE* e, MOVE const& move)
+  void bring_to_front(MOVE* b, MOVE* e, MOVE const move)
   {
     X_ASSERT(b >= e, "invalid moves array");
     auto* i = b;

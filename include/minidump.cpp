@@ -3,10 +3,10 @@
   minidump.cpp - Copyright (C) 2011 - 2012 by Dmitry Sultanov
  *************************************************************/
 
-#include <xcommon.h>
 
 #if ((defined _MSC_VER) && (defined USE_MINIDUMP))
 
+#include <xcommon.h>
 #include <windows.h>
 #include <Dbghelp.h>
 #include <time.h>

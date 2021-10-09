@@ -3,9 +3,9 @@ xprotocol.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <xparser.h>
-#include <processor.h>
-#include <xcmdqueue.h>
+#include "xparser.h"
+#include "processor.h"
+#include "xcmdqueue.h"
 
 namespace NShallow
 {

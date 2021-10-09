@@ -2,16 +2,16 @@
 xbitmath.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
-#include <xbitmath.h>
-#include <xindex.h>
-#include <Board.h>
-#include <iostream>
+#include "xbitmath.h"
+#include "xindex.h"
+#include "Board.h"
+#include "iostream"
 
 namespace NEngine
 {
 FUNC_POP_COUNT64 g_func_pop_count64 = nullptr;
 
-int pop_count_common(uint64 n)
+int pop_count_common(BitMask n)
 {
   if(n == 0ULL)
     return 0;
@@ -28,7 +28,7 @@ int pop_count_common(uint64 n)
 
 
 #ifdef _M_X64
-int pop_count64_fast(uint64 n)
+int pop_count64_fast(BitMask n)
 {
   return static_cast<int>(__popcnt64(n));
 }
@@ -58,29 +58,14 @@ void init_popcount_ptr()
 
 #elif (defined __GNUC__)
 
-#include <cpuid.h>
-
-int pop_count64_fast(uint64 n)
+int pop_count64_fast(BitMask n)
 {
   return __builtin_popcountll(n);
 }
 
 void init_popcount_ptr()
 {
-  int level = 1;
-  unsigned int eax = 0;
-  unsigned int ebx = 0;
-  unsigned int ecx = 0;
-  unsigned int edx = 0;
-  __get_cpuid(level, &eax, &ebx, &ecx, &edx);
-  if(ecx & (1<<23))
-  {
-    g_func_pop_count64 = pop_count64_fast;
-  }
-  else
-  {
-    g_func_pop_count64 = pop_count_common;
-  }
+  g_func_pop_count64 = pop_count64_fast;
 }
 
 #endif
@@ -326,7 +311,7 @@ DistanceCounter::DistanceCounter()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void print_bitmask(uint64 mask)
+void print_bitmask(BitMask mask)
 {
   for(int i = 7; i >= 0; --i)
   {
@@ -345,8 +330,8 @@ static const BitMask cut_le = ~0x0101010101010101;
 static const BitMask cut_ri = ~0x8080808080808080;
 
 bool couldIntercept(Board const& board,
-                    BitMask const& inv_mask_all,
-                    BitMask const& attack_mask_c,
+                    BitMask const inv_mask_all,
+                    BitMask const attack_mask_c,
                     int8 color,
                     int pawn_pos,
                     int promo_pos,

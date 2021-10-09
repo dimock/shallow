@@ -3,13 +3,13 @@
   xparser.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <xparser.h>
-#include <Helpers.h>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <map>
-#include <locale>
+#include "xparser.h"
+#include "Helpers.h"
+#include "iostream"
+#include "string"
+#include "sstream"
+#include "map"
+#include "locale"
 
 namespace NShallow
 {

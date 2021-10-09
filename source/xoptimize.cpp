@@ -1,8 +1,8 @@
-#include <xoptimize.h>
-#include <MovesGenerator.h>
-#include <xindex.h>
-#include <Helpers.h>
-#include <algorithm>
+#include "xoptimize.h"
+#include "MovesGenerator.h"
+#include "xindex.h"
+#include "Helpers.h"
+#include "algorithm"
 
 namespace NEngine
 {

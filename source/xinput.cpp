@@ -1,7 +1,7 @@
 /*************************************************************
 xInput.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
-#include <xinput.h>
+#include "xinput.h"
 
 #ifdef __GNUC__
 

@@ -3,7 +3,7 @@ xlist.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <xcommon.h>
+#include "xcommon.h"
 
 namespace NEngine
 {

@@ -3,7 +3,7 @@
  *************************************************************/
 #pragma once
 
-#include <xcommon.h>
+#include "xcommon.h"
 
 namespace NEngine
 {
@@ -79,51 +79,51 @@ public:
   }
 
   // ordinary captures
-  inline const BitMask & pawnCaps(int color, int pos) const
+  inline const BitMask pawnCaps(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "try to get pawn cap from invalid position or color");
     return s_pawnsCaps_[color][pos];
   }
 
   // moves
-  inline const BitMask & pawnMoves(int color, int pos) const
+  inline const BitMask pawnMoves(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "try to get pawn move from invalid position or color");
     return s_pawnsMoves_[color][pos];
   }
 
   // pawn can go to 'pos' from these positions
-  inline const BitMask & pawnFrom(int color, int pos) const
+  inline const BitMask pawnFrom(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "try to get pawn move from invalid position or color");
     return s_pawnsFrom_[color][pos];
   }
 
-  inline const BitMask & promote(int color) const
+  inline const BitMask promote(int color) const
   {
     X_ASSERT( (unsigned)color > 1, "invalid color of promotion mask" );
     return s_pawnPromotions_[color];
   }
 
-  inline const BitMask & caps(int type, int pos) const
+  inline const BitMask caps(int type, int pos) const
   {
     X_ASSERT((unsigned)type > 6 || (unsigned)pos > 63, "try to get figure move for invalid position or type");
     return s_otherCaps_[type][pos];
   }
 
-  inline const BitMask & king_pressure(int color, int pos) const
+  inline const BitMask king_pressure(int color, int pos) const
   {
     X_ASSERT((unsigned)pos > 63 || (unsigned)color > 1, "try to get mask for invalid position");
     return s_kingPressure_[color][pos];
   }
 
-  inline const BitMask & blocked_rook(int pos) const
+  inline const BitMask blocked_rook(int pos) const
   {
     X_ASSERT((unsigned)pos > 63, "try to get mask for invalid position");
     return s_blockedRook_[pos];
   }
 
-  inline const BitMask & figure_moves(int color, int type, int pos) const
+  inline const BitMask figure_moves(int color, int type, int pos) const
   {
     X_ASSERT((unsigned)color > 1, "try to get mask for invalid color");
     X_ASSERT((unsigned)type > 6, "try to get mask for invalid type");

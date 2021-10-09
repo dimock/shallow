@@ -2,14 +2,16 @@
   xboard.cpp - Copyright (C) 2016 by Dmitry Sultanov
   *************************************************************/
 
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <xprotocol.h>
-#include <Helpers.h>
-#include <xoptions.h>
-#include <algorithm>
+#include "iostream"
+#include "string"
+#include "fstream"
+#include "sstream"
+#include "xprotocol.h"
+#include "Helpers.h"
+#include "xoptions.h"
+#include "algorithm"
+#include "ctime"
+#include "iomanip"
 
 namespace NShallow
 {
@@ -570,15 +572,17 @@ void xProtocolMgr::printCmdDbg(xCmd const& cmd) const
   ofs << to_string(cmd) << std::endl;
 }
 
+#pragma warning(disable : 4996)
 void xProtocolMgr::writeError()
 {
-    time_t curtime;
-    time(&curtime);
-    tm * t = localtime(&curtime);
-    char fen_fname[MAX_PATH];
-    char hash_fname[MAX_PATH];
-    strftime(fen_fname, MAX_PATH, "fen_%d-%m-%Y_%H-%M-%S.fen", t);
-    strftime(hash_fname, MAX_PATH, "hash_%d-%m-%Y_%H-%M-%S", t);
+    std::tm tm{};
+    std::time_t t = std::mktime(&tm);
+    auto* gt = std::localtime(&t);
+    std::stringstream ssf, ssh;
+    ssf << std::put_time(gt, "fen_%d-%m-%Y_%H-%M-%S.fen");
+    ssh << std::put_time(gt, "hash_%d-%m-%Y_%H-%M-%S");
+    auto fen_fname = ssf.str();
+    auto hash_fname = ssh.str();
     proc_.fen2file(fen_fname, true);
     proc_.hash2file(hash_fname, true);
 }

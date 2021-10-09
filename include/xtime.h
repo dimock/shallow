@@ -3,8 +3,8 @@ xcallback.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <chrono>
-#include <ratio>
+#include "chrono"
+#include "ratio"
 
 namespace NTime
 {

@@ -2,10 +2,10 @@
 xcommand.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
-#include <xcommand.h>
-#include <algorithm>
-#include <sstream>
-#include <Helpers.h>
+#include "xcommand.h"
+#include "algorithm"
+#include "sstream"
+#include "Helpers.h"
 
 namespace NShallow
 {

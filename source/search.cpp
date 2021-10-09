@@ -3,14 +3,14 @@
  *************************************************************/
 
 
-#include <engine.h>
-#include <MovesGenerator.h>
+#include "engine.h"
+#include "MovesGenerator.h"
 #include "Evaluator.h"
-#include <algorithm>
-#include <Helpers.h>
-#include <History.h>
-#include <xalgorithm.h>
-#include <thread>
+#include "algorithm"
+#include "Helpers.h"
+#include "History.h"
+#include "xalgorithm.h"
+#include "thread"
 
 namespace NEngine
 {
@@ -28,7 +28,7 @@ bool Engine::generateStartposMoves(int ictx)
 #ifdef USE_HASH
   auto * hitem = hash_.get(board.fmgr().hashCode());
   X_ASSERT(hitem == nullptr, "HItem not found in Hash table");
-  HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(uint64) - sizeof(HKeyType)) * 8);
+  HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(BitMask) - sizeof(HKeyType)) * 8);
   if (hitem->hkey_ == hk && hitem->move_ && board.validateMoveExpress(hitem->move_))
   {
     hmove = hitem->move_;
@@ -445,14 +445,14 @@ void Engine::sortMoves0(int ictx)
       auto& hist = history(board.color(), m->from(), m->to());
       m->sort_value = hist.score();
     }
-    std::stable_sort(b, e, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
+    std::stable_sort(b, e, [](SMove const m1, SMove const m2) { return m1 > m2; });
   }
 #else
   std::stable_sort(moves.data(), moves.data() + sdata.numOfMoves_, [](SMove const& m1, SMove const& m2) { return m1 > m2; });
 #endif
 }
 
-ScoreType Engine::processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv)
+ScoreType Engine::processMove0(int ictx, SMove const move, ScoreType const alpha, ScoreType const betta, bool const pv)
 {
   X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
   auto& sctx = scontexts_[ictx];
@@ -1076,7 +1076,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 // we actually test if moved figure was/will be attacked by previously moved one or from direction it was moved from
 // or we should move our king even if we have a lot of other figures
 //////////////////////////////////////////////////////////////////////////
-bool Engine::isRealThreat(int ictx, const Move & move)
+bool Engine::isRealThreat(int ictx, const Move move)
 {
   X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
   auto& sctx = scontexts_[ictx];
@@ -1089,7 +1089,7 @@ bool Engine::isRealThreat(int ictx, const Move & move)
   auto const color = board.color();
   auto const ocolor = Figure::otherColor(color);
 
-  auto const& pfield = board.getField(prev.move_.to());
+  auto const pfield = board.getField(prev.move_.to());
   X_ASSERT(!pfield || pfield.color() != ocolor, "no figure of required color on the field it was move to while detecting threat");
 
   // don't need forbid reduction of captures, checks, promotions and pawn's attack because we've already done it
@@ -1105,7 +1105,7 @@ bool Engine::isRealThreat(int ictx, const Move & move)
     return true;
   }
 
-  auto const& cfield = board.getField(move.from());
+  auto const cfield = board.getField(move.from());
   X_ASSERT(!cfield || cfield.color() != color, "no figure of required color in while detecting threat");
 
   // we have to put figure under attack

@@ -3,11 +3,11 @@ xcallback.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <xoptimize.h>
-#include <xtime.h>
-#include <array>
-#include <functional>
-#include <memory>
+#include "xoptimize.h"
+#include "xtime.h"
+#include "array"
+#include "functional"
+#include "memory"
 
 namespace NEngine
 {

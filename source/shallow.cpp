@@ -2,13 +2,13 @@
   shallow.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <iostream>
-#include <xprotocol.h>
-#include <magicbb.h>
-#include <xtests.h>
-#include <xlist.h>
-#include <xalgorithm.h>
-#include <iomanip>
+#include "iostream"
+#include "xprotocol.h"
+#include "magicbb.h"
+#include "xtests.h"
+#include "xlist.h"
+#include "xalgorithm.h"
+#include "iomanip"
 
 
 #if ((defined _MSC_VER) && (defined USE_MINIDUMP))
@@ -43,6 +43,8 @@ int main(int argn, char *argv[])
   std::cout.setf(std::ios_base::unitbuf);
   NShallow::xProtocolMgr xpr;
 
+#ifndef __ANDROID__
+
 #ifndef NDEBUG
   if (argn > 1)
   {
@@ -58,6 +60,8 @@ int main(int argn, char *argv[])
     return 0;
   }
 #endif
+
+#endif // !__ANDROID__
 
   main_loop(xpr);
 

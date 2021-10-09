@@ -3,8 +3,8 @@
  *************************************************************/
 #pragma once
 
-#include <Move.h>
-#include <fstream>
+#include "Move.h"
+#include "fstream"
 
 namespace NEngine
 {
@@ -29,7 +29,7 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
 
   HItem() {}
 
-  inline HItem(HKeyType hkey, ScoreType score, int depth, Flag xflag, const Move & move, bool threat, bool singular, bool pv)
+  inline HItem(HKeyType hkey, ScoreType score, int depth, Flag xflag, const Move move, bool threat, bool singular, bool pv)
   {
     hkey_ = hkey;
     score_ = score;
@@ -124,14 +124,20 @@ public:
     return (bool)ofs;
   }
 
-  inline void prefetch(const uint64 & code)
+#ifndef __ANDROID__
+  inline void prefetch(const uint64 code)
   {
     _mm_prefetch((char*)&buffer_[code & szMask_], _MM_HINT_T0);
   }
-
+#else
+  inline void prefetch(const uint64 & code)
+  {
+    __builtin_prefetch((char*)&buffer_[code & szMask_]);
+  }
+#endif // !__ANDROID__
 protected:
 
-  inline ITEM & operator [] (const uint64 & code)
+  inline ITEM & operator [] (const uint64 code)
   {
     return buffer_[code & szMask_];
   }
@@ -149,7 +155,7 @@ public:
   GHashTable(int size) : HashTable<HItem>(size)
   {}
 
-  inline HItem* get(const uint64 & hkey)
+  inline HItem* get(const uint64 hkey)
   {
     return &(operator [] (hkey));
   }
@@ -170,7 +176,7 @@ public:
   PHashTable(int size) : HashTable<PHEval>(size)
   {}
 
-  inline PHEval* get(const uint64 & code)
+  inline PHEval* get(const uint64 code)
   {
     return &(operator [] (code));
   }
@@ -191,7 +197,7 @@ public:
   FHashTable(int size) : HashTable<FHEval>(size)
   {}
 
-  inline FHEval* get(const uint64 & code)
+  inline FHEval* get(const uint64 code)
   {
     return &(operator [] (code));
   }
@@ -211,7 +217,7 @@ public:
   AHashTable(int size) : HashTable<AHEval>(size)
   {}
 
-  inline AHEval* get(const uint64 & code)
+  inline AHEval* get(const uint64 code)
   {
     return &(operator [] (code));
   }

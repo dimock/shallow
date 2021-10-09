@@ -1,7 +1,7 @@
 #pragma once
 
-#include <xcommon.h>
-#include <Figure.h>
+#include "xcommon.h"
+#include "Figure.h"
 
 namespace NEngine
 {
@@ -36,12 +36,12 @@ struct Move
   void set_ok() { mask |= 1 << 15; }
   void clear_ok() { mask &= ~(1 << 15); }
 
-  inline bool operator == (Move const& m) const
+  inline bool operator == (Move const m) const
   {
     return (mask & (~(1<<15))) == (m.mask & (~(1<<15)));
   }
 
-  inline bool operator != (Move const& m) const
+  inline bool operator != (Move const m) const
   {
     return (mask & (~(1<<15))) != (m.mask & (~(1<<15)));
   }
@@ -71,28 +71,28 @@ struct SMove : public Move
   {
   }
 
-  SMove& operator = (Move const& m)
+  SMove& operator = (Move const m)
   {
     (Move&)(*this) = m;
     return *this;
   }
 
-  inline bool operator < (SMove const& m) const
+  inline bool operator < (SMove const m) const
   {
     return sort_value < m.sort_value;
   }
 
-  inline bool operator <= (SMove const& m) const
+  inline bool operator <= (SMove const m) const
   {
     return sort_value <= m.sort_value;
   }
 
-  inline bool operator > (SMove const& m) const
+  inline bool operator > (SMove const m) const
   {
     return sort_value > m.sort_value;
   }
 
-  inline bool operator >= (SMove const& m) const
+  inline bool operator >= (SMove const m) const
   {
     return sort_value >= m.sort_value;
   }

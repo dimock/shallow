@@ -1,9 +1,9 @@
 #pragma once
 
-#include <xcommon.h>
-#include <Figure.h>
-#include <Board.h>
-#include <unordered_map>
+#include "xcommon.h"
+#include "Figure.h"
+#include "Board.h"
+#include "unordered_map"
 
 namespace NEngine
 {
@@ -18,7 +18,7 @@ public:
   inline std::pair<SpecialCaseResult, ScoreType> eval(Board const& board) const
   {
     auto const& fmgr = board.fmgr();
-    auto const& hkey = fmgr.fgrsCode();
+    auto const hkey = fmgr.fgrsCode();
     auto iter = scases_.find(hkey);
     if (iter == scases_.end())
       return { SpecialCaseResult::NO_RESULT, 0 };

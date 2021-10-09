@@ -5,7 +5,7 @@ xbitmath.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #pragma once
 
-#include <fpos.h>
+#include "fpos.h"
 
 namespace NEngine
 {
@@ -21,12 +21,12 @@ inline int change_sign(bool cond, int value)
   return (value ^ -(int)(cond)) + cond;
 }
     
-typedef int(*FUNC_POP_COUNT64)(uint64);
+typedef int(*FUNC_POP_COUNT64)(BitMask);
 extern FUNC_POP_COUNT64 g_func_pop_count64;
 
 void init_popcount_ptr();
 
-inline int pop_count(uint64 n)
+inline int pop_count(BitMask n)
 {
   return g_func_pop_count64(n);
 }
@@ -59,7 +59,7 @@ inline int _msb32(unsigned long n)
 #pragma intrinsic(_BitScanForward64)
 #pragma intrinsic(_BitScanReverse64)
 
-inline int _lsb64(const uint64 & mask)
+inline int _lsb64(const BitMask mask)
 {
   X_ASSERT(!mask, "zero mask in _lsb64");
   unsigned long n;
@@ -68,7 +68,7 @@ inline int _lsb64(const uint64 & mask)
   return n;
 }
 
-inline int _msb64(const uint64 & mask)
+inline int _msb64(const BitMask mask)
 {
   X_ASSERT(!mask, "zero mask in _msb64");
   unsigned long n;
@@ -77,7 +77,7 @@ inline int _msb64(const uint64 & mask)
   return n;
 }
 
-inline int log2(uint64 n)
+inline int log2(BitMask n)
 {
   unsigned long i = 0;
   if(_BitScanReverse64(&i, n))
@@ -85,7 +85,7 @@ inline int log2(uint64 n)
   return 0;
 }
 #else
-inline int _lsb64(const uint64 & mask)
+inline int _lsb64(const BitMask mask)
 {
   X_ASSERT(!mask, "zero mask in _lsb64");
   unsigned long n;
@@ -99,7 +99,7 @@ inline int _lsb64(const uint64 & mask)
   return n+32;
 }
 
-inline int _msb64(const uint64 & mask)
+inline int _msb64(const BitMask mask)
 {
   X_ASSERT(!mask, "zero mask in _msb64");
   unsigned long n;
@@ -113,7 +113,7 @@ inline int _msb64(const uint64 & mask)
   return n;
 }
 
-inline int log2(uint64 n)
+inline int log2(BitMask n)
 {
   unsigned long i = 0;
   const unsigned * pn = reinterpret_cast<const unsigned int *>(&n);
@@ -142,29 +142,29 @@ inline int _msb32(uint32 mask)
   return 31 - __builtin_clz(mask);
 }
 
-inline int _lsb64(uint64 mask)
+inline int _lsb64(BitMask mask)
 {
   X_ASSERT(!mask, "zero mask in _lsb64");
   return __builtin_ctzll(mask);
 }
 
-inline int _msb64(uint64 mask)
+inline int _msb64(BitMask mask)
 {
   X_ASSERT(!mask, "zero mask in _msb64");
   return 63 - __builtin_clzll(mask);
 }
 
-inline int log2(uint64 n)
+inline int log2(BitMask n)
 {
   return 63 - __builtin_clzll(n);
 }
 
 #endif // __GNUC__
 
-void print_bitmask(uint64 mask);
+void print_bitmask(BitMask mask);
 
 // got from chessprogramming.wikispaces.com
-inline bool one_bit_set(uint64 n)
+inline bool one_bit_set(BitMask n)
 {
   return (n & (n-1)) == 0ULL;
 }
@@ -179,14 +179,14 @@ inline int set_bit(int bit)
   return 1 << bit;
 }
 
-inline int clear_lsb(uint64 & mask)
+inline int clear_lsb(BitMask& mask)
 {
   unsigned long n = _lsb64(mask);
   mask &= mask-1;
   return n;
 }
 
-inline int clear_msb(uint64 & mask)
+inline int clear_msb(BitMask& mask)
 {
   unsigned long n = _msb64(mask);
   mask ^= set_mask_bit(n);
@@ -207,61 +207,61 @@ public:
 
   PawnMasks();
 
-  inline const BitMask & mask_passed(int color, int pos) const
+  inline const BitMask mask_passed(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmasks_passed_[color][pos];
   }
 
-  inline const BitMask & mask_forward(int color, int pos) const
+  inline const BitMask mask_forward(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmasks_forward_[color][pos];
   }
 
-  inline const BitMask & mask_neighbor(int color, int pos) const
+  inline const BitMask mask_neighbor(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmasks_neighbor_[color][pos];
   }
 
-  inline const BitMask & mask_guards(int color, int pos) const
+  inline const BitMask mask_guards(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmasks_guards_[color][pos];
   }
 
-  inline const BitMask & mask_backward(int color, int pos) const
+  inline const BitMask mask_backward(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmasks_backward_[color][pos];
   }
 
-  inline const BitMask & mask_isolated(int x) const
+  inline const BitMask mask_isolated(int x) const
   {
     X_ASSERT((unsigned)x > 7, "invalid pawn x");
     return pmask_isolated_[x];
   }
 
-  inline const BitMask & mask_column(int x) const
+  inline const BitMask mask_column(int x) const
   {
     X_ASSERT((unsigned)x > 7, "invalid pawn x");
     return pmask_column_[x];
   }
 
-  inline const BitMask & mask_row(int n) const
+  inline const BitMask mask_row(int n) const
   {
     X_ASSERT((unsigned)n > 63, "invalid position");
     return pmask_row_[n];
   }
 
-  inline const BitMask & blocked_knight(int color, int pos) const
+  inline const BitMask blocked_knight(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmask_blocked_knight_[color][pos];
   }
 
-  inline const BitMask & blocked_bishop(int color, int pos) const
+  inline const BitMask blocked_bishop(int color, int pos) const
   {
     X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
     return pmask_blocked_bishop_[color][pos];
@@ -358,35 +358,35 @@ public:
   BetweenMask(DeltaPosCounter const&);
 
   // mask contains only bits BETWEEN from & to
-  inline const BitMask & between(int8 from, int8 to) const
+  inline const BitMask between(int8 from, int8 to) const
   {
     X_ASSERT((uint8)from > 63 || (uint8)to > 63, "invalid positions given");
     return s_between_[from][to];
   }
 
   // mask contains bits along from-to direction starting from and finishing at border
-  inline const BitMask & from(int8 from, int8 to) const
+  inline const BitMask from(int8 from, int8 to) const
   {
     X_ASSERT((uint8)from > 63 || (uint8)to > 63, "invalid positions given");
     return s_from_[from][to];
   }
 
   // mask contains bits along from-to direction starting from 'to' and finishing at border
-  inline const BitMask & tail(int8 from, int8 to) const
+  inline const BitMask tail(int8 from, int8 to) const
   {
     X_ASSERT((uint8)from > 63 || (uint8)to > 63, "invalid positions given");
     return s_tail_[from][to];
   }
 
   // mask contains bits of whole line along from-to direction
-  inline const BitMask & line(int8 from, int8 to) const
+  inline const BitMask line(int8 from, int8 to) const
   {
     X_ASSERT((uint8)from > 63 || (uint8)to > 63, "invalid positions given");
     return s_line_[from][to];
   }
 
   // mask contains bits from square in dir direction until the border
-  inline const BitMask & from_dir(int8 from, nst::dirs dir) const
+  inline const BitMask from_dir(int8 from, nst::dirs dir) const
   {
     X_ASSERT((uint8)from > 63 || (uint8)dir > 8 || dir == nst::dirs::no_dir, "invalid positions given");
     return s_from_dir_[(uint8)dir-1][from];

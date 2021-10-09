@@ -1,5 +1,5 @@
-#include <xcmdqueue.h>
-#include <xparser.h>
+#include "xcmdqueue.h"
+#include "xparser.h"
 
 namespace NShallow
 {

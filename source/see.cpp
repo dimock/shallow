@@ -2,9 +2,9 @@
   see.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <Board.h>
-#include <Helpers.h>
-#include <fstream>
+#include "Board.h"
+#include "Helpers.h"
+#include "fstream"
 
 namespace NEngine
 {
@@ -15,7 +15,7 @@ namespace
 struct SeeCalc
 {
   Board const& board_;
-  Move  const& move_;
+  Move  const move_;
   FiguresManager const& fmgr_;
   BitMask last_b_[2] = {};
   BitMask last_r_[2] = {};
@@ -191,8 +191,8 @@ struct SeeCalc
     auto mask_all_f = all_mask_ & ~set_mask_bit(from) & ~set_mask_bit(epp);
     auto mask_all_t = mask_all_f & ~set_mask_bit(move_.to());
     {
-      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       auto bq_mask = (bi_mask | q_mask) & mask_all_t;
       if (bq_mask) {
         auto bi_moves = magic_ns::bishop_moves(ki_pos, mask_all_f);
@@ -200,8 +200,8 @@ struct SeeCalc
           return true;
       }
     }
-    auto const& r_mask = fmgr_.rook_mask(ocolor);
-    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    auto const r_mask = fmgr_.rook_mask(ocolor);
+    auto const q_mask = fmgr_.queen_mask(ocolor);
     auto rq_mask = (r_mask | q_mask) & mask_all_t;
     if (!rq_mask)
       return false;
@@ -219,8 +219,8 @@ struct SeeCalc
     auto tail_mask = betweenMasks().tail(ki_pos, from);
     if(dir == nst::bishop)
     {
-      auto const& bi_mask = fmgr_.bishop_mask(ocolor);
-      auto const& q_mask = fmgr_.queen_mask(ocolor);
+      auto const bi_mask = fmgr_.bishop_mask(ocolor);
+      auto const q_mask = fmgr_.queen_mask(ocolor);
       auto bq_mask = (bi_mask | q_mask) & mask_all_t & tail_mask;
       if (!bq_mask)
         return false;
@@ -228,8 +228,8 @@ struct SeeCalc
       return (bi_moves & bq_mask) != 0ULL;
     }
     X_ASSERT(dir != nst::rook, "invalid direction from point to point");
-    auto const& r_mask = fmgr_.rook_mask(ocolor);
-    auto const& q_mask = fmgr_.queen_mask(ocolor);
+    auto const r_mask = fmgr_.rook_mask(ocolor);
+    auto const q_mask = fmgr_.queen_mask(ocolor);
     auto rq_mask = (r_mask | q_mask) & mask_all_t & tail_mask;
     if (!rq_mask)
       return false;
@@ -306,12 +306,12 @@ struct SeeCalc
 
 } // end of namespace {} for SeeCalc
 
-bool Board::see(const Move & move, int threshold) const
+bool Board::see(const Move move, int threshold) const
 {
   X_ASSERT(data_.state_ == Invalid, "try to SEE invalid board");
 
-  const auto& ffield = getField(move.from());
-  const auto& tfield = getField(move.to());
+  const auto ffield = getField(move.from());
+  const auto tfield = getField(move.to());
   bool en_passant{ false };
 
   if(tfield)

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <xcommon.h>
-#include <xlist.h>
-#include <Board.h>
-#include <xalgorithm.h>
+#include "xcommon.h"
+#include "xlist.h"
+#include "Board.h"
+#include "xalgorithm.h"
 
 namespace NEngine
 {
@@ -23,8 +23,8 @@ struct EscapeGenerator
     if(killer_ == hmove_)
       killer_ = MOVE{ true };
     ocolor = Figure::otherColor(board_.color());
-    const auto& black = board_.fmgr().mask(Figure::ColorBlack);
-    const auto& white = board_.fmgr().mask(Figure::ColorWhite);
+    const auto black = board_.fmgr().mask(Figure::ColorBlack);
+    const auto white = board_.fmgr().mask(Figure::ColorWhite);
     mask_all = white | black;
   }
 
@@ -40,16 +40,16 @@ struct EscapeGenerator
 
   inline void generateCaps()
   {
-    const auto& color = board_.color();
+    const auto color = board_.color();
     protect_king_msk_ = betweenMasks().between(board_.kingPos(color), board_.checking());
-    auto const& ch_pos = board_.checking();
+    auto const ch_pos = board_.checking();
     auto const& fmgr = board_.fmgr();
 
     X_ASSERT((unsigned)board_.checking() > 63, "there is no checking figure");
 
     // 1st - pawns
-    const auto& pawn_msk = fmgr.pawn_mask(color);
-    const auto& opawn_caps = movesTable().pawnCaps(ocolor, ch_pos);
+    const auto pawn_msk = fmgr.pawn_mask(color);
+    const auto opawn_caps = movesTable().pawnCaps(ocolor, ch_pos);
     auto eat_msk = pawn_msk & opawn_caps;
 
     bool promotion = ch_pos > 55 || ch_pos < 8; // 1st || last line
@@ -57,7 +57,7 @@ struct EscapeGenerator
     {
       auto n = clear_lsb(eat_msk);
 
-      const auto& fpawn = board_.getField(n);
+      const auto fpawn = board_.getField(n);
       X_ASSERT(!fpawn || fpawn.type() != Figure::TypePawn || fpawn.color() != color, "no pawn on field we are going to do capture from");
 
       if(promotion)
@@ -79,13 +79,13 @@ struct EscapeGenerator
       {
         X_ASSERT(!board_.getField(ep_pos) || board_.getField(ep_pos).type() != Figure::TypePawn, "en-passant pown doesnt exist");
         X_ASSERT(board_.getField(ch_pos).type() != Figure::TypePawn, "en-passant pawn is on checking position but checking figure type is not pawn");
-        const auto& opawn_caps_ep = movesTable().pawnCaps(ocolor, board_.enpassant());
+        const auto opawn_caps_ep = movesTable().pawnCaps(ocolor, board_.enpassant());
         auto eat_msk_ep = pawn_msk & opawn_caps_ep;
         for(; eat_msk_ep;)
         {
           auto n = clear_lsb(eat_msk_ep);
 
-          const auto& fpawn = board_.getField(n);
+          const auto fpawn = board_.getField(n);
           X_ASSERT(!fpawn || fpawn.type() != Figure::TypePawn || fpawn.color() != color, "no pawn on field we are going to do capture from");
 
           add_caps(n, board_.enpassant(), Figure::TypeNone);
@@ -117,14 +117,14 @@ struct EscapeGenerator
 
     // 2nd - knight's captures
     {
-      const auto& knight_caps = movesTable().caps(Figure::TypeKnight, ch_pos);
-      const auto& knight_msk = fmgr.knight_mask(color);
+      const auto knight_caps = movesTable().caps(Figure::TypeKnight, ch_pos);
+      const auto knight_msk = fmgr.knight_mask(color);
       auto eat_msk = knight_msk & knight_caps;
       for(; eat_msk;)
       {
         auto n = clear_lsb(eat_msk);
 
-        const auto& fknight = board_.getField(n);
+        const auto fknight = board_.getField(n);
         X_ASSERT(!fknight || fknight.type() != Figure::TypeKnight || fknight.color() != color, "no knight on field we are going to do capture from");
 
         add_caps(n, ch_pos, Figure::TypeNone);
@@ -133,24 +133,24 @@ struct EscapeGenerator
 
     // 3rd - bishops, rooks and queens
     {
-      auto const& bi_moves = magic_ns::bishop_moves(ch_pos, mask_all);
+      auto const bi_moves = magic_ns::bishop_moves(ch_pos, mask_all);
       auto bi_mask = bi_moves & fmgr.bishop_mask(color);
       for(; bi_mask;)
       {
         auto n = clear_lsb(bi_mask);
 
-        const auto& field = board_.getField(n);
+        const auto field = board_.getField(n);
         X_ASSERT(!field || field.color() != color || field.type() != Figure::TypeBishop, "no bishop on field we are going to do capture from");
 
         add_caps(n, ch_pos, Figure::TypeNone);
       }
-      auto const& r_moves = magic_ns::rook_moves(ch_pos, mask_all);
+      auto const r_moves = magic_ns::rook_moves(ch_pos, mask_all);
       auto r_mask = r_moves & fmgr.rook_mask(color);
       for(; r_mask;)
       {
         auto n = clear_lsb(r_mask);
 
-        const auto& field = board_.getField(n);
+        const auto field = board_.getField(n);
         X_ASSERT(!field || field.color() != color || field.type() != Figure::TypeRook, "no rook on field we are going to do capture from");
 
         add_caps(n, ch_pos, Figure::TypeNone);
@@ -161,7 +161,7 @@ struct EscapeGenerator
       {
         auto n = clear_lsb(q_mask);
 
-        const auto& field = board_.getField(n);
+        const auto field = board_.getField(n);
         X_ASSERT(!field || field.color() != color || field.type() != Figure::TypeQueen, "no queen on field we are going to do capture from");
 
         add_caps(n, ch_pos, Figure::TypeNone);
@@ -173,14 +173,14 @@ struct EscapeGenerator
   inline void generateUsual()
   {
     // checking figure position and type
-    auto const& ch_type = board_.getField(board_.checking()).type();
+    auto const ch_type = board_.getField(board_.checking()).type();
     X_ASSERT(!ch_type, "there is no checking figure");
     X_ASSERT(ch_type == Figure::TypeKing, "king is attacking king");
 
     if(Figure::TypePawn == ch_type || Figure::TypeKnight == ch_type || !protect_king_msk_)
       return;
 
-    auto const& color = board_.color();
+    auto const color = board_.color();
     auto const& fmgr = board_.fmgr();
     auto mask_all = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
     auto mask_all_inv = ~mask_all;
@@ -233,13 +233,13 @@ struct EscapeGenerator
     for(; kn_mask;)
     {
       auto kn_pos = clear_msb(kn_mask);
-      const auto& knight_msk = movesTable().caps(Figure::TypeKnight, kn_pos);
+      const auto knight_msk = movesTable().caps(Figure::TypeKnight, kn_pos);
       auto msk_protect = protect_king_msk_ & knight_msk;
       for(; msk_protect;)
       {
         auto n = clear_lsb(msk_protect);
 
-        const auto& field = board_.getField(n);
+        const auto field = board_.getField(n);
         X_ASSERT(field, "there is something between king and checking figure");
 
         add_usual(kn_pos, n);
@@ -258,7 +258,7 @@ struct EscapeGenerator
         {
           auto to = clear_lsb(bi_protect);
 
-          const auto& field = board_.getField(to);
+          const auto field = board_.getField(to);
           X_ASSERT(field, "there is something between king and checking figure");
 
           add_usual(from, to);
@@ -272,13 +272,13 @@ struct EscapeGenerator
       for(; r_mask;)
       {
         auto from = clear_lsb(r_mask);
-        auto const& r_moves = magic_ns::rook_moves(from, mask_all);
+        auto const r_moves = magic_ns::rook_moves(from, mask_all);
         auto r_protect = protect_king_msk_ & r_moves;
         for(; r_protect;)
         {
           auto to = clear_lsb(r_protect);
 
-          const auto& field = board_.getField(to);
+          const auto field = board_.getField(to);
           X_ASSERT(field, "there is something between king and checking figure");
 
           add_usual(from, to);
@@ -298,7 +298,7 @@ struct EscapeGenerator
         {
           auto to = clear_lsb(q_protect);
 
-          const auto& field = board_.getField(to);
+          const auto field = board_.getField(to);
           X_ASSERT(field, "there is something between king and checking figure");
 
           add_usual(from, to);
@@ -309,8 +309,8 @@ struct EscapeGenerator
 
   inline void generateKingCaps()
   {
-    auto const& color = board_.color();
-    const auto& o_mask = board_.fmgr().mask(ocolor);
+    auto const color = board_.color();
+    const auto o_mask = board_.fmgr().mask(ocolor);
 
     // captures
     auto ki_mask = (movesTable().caps(Figure::TypeKing, board_.kingPos(color)) & o_mask)
@@ -319,7 +319,7 @@ struct EscapeGenerator
     {
       auto to = clear_lsb(ki_mask);
 
-      auto const& field = board_.getField(to);
+      auto const field = board_.getField(to);
       X_ASSERT(!field || field.color() == color, "escape generator: try to put king to occupied field");
       add_caps(board_.kingPos(color), to, Figure::TypeNone);
     }
@@ -327,9 +327,9 @@ struct EscapeGenerator
 
   inline void generateKingUsual()
   {
-    auto const& color = board_.color();
-    const auto& mask = board_.fmgr().mask(color);
-    const auto& o_mask = board_.fmgr().mask(ocolor);
+    auto const color = board_.color();
+    const auto mask = board_.fmgr().mask(color);
+    const auto o_mask = board_.fmgr().mask(ocolor);
 
     // usual moves
     auto ki_mask = movesTable().caps(Figure::TypeKing, board_.kingPos(color))

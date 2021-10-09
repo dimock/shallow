@@ -3,14 +3,14 @@ engine.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 #pragma once
 
-#include <HashTable.h>
-#include <Evaluator.h>
-#include <xcallback.h>
-#include <xoptions.h>
-#include <queue>
-#include <array>
-#include <mutex>
-#include <Helpers.h>
+#include "HashTable.h"
+#include "Evaluator.h"
+#include "xcallback.h"
+#include "xoptions.h"
+#include "queue"
+#include "array"
+#include "mutex"
+#include "Helpers.h"
 
 namespace NEngine
 {
@@ -114,7 +114,7 @@ private:
 
   // search routine
   ScoreType alphaBetta0(int ictx);
-  ScoreType processMove0(int ictx, SMove const& move, ScoreType const alpha, ScoreType const betta, bool const pv);
+  ScoreType processMove0(int ictx, SMove const move, ScoreType const alpha, ScoreType const betta, bool const pv);
   ScoreType alphaBetta(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, bool allow_nm, int signular_count);
 
   ScoreType captures(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, bool pv, ScoreType score0 = -ScoreMax);
@@ -154,13 +154,13 @@ private:
     return 0;
   }
   
-  void assemblePV(int ictx, Move const & move, bool checking, int ply);
+  void assemblePV(int ictx, Move const move, bool checking, int ply);
 
   void sortMoves0(int ictx);
 
   // is given movement caused by previous. this mean that if we don't do this move we loose
   // we actually check if moved figure was attacked by previously moved one or from direction it was moved from
-  bool isRealThreat(int ictx, const Move & move);
+  bool isRealThreat(int ictx, const Move move);
 
   // analyze mode support
   bool updateRequested_{ false };
@@ -213,14 +213,15 @@ private:
 
 #ifdef USE_HASH
   // we should return alpha if flag is Alpha, or Betta if flag is Betta
-  inline Flag getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta, Move & hmove, ScoreType & hscore, bool pv, bool& singular, HItem*& pitem)
+  inline Flag getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
+    Move & hmove, ScoreType & hscore, bool pv, bool& singular, HItem*& pitem)
   {
     X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
     auto& sctx = scontexts_[ictx];
 
     auto& board = sctx.board_;
     pitem = hash_.get(board.fmgr().hashCode());
-    auto const& hitem = *pitem;
+    auto const hitem = *pitem;
     if (hitem.hkey_ == board.fmgr().hashKey())
     {
       singular = hitem.singular_;
@@ -252,7 +253,8 @@ private:
   }
 
   /// insert data to hash table
-  inline void putHash(int ictx, const Move & move, ScoreType alpha, ScoreType betta, ScoreType score, int depth, int ply, bool threat, bool singular, bool pv, HItem* pitem)
+  inline void putHash(int ictx, const Move move, ScoreType alpha, ScoreType betta, ScoreType score,
+    int depth, int ply, bool threat, bool singular, bool pv, HItem* pitem)
   {
     X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
     auto& sctx = scontexts_[ictx];

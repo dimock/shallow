@@ -2,14 +2,14 @@
   verify.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <engine.h>
-#include <MovesGenerator.h>
-#include <Helpers.h>
-#include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
-#include <fstream>
+#include "engine.h"
+#include "MovesGenerator.h"
+#include "Helpers.h"
+#include "chrono"
+#include "ctime"
+#include "iomanip"
+#include "sstream"
+#include "fstream"
 
 namespace NEngine
 {
@@ -79,7 +79,7 @@ void Engine::logPV(int ictx)
   oss << "pv ";
   for(int i = 0; i < MaxPly; ++i)
   {
-    auto const& move = scontexts_[ictx].plystack_[0].pv_[i];
+    auto const move = scontexts_[ictx].plystack_[0].pv_[i];
     if(!move)
       break;
     auto str = printSAN(board, move);

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <xcommon.h>
-#include <xlist.h>
-#include <Board.h>
+#include "xcommon.h"
+#include "xlist.h"
+#include "Board.h"
 
 namespace NEngine
 {
@@ -62,7 +62,7 @@ struct ChecksGenerator
     return false;
   }
 
-  bool find(MOVE const& m)
+  bool find(MOVE const m)
   {
     for (auto i = moves_.begin(); i != moves_.end(); ++i) {
       if (*i == m)
@@ -86,12 +86,12 @@ struct ChecksGenerator
   void generate()
   {
     BitMask visited{};
-    const auto& color = board_.color();
+    const auto color = board_.color();
     const auto ocolor = Figure::otherColor(color);
     auto const& fmgr = board_.fmgr();
     auto mask_all = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
     auto mask_all_inv = ~mask_all;
-    auto const& oki_pos = board_.kingPos(ocolor);
+    auto const oki_pos = board_.kingPos(ocolor);
     auto const pawns = fmgr.pawn_mask(color) & ~movesTable().promote(color);
 
     // pawns
@@ -100,7 +100,7 @@ struct ChecksGenerator
       for(; pw_check_mask;)
       {
         auto to = clear_lsb(pw_check_mask);
-        const auto& tfield = board_.getField(to);
+        const auto tfield = board_.getField(to);
         if(tfield || to == board_.enpassant())
           continue;
 
@@ -120,7 +120,7 @@ struct ChecksGenerator
 
     // knights
     {
-      auto const& knight_check_mask = movesTable().caps(Figure::TypeKnight, oki_pos);
+      auto const knight_check_mask = movesTable().caps(Figure::TypeKnight, oki_pos);
       auto kn_mask = board_.fmgr().knight_mask(color);
       for(; kn_mask;)
       {
@@ -139,14 +139,14 @@ struct ChecksGenerator
 
     // king
     {
-      auto const& ki_pos = board_.kingPos(color);
+      auto const ki_pos = board_.kingPos(color);
       auto all_but_king_mask = mask_all_inv | set_mask_bit(ki_pos);
       bool castle = false;
       // short castle
       if(board_.castling(color, 0) && (movesTable().castleMasks(color, 0) & mask_all) == 0ULL)
       {
         static int rook_positions[] = { 61, 5 };
-        auto const& r_pos = rook_positions[board_.color()];
+        auto const r_pos = rook_positions[board_.color()];
         X_ASSERT(color && ki_pos != 4 ||  !color && ki_pos != 60, "invalid king position for castle");
         X_ASSERT(color && board_.getField(7).type() != Figure::TypeRook
                   || !color && board_.getField(63).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
@@ -161,7 +161,7 @@ struct ChecksGenerator
       if(!castle && board_.castling(color, 1) && (movesTable().castleMasks(color, 1) & mask_all) == 0ULL)
       {
         static int rook_positions[] = { 59, 3 };
-        auto const& r_pos = rook_positions[board_.color()];
+        auto const r_pos = rook_positions[board_.color()];
         X_ASSERT(color && ki_pos != 4 ||  !color && ki_pos != 60, "invalid king position for castle");
         X_ASSERT(color && board_.getField(0).type() != Figure::TypeRook
                   || !color && board_.getField(56).type() != Figure::TypeRook, "no rook for castling, but castle is possible");
@@ -201,7 +201,7 @@ struct ChecksGenerator
         for(; bq_from;)
         {
           auto p = clear_lsb(bq_from);
-          auto const& btw_mask = betweenMasks().between(p, oki_pos);
+          auto const btw_mask = betweenMasks().between(p, oki_pos);
           auto pwm = btw_mask & pw_mask;
           if(pwm)
           {
@@ -233,7 +233,7 @@ struct ChecksGenerator
         for(; rq_from;)
         {
           auto p = clear_lsb(rq_from);
-          auto const& btw_mask = betweenMasks().between(oki_pos, p);
+          auto const btw_mask = betweenMasks().between(oki_pos, p);
           auto pwm = btw_mask & pw_mask;
           if(pwm)
           {
@@ -312,7 +312,7 @@ struct ChecksGenerator
     iter_ = moves_.begin();
   }
 
-  inline void generateBishops(int from, BitMask const& mask_all, BitMask const& mask_all_inv)
+  inline void generateBishops(int from, BitMask const mask_all, BitMask const mask_all_inv)
   {
     auto bmask = magic_ns::bishop_moves(from, mask_all) & mask_all_inv;
     for (; bmask;)
@@ -322,7 +322,7 @@ struct ChecksGenerator
     }
   }
 
-  inline void generateRooks(int from, BitMask const& mask_all, BitMask const& mask_all_inv)
+  inline void generateRooks(int from, BitMask const mask_all, BitMask const mask_all_inv)
   {
     auto rmask = magic_ns::rook_moves(from, mask_all) & mask_all_inv;
     for (; rmask;)
@@ -335,12 +335,12 @@ struct ChecksGenerator
   void generateMat(int threshold, bool atLeast)
   {
     BitMask visited{};
-    const auto& color = board_.color();
+    const auto color = board_.color();
     const auto ocolor = Figure::otherColor(color);
     auto const& fmgr = board_.fmgr();
     auto mask_all = fmgr.mask(Figure::ColorWhite) | fmgr.mask(Figure::ColorBlack);
     auto mask_all_inv = ~mask_all;
-    auto const& oki_pos = board_.kingPos(ocolor);
+    auto const oki_pos = board_.kingPos(ocolor);
     auto const pawns = fmgr.pawn_mask(color) & ~movesTable().promote(color);
 
     BitMask blocked_mask{};
@@ -349,7 +349,7 @@ struct ChecksGenerator
     BitMask b_attack_mask{};
     BitMask npkqr_attack_mask{};
     {
-      const BitMask & pawn_msk = fmgr.pawn_mask(color);
+      const BitMask pawn_msk = fmgr.pawn_mask(color);
       if (color == Figure::ColorWhite)
         attack_mask = ((pawn_msk << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk << 7) & Figure::pawnCutoffMasks_[1]);
       else
@@ -409,7 +409,7 @@ struct ChecksGenerator
     BitMask or_attack_mask{};
     BitMask ob_attack_mask{};
     {
-      const BitMask & opawn_msk = fmgr.pawn_mask(ocolor);
+      const BitMask opawn_msk = fmgr.pawn_mask(ocolor);
       if (ocolor == Figure::ColorWhite)
         o_attack_but_king_mask = ((opawn_msk << 9) & Figure::pawnCutoffMasks_[0]) | ((opawn_msk << 7) & Figure::pawnCutoffMasks_[1]);
       else
@@ -540,7 +540,7 @@ struct ChecksGenerator
       for (; pw_check_mask && moves_.empty();)
       {
         auto to = clear_lsb(pw_check_mask);
-        const auto& tfield = board_.getField(to);
+        const auto tfield = board_.getField(to);
         if (tfield || to == board_.enpassant() || (set_mask_bit(to) & o_attack_but_king_mask))
           continue;
 
@@ -574,7 +574,7 @@ struct ChecksGenerator
     // knights
     if (moves_.empty())
     {
-      auto const& knight_check_mask = movesTable().caps(Figure::TypeKnight, oki_pos);
+      auto const knight_check_mask = movesTable().caps(Figure::TypeKnight, oki_pos);
       auto kn_mask = board_.fmgr().knight_mask(color);
       for (; kn_mask && moves_.empty();)
       {
@@ -617,7 +617,7 @@ struct ChecksGenerator
         for (; bq_from && moves_.empty();)
         {
           auto p = clear_lsb(bq_from);
-          auto const& btw_mask = betweenMasks().between(p, oki_pos);
+          auto const btw_mask = betweenMasks().between(p, oki_pos);
           auto pwm = btw_mask & pw_mask;
           if (pwm)
           {
@@ -824,7 +824,7 @@ struct ChecksGenerator
         for (; rq_from && moves_.empty();)
         {
           auto p = clear_lsb(rq_from);
-          auto const& btw_mask = betweenMasks().between(oki_pos, p);
+          auto const btw_mask = betweenMasks().between(oki_pos, p);
           auto pwm = btw_mask & pw_mask;
           if (pwm)
           {

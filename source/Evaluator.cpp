@@ -2,15 +2,15 @@
   Evaluator.cpp - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <Evaluator.h>
-#include <Board.h>
-#include <HashTable.h>
-#include <xindex.h>
-#include <magicbb.h>
-#include <xbitmath.h>
-#include <Helpers.h>
-#include <xalgorithm.h>
-#include <SpecialCases.h>
+#include "Evaluator.h"
+#include "Board.h"
+#include "HashTable.h"
+#include "xindex.h"
+#include "magicbb.h"
+#include "xbitmath.h"
+#include "Helpers.h"
+#include "xalgorithm.h"
+#include "SpecialCases.h"
 
 namespace NEngine
 {
@@ -88,8 +88,8 @@ void Evaluator::prepare()
 
   // pawns attacks
   {
-    const BitMask & pawn_msk_w = fmgr.pawn_mask(Figure::ColorWhite);
-    const BitMask & pawn_msk_b = fmgr.pawn_mask(Figure::ColorBlack);
+    const BitMask pawn_msk_w = fmgr.pawn_mask(Figure::ColorWhite);
+    const BitMask pawn_msk_b = fmgr.pawn_mask(Figure::ColorBlack);
 
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
@@ -227,7 +227,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   AHEval* heval = nullptr;
   uint32 hkey = 0;
   if (ev_hash_) {
-    const uint64 & code = board_->fmgr().hashCode();
+    const BitMask code = board_->fmgr().hashCode();
     hkey = (uint32)(code >> 32);
     heval = ev_hash_->get(code);
     if (heval && heval->hkey_ == hkey) {
@@ -381,7 +381,7 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
 {
   auto const& fmgr = board_->fmgr();
   auto const ocolor = Figure::otherColor(color);
-  auto const& pw_mask = fmgr.pawn_mask(ocolor);
+  auto const pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
   auto pw_unprotected = pw_mask ^ pw_protected;
   auto attackers = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
@@ -404,7 +404,7 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
 Evaluator::PasserInfo Evaluator::hashedEvaluation()
 {
 #ifdef USE_EVAL_HASH_PW
-  const uint64 & code = board_->fmgr().kpwnCode();
+  const BitMask code = board_->fmgr().kpwnCode();
   uint32 hkey = (uint32)(code >> 32);
   auto* heval = ehash_.get(code);
   if(heval->hkey_ == hkey)
@@ -436,7 +436,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 }
 
 // TODO: optimization required
-int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Color color) const
+int Evaluator::closestToBackward(int x, int y, const BitMask pmask, Figure::Color color) const
 {
   BitMask left  = (x != 0) ? (pawnMasks().mask_forward(color, Index(x-1, y)) & pmask) : 0ULL;
   BitMask right = (x != 7) ? (pawnMasks().mask_forward(color, Index(x+1, y)) & pmask) : 0ULL;
@@ -460,7 +460,7 @@ int Evaluator::closestToBackward(int x, int y, const BitMask & pmask, Figure::Co
   return y_closest;
 }
 
-bool Evaluator::isPawnBackward(Index const& idx, Figure::Color color, BitMask const& pmask, BitMask const& opmsk, BitMask const& fwd_field) const
+bool Evaluator::isPawnBackward(Index const idx, Figure::Color color, BitMask const pmask, BitMask const opmsk, BitMask const fwd_field) const
 {
   // TODO: optimization required
   Figure::Color ocolor = Figure::otherColor(color);
@@ -478,15 +478,15 @@ bool Evaluator::isPawnBackward(Index const& idx, Figure::Color color, BitMask co
 
 Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
 {
-  const FiguresManager & fmgr = board_->fmgr();
-  const BitMask & pmask = fmgr.pawn_mask(color);
+  const FiguresManager& fmgr = board_->fmgr();
+  const BitMask pmask = fmgr.pawn_mask(color);
   if(!pmask)
     return{};
 
   PasserInfo info;
 
   Figure::Color ocolor = Figure::otherColor(color);
-  const BitMask & opmsk = fmgr.pawn_mask(ocolor);
+  const BitMask opmsk = fmgr.pawn_mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
   auto pawns_all = opmsk | pmask;
 
@@ -505,10 +505,10 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
     auto n1 = n + (dy << 3);
     auto pw_field = set_mask_bit(n);
     auto fwd_field = set_mask_bit(n1);
-    const auto & fwd_mask = pawnMasks().mask_forward(color, n);
-    const auto & bkw_mask = pawnMasks().mask_forward(ocolor, n);
+    const auto fwd_mask = pawnMasks().mask_forward(color, n);
+    const auto bkw_mask = pawnMasks().mask_forward(ocolor, n);
 
-    auto const& protectMask = movesTable().pawnCaps(ocolor, n);
+    auto const protectMask = movesTable().pawnCaps(ocolor, n);
     int protectorsN = pop_count(protectMask & pmask);
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool opened = (opmsk & fwd_mask) == 0ULL;
@@ -530,7 +530,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns(Figure::Color color) const
       // save position for further usage
       info.passers_ |= set_mask_bit(n);
 
-      const auto & passmsk = pawnMasks().mask_passed(color, n);
+      const auto passmsk = pawnMasks().mask_passed(color, n);
       bool halfpasser = (opmsk & passmsk);
 
       ScoreType32 pwscore;
@@ -591,7 +591,7 @@ ScoreType32 Evaluator::passerEvaluation(PasserInfo const& pi)
   return infoW.score_;
 }
 
-bool Evaluator::pawnUnstoppable(Index const& pidx, Figure::Color color) const
+bool Evaluator::pawnUnstoppable(Index const pidx, Figure::Color color) const
 {
   // next field is not attacked by opponent
   const auto& fmgr = board_->fmgr();
@@ -662,7 +662,7 @@ bool Evaluator::pawnUnstoppable(Index const& pidx, Figure::Color color) const
 Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInfo const& pi)
 {
   const auto& fmgr = board_->fmgr();
-  const auto& pmask = fmgr.pawn_mask(color);
+  const auto pmask = fmgr.pawn_mask(color);
   auto pawn_mask = pmask & pi.passers_;
   if(!pawn_mask)
     return{};
@@ -673,14 +673,14 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   PasserInfo pinfo;
 
   Figure::Color ocolor = Figure::otherColor(color);
-  const auto& opmsk = fmgr.pawn_mask(ocolor);
-  const auto& ofgs = fmgr.mask(ocolor);
+  const auto opmsk = fmgr.pawn_mask(ocolor);
+  const auto ofgs = fmgr.mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
 
   while (pawn_mask)
   {
     const int n = clear_lsb(pawn_mask);
-    const auto& fwd_fields = pawnMasks().mask_forward(color, n);
+    const auto fwd_fields = pawnMasks().mask_forward(color, n);
 
     const Index idx(n);
     const int cy = colored_y_[color][idx.y()];
@@ -765,7 +765,7 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
 
 int Evaluator::getCastleType(Figure::Color color) const
 {
-  auto const& ki_mask = board_->fmgr().king_mask(color);
+  auto const ki_mask = board_->fmgr().king_mask(color);
 
   // short
   bool cking = (castle_mask_[color][0] & ki_mask) != 0;
@@ -812,13 +812,13 @@ int Evaluator::evaluateKingSafety(Figure::Color color) const
   return score;
 }
 
-int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) const
+int Evaluator::evaluateKingSafety(Figure::Color color, Index const kingPos) const
 {
   static const int delta_y[2] = { -8, 8 };
   const FiguresManager & fmgr = board_->fmgr();
-  auto const& pmask = fmgr.pawn_mask(color);
+  auto const pmask = fmgr.pawn_mask(color);
   Figure::Color ocolor = Figure::otherColor(color);
-  auto const& opmask = fmgr.pawn_mask(ocolor);
+  auto const opmask = fmgr.pawn_mask(ocolor);
 
   auto king_cy = colored_y_[color][kingPos.y()];
   if (king_cy > 5)
@@ -884,12 +884,12 @@ int Evaluator::evaluateKingSafety(Figure::Color color, Index const& kingPos) con
   return score;
 }
 
-int Evaluator::opponentPawnsPressure(Figure::Color color, Index const& kingPos) const
+int Evaluator::opponentPawnsPressure(Figure::Color color, Index const kingPos) const
 {
   const FiguresManager & fmgr = board_->fmgr();
-  auto const& pmask = fmgr.pawn_mask(color);
+  auto const pmask = fmgr.pawn_mask(color);
   Figure::Color ocolor = Figure::otherColor(color);
-  auto const& opmask = fmgr.pawn_mask(ocolor);
+  auto const opmask = fmgr.pawn_mask(ocolor);
 
   int xk = kingPos.x();
   int opponent_penalty = 0;
@@ -933,13 +933,13 @@ int Evaluator::opponentPawnsPressure(Figure::Color color, Index const& kingPos) 
   return opponent_penalty;
 }
 
-int Evaluator::evaluateKingsPawn(Figure::Color color, Index const& kingPos) const
+int Evaluator::evaluateKingsPawn(Figure::Color color, Index const kingPos) const
 {
   static const int delta_y[2] = { -8, 8 };
   const FiguresManager & fmgr = board_->fmgr();
-  auto const& pmask = fmgr.pawn_mask(color);
+  auto const pmask = fmgr.pawn_mask(color);
   Figure::Color ocolor = Figure::otherColor(color);
-  auto const& opmask = fmgr.pawn_mask(ocolor);
+  auto const opmask = fmgr.pawn_mask(ocolor);
 
   auto king_cy = colored_y_[color][kingPos.y()];
   if (king_cy > 5)
@@ -988,7 +988,7 @@ bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) cons
 ScoreType32 Evaluator::evaluateMaterialDiff()
 {
 #ifdef USE_EVAL_HASH_MD
-  const uint64 & code = board_->fmgr().fgrsCode();
+  const BitMask code = board_->fmgr().fgrsCode();
   auto * heval = fhash_.get(code);
   uint32 hkey = (uint32)(code >> 32);
   if (heval->hkey_ == hkey)

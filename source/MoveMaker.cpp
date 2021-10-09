@@ -2,13 +2,13 @@
 MoveMaker.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
-#include <Board.h>
-#include <FigureDirs.h>
+#include "Board.h"
+#include "FigureDirs.h"
 
 namespace NEngine
 {
 
-void Board::makeMove(const Move & move)
+void Board::makeMove(const Move move)
 {
   X_ASSERT(halfmovesCounter_ < 0 || halfmovesCounter_ >= GameLength, "number of halfmoves is invalid");
 
@@ -196,7 +196,7 @@ void Board::makeMove(const Move & move)
   X_ASSERT(isAttacked(color(), kingPos(Figure::otherColor(color()))), "our king is under check after undo");
 }
 
-void Board::unmakeMove(const Move& move)
+void Board::unmakeMove(const Move move)
 {
   X_ASSERT(halfmovesCounter_ <= 0 || halfmovesCounter_ >= GameLength, "number of halfmoves is invalid");
 

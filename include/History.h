@@ -1,8 +1,8 @@
 #pragma once
 
-#include <xcommon.h>
-#include <xbitmath.h>
-#include <Figure.h>
+#include "xcommon.h"
+#include "xbitmath.h"
+#include "Figure.h"
 
 namespace NEngine
 {

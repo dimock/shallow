@@ -3,8 +3,8 @@
  *************************************************************/
 #pragma once
 
-#include <xbitmath.h>
-#include <EvalCoefficients.h>
+#include "xbitmath.h"
+#include "EvalCoefficients.h"
 
 namespace NEngine
 {
@@ -49,7 +49,7 @@ public:
 
   static  int8 s_whiteColors_[64];
   static uint8 s_transposeIndex_[64];
-  static uint64 s_whiteMask_;
+  static BitMask s_whiteMask_;
 
   FiguresCounter()
   {
@@ -173,7 +173,7 @@ public:
     fcounter_[c].incr(c, t, p);
     fgrsCode_ ^= code(c, t, fcounter_[c].tcount(t));
 
-    const BitMask & uc = code(c, t, p);
+    const BitMask uc = code(c, t, p);
     hashCode_ ^= uc;
     
     if(t == Figure::TypePawn || t == Figure::TypeKing)
@@ -191,7 +191,7 @@ public:
       fgrsCode_ ^= code(c, t, fcounter_[c].tcount(t));
     }
 
-    const BitMask & uc = code(c, t, p);
+    const BitMask uc = code(c, t, p);
     hashCode_ ^= uc;
 
     if(t == Figure::TypePawn || t == Figure::TypeKing)
@@ -204,8 +204,8 @@ public:
   {
     fcounter_[c].move(c, t, from, to);
 
-    const BitMask & uc0 = code(c, t, from);
-    const BitMask & uc1 = code(c, t, to);
+    const BitMask uc0 = code(c, t, from);
+    const BitMask uc1 = code(c, t, to);
     hashCode_ ^= uc0;
     hashCode_ ^= uc1;
 
@@ -260,9 +260,9 @@ public:
     hashCode_ ^= nullmoveCode();
   }
 
-  void restoreHash(const BitMask & hcode) { hashCode_ = hcode; }
-  void restoreKpwnCode(const BitMask & pcode) { kpwnCode_ = pcode; }
-  void restoreFgrsCode(const BitMask & fcode) { fgrsCode_ = fcode; }
+  inline void restoreHash(const BitMask hcode) { hashCode_ = hcode; }
+  inline void restoreKpwnCode(const BitMask pcode) { kpwnCode_ = pcode; }
+  inline void restoreFgrsCode(const BitMask fcode) { fgrsCode_ = fcode; }
 
   inline int tcount(Figure::Type type, Figure::Color color) const { return fcounter_[color].tcount(type); }
   inline int pawns(Figure::Color color) const { return fcounter_[color].pawns(); }
@@ -284,9 +284,9 @@ public:
   inline const BitMask mask(Figure::Color color) const { return fcounter_[color].mask_all(); }
   inline const BitMask type_mask(const Figure::Type type, const Figure::Color color) const { return fcounter_[color].type_mask(type); }
 
-  inline const BitMask & hashCode() const { return hashCode_; }
-  inline const BitMask & kpwnCode() const { return kpwnCode_; }
-  inline const BitMask & fgrsCode() const { return fgrsCode_; }
+  inline const BitMask hashCode() const { return hashCode_; }
+  inline const BitMask kpwnCode() const { return kpwnCode_; }
+  inline const BitMask fgrsCode() const { return fgrsCode_; }
 
   inline const HKeyType hashKey() const { return (HKeyType)(hashCode_ >> (sizeof(uint64) - sizeof(HKeyType)) * 8); }
 
@@ -295,27 +295,27 @@ public:
   inline void resoreEval(int32 ev32) { score_.eval32_ = ev32; }
 
   // HASH codes calculation
-  static inline const BitMask & code(const Figure::Color c, const Figure::Type t, int p)
+  static inline const BitMask code(const Figure::Color c, const Figure::Type t, int p)
   {
     return s_zobristCodes_[(p<<4) | (c<<3) | t];
   }
 
-  static inline const BitMask & enpassantCode(uint8 pos, uint8 color)
+  static inline const BitMask enpassantCode(uint8 pos, uint8 color)
   {
     return s_zobristCodes_[ (pos<<4) | (color<<3) ];
   }
 
-  static inline const BitMask & castleCode(uint8 color, uint8 index)
+  static inline const BitMask castleCode(uint8 color, uint8 index)
   {
     return s_zobristCastle_[color][index];
   }
 
-  static inline const BitMask & colorCode()
+  static inline const BitMask colorCode()
   {
     return s_zobristColor_;
   }
 
-  static inline const BitMask & nullmoveCode()
+  static inline const BitMask nullmoveCode()
   {
     return s_zobristNullmove_;
   }

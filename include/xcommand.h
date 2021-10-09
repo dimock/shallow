@@ -4,9 +4,9 @@
   xcommand.h - Copyright (C) 2016 by Dmitry Sultanov
  *************************************************************/
 
-#include <vector>
-#include <string>
-#include <map>
+#include "vector"
+#include "string"
+#include "map"
 
 namespace NShallow
 {

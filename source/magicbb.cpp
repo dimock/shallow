@@ -1,17 +1,16 @@
 /*************************************************************
 magicbb.cpp - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
-#include <magicbb.h>
-#include <xbitmath.h>
-#include <xindex.h>
-#include <fpos.h>
-
-#include <iostream>
-#include <random>
-#include <chrono>
-#include <fstream>
-#include <array>
-#include <functional>
+#include "magicbb.h"
+#include "xbitmath.h"
+#include "xindex.h"
+#include "fpos.h"
+#include "iostream"
+#include "random"
+#include "chrono"
+#include "fstream"
+#include "array"
+#include "functional"
 
 namespace NEngine
 {
@@ -44,13 +43,13 @@ namespace
   template <class mstruct>
   uint64* initialize_moves(std::vector<uint8>& moves_arr)
   {
-    return make_aligned_array<uint64>(moves_arr, 64 * (1 << mstruct::bits_count));
+    return make_aligned_array<BitMask>(moves_arr, 64 * (1 << mstruct::bits_count));
   }
 
-  uint64 rook_moves_from_blockers(int pos, uint64 mask_r, bool exclude_border)
+  BitMask rook_moves_from_blockers(int pos, BitMask mask_r, bool exclude_border)
   {
     Index index(pos);
-    uint64 moves_x = 0;
+    BitMask moves_x = 0;
     int x0 = exclude_border ? 1 : 0;
     int y0 = exclude_border ? 1 : 0;
     int x8 = exclude_border ? 7 : 8;
@@ -69,7 +68,7 @@ namespace
       if((1ULL << xx) & mask_r)
         break;
     }
-    uint64 moves_y = 0;
+    BitMask moves_y = 0;
     for(int y = index.y()-1; y >= y0; y--)
     {
       int yy = y*8 + index.x();
@@ -87,7 +86,7 @@ namespace
     return moves_x | moves_y;
   }
 
-  uint64 bishop_moves_from_blockers(int pos, uint64 mask_b, bool exclude_border)
+  BitMask bishop_moves_from_blockers(int pos, BitMask mask_b, bool exclude_border)
   {
     std::array<FPos, 4> deltas =
     {
@@ -96,7 +95,7 @@ namespace
       FPos{ -1, 1 },
       FPos{ -1, -1 }
     };
-    uint64 mask = 0;
+    BitMask mask = 0;
     for(auto const& d : deltas)
     {
       FPos current(pos);
@@ -107,7 +106,7 @@ namespace
         {
           break;
         }
-        uint64 m = 1ULL << current.index();
+        BitMask m = 1ULL << current.index();
         mask |= m;
         if(m & mask_b)
           break;
@@ -116,10 +115,10 @@ namespace
     return mask;
   }
 
-  std::vector<std::vector<uint64>>
+  std::vector<std::vector<BitMask>>
   calculate_rooks_blockers()
   {
-    std::vector<std::vector<uint64>> rook_all_masks_(64);
+    std::vector<std::vector<BitMask>> rook_all_masks_(64);
     for(int pos = 0; pos < 64; ++pos)
     {
       rook_all_masks_[pos].reserve(4096);
@@ -128,7 +127,7 @@ namespace
       int num_y = (index.y() == 0 || index.y() == 7) ? 6 : 5;
       for(int bits_x = 0; bits_x < (1<<num_x); ++bits_x)
       {
-        uint64 mask_x = 0;
+        BitMask mask_x = 0;
         for(int i = 0, x = 1; i < num_x && x < 7; ++x)
         {
           if(x == index.x())
@@ -139,7 +138,7 @@ namespace
         }
         for(int bits_y = 0; bits_y < (1<<num_y); ++bits_y)
         {
-          uint64 mask_y = 0;
+          BitMask mask_y = 0;
           for(int i = 0, y = 1; i < num_y && y < 7; ++y)
           {
             if(y == index.y())
@@ -148,7 +147,7 @@ namespace
               mask_y |= 1ULL << y*8;
             ++i;
           }
-          uint64 mask_r = (mask_x << (index.y()*8)) | (mask_y << index.x());
+          BitMask mask_r = (mask_x << (index.y()*8)) | (mask_y << index.x());
           rook_all_masks_[pos].push_back(mask_r);
         }
       }
@@ -157,10 +156,10 @@ namespace
     return rook_all_masks_;
   }
 
-  std::vector<std::vector<uint64>>
+  std::vector<std::vector<BitMask>>
   calculate_bishops_blockers()
   {
-    std::vector<std::vector<uint64>> bishop_all_masks_(64);
+    std::vector<std::vector<BitMask>> bishop_all_masks_(64);
     std::array<FPos, 4> deltas =
     {
       FPos{ 1, 1 },
@@ -174,7 +173,7 @@ namespace
       FPos start(pos);
       for(int bits = 0; bits < 512; ++bits)
       {
-        uint64 mask = 0;
+        BitMask mask = 0;
         int i = 0;
         bool zero_found = false;
         for(auto const& d : deltas)
@@ -200,14 +199,14 @@ namespace
 
   template <class mstruct>
   std::vector<mstruct>
-  calculate_magic_numbers(std::function<std::vector<std::vector<uint64>>()> const& calculate_blockers,
-    std::function<uint64(int, uint64, bool)> const& moves_from_blockers)
+  calculate_magic_numbers(std::function<std::vector<std::vector<BitMask>>()> const& calculate_blockers,
+    std::function<BitMask(int, BitMask, bool)> const& moves_from_blockers)
   {
     auto blockers = calculate_blockers();
 
     std::random_device rd;
     std::mt19937_64 rgen(rd());
-    std::uniform_int_distribution<uint64> dist;
+    std::uniform_int_distribution<BitMask> dist;
 
     std::vector<mstruct> magics(64);
     int total_counter = 0;
@@ -218,7 +217,7 @@ namespace
       //std::cout << "position (" << index.x() << ", " << index.y() << ") needs " << xmasks.size() << " indices" << std::endl;
       for(size_t vcounter = 0;; ++vcounter, ++total_counter)
       {
-        std::vector<uint64> moves(1 << mstruct::bits_count);
+        std::vector<BitMask> moves(1 << mstruct::bits_count);
         int count = 0;
         auto mnum = dist(rgen) & dist(rgen) & dist(rgen);
         for(auto const blk : xblks)
@@ -245,13 +244,13 @@ namespace
   }
 
   template <class mstruct>  
-  void fill_magics(std::function<std::vector<std::vector<uint64>>()> const& calculate_blockers,
-    std::function<uint64(int, uint64, bool)> const& moves_from_blockers,
+  void fill_magics(std::function<std::vector<std::vector<BitMask>>()> const& calculate_blockers,
+    std::function<BitMask(int, BitMask, bool)> const& moves_from_blockers,
     mstruct* magics_io,
-    uint64* moves_o)
+    BitMask* moves_o)
   {
     auto blockers = calculate_blockers();
-    uint64* moves_ptr = moves_o;
+    BitMask* moves_ptr = moves_o;
     for(int pos = 0; pos < 64; ++pos)
     {
       auto& ms = magics_io[pos];
@@ -271,14 +270,14 @@ namespace
   }
 
   template <class mstruct>
-  void verify_magics(std::function<uint64(int, uint64)> const& get_moves,
-    std::function<std::vector<std::vector<uint64>>()> const& calculate_blockers,
-    std::function<uint64(int, uint64, bool)> const& moves_from_blockers,
+  void verify_magics(std::function<BitMask(int, BitMask)> const& get_moves,
+    std::function<std::vector<std::vector<BitMask>>()> const& calculate_blockers,
+    std::function<BitMask(int, BitMask, bool)> const& moves_from_blockers,
     mstruct const* magics_i)
   {
     std::random_device rd;
     std::mt19937_64 rgen(rd());
-    std::uniform_int_distribution<uint64> dist;
+    std::uniform_int_distribution<BitMask> dist;
 
     auto blockers = calculate_blockers();
     bool verified_ok = true;
@@ -288,14 +287,14 @@ namespace
       for(int i = 0; verified_ok && i < 100000; ++i)
       {
         auto const& ms = magics_i[pos];
-        uint64 board = dist(rgen);
-        uint64 blk = board & ms.mask;
-        uint64 xmvs = moves_from_blockers(pos, blk, false);
+        BitMask board = dist(rgen);
+        BitMask blk = board & ms.mask;
+        BitMask xmvs = moves_from_blockers(pos, blk, false);
         if(xmvs != get_moves(pos, board))
         {
           verified_ok = false;
           auto const& xblks = blockers[pos];
-          if(std::find_if(xblks.begin(), xblks.end(), [blk](uint64 const b) { return b == blk; })
+          if(std::find_if(xblks.begin(), xblks.end(), [blk](BitMask const b) { return b == blk; })
             == xblks.end())
           {
             std::cout << "blocker not found in generated array:" << std::endl;
@@ -317,7 +316,7 @@ namespace
 
     for(int i = 0; i < 3; ++i)
     {
-      uint64 board = dist(rgen);
+      BitMask board = dist(rgen);
       int pos = dist(rgen) & 63;
       auto xmoves = get_moves(pos, board);
       std::cout << "for board:" << std::endl;
@@ -370,7 +369,7 @@ namespace magic_details_ns
       magic_details_ns::rook_magics_p,
       rook_moves_ptr);
 
-    verify_magics([](int pos, uint64 board) { return magic_ns::rook_moves(pos, board); },
+    verify_magics([](int pos, BitMask board) { return magic_ns::rook_moves(pos, board); },
       calculate_rooks_blockers,
       rook_moves_from_blockers,
       magic_details_ns::rook_magics_p);
@@ -388,7 +387,7 @@ namespace magic_details_ns
       magic_details_ns::bishop_magics_p,
       bishop_moves_ptr);
 
-    verify_magics([](int pos, uint64 board) { return magic_ns::bishop_moves(pos, board); },
+    verify_magics([](int pos, BitMask board) { return magic_ns::bishop_moves(pos, board); },
       calculate_bishops_blockers,
       bishop_moves_from_blockers,
       magic_details_ns::bishop_magics_p);

@@ -2,7 +2,7 @@
 xoptions.h - Copyright (C) 2016 by Dmitry Sultanov
 *************************************************************/
 
-#include <xoptions.h>
+#include "xoptions.h"
 
 namespace NEngine
 {
@@ -16,17 +16,22 @@ std::vector<xOptionInfo> all_options()
       "spin",
       "1",
       "1024",
+#ifdef __ANDROID__
+      "64",
+#else
       "256",
-      {},
-    },
-    {
-      "Threads",
-      "spin",
-      "1",
-      "8",
-      "1",
+#endif
       {},
     }
+    //,
+    //{
+    //  "Threads",
+    //  "spin",
+    //  "1",
+    //  "8",
+    //  "1",
+    //  {},
+    //}
   };
 }
 
