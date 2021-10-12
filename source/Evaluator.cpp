@@ -307,10 +307,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   prepareAttacksMasks();
 
-  score32 += evaluateKnights();
-  score32 += evaluateBishops();
-  score32 += evaluateRook();
-  score32 += evaluateQueens();
+  auto score_nbrq = evaluateKnights();
+  score_nbrq += evaluateBishops();
+  score_nbrq += evaluateRook();
+  score_nbrq += evaluateQueens();
+  score32 += score_nbrq;
 
   auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;

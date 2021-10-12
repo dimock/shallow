@@ -19,7 +19,7 @@ namespace NEngine
 
 
   // outpost
-  ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
+  ScoreType32 EvalCoefficients::knightOutpost_{ 12, 3 };
 
   // forks
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };

@@ -190,7 +190,9 @@ ScoreType32 Evaluator::evaluateKnights()
 
       // outpost
       const auto nbit = set_mask_bit(n);
-      const bool boutpost = ((nbit | (knight_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
+      const bool boutpostp = ((knight_moves & ~fmgr.mask(color)) & outpost_mask) != 0ULL;
+      score[color] += EvalCoefficients::knightOutpost_ * boutpostp;
+      const bool boutpost = ((nbit & ~fmgr.mask(color)) & outpost_mask) != 0ULL;
       score[color] += EvalCoefficients::knightOutpost_ * boutpost;
 
       // king protection
@@ -572,7 +574,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
 
   auto around_oking = oki_fields & ~finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_;
   if (around_oking) {
-    auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 2;
+    auto remaining_coeff = (EvalCoefficients::attackedNearKingCoeff_ * pop_count(around_oking)) >> 3;
     attack_coeff += remaining_coeff;
     check_coeff += remaining_coeff;
   }
@@ -593,6 +595,10 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
   }
   else if ((num_attackers == 1) && (!q_check || (q_check && finfo_[color].qkingAttack_))) {
     check_coeff >>= 1;
+  }
+
+  if (fmgr.queens(color) == 0) {
+    attack_coeff >>= 1;
   }
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
