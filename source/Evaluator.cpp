@@ -317,13 +317,13 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;
   score32 += score_mob;
 
-#ifdef DO_KING_EVAL
-  if (phaseInfo.phase_ != GamePhase::EndGame) {
-    auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-    scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-    score32 += scoreKing;
-  }
-#endif
+//#ifdef DO_KING_EVAL
+//  if (phaseInfo.phase_ != GamePhase::EndGame) {
+//    auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
+//    scoreKing -= evaluateKingPressure(Figure::ColorBlack);
+//    score32 += scoreKing;
+//  }
+//#endif
 
   auto scoreAttacks = evaluateAttacks(Figure::ColorWhite);
   scoreAttacks -= evaluateAttacks(Figure::ColorBlack);
