@@ -208,6 +208,8 @@ private:
   
   bool fakeCastle(Figure::Color color, int rpos, BitMask rmask) const;
 
+  int evaluateKingSafety2(Figure::Color color) const;
+  int evaluateKingSafety2(Figure::Color color, Index const kingPos) const;
   int evaluateKingSafety(Figure::Color color) const;
   int evaluateKingSafety(Figure::Color color, Index const kingPos) const;
   int opponentPawnsPressure(Figure::Color color, Index const kingPos) const;

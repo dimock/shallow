@@ -100,6 +100,19 @@ namespace NEngine
   int EvalCoefficients::pawnShieldC_[4] = { 20, 16, 3, 0 };
   int EvalCoefficients::pawnShieldAbove_[4] = { 12, 5, 1, 0 };
 
+  // new shield
+  int EvalCoefficients::pawnsShields_[4][8] = {
+    {0, 25, 20, 5, 0, 0, 0, 0},
+    {0, 30, 20, 5, 0, 0, 0, 0},
+    {0, 15, 10, 5, 0, 0, 0, 0},
+    {0, 10, 6, 3, 0, 0, 0, 0},
+  };
+  int EvalCoefficients::opawnsShieldAttack_[2][8] = {
+    {0, 3, 1, 0, 0, 0, 0, 0},
+    {0, 20, 10, 2, 0, 0, 0, 0}
+  };
+  int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 28, 24, 8, 4, 0 };
+  int EvalCoefficients::opawnAboveKing_[8] = { 0, 20, 15, 10, 5, 2, 0, 0 };
   // rook on open column
   ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {10, 4} };
 
