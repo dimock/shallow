@@ -416,7 +416,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #ifndef NDEBUG
     PasserInfo xinfo = evaluatePawns();
     auto hscore = xinfo.score_;
-    hscore += ScoreType32{ evaluateKingSafety2(Figure::ColorWhite) - evaluateKingSafety2(Figure::ColorBlack), 0 };
+    hscore += ScoreType32{ evaluateKingSafety3(Figure::ColorWhite) - evaluateKingSafety3(Figure::ColorBlack), 0 };
     X_ASSERT_R(!(info.score_ == hscore && info.passers_ == xinfo.passers_), "invalid pawns+king score in hash");
 #endif
     return info;
@@ -424,7 +424,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #endif
 
   PasserInfo info = evaluatePawns();
-  ScoreType32 kingSafety{ evaluateKingSafety2(Figure::ColorWhite) - evaluateKingSafety2(Figure::ColorBlack), 0 };
+  ScoreType32 kingSafety{ evaluateKingSafety3(Figure::ColorWhite) - evaluateKingSafety3(Figure::ColorBlack), 0 };
   info.score_ += kingSafety;
 
 #ifdef USE_EVAL_HASH_PW
@@ -869,6 +869,136 @@ int Evaluator::evaluateKingSafety2(Figure::Color color, Index const kingPos) con
   }
   return score;
 }
+
+int Evaluator::opponentPawnsPressure3(Figure::Color color, Index const kingPos) const
+{
+  const FiguresManager & fmgr = board_->fmgr();
+  auto const pmask = fmgr.pawn_mask(color);
+  Figure::Color ocolor = Figure::otherColor(color);
+  auto const opmask = fmgr.pawn_mask(ocolor);
+
+  int xk = kingPos.x();
+  int ky = kingPos.y();
+  int dy = delta_y_[color];
+  int ky1 = ky + dy;
+
+  int opponent_penalty = 0;
+  int x_arr[3] = { -1,-1,-1 };
+  {
+    int j = 0;
+    if (xk > 0)
+      x_arr[j++] = xk - 1;
+    x_arr[j++] = xk;
+    if (xk < 7)
+      x_arr[j++] = xk + 1;
+  }
+  if (color)
+  {
+    for (auto x : x_arr)
+    {
+      if (x < 0)
+        break;
+      if (auto m = (opmask & pawnMasks().mask_column(x)))
+      {
+        int ay = 7;
+        int ap = Index(x, ky1);
+        auto afmsk = pawnMasks().mask_forward(color, ap);
+        auto atmsk = afmsk & finfo_[color].pawnAttacks_;
+        bool canAttack = false;
+        int odist = 7;
+
+        int y = std::max(0, Index(_lsb64(m)).y());
+        if (atmsk) {
+          ay = Index(_lsb64(atmsk)).y();
+        }
+        if (ay < y) {
+          int ay1 = ay - dy;
+          int a = Index(x, ay1);
+          int o = Index(x, y);
+          canAttack = (betweenMasks().between(o, a) & pmask) == 0ULL;
+          odist = y - ay;
+        }
+
+        auto penalty = (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[y]) >> 5;;
+        opponent_penalty += penalty;
+      }
+    }
+  }
+  else
+  {
+    for (auto x : x_arr)
+    {
+      if (x < 0)
+        break;
+      if (auto m = (opmask & pawnMasks().mask_column(x)))
+      {
+        int ay = 7;
+        int ay1 = 0;
+        int ap = Index(x, ky1);
+        auto afmsk = pawnMasks().mask_forward(color, ap);
+        auto atmsk = afmsk & finfo_[color].pawnAttacks_;
+        bool canAttack = false;
+        int odist = 7;
+
+        if (atmsk) {
+          ay1 = Index(_msb64(atmsk)).y();
+          ay = 7 - ay1;
+          ay1 -= dy;
+        }
+
+        int y1 = Index(_msb64(m)).y();
+        int y = std::max(0, 7 - y1);
+        if (ay < y) {
+          int a = Index(x, ay1);
+          int o = Index(x, y1);
+          canAttack = (betweenMasks().between(o, a) & pmask) == 0ULL;
+          odist = y - ay;
+        }
+
+        auto penalty = (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[y]) >> 5;;
+        opponent_penalty += penalty;
+      }
+    }
+  }
+  return opponent_penalty;
+}
+
+int Evaluator::evaluateKingSafety3(Figure::Color color) const
+{
+  Index kingPos(board_->kingPos(color));
+  int ky = kingPos.y();
+  if ((ky < 2 && color) || (ky > 5 && !color))
+    ky = promo_y_[Figure::otherColor(color)];
+  int ctype = getCastleType(color);
+  int score = 0;
+  if (ctype == 0) // king side
+  {
+    Index kingPos6{ 6, ky };
+    score = evaluateKingSafety(color, kingPos6) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure3(color, kingPos6);
+  }
+  else if (ctype == 1) // queen side
+  {
+    Index kingPos1{ 1, ky };
+    score = evaluateKingSafety(color, kingPos1) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure3(color, kingPos1);
+  }
+  else
+  {
+    score = evaluateKingSafety(color, kingPos) + evaluateKingsPawn(color, kingPos) - opponentPawnsPressure3(color, kingPos);
+    if (board_->castling(color, 0)) {
+      Index kingPosK{ 6, promo_y_[Figure::otherColor(color)] };
+      int scoreK = evaluateKingSafety(color, kingPosK) + evaluateKingsPawn(color, kingPosK) - opponentPawnsPressure3(color, kingPosK);
+      score = std::max(score, scoreK);
+    }
+    if (board_->castling(color, 1)) {
+      Index kingPosQ{ 1, promo_y_[Figure::otherColor(color)] };
+      int scoreQ = evaluateKingSafety(color, kingPosQ) + evaluateKingsPawn(color, kingPosQ) - opponentPawnsPressure3(color, kingPosQ);
+      score = std::max(score, scoreQ);
+    }
+  }
+  return score;
+}
+
+
 int Evaluator::evaluateKingSafety(Figure::Color color) const
 {
   Index kingPos(board_->kingPos(color));

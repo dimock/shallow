@@ -210,6 +210,11 @@ private:
 
   int evaluateKingSafety2(Figure::Color color) const;
   int evaluateKingSafety2(Figure::Color color, Index const kingPos) const;
+
+  int evaluateKingSafety3(Figure::Color color) const;
+
+  int opponentPawnsPressure3(Figure::Color color, Index const kingPos) const;
+
   int evaluateKingSafety(Figure::Color color) const;
   int evaluateKingSafety(Figure::Color color, Index const kingPos) const;
   int opponentPawnsPressure(Figure::Color color, Index const kingPos) const;
