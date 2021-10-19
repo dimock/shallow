@@ -109,10 +109,12 @@ PawnMasks::PawnMasks()
 
       BitMask forward_msk{};
       BitMask backward_msk{};
+      BitMask forward_plus_msk = set_mask_bit(Index(0, y));
       int deltay = color ? 1 : -1;
       for(int yy = y+deltay; yy < 8 && yy >= 0; yy += deltay)
       {
         forward_msk |= set_mask_bit(Index(0, yy));
+        forward_plus_msk |= set_mask_bit(Index(0, yy));
       }
       for (int yy = y; yy < 7 && yy > 0; yy -= deltay)
       {
@@ -122,6 +124,7 @@ PawnMasks::PawnMasks()
       pmask_column_[x] = full_column_msk << x;
       pmasks_forward_[color][i] = forward_msk << x;
       pmasks_passed_[color][i] = forward_msk << x;
+      pmasks_forward_plus_[color][i] = forward_plus_msk << x;
 
       BitMask neighbor_mask = set_mask_bit(Index(0, y));
       BitMask guard_mask = set_mask_bit(Index(0, y));

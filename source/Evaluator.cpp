@@ -416,7 +416,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #ifndef NDEBUG
     PasserInfo xinfo = evaluatePawns();
     auto hscore = xinfo.score_;
-    hscore += ScoreType32{ evaluateKingSafety3(Figure::ColorWhite) - evaluateKingSafety3(Figure::ColorBlack), 0 };
+    hscore += ScoreType32{ evaluateKingSafety2(Figure::ColorWhite) - evaluateKingSafety2(Figure::ColorBlack), 0 };
     X_ASSERT_R(!(info.score_ == hscore && info.passers_ == xinfo.passers_), "invalid pawns+king score in hash");
 #endif
     return info;
@@ -424,7 +424,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #endif
 
   PasserInfo info = evaluatePawns();
-  ScoreType32 kingSafety{ evaluateKingSafety3(Figure::ColorWhite) - evaluateKingSafety3(Figure::ColorBlack), 0 };
+  ScoreType32 kingSafety{ evaluateKingSafety2(Figure::ColorWhite) - evaluateKingSafety2(Figure::ColorBlack), 0 };
   info.score_ += kingSafety;
 
 #ifdef USE_EVAL_HASH_PW
@@ -807,17 +807,21 @@ int Evaluator::evaluateKingSafety2(Figure::Color color, Index const kingPos) con
   }
   int dy = delta_y_[color];
   int ky1 = ky + dy;
-  int x0 = std::max(0, kx - 1);
-  int x1 = std::min(7, kx + 1);
-  bool kleft = kx < 4;
-  static int deltax_[2][8] = { {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7} };
+  int xc = kx;
+  if (xc == 0) {
+    xc = 1;
+  }
+  if (xc == 7) {
+    xc = 6;
+  }
+  int x0 = std::max(0, xc - 1);
+  int x1 = std::min(7, xc + 1);
   auto pawns_mask = fmgr.pawn_mask(color);
   auto opawns_mask = fmgr.pawn_mask(ocolor);
   for (int x = x0; x <= x1; ++x) {
-    int dx = deltax_[x < 4][x];
     int p = Index(x, ky);
     int ap = Index(x, ky1);
-    auto fwdmsk = pawnMasks().mask_forward(color, p);
+    auto fwdmsk = pawnMasks().mask_forward_plus(color, p);
     auto pwmsk = fwdmsk & pawns_mask;
     auto opmsk = fwdmsk & opawns_mask;
     auto afmsk = pawnMasks().mask_forward(color, ap);
@@ -853,13 +857,13 @@ int Evaluator::evaluateKingSafety2(Figure::Color color, Index const kingPos) con
         ay1 -= dy;
       }
     }
-    if (ay < opy) {
+    if (ay <= opy) {
       int a = Index(x, ay1);
       int o = Index(x, opy1);
       canAttack = (betweenMasks().between(o, a) & pawns_mask) == 0ULL;
       odist = opy - ay;
     }
-    score += EvalCoefficients::pawnsShields_[dx][py];
+    score += EvalCoefficients::pawnsShields_[x][py];
     score -= (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~finfo_[color].pawnAttacks_;
@@ -911,7 +915,7 @@ int Evaluator::opponentPawnsPressure3(Figure::Color color, Index const kingPos) 
         if (atmsk) {
           ay = Index(_lsb64(atmsk)).y();
         }
-        if (ay < y) {
+        if (ay <= y) {
           int ay1 = ay - dy;
           int a = Index(x, ay1);
           int o = Index(x, y);
@@ -948,7 +952,7 @@ int Evaluator::opponentPawnsPressure3(Figure::Color color, Index const kingPos) 
 
         int y1 = Index(_msb64(m)).y();
         int y = std::max(0, 7 - y1);
-        if (ay < y) {
+        if (ay <= y) {
           int a = Index(x, ay1);
           int o = Index(x, y1);
           canAttack = (betweenMasks().between(o, a) & pmask) == 0ULL;
