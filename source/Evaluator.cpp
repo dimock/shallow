@@ -438,7 +438,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #ifndef NDEBUG
     PasserInfo xinfo = evaluatePawns();
     auto hscore = xinfo.score_;
-    hscore += ScoreType32{ evaluateKingSafety2(Figure::ColorWhite) - evaluateKingSafety2(Figure::ColorBlack), 0 };
+    hscore += ScoreType32{ evaluateKingSafety3(Figure::ColorWhite) - evaluateKingSafety3(Figure::ColorBlack), 0 };
     X_ASSERT_R(!(info.score_ == hscore && info.passers_ == xinfo.passers_), "invalid pawns+king score in hash");
 #endif
     return info;
@@ -446,7 +446,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #endif
 
   PasserInfo info = evaluatePawns();
-  ScoreType32 kingSafety{ evaluateKingSafety2(Figure::ColorWhite) - evaluateKingSafety2(Figure::ColorBlack), 0 };
+  ScoreType32 kingSafety{ evaluateKingSafety3(Figure::ColorWhite) - evaluateKingSafety3(Figure::ColorBlack), 0 };
   info.score_ += kingSafety;
 
 
