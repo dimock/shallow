@@ -205,7 +205,8 @@ private:
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
-  
+  int getCastleType2(Figure::Color color) const;
+
   bool fakeCastle(Figure::Color color, int rpos, BitMask rmask) const;
 
   int evaluateKingSafety2(Figure::Color color) const;
@@ -233,6 +234,7 @@ private:
   static const int weightOEDiff_ = openingWeight_ - endgameWeight_;
 
   static const BitMask castle_mask_[2][2];
+  static const BitMask castle_mask2_[2][2];
   static const BitMask blocked_rook_mask_[2][2];
 
   static const int maximumAttackersWeight_ = 2 * Figure::figureWeight_[Figure::TypeKnight] +

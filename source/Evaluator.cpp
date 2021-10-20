@@ -45,6 +45,28 @@ const BitMask Evaluator::castle_mask_[2][2] = {
   }
 };
 
+const BitMask Evaluator::castle_mask2_[2][2] = {
+  {
+    set_mask_bit(H8) | set_mask_bit(F8) | set_mask_bit(G8) |
+    set_mask_bit(H7) | set_mask_bit(F7) |
+    set_mask_bit(H6),
+
+    set_mask_bit(A8) | set_mask_bit(B8) | set_mask_bit(C8) |
+    set_mask_bit(A7) | set_mask_bit(B7) | 
+    set_mask_bit(A6)
+  },
+
+  {
+    set_mask_bit(H1) | set_mask_bit(F1) | set_mask_bit(G1)  |
+    set_mask_bit(H2) | set_mask_bit(G2) |
+    set_mask_bit(H3),
+
+    set_mask_bit(A1) | set_mask_bit(B1) | set_mask_bit(C1) |
+    set_mask_bit(A2) | set_mask_bit(B2) |
+    set_mask_bit(A3)
+  }
+};
+
 const BitMask Evaluator::blocked_rook_mask_[2][2] = {
   {
     set_mask_bit(G1) | set_mask_bit(H1) | set_mask_bit(G2) | set_mask_bit(H2),
@@ -427,6 +449,7 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   ScoreType32 kingSafety{ evaluateKingSafety2(Figure::ColorWhite) - evaluateKingSafety2(Figure::ColorBlack), 0 };
   info.score_ += kingSafety;
 
+
 #ifdef USE_EVAL_HASH_PW
   heval->hkey_ = hkey;
   heval->score_ = info.score_;
@@ -778,6 +801,20 @@ int Evaluator::getCastleType(Figure::Color color) const
   return (!cking && !cqueen) * (-1) + cqueen;
 }
 
+int Evaluator::getCastleType2(Figure::Color color) const
+{
+  auto const ki_mask = board_->fmgr().king_mask(color);
+
+  // short
+  bool cking = (castle_mask2_[color][0] & ki_mask) != 0;
+
+  // long
+  bool cqueen = (castle_mask2_[color][1] & ki_mask) != 0;
+
+  // -1 == no castle
+  return (!cking && !cqueen) * (-1) + cqueen;
+}
+
 int Evaluator::evaluateKingSafety2(Figure::Color color) const
 {
   Index kingPos(board_->kingPos(color));
@@ -814,6 +851,14 @@ int Evaluator::evaluateKingSafety2(Figure::Color color, Index const kingPos) con
   if (xc == 7) {
     xc = 6;
   }
+//  auto ctype = getCastleType2(color);
+//  if (ctype == 0) {
+//    xc = 6;
+//  }
+//  else if (ctype == 1) {
+//    xc = 1;
+//  }
+
   int x0 = std::max(0, xc - 1);
   int x1 = std::min(7, xc + 1);
   auto pawns_mask = fmgr.pawn_mask(color);
