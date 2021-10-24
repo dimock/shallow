@@ -355,8 +355,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   score32 += scorePP;
 
-  //auto scorePassers = passerEvaluation(hashedScore);
-  //score32 += scorePassers;
+  auto scorePassers = passerEvaluation(hashedScore);
+  score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   result *= scoreMultip;
@@ -841,14 +841,6 @@ int Evaluator::evaluateKingSafety2(Figure::Color color, Index const kingPos) con
   if (xc == 7) {
     xc = 6;
   }
-//  auto ctype = getCastleType2(color);
-//  if (ctype == 0) {
-//    xc = 6;
-//  }
-//  else if (ctype == 1) {
-//    xc = 1;
-//  }
-
   int x0 = std::max(0, xc - 1);
   int x1 = std::min(7, xc + 1);
   auto pawns_mask = fmgr.pawn_mask(color);
@@ -900,6 +892,7 @@ int Evaluator::evaluateKingSafety2(Figure::Color color, Index const kingPos) con
     }
     score += EvalCoefficients::pawnsShields_[x][py];
     score -= (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
+    score -= EvalCoefficients::opawnsNearKing_[opy];
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~finfo_[color].pawnAttacks_;
   if (kifwdmsk) {

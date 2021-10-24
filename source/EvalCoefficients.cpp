@@ -115,6 +115,8 @@ namespace NEngine
     {0, 3, 1, 0, 0, 0, 0, 0},
     {20, 15, 10, 3, 1, 1, 1, 0}
   };
+  int EvalCoefficients::opawnsNearKing_[8] = { 0, 10, 7, 5, 3, 1, 0, 0 };
+
   int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 28, 24, 8, 4, 0 };
   int EvalCoefficients::opawnAboveKing_[8] = { 0, 20, 15, 10, 5, 2, 0, 0 };
   // rook on open column
