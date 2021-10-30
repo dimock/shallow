@@ -355,8 +355,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   score32 += scorePP;
 
-  auto scorePassers = passerEvaluation(hashedScore);
-  score32 += scorePassers;
+  //auto scorePassers = passerEvaluation(hashedScore);
+  //score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   result *= scoreMultip;
