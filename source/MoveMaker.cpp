@@ -284,7 +284,6 @@ void Board::makeNullMove()
   undo.data_ = data_;
   // save Zobrist keys
   undo.zcode_ = fmgr_.hashCode();
-  undo.zcode_kpw_ = fmgr_.kpwnCode();
 
   X_ASSERT(data_.state_ != Ok, "try null-move on invalid state");
 
@@ -294,14 +293,10 @@ void Board::makeNullMove()
   if(data_.en_passant_ >= 0)
     fmgr_.hashEnPassant(enpassant(), ocolor);
 
-  //fmgr_.hashNullmove();
-
   data_.en_passant_ = -1;
 
   fmgr_.hashColor();
   setColor(ocolor);
-
-  //data_.repsCounter_ = countReps(2, fmgr_.hashCode());
 }
 
 void Board::unmakeNullMove()
@@ -317,7 +312,6 @@ void Board::unmakeNullMove()
   data_ = undo.data_;
 
   fmgr_.restoreHash(undo.zcode_);
-  fmgr_.restoreKpwnCode(undo.zcode_kpw_);
 }
 
 } // NEngine

@@ -15,6 +15,7 @@ namespace NEngine
 
 class Evaluator
 {
+public:
   enum GamePhase { Opening = 0, MiddleGame, EndGame };
 
   struct PhaseInfo
@@ -158,10 +159,6 @@ private:
   // pawns structure for middle & end game + king's pawn shield
   PasserInfo hashedEvaluation();
   
-  int closestToBackward(int x, int y, const BitMask pmask, Figure::Color color) const;
-  bool isPawnBackward(Index const idx, Figure::Color color, BitMask const pmask, BitMask const opmsk, BitMask const fwd_field) const;
-
-  PasserInfo evaluatePawns(Figure::Color color) const;
   PasserInfo evaluatePawns() const;
 
   // attacked field
@@ -209,12 +206,8 @@ private:
 
   bool fakeCastle(Figure::Color color, int rpos, BitMask rmask) const;
 
-  int evaluateKingSafety2(Figure::Color color) const;
-  int evaluateKingSafety2(Figure::Color color, Index const kingPos) const;
-
-  int evaluateKingSafety3(Figure::Color color) const;
-
-  int opponentPawnsPressure3(Figure::Color color, Index const kingPos) const;
+  int evaluateKingSafetyW() const;
+  int evaluateKingSafetyB() const;
 
   int evaluateKingSafety(Figure::Color color) const;
   int evaluateKingSafety(Figure::Color color, Index const kingPos) const;
