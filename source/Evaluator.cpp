@@ -245,19 +245,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   std::string sfen = toFEN(*board_);
 #endif
 
-#ifdef USE_EVAL_HASH_ALL
-  AHEval* heval = nullptr;
-  uint32 hkey = 0;
-  if (ev_hash_) {
-    const BitMask code = board_->fmgr().hashCode();
-    hkey = (uint32)(code >> 32);
-    heval = ev_hash_->get(code);
-    if (heval && heval->hkey_ == hkey) {
-      return heval->score_;
-    }
-  }
-#endif
-
   int scoreOffset = 0;
   int scoreMultip = 1;
   auto spec = specialCases().eval(*board_);
@@ -316,8 +303,22 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 #ifdef USE_LAZY_EVAL
   {
     auto score0 = considerColor(lipolScore(score32, phaseInfo));
-    if(score0 < alpha_ || score0 > betta_)
+    if ((spec.first == SpecialCaseResult::NO_RESULT) && (score0 < alpha_ || score0 > betta_)) {
       return score0;
+    }
+  }
+#endif
+
+#ifdef USE_EVAL_HASH_ALL
+  AHEval* heval = nullptr;
+  uint32 hkey = 0;
+  if (ev_hash_) {
+    const BitMask code = board_->fmgr().hashCode();
+    hkey = (uint32)(code >> 32);
+    heval = ev_hash_->get(code);
+    if (heval && heval->hkey_ == hkey) {
+      return heval->score_;
+    }
   }
 #endif
 
