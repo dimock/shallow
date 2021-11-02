@@ -547,7 +547,7 @@ struct Board
     //  return Figure::figureWeight_[Figure::TypePawn] - Figure::TypePawn;
     //}
     // MVV LVA
-    SortValueType sort_value = Figure::figureWeight_[fto.type()] -ffrom.type();
+    SortValueType sort_value = Figure::figureWeight_[fto.type()] - ffrom.type();
     //// + promotion
     //if (new_type)
     //  sort_value += PromotionBonus;

@@ -46,9 +46,14 @@ Engine::SearchContext& Engine::SearchContext::operator = (SearchContext const& o
 Engine::Engine()
 #ifdef USE_HASH
   : hash_(0)
-#ifdef USE_EVAL_HASH_ALL
-  , ev_hash_(0)
+#elif(defined USE_EVAL_HASH_ALL)
+  :
 #endif
+#if ((defined USE_HASH) && (defined USE_EVAL_HASH_ALL))
+  ,
+#endif
+#ifdef USE_EVAL_HASH_ALL
+  ev_hash_(0)
 #endif
 {
   setThreadsNumber(N_THREADS_DEFAULT);

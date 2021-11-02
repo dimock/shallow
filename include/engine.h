@@ -195,9 +195,10 @@ private:
 
 #ifdef USE_HASH
   GHashTable hash_;
+#endif
+
 #ifdef USE_EVAL_HASH_ALL
   AHashTable ev_hash_;
-#endif
 #endif
 
 #ifdef PROCESS_MOVES_SEQ

@@ -629,7 +629,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool allMovesIterated = false;
 #endif
 
-#ifdef USE_IID
+#if((defined USE_IID) && (defined USE_HASH))
   if(!hmove && depth >= (ONE_PLY<<2))
   {
     alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, allow_nm, signular_count);
@@ -658,6 +658,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
   bool check_escape = board.underCheck();
   FastGenerator<Board, SMove> fg(board, hmove, sctx.plystack_[ply].killer_);
+  int ngood = 0;
+  Move movep{false};
   for (; alpha < betta && !checkForStop(ictx);)
   {
     auto* pmove = fg.next();
@@ -672,12 +674,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
-#ifdef USE_HASH
+#if ((defined USE_HASH) || (defined USE_EVAL_HASH_ALL))
     auto pfhkey = board.hashAfterMove(move);
+#endif
+
+#ifdef USE_HASH
     hash_.prefetch(pfhkey);
+#endif
+
 #ifdef USE_EVAL_HASH_ALL
     ev_hash_.prefetch(pfhkey);
-#endif
 #endif
 
     bool danger_pawn = board.isDangerPawn(move);
@@ -707,7 +713,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     else
     {
       depthInc = depthIncrement(ictx, move, false, false);
-      auto const& hist = history(Figure::otherColor(board.color()), move.from(), move.to());
 
       int R = 0;
 #ifdef USE_LMR
@@ -756,7 +761,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       }
 #endif
 
-      auto& hist = history(board.color(), move.from(), move.to());
       if(score > scoreBest)
       {
         best = move;
@@ -764,20 +768,23 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
         scoreBest = score;
         if(score > alpha)
         {
-          bool capture = board.getField(move.to())  || move.new_type() || (move.to() > 0 && board.enpassant() == move.to() && board.getField(move.from()).type() == Figure::TypePawn);
+          bool capture = board.getField(move.to()) || move.new_type() || (move.to() > 0 && board.enpassant() == move.to() && board.getField(move.from()).type() == Figure::TypePawn);
           if (!capture) {
             sctx.plystack_[ply].killer_ = move;
+            auto& hist = history(board.color(), move.from(), move.to());
+            auto d = (depth >> 4) + ngood;
+            hist.inc_score(d * d);
+            ngood++;
+            if (movep) {
+              auto& phist = history(board.color(), movep.from(), movep.to());
+              phist.dec_score(d + ngood);
+            }
+            movep = move;
           }
-          auto d = depth >> 4;
-          hist.inc_score(d);
           alpha = score;
           if(pv)
             assemblePV(ictx, move, board.underCheck(), ply);
         }
-      }
-      else {
-        auto d = depth >> 4;
-        hist.dec_score(d);
       }
     }
 
@@ -811,12 +818,16 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     X_ASSERT(!best, "best move wasn't found but one move was");
     singular = true;
 
-#ifdef USE_HASH
+#if ((defined USE_HASH) || (defined USE_EVAL_HASH_ALL))
     auto pfhkey = board.hashAfterMove(best);
+#endif
+
+#ifdef USE_HASH
     hash_.prefetch(pfhkey);
+#endif
+
 #ifdef USE_EVAL_HASH_ALL
     ev_hash_.prefetch(pfhkey);
-#endif
 #endif
 
     board.makeMove(best);
@@ -975,12 +986,8 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     auto& move = *pmove;
     X_ASSERT(!board.validateMove(move), "invalid move got from generator");
 
-#ifdef USE_HASH
+#if ((defined USE_HASH) || (defined USE_EVAL_HASH_ALL))
     auto pfhkey = board.hashAfterMove(move);
-    hash_.prefetch(pfhkey);
-#ifdef USE_EVAL_HASH_ALL
-    ev_hash_.prefetch(pfhkey);
-#endif
 #endif
 
 #ifdef PROCESS_MOVES_SEQ
@@ -992,6 +999,15 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if((!board.underCheck()) && !move.see_ok() && !board.see(move, thr))
       continue;
 #endif
+
+#ifdef USE_HASH
+    hash_.prefetch(pfhkey);
+#endif
+
+#ifdef USE_EVAL_HASH_ALL
+    ev_hash_.prefetch(pfhkey);
+#endif
+
 
     ScoreType score = -ScoreMax;
 
