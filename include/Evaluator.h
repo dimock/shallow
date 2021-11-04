@@ -191,9 +191,7 @@ private:
 
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 
-  PasserInfo  passerEvaluation(Figure::Color color, PasserInfo const&);
-  ScoreType32 passerEvaluation(PasserInfo const&);
-  bool pawnUnstoppable(Index const pidx, Figure::Color pwcolor) const;
+  ScoreType32 passersEvaluation(PasserInfo const&);
 
   ScoreType32 evaluateMaterialDiff();
 
