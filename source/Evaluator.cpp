@@ -356,8 +356,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
   score32 += scorePP;
 
-  //auto scorePassers = passerEvaluation(hashedScore);
-  //score32 += scorePassers;
+  auto scorePassers = passerEvaluation(hashedScore);
+  score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   result *= scoreMultip;
@@ -585,14 +585,6 @@ Evaluator::PasserInfo Evaluator::evaluatePawns() const
   return info_w;
 }
 
-ScoreType32 Evaluator::passerEvaluation(PasserInfo const& pi)
-{
-  auto infoW = passerEvaluation(Figure::ColorWhite, pi);
-  auto infoB = passerEvaluation(Figure::ColorBlack, pi);
-  infoW.score_ -= infoB.score_;
-  return infoW.score_;
-}
-
 bool Evaluator::pawnUnstoppable(Index const pidx, Figure::Color color) const
 {
   // next field is not attacked by opponent
@@ -666,9 +658,9 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
   const auto& fmgr = board_->fmgr();
   const auto pmask = fmgr.pawn_mask(color);
   auto pawn_mask = pmask & pi.passers_;
-  if(!pawn_mask)
+  if (!pawn_mask)
     return{};
-    
+
   const int py = promo_y_[color];
   const int dy = delta_y_[color];
 
@@ -789,11 +781,19 @@ Evaluator::PasserInfo Evaluator::passerEvaluation(Figure::Color color, PasserInf
         }
       }
     }
-    
+
     pinfo.score_ += pwscore;
   }
 
   return pinfo;
+}
+
+ScoreType32 Evaluator::passerEvaluation(PasserInfo const& pi)
+{
+  auto infoW = passerEvaluation(Figure::ColorWhite, pi);
+  auto infoB = passerEvaluation(Figure::ColorBlack, pi);
+  infoW.score_ -= infoB.score_;
+  return infoW.score_;
 }
 
 int Evaluator::getCastleType(Figure::Color color) const
