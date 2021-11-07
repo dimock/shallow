@@ -295,6 +295,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   const FiguresManager& fmgr = board_->fmgr();
   // evaluate figures weight
+
   ScoreType32 score32 = fmgr.weight();
   score32 += fmgr.score();
   score32 += evaluateMaterialDiff();
@@ -679,7 +680,10 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     const int n = clear_lsb(psmask);
     const Index idx(n);
     const int y = idx.y();
+    const int x = idx.x();
     const int cy = Evaluator::colored_y_[color][idx.y()];
+    auto n1 = n + (dy << 3);
+    auto pp = Index(x, py);
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
     if (opmsk & passmsk) {
@@ -687,6 +691,11 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     }
     else {
       pwscore = EvalCoefficients::passerPawn_[cy];
+      int oking_dist = distanceCounter().getDistance(board.kingPos(ocolor), pp);
+      int king_dist = distanceCounter().getDistance(board.kingPos(color), pp);
+      pwscore +=
+        EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
+        EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
     }
     pinfo.score_ += pwscore;
   }
