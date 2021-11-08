@@ -1055,7 +1055,43 @@ void SpecialCasesDetector::initCases()
     return evalRookPawn(board, Figure::ColorWhite);
   };
 
-  ///
+  scases_[format({
+    { Figure::TypeBishop, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 },
+    { Figure::TypePawn, Figure::ColorWhite, 1 },
+    { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 } })] =
+    [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    auto const& fmgr = board.fmgr();
+    auto bi_mask_w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
+    auto bi_mask_b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
+    if (bi_mask_w != bi_mask_b) {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    }
+    else {
+      return { SpecialCaseResult::NO_RESULT, 0 };
+    }
+  };
+
+  scases_[format({
+    { Figure::TypeBishop, Figure::ColorBlack, 1 },
+    { Figure::TypeRook, Figure::ColorBlack, 1 },
+    { Figure::TypePawn, Figure::ColorBlack, 1 },
+    { Figure::TypeBishop, Figure::ColorWhite, 1 },
+    { Figure::TypeRook, Figure::ColorWhite, 1 } })] =
+    [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+  {
+    auto const& fmgr = board.fmgr();
+    auto bi_mask_w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
+    auto bi_mask_b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
+    if (bi_mask_w != bi_mask_b) {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    }
+    else {
+      return { SpecialCaseResult::NO_RESULT, 0 };
+    }
+  };
 }
 
 } // NEngine

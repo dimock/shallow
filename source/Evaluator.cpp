@@ -678,16 +678,20 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
 
   while (psmask) {
     const int n = clear_lsb(psmask);
+    const auto fwd_fields = pawnMasks().mask_forward(color, n);
+
     const Index idx(n);
     const int y = idx.y();
     const int x = idx.x();
     const int cy = Evaluator::colored_y_[color][idx.y()];
     auto n1 = n + (dy << 3);
     auto pp = Index(x, py);
+    auto fwd_field = set_mask_bit(n1);
+
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
     if (opmsk & passmsk) {
-      pwscore = EvalCoefficients::passerPawn4_[cy];
+      pwscore = EvalCoefficients::passerPawn2_[cy];
     }
     else {
       pwscore = EvalCoefficients::passerPawn_[cy];
@@ -696,7 +700,33 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
+    
+      if (!(fwd_field & mask_all)) {
+        auto attack_mask = finfo[color].attack_mask_ | finfo[color].behindPawnAttacks_;
+        auto multiattack_mask = finfo[color].multiattack_mask_;
+        auto o_attack_mask = finfo[ocolor].attack_mask_ | finfo[ocolor].behindPawnAttacks_;
+        auto o_multiattack_mask = finfo[ocolor].multiattack_mask_;
+
+        auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo[color].pawnAttacks_;
+        blockers_mask |= mask_all;
+
+        // all forward fields are not blocked by opponent
+        auto fwd_mask = fwd_fields & blockers_mask;
+        if (!fwd_mask) {
+          pwscore += EvalCoefficients::passerPawnEx_[cy];
+        }
+        // only few fields are free
+        else {
+          int closest_blocker = (color == Figure::ColorWhite) ? _lsb64(fwd_mask) : _msb64(fwd_mask);
+          int last_cango = Evaluator::colored_y_[color][Index(closest_blocker).y()] - 1;
+          int steps = last_cango - cy;
+          if (steps > 0) {
+            pwscore += EvalCoefficients::passerPawnExS_[cy][steps];
+          }
+        }
+      }
     }
+
     pinfo.score_ += pwscore;
   }
   return pinfo;

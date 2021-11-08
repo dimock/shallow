@@ -151,9 +151,9 @@ namespace NEngine
   ScoreType32 EvalCoefficients::noQueensPenalty_ = {15, 15};
 
   // passer pawns
-  ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  3,   3}, {  6,   6}, { 18,  18}, { 37,  37}, { 65,  65}, {100, 100}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  1,   1}, {  3,   3}, {  9,   9}, { 18,  18}, { 32,  32}, { 50,  50}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerPawn4_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  4,   4}, {  9,   9}, { 16,  16}, { 25,  25}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  2,   2}, {  4,   5}, { 12,  14}, { 26,  30}, { 45,  52}, { 70,  80}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  1,   1}, {  2,   2}, {  6,   7}, { 13,  15}, { 22,  26}, { 35,  40}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerPawn4_[8] = { {  0,   0}, {  0,   0}, {  1,   1}, {  3,   3}, {  6,   7}, { 11,  13}, { 17,  20}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnEx_[8] = { {  0,   0}, {  1,   3}, {  2,   6}, {  7,  18}, { 15,  37}, { 33,  84}, { 64, 160}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnFwd_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  1,   2}, {  2,   5}, {  5,  12}, {  9,  24}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnNatt_[8] = { {  0,   0}, {  0,   0}, {  0,   1}, {  1,   2}, {  2,   5}, {  3,   9}, {  6,  15}, {  0,   0} };
