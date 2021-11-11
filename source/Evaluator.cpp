@@ -710,8 +710,12 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       //  pwscore += EvalCoefficients::passerPawn4_[cy];
       //}
 
+      int oking_dist_pp = distanceCounter().getDistance(board.kingPos(ocolor), pp) - int(ocolor == board.color());
+      int pw_dist_pp = 7 - cy;
       int oking_dist = distanceCounter().getDistance(board.kingPos(ocolor), n1);
+      oking_dist += int(oking_dist_pp > pw_dist_pp);
       int king_dist = distanceCounter().getDistance(board.kingPos(color), n1);
+      king_dist += int(oking_dist_pp <= pw_dist_pp);
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
@@ -724,6 +728,9 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
 
         auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo[color].pawnAttacks_;
         blockers_mask |= mask_all;
+
+        //const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
+        //pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
 
         // all forward fields are not blocked by opponent
         auto fwd_mask = fwd_fields & blockers_mask;
