@@ -690,13 +690,28 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
 
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
-    if (opmsk & passmsk) {
-      pwscore = EvalCoefficients::passerPawn2_[cy];
+    BitMask attackers = passmsk & opmsk;
+    if (attackers) {
+      BitMask attackers = passmsk & opmsk;
+      BitMask guards = pawnMasks().mask_backward(color, n) & pmask;
+      int nattack = pop_count(attackers);
+      int nguards = pop_count(guards);
+      if (nguards >= nattack) {
+        pwscore = EvalCoefficients::passerPawn2_[cy];
+      }
+      else {
+        pwscore = EvalCoefficients::passerPawn4_[cy];
+      }
     }
     else {
       pwscore = EvalCoefficients::passerPawn_[cy];
-      int oking_dist = distanceCounter().getDistance(board.kingPos(ocolor), pp);
-      int king_dist = distanceCounter().getDistance(board.kingPos(color), pp);
+      //BitMask guards = pawnMasks().mask_backward(color, n) & pmask & pi.passers_;
+      //if(guards) {
+      //  pwscore += EvalCoefficients::passerPawn4_[cy];
+      //}
+
+      int oking_dist = distanceCounter().getDistance(board.kingPos(ocolor), n1);
+      int king_dist = distanceCounter().getDistance(board.kingPos(color), n1);
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
