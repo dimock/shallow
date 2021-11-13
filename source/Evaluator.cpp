@@ -358,11 +358,17 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score32 += scorePP;
 
   auto scorePassers = passersEvaluation(hashedScore);
+
+#if 1
   score32 += scorePassers;
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   result *= scoreMultip;
   result >>= scoreOffset;
+#else
+  score32 = scorePassers;
+  auto result = considerColor(lipolScore(score32, phaseInfo));
+#endif
 
 #ifdef USE_EVAL_HASH_ALL
   if (heval) {

@@ -184,9 +184,8 @@ void Board::makeMove(const Move move)
   fmgr_.hashColor();
   setColor(ocolor);
 
-  verifyChessDraw(undo.irreversible());
-
   detectCheck(move);
+  verifyChessDraw(undo.irreversible());
 
   if(underCheck())
     undo.mflags_ |= UndoInfo::Check;
