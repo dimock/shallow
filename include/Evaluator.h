@@ -40,6 +40,7 @@ public:
     BitMask rookMoves_{};
     BitMask queenMoves_{};
     BitMask behindPawnAttacks_{};
+    BitMask behindOPawnAttacks_{};
     BitMask bishopTreatAttacks_{};
     BitMask rookTreatAttacks_{};
     BitMask kingAttacks_{};
@@ -61,6 +62,8 @@ public:
     BitMask discovered_attackers_{};
     BitMask discovered_mask_{};
     BitMask attackedByKnightRq_{};
+    BitMask pinnedFigures_{};
+    BitMask checks_mask_{};
     ScoreType32 score_mob_{};
 #ifdef DO_KING_EVAL
     int num_attackers_{};
@@ -73,8 +76,6 @@ public:
   } finfo_[2];
 
   BitMask moves_masks_[NumOfFields] = {};
-  BitMask attacks_masks_[NumOfFields] = {};
-  BitMask qr_attacks_masks_[NumOfFields] = {};
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};

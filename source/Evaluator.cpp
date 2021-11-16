@@ -725,36 +725,10 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
     
       if (!(fwd_field & mask_all)) {
-        auto attack_mask = finfo[color].attack_mask_;
-        auto multiattack_mask = finfo[color].multiattack_mask_;
-        auto o_attack_mask = finfo[ocolor].attack_mask_;
-        auto o_multiattack_mask = finfo[ocolor].multiattack_mask_;
-        auto behind_msk = betweenMasks().from_dir(n, Evaluator::dir_behind_[color]) & magic_ns::rook_moves(n, mask_all);
-        auto behind_msk1 = behind_msk & (fmgr.rook_mask(color) | fmgr.queen_mask(color));
-        if (behind_msk1) {
-          multiattack_mask |= attack_mask & fwd_fields;
-          attack_mask |= fwd_fields;
-          if (!(multiattack_mask & fwd_fields)) {
-            behind_msk1 = ~behind_msk1;
-            auto behind_msk2 = betweenMasks().from_dir(n, Evaluator::dir_behind_[color]) & magic_ns::rook_moves(n, mask_all & behind_msk1) & behind_msk1;
-            if (behind_msk2 & (fmgr.rook_mask(color) | fmgr.queen_mask(color)))
-              multiattack_mask |= fwd_fields;
-          }
-        }
-        else {
-          behind_msk1 = behind_msk & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor));
-          if (behind_msk1) {
-            o_multiattack_mask |= o_attack_mask & fwd_fields;
-            o_attack_mask |= fwd_fields;
-            if (!(o_multiattack_mask & fwd_fields)) {
-              behind_msk1 = ~behind_msk1;
-              auto behind_msk2 = betweenMasks().from_dir(n, Evaluator::dir_behind_[color]) & magic_ns::rook_moves(n, mask_all & behind_msk1) & behind_msk1;
-              if (behind_msk2 & (fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor)))
-                o_multiattack_mask |= fwd_fields;
-            }
-          }
-        }
-
+        auto attack_mask = finfo[color].attack_mask_ | finfo[color].behindPawnAttacks_;
+        auto multiattack_mask = finfo[color].multiattack_mask_ | finfo[color].behindPawnAttacks_;
+        auto o_attack_mask = finfo[ocolor].attack_mask_ | finfo[ocolor].behindOPawnAttacks_;
+        auto o_multiattack_mask = finfo[ocolor].multiattack_mask_ | finfo[ocolor].behindOPawnAttacks_;
         auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo[color].pawnAttacks_;
         blockers_mask |= mask_all;
 

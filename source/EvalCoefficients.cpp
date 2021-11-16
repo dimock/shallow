@@ -47,19 +47,11 @@ namespace NEngine
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 7 };
 
-#ifdef KING_EVAL_ATTACKED_MULTI_FIELD
-  int EvalCoefficients::knightKingAttack_{ 10 };
-  int EvalCoefficients::bishopKingAttack_{ 9 };
-  int EvalCoefficients::rookKingAttack_{ 10 };
-  int EvalCoefficients::queenKingAttack_{ 13 };
-  int EvalCoefficients::basicAttack_{ 2 };
-#else
   int EvalCoefficients::knightKingAttack_{ 17 };
   int EvalCoefficients::bishopKingAttack_{ 17 };
   int EvalCoefficients::rookKingAttack_{ 18 };
   int EvalCoefficients::queenKingAttack_{ 21 };
   int EvalCoefficients::basicAttack_{ 3 };
-#endif
 
   int EvalCoefficients::generalKingPressure_{ 6 };
   int EvalCoefficients::generalKingAuxPressure_{ 3 };
