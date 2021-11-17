@@ -99,8 +99,9 @@ void Evaluator::prepareAttacksMasks()
       finfo_[color].attackedByKnightRq_ |= movesTable().caps(Figure::TypeKnight, n);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
       finfo_[color].checks_mask_ |= rook_moves;
-      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n);
-      auto rook_moves_op = magic_ns::rook_moves(n, mask_all_not_pw[ocolor]) & pawnMasks().mask_forward(ocolor, n);
+      auto nrook_moves = ~rook_moves;
+      auto rook_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n) & nrook_moves;
+      auto rook_moves_op = magic_ns::rook_moves(n, mask_all_not_pw[ocolor]) & pawnMasks().mask_forward(ocolor, n) & nrook_moves;
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
         auto const from_mask = betweenMasks().from(board_->kingPos(color), n);
@@ -125,8 +126,9 @@ void Evaluator::prepareAttacksMasks()
       auto n = clear_lsb(qmask);
       finfo_[color].attackedByKnightRq_ |= movesTable().caps(Figure::TypeKnight, n);
       auto qr_attacks = magic_ns::rook_moves(n, mask_all_);
-      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n);
-      auto queen_moves_op = magic_ns::rook_moves(n, mask_all_not_pw[ocolor]) & pawnMasks().mask_forward(ocolor, n);
+      auto nqr_attacks = ~qr_attacks;
+      auto queen_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n) & nqr_attacks;
+      auto queen_moves_op = magic_ns::rook_moves(n, mask_all_not_pw[ocolor]) & pawnMasks().mask_forward(ocolor, n) & nqr_attacks;
       auto queen_moves = magic_ns::queen_moves(n, mask_all_);
       finfo_[color].checks_mask_ |= queen_moves;
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");

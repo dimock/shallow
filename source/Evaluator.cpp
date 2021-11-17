@@ -695,6 +695,13 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
   const auto ofgs = fmgr.mask(ocolor);
   bool no_opawns = opmsk == 0ULL;
 
+  auto attack_mask = finfo[color].attack_mask_ | finfo[color].behindPawnAttacks_;
+  auto o_attack_mask = finfo[ocolor].attack_mask_ | finfo[ocolor].behindOPawnAttacks_;
+  auto multiattack_mask = finfo[color].multiattack_mask_ | (finfo[color].behindPawnAttacks_ & finfo[color].attack_mask_);
+  auto o_multiattack_mask = finfo[ocolor].multiattack_mask_ | (finfo[ocolor].behindOPawnAttacks_ & finfo[ocolor].attack_mask_);
+  auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo[color].pawnAttacks_;
+  blockers_mask |= mask_all;
+
   while (psmask) {
     const int n = clear_lsb(psmask);
     const auto fwd_fields = pawnMasks().mask_forward(color, n);
@@ -725,13 +732,6 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
     
       if (!(fwd_field & mask_all)) {
-        auto attack_mask = finfo[color].attack_mask_ | finfo[color].behindPawnAttacks_;
-        auto multiattack_mask = finfo[color].multiattack_mask_ | finfo[color].behindPawnAttacks_;
-        auto o_attack_mask = finfo[ocolor].attack_mask_ | finfo[ocolor].behindOPawnAttacks_;
-        auto o_multiattack_mask = finfo[ocolor].multiattack_mask_ | finfo[ocolor].behindOPawnAttacks_;
-        auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo[color].pawnAttacks_;
-        blockers_mask |= mask_all;
-
         //const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
         //pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
 
