@@ -327,7 +327,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   // take pawns eval from hash if possible
   auto hashedScore = hashedEvaluation();
-  score32 += hashedScore.score_;
+  score32 += hashedScore.pwscore_;
 
   prepareAttacksMasks();
 
@@ -341,6 +341,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;
   score32 += score_mob;
 
+
+  score32 += hashedScore.kscores_[Figure::ColorWhite] - hashedScore.kscores_[Figure::ColorBlack];
 //#ifdef DO_KING_EVAL
 //  if (phaseInfo.phase_ != GamePhase::EndGame) {
 //    auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
@@ -366,7 +368,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   result *= scoreMultip;
   result >>= scoreOffset;
 #else
-  score32 = scorePassers;
+  score32 = hashedScore.kscores_[Figure::ColorWhite] - hashedScore.kscores_[Figure::ColorBlack];
   auto result = considerColor(lipolScore(score32, phaseInfo));
 #endif
 
@@ -441,25 +443,34 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   if(heval->hkey_ == hkey)
   {
     PasserInfo info;
-    info.score_ = heval->score_;
+    info.pwscore_ = heval->pwscore_;
+    info.kscores_[Figure::ColorBlack] = ScoreType32{ heval->kscores_[Figure::ColorBlack], 0 };
+    info.kscores_[Figure::ColorWhite] = ScoreType32{ heval->kscores_[Figure::ColorWhite], 0 };
     info.passers_ = heval->passers_;
 #ifndef NDEBUG
     PasserInfo xinfo = evaluatePawns();
-    auto hscore = xinfo.score_;
-    hscore += ScoreType32{ evaluateKingSafetyW() - evaluateKingSafetyB(), 0 };
-    X_ASSERT_R(!(info.score_ == hscore && info.passers_ == xinfo.passers_), "invalid pawns+king score in hash");
+    auto pwscore = xinfo.pwscore_;
+    auto kscorew = ScoreType32{ evaluateKingSafetyW(), 0 };
+    auto kscoreb = ScoreType32{ evaluateKingSafetyB(), 0 };
+    X_ASSERT_R(!(info.pwscore_ == pwscore && info.passers_ == xinfo.passers_ &&
+      kscorew == xinfo.kscores_[Figure::ColorWhite]) && kscoreb == xinfo.kscores_[Figure::ColorBlack],
+      "invalid pawns+king score in hash");
 #endif
     return info;
   }
 #endif
 
   PasserInfo info = evaluatePawns();
-  ScoreType32 kingSafety{ evaluateKingSafetyW() - evaluateKingSafetyB(), 0 };
-  info.score_ += kingSafety;
+  auto kscorew = evaluateKingSafetyW();
+  auto kscoreb = evaluateKingSafetyB();
+  info.kscores_[Figure::ColorWhite] = ScoreType32{ kscorew, 0 };
+  info.kscores_[Figure::ColorBlack] = ScoreType32{ kscoreb, 0 };
 
 #ifdef USE_EVAL_HASH_PW
   heval->hkey_ = hkey;
-  heval->score_ = info.score_;
+  heval->pwscore_ = info.pwscore_;
+  heval->kscores_[Figure::ColorBlack] = kscoreb;
+  heval->kscores_[Figure::ColorWhite] = kscorew;
   heval->passers_ = info.passers_;
 #endif
 
@@ -567,11 +578,11 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
     int neighborsN = pop_count(pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask);
     bool doubled = (!protectsN) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
 
-    info.score_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
-    info.score_ += EvalCoefficients::backwardPawn_[cy] * backward;
-    info.score_ += EvalCoefficients::protectedPawn_[cy] * protectsN;
-    info.score_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
-    info.score_ += EvalCoefficients::doubledPawn_ * doubled;
+    info.pwscore_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
+    info.pwscore_ += EvalCoefficients::backwardPawn_[cy] * backward;
+    info.pwscore_ += EvalCoefficients::protectedPawn_[cy] * protectsN;
+    info.pwscore_ += EvalCoefficients::hasneighborPawn_[cy] * neighborsN;
+    info.pwscore_ += EvalCoefficients::doubledPawn_ * doubled;
 
     // passer pawn - save position for further usage
     if (!(fwd_mask & (opmsk | pmask))) {
@@ -600,7 +611,7 @@ Evaluator::PasserInfo Evaluator::evaluatePawns() const
 {
   auto info_w = evaluatePawn<Figure::ColorWhite>(board_->fmgr(), finfo_);
   auto info_b = evaluatePawn<Figure::ColorBlack>(board_->fmgr(), finfo_);
-  info_w.score_ -= info_b.score_;
+  info_w.pwscore_ -= info_b.pwscore_;
   info_w.passers_ |= info_b.passers_;
   return info_w;
 }
@@ -754,7 +765,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       }
     }
 
-    pinfo.score_ += pwscore;
+    pinfo.pwscore_ += pwscore;
   }
   return pinfo;
 }
@@ -764,8 +775,8 @@ ScoreType32 Evaluator::passersEvaluation(PasserInfo const& pi)
   auto const& fmgr = board_->fmgr();
   auto infoW = NEngine::passerEvaluation<Figure::ColorWhite>(*board_, finfo_, mask_all_, pi);
   auto infoB = NEngine::passerEvaluation<Figure::ColorBlack>(*board_, finfo_, mask_all_, pi);
-  infoW.score_ -= infoB.score_;
-  return infoW.score_;
+  infoW.pwscore_ -= infoB.pwscore_;
+  return infoW.pwscore_;
 }
 
 int Evaluator::getCastleType(Figure::Color color) const
@@ -803,6 +814,7 @@ template <>
 int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask const& pawnAttacks, Index const kingPos)
 {
   int score = 0;
+  int oscore = 0;
   int kx = kingPos.x();
   int ky = kingPos.y();
   if (ky == 7) {
@@ -826,7 +838,7 @@ int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask 
     auto fwdmsk = pawnMasks().mask_forward_plus(Figure::ColorWhite, p);
     auto pwmsk = fwdmsk & pawns_mask;
     auto opmsk = fwdmsk & opawns_mask;
-    auto afmsk = pawnMasks().mask_forward(Figure::ColorWhite, ap);
+    auto afmsk = pawnMasks().mask_passed(Figure::ColorWhite, ap);
     auto atmsk = afmsk & pawnAttacks;
     int py = 0, opy = 0, ay = 7;
     int ay1 = 0, opy1 = 0;
@@ -850,14 +862,14 @@ int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask 
       odist = opy - ay;
     }
     score += EvalCoefficients::pawnsShields_[x][py];
-    score -= (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
-    score -= EvalCoefficients::opawnsNearKing_[opy];
+    oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
     int oy = Index(_lsb64(kifwdmsk)).y();
     score += EvalCoefficients::opawnAboveKing_[oy];
   }
+  score -= oscore;
   return score;
 }
 
@@ -865,6 +877,7 @@ template <>
 int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask const& pawnAttacks, Index const kingPos)
 {
   int score = 0;
+  int oscore = 0;
   int kx = kingPos.x();
   int ky = kingPos.y();
   if (ky == 0) {
@@ -913,20 +926,21 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
       odist = opy - ay;
     }
     score += EvalCoefficients::pawnsShields_[x][py];
-    score -= (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
-    score -= EvalCoefficients::opawnsNearKing_[opy];
+    oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
     int oy = 7 - Index(_msb64(kifwdmsk)).y();
     score += EvalCoefficients::opawnAboveKing_[oy];
   }
+  score -= oscore;
   return score;
 }
 
 int Evaluator::evaluateKingSafetyW() const
 {
   Index kingPos(board_->kingPos(Figure::ColorWhite));
+  Index okingPos(board_->kingPos(Figure::ColorBlack));
   auto score = evaluateKingSafety2<Figure::ColorWhite>(board_->fmgr(), finfo_[Figure::ColorWhite].pawnAttacks_, kingPos);
   if (board_->castling(Figure::ColorWhite, 0)) {
     Index kingPosK{ 6, promo_y_[Figure::ColorBlack] };
@@ -944,6 +958,7 @@ int Evaluator::evaluateKingSafetyW() const
 int Evaluator::evaluateKingSafetyB() const
 {
   Index kingPos(board_->kingPos(Figure::ColorBlack));
+  Index okingPos(board_->kingPos(Figure::ColorWhite));
   auto score = evaluateKingSafety2<Figure::ColorBlack>(board_->fmgr(), finfo_[Figure::ColorBlack].pawnAttacks_, kingPos);
   if (board_->castling(Figure::ColorBlack, 0)) {
     Index kingPosK{ 6, promo_y_[Figure::ColorWhite] };

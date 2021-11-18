@@ -27,7 +27,8 @@ public:
 
   struct PasserInfo
   {
-    ScoreType32 score_;
+    ScoreType32 pwscore_;
+    ScoreType32 kscores_[2];
     BitMask     passers_{};
   };
 
