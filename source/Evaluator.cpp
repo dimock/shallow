@@ -838,7 +838,7 @@ int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask 
     auto fwdmsk = pawnMasks().mask_forward_plus(Figure::ColorWhite, p);
     auto pwmsk = fwdmsk & pawns_mask;
     auto opmsk = fwdmsk & opawns_mask;
-    auto afmsk = pawnMasks().mask_passed(Figure::ColorWhite, ap);
+    auto afmsk = pawnMasks().mask_forward(Figure::ColorWhite, ap);
     auto atmsk = afmsk & pawnAttacks;
     int py = 0, opy = 0, ay = 7;
     int ay1 = 0, opy1 = 0;
@@ -863,6 +863,7 @@ int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask 
     }
     score += EvalCoefficients::pawnsShields_[x][py];
     oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
+    oscore += EvalCoefficients::opawnsNearKing_[opy];
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
@@ -927,6 +928,7 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
     }
     score += EvalCoefficients::pawnsShields_[x][py];
     oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
+    oscore += EvalCoefficients::opawnsNearKing_[opy];
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
@@ -940,7 +942,6 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
 int Evaluator::evaluateKingSafetyW() const
 {
   Index kingPos(board_->kingPos(Figure::ColorWhite));
-  Index okingPos(board_->kingPos(Figure::ColorBlack));
   auto score = evaluateKingSafety2<Figure::ColorWhite>(board_->fmgr(), finfo_[Figure::ColorWhite].pawnAttacks_, kingPos);
   if (board_->castling(Figure::ColorWhite, 0)) {
     Index kingPosK{ 6, promo_y_[Figure::ColorBlack] };
@@ -958,7 +959,6 @@ int Evaluator::evaluateKingSafetyW() const
 int Evaluator::evaluateKingSafetyB() const
 {
   Index kingPos(board_->kingPos(Figure::ColorBlack));
-  Index okingPos(board_->kingPos(Figure::ColorWhite));
   auto score = evaluateKingSafety2<Figure::ColorBlack>(board_->fmgr(), finfo_[Figure::ColorBlack].pawnAttacks_, kingPos);
   if (board_->castling(Figure::ColorBlack, 0)) {
     Index kingPosK{ 6, promo_y_[Figure::ColorWhite] };
