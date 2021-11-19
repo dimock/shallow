@@ -11,12 +11,12 @@ namespace NEngine
 {
   // single vars
   int EvalCoefficients::additionalMatBonus_{ 150 };
+
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
   ScoreType32 EvalCoefficients::pawnPressureStrong_{ 6, 16 };
   ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 8 };
-  ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
-
+  ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
 
   // outpost
   ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
@@ -96,10 +96,10 @@ namespace NEngine
   int EvalCoefficients::pawnsShields_[8][8] = {
     {0, 32, 25, 3, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
-    {0, 32, 20, 3, 2, 1, 0, 0},
+    {0, 32, 10, 3, 2, 1, 0, 0},
     {0, 12, 6, 2, 1, 0, 0, 0},
     {0, 12, 6, 2, 1, 0, 0, 0},
-    {0, 32, 20, 3, 2, 1, 0, 0},
+    {0, 32, 10, 3, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
     {0, 32, 25, 3, 2, 1, 0, 0}
   };

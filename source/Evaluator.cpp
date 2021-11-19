@@ -368,7 +368,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   result *= scoreMultip;
   result >>= scoreOffset;
 #else
-  score32 = hashedScore.kscores_[Figure::ColorWhite] - hashedScore.kscores_[Figure::ColorBlack];
+  score32 = score_mob + score_nbrq + scoreAttacks + scorePP;// hashedScore.kscores_[Figure::ColorWhite] - hashedScore.kscores_[Figure::ColorBlack];
   auto result = considerColor(lipolScore(score32, phaseInfo));
 #endif
 
@@ -421,16 +421,6 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
   ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & attackers);;
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & attackers & ~finfo_[ocolor].attack_mask_);
   score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & attackers &  finfo_[ocolor].attack_mask_);
-  // bishop treat
-  if(fmgr.bishops(color))
-  {
-    auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
-    auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
-    if(bi_mask_w)
-      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~attackers);
-    if(bi_mask_b)
-      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~attackers);
-  }
   return score;
 }
 

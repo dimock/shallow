@@ -210,9 +210,6 @@ ScoreType32 Evaluator::evaluateKnights()
       auto n_moves_mask = knight_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
       auto n_moves = pop_count(n_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[n_moves & 15];
-      if ((n_moves < 2 || !(n_moves_mask & ~finfo_[ocolor].attack_mask_)) && blockedKnight(color, n)) {
-        finfo_[color].score_mob_ -= EvalCoefficients::knightBlocked_;
-      }
 
 #ifdef MOBILITY_EXTENDED
       if ((qpinned || !(n_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n))) {
@@ -233,6 +230,18 @@ ScoreType32 Evaluator::evaluateBishops()
     finfo_[color].bishopTreatAttacks_ = BitMask{};
     auto ocolor = Figure::otherColor(color);
     BitMask mask = fmgr.bishop_mask(color);
+    auto const pwmask = fmgr.pawn_mask(color);
+
+    // bishop on the same color square as its pawns
+    if (mask) {
+      auto bi_mask_w = mask &  FiguresCounter::s_whiteMask_;
+      auto bi_mask_b = mask & ~FiguresCounter::s_whiteMask_;
+      if (bi_mask_w)
+        score[color] += EvalCoefficients::pawnsOnBishopSquares_ * pop_count(pwmask &  FiguresCounter::s_whiteMask_);
+      if (bi_mask_b)
+        score[color] += EvalCoefficients::pawnsOnBishopSquares_ * pop_count(pwmask & ~FiguresCounter::s_whiteMask_);
+    }
+
     for (; mask;)
     {
       int n = clear_lsb(mask);
@@ -285,11 +294,6 @@ ScoreType32 Evaluator::evaluateBishops()
       auto b_moves_mask = bishop_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
       int n_moves = pop_count(b_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[n_moves & 15];
-
-
-      if ((n_moves < 2 || !(b_moves_mask & ~finfo_[ocolor].attack_mask_)) && blockedBishop(color, n)) {
-        finfo_[color].score_mob_ -= EvalCoefficients::bishopBlocked_;
-      }
 
 #ifdef MOBILITY_EXTENDED
       if ((q_pinned || !(b_moves_mask & ~fmgr.mask(color))) && (finfo_[ocolor].pawnAttacks_ & set_mask_bit(n)) != 0ULL) {
