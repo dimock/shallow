@@ -384,7 +384,7 @@ int Evaluator::evaluateKingsPawn(Figure::Color color, Index const kingPos) const
 }
 
 #ifdef DO_KING_EVAL
-ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
+ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscore_o)
 {
   const auto& fmgr = board_->fmgr();
   const auto ocolor = Figure::otherColor(color);
@@ -500,6 +500,11 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color)
     check_coeff >>= 1;
   }
 
+  check_coeff -= kscore_o >> 3;
+  attack_coeff -= kscore_o >> 3;
+
+  check_coeff = std::max(0, check_coeff);
+  attack_coeff = std::max(0, attack_coeff);
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
   score >>= 5;

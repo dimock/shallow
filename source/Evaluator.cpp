@@ -341,15 +341,16 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;
   score32 += score_mob;
 
-
-  score32 += hashedScore.kscores_[Figure::ColorWhite] - hashedScore.kscores_[Figure::ColorBlack];
-//#ifdef DO_KING_EVAL
-//  if (phaseInfo.phase_ != GamePhase::EndGame) {
-//    auto scoreKing = evaluateKingPressure(Figure::ColorWhite);
-//    scoreKing -= evaluateKingPressure(Figure::ColorBlack);
-//    score32 += scoreKing;
-//  }
-//#endif
+  ScoreType32 scoreKingW = ScoreType32{ hashedScore.kscores_[Figure::ColorWhite], 0 };
+  ScoreType32 scoreKingB = ScoreType32{ hashedScore.kscores_[Figure::ColorBlack], 0 };
+#ifdef DO_KING_EVAL
+  if (phaseInfo.phase_ != GamePhase::EndGame) {
+    scoreKingW += evaluateKingPressure(Figure::ColorWhite, hashedScore.kscores_[Figure::ColorBlack]);
+    scoreKingB += evaluateKingPressure(Figure::ColorBlack, hashedScore.kscores_[Figure::ColorWhite]);
+  }
+#endif
+  ScoreType32 scoreKing = scoreKingW - scoreKingB;
+  score32 += scoreKing;
 
   auto scoreAttacks = evaluateAttacks(Figure::ColorWhite);
   scoreAttacks -= evaluateAttacks(Figure::ColorBlack);
@@ -368,7 +369,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   result *= scoreMultip;
   result >>= scoreOffset;
 #else
-  score32 = score_mob + score_nbrq + scoreAttacks + scorePP;// hashedScore.kscores_[Figure::ColorWhite] - hashedScore.kscores_[Figure::ColorBlack];
+  score32 = scoreKing;
   auto result = considerColor(lipolScore(score32, phaseInfo));
 #endif
 
@@ -434,14 +435,14 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   {
     PasserInfo info;
     info.pwscore_ = heval->pwscore_;
-    info.kscores_[Figure::ColorBlack] = ScoreType32{ heval->kscores_[Figure::ColorBlack], 0 };
-    info.kscores_[Figure::ColorWhite] = ScoreType32{ heval->kscores_[Figure::ColorWhite], 0 };
+    info.kscores_[Figure::ColorBlack] = heval->kscores_[Figure::ColorBlack];
+    info.kscores_[Figure::ColorWhite] = heval->kscores_[Figure::ColorWhite];
     info.passers_ = heval->passers_;
 #ifndef NDEBUG
     PasserInfo xinfo = evaluatePawns();
     auto pwscore = xinfo.pwscore_;
-    auto kscorew = ScoreType32{ evaluateKingSafetyW(), 0 };
-    auto kscoreb = ScoreType32{ evaluateKingSafetyB(), 0 };
+    auto kscorew = evaluateKingSafetyW();
+    auto kscoreb = evaluateKingSafetyB();
     X_ASSERT_R(!(info.pwscore_ == pwscore && info.passers_ == xinfo.passers_ &&
       kscorew == xinfo.kscores_[Figure::ColorWhite]) && kscoreb == xinfo.kscores_[Figure::ColorBlack],
       "invalid pawns+king score in hash");
@@ -453,8 +454,8 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
   PasserInfo info = evaluatePawns();
   auto kscorew = evaluateKingSafetyW();
   auto kscoreb = evaluateKingSafetyB();
-  info.kscores_[Figure::ColorWhite] = ScoreType32{ kscorew, 0 };
-  info.kscores_[Figure::ColorBlack] = ScoreType32{ kscoreb, 0 };
+  info.kscores_[Figure::ColorWhite] = kscorew;
+  info.kscores_[Figure::ColorBlack] = kscoreb;
 
 #ifdef USE_EVAL_HASH_PW
   heval->hkey_ = hkey;

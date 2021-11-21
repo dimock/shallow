@@ -28,7 +28,7 @@ public:
   struct PasserInfo
   {
     ScoreType32 pwscore_;
-    ScoreType32 kscores_[2];
+    int16       kscores_[2];
     BitMask     passers_{};
   };
 
@@ -188,7 +188,7 @@ private:
   }
 
 #ifdef DO_KING_EVAL
-  ScoreType32 evaluateKingPressure(Figure::Color color);
+  ScoreType32 evaluateKingPressure(Figure::Color color, int const kscore_o);
 #endif
 
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
