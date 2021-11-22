@@ -846,14 +846,6 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
 
-  // bonus for 2 rooks
-  if (rooksDiff >= 2 || rooksDiff <= -2)
-  {
-    int rdiff = sign(rooksDiff);
-    Figure::Color rcolor = static_cast<Figure::Color>(rooksDiff > 0);
-    const int pawnsN = fmgr.pawns(rcolor);
-    score += EvalCoefficients::twoRooksBonus_[pawnsN] * rdiff;
-  }
   // Figure vs. Pawns
   if (!rooksDiff && figuresDiff)
   {
