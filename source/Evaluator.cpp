@@ -345,8 +345,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   ScoreType32 scoreKingB = ScoreType32{ hashedScore.kscores_[Figure::ColorBlack], 0 };
 #ifdef DO_KING_EVAL
   if (phaseInfo.phase_ != GamePhase::EndGame) {
-    scoreKingW += evaluateKingPressure(Figure::ColorWhite, hashedScore.kscores_[Figure::ColorBlack]);
-    scoreKingB += evaluateKingPressure(Figure::ColorBlack, hashedScore.kscores_[Figure::ColorWhite]);
+    scoreKingW -= evaluateKingPressure(Figure::ColorBlack, hashedScore.kscores_[Figure::ColorWhite]);
+    scoreKingB -= evaluateKingPressure(Figure::ColorWhite, hashedScore.kscores_[Figure::ColorBlack]);
   }
 #endif
   ScoreType32 scoreKing = scoreKingW - scoreKingB;

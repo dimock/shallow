@@ -973,6 +973,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
 #ifdef PROCESS_MOVES_SEQ
   bool sequenceFound = false;
+  bool underCheck = board.underCheck();
 #endif
 
   int thr = std::min(threshold, 0);
@@ -1008,7 +1009,6 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     ev_hash_.prefetch(pfhkey);
 #endif
 
-
     ScoreType score = -ScoreMax;
 
     board.makeMove(move);
@@ -1030,7 +1030,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     score = -captures(ictx, depth - ONE_PLY, ply + 1, -betta, -alpha, pv);
 
 #ifdef PROCESS_MOVES_SEQ
-    if (findSequence(ictx, ply, false) && score > alpha)
+    if (findSequence(ictx, ply, false) && (score > alpha || (score > scoreBest && underCheck)))
     {
       sequenceFound = true;
     }

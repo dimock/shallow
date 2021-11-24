@@ -57,7 +57,7 @@ namespace NEngine
   int EvalCoefficients::generalKingAuxPressure_{ 3 };
 
   // king threat
-  int EvalCoefficients::knightChecking_{ 40 };
+  int EvalCoefficients::knightChecking_{ 60 };
   int EvalCoefficients::bishopChecking_{ 40 };
   int EvalCoefficients::rookChecking_{ 70 };
   int EvalCoefficients::queenChecking_{ 85 };
@@ -94,14 +94,14 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {0, 32, 25, 3, 2, 1, 0, 0},
+    {0, 32, 25, 15, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
     {0, 32, 10, 3, 2, 1, 0, 0},
     {0, 12, 6, 2, 1, 0, 0, 0},
     {0, 12, 6, 2, 1, 0, 0, 0},
     {0, 32, 10, 3, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
-    {0, 32, 25, 3, 2, 1, 0, 0}
+    {0, 32, 25, 15, 2, 1, 0, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
