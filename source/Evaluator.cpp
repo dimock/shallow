@@ -369,7 +369,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   result *= scoreMultip;
   result >>= scoreOffset;
 #else
-  score32 = scoreKing;
+  score32 = score_mob;
   auto result = considerColor(lipolScore(score32, phaseInfo));
 #endif
 
