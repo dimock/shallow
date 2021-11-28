@@ -76,7 +76,7 @@ int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask 
       opy1 = opy;
     }
     if (atmsk) {
-      ay = Index(_lsb64(atmsk)).y();
+      ay = Index(_msb64(atmsk)).y();
       ay1 = ay - 1;
     }
     if (ay <= opy) {
@@ -140,7 +140,7 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
       opy = 7 - opy1;
     }
     if (atmsk) {
-      ay1 = Index(_msb64(atmsk)).y();
+      ay1 = Index(_lsb64(atmsk)).y();
       ay = 7 - ay1;
       ay1 += 1;
     }

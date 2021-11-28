@@ -149,8 +149,8 @@ void Evaluator::prepareAttacksMasks()
       finfo_[color].behindOPawnAttacks_ |= queen_moves_op;
     }
   }
-  //finfo_[Figure::ColorBlack].cango_mask_ &= ~(finfo_[Figure::ColorWhite].attack_mask_ & ~finfo_[Figure::ColorBlack].multiattack_mask_);
-  //finfo_[Figure::ColorWhite].cango_mask_ &= ~(finfo_[Figure::ColorBlack].attack_mask_ & ~finfo_[Figure::ColorWhite].multiattack_mask_);
+  finfo_[Figure::ColorBlack].cango_mask_ &= ~(finfo_[Figure::ColorWhite].attack_mask_ & ~finfo_[Figure::ColorBlack].multiattack_mask_);
+  finfo_[Figure::ColorWhite].cango_mask_ &= ~(finfo_[Figure::ColorBlack].attack_mask_ & ~finfo_[Figure::ColorWhite].multiattack_mask_);
 }
 
 ScoreType32 Evaluator::evaluateKnights()
@@ -202,8 +202,7 @@ ScoreType32 Evaluator::evaluateKnights()
       if (knight_moves & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        bool b_attacks = (knight_moves & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
-        finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+        finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_;
       }
 #endif
       
@@ -278,8 +277,7 @@ ScoreType32 Evaluator::evaluateBishops()
       if (bishop_moves_x & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        bool b_attacks = (bishop_moves_x & (finfo_[ocolor].ki_fields_no_pw_)) != 0ULL;
-        finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+        finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_;
       }
 #endif
 
@@ -359,8 +357,7 @@ ScoreType32 Evaluator::evaluateRook()
       if (rook_moves_x & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
-        bool b_attacks = (rook_moves_x & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
-        finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+        finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_;
       }
 #endif
 
@@ -370,7 +367,7 @@ ScoreType32 Evaluator::evaluateRook()
         finfo_[color].rookTreatAttacks_ |= rook_treat;
       }
       
-      auto r_moves_mask = rook_moves & ((finfo_[color].cango_mask_/* & ~finfo_[ocolor].nb_attacked_*/) | finfo_[ocolor].rq_mask_);
+      auto r_moves_mask = rook_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_) | finfo_[ocolor].rq_mask_);
       int n_moves = pop_count(r_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[n_moves & 15];
 
@@ -427,12 +424,11 @@ ScoreType32 Evaluator::evaluateQueens()
       if (qkattack)
       {
         finfo_[color].num_attackers_++;
-        bool b_attacks = (queen_moves_xr & finfo_[ocolor].ki_fields_no_pw_) != 0ULL;
-        finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_ * b_attacks + EvalCoefficients::basicAttack_ * (!b_attacks);
+        finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_;
       }
 #endif
 
-      auto q_moves_mask = queen_moves & ((finfo_[color].cango_mask_/* & ~finfo_[ocolor].nbr_attacked_*/) | fmgr.queen_mask(ocolor));
+      auto q_moves_mask = queen_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_) | fmgr.queen_mask(ocolor));
       auto n_moves = pop_count(q_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::queenMobility_[n_moves & 31];
 
