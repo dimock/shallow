@@ -14,8 +14,8 @@ namespace NEngine
 
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 6, 16 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 4 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 12, 18 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 4, 5 };
   ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
 
   // outpost
@@ -171,8 +171,8 @@ namespace NEngine
   // mobility
   ScoreType32 EvalCoefficients::knightMobility_[16] = { {-40, -40}, {-15, -15}, {-5, 0},  { 5,  6},  { 8,  9},  {11, 12}, {13, 14}, {15, 16}, {17, 18} };
   ScoreType32 EvalCoefficients::bishopMobility_[16] = { {-40, -40}, {-15, -15}, { 0, 0},  { 5,  6},  { 8,  9},  {12, 13}, {12, 14}, {13, 14}, {14, 15}, {15, 16}, {16, 17}, {17, 18}, {17, 18}, {18, 18}, {18, 18}, {18, 18} };
-  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-25, -45}, { -5, -20}, { 0, 0},  { 5, 10},  { 8, 20},  {10, 25}, {10, 30}, {20, 35}, {20, 35}, {25, 40}, {26, 40}, {27, 40}, {27, 40}, {28, 40}, {28, 40}, {28, 40} };
-  ScoreType32 EvalCoefficients::queenMobility_[32] =  { {-55, -55}, {-25, -25}, { 0, 0},  { 5, 10},  { 8, 15},  {10, 25}, {12, 25}, {14, 25}, {16, 25}, {18, 25}, {20, 40}, {22, 40}, {24, 40}, {26, 40}, {28, 40}, {30, 45},
+  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-25, -45}, { -5, -20}, { 0, 0},  { 5, 10},  { 8, 15},  {10, 20}, {10, 25}, {20, 30}, {20, 35}, {25, 40}, {26, 40}, {27, 40}, {27, 40}, {28, 40}, {28, 40}, {28, 40} };
+  ScoreType32 EvalCoefficients::queenMobility_[32] =  { {-55, -55}, {-25, -25}, { 0, 0},  { 5, 10},  { 8, 15},  {10, 20}, {12, 25}, {14, 25}, {16, 30}, {18, 30}, {20, 30}, {22, 35}, {24, 40}, {26, 40}, {28, 40}, {30, 45},
                                                         { 32,  45}, { 34,  45}, {36, 50}, {38, 50},  {40, 50},  {42, 55}, {44, 55}, {46, 55}, {48, 60}, {49, 60}, {50, 60}, {50, 60}, {50, 60}, {50, 60}, {50, 60}, {50, 60} };
 
   ScoreType32 EvalCoefficients::knightPinned_ = { 15, 15 };

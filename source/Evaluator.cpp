@@ -380,6 +380,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   }
 #endif
 
+  result += 5;
   return result;
 }
 
