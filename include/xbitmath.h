@@ -169,6 +169,11 @@ inline bool one_bit_set(BitMask n)
   return (n & (n-1)) == 0ULL;
 }
 
+inline bool few_bits_set(BitMask n)
+{
+  return (n != 0ULL) && !one_bit_set(n);
+}
+
 inline BitMask set_mask_bit(int bit)
 {
   return 1ULL << bit;

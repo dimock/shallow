@@ -80,6 +80,7 @@ namespace NEngine
 
   // arrays
   ScoreType32 EvalCoefficients::doubledPawn_ = {-11, -9};
+  ScoreType32 EvalCoefficients::disconnectedPawn_ = {-3, -3};
   ScoreType32 EvalCoefficients::isolatedPawn_[2] = { {-12, -10}, {-16, -13} };
   ScoreType32 EvalCoefficients::backwardPawn_[8] = { {0, 0}, {-14, -10}, {-12, -9}, {-10, -8}, {-8, -7}, {-8, -7}, {0, 0}, {0, 0} };
   ScoreType32 EvalCoefficients::protectedPawn_[8] = { {0, 0}, {0, 0}, {4, 3}, {5, 4}, {5, 5}, {6, 6}, {6, 6}, {0, 0} };
@@ -109,7 +110,7 @@ namespace NEngine
   };
   int EvalCoefficients::opawnsNearKing_[8] = { 0, 10, 7, 5, 3, 1, 0, 0 };
   int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 16, 8, 4, 0 };
-  int EvalCoefficients::opawnAboveKing_[8] = { 0, 20, 15, 10, 5, 2, 0, 0 };
+  int EvalCoefficients::opawnAboveKing_[8] = { 0, 40, 25, 10, 0, 0, 0, 0 };
   // rook on open column
   ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {10, 4} };
 
@@ -197,10 +198,10 @@ namespace NEngine
   {
     {},
     {},
-    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
-    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
-    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
-    { {0, 0}, {10, 0}, {7, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {-5, 0} },
+    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
+    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
+    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
+    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
     {},
     {}
   };

@@ -31,4 +31,6 @@ private:
   std::unordered_map<BitMask, std::function<std::pair<SpecialCaseResult, ScoreType>(Board const&)>> scases_;
 };
 
+bool kpkPassed(Board const& board, Figure::Color pawnColor, int pawnPos);
+
 }

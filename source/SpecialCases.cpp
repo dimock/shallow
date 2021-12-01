@@ -5,6 +5,24 @@
 namespace NEngine
 {
 
+bool kpkPassed(Board const& board, Figure::Color pawnColor, int pawnPos)
+{
+  auto loserColor = Figure::otherColor(pawnColor);
+  auto moveColor = board.color();
+  int kw = board.kingPos(pawnColor);
+  int kl = board.kingPos(loserColor);
+  if (pawnColor == Figure::ColorBlack)
+  {
+    pawnPos = Figure::mirrorIndex_[pawnPos];
+    kw = Figure::mirrorIndex_[kw];
+    kl = Figure::mirrorIndex_[kl];
+    moveColor = Figure::otherColor(moveColor);
+  }
+  return (kpk_[kw][kl][moveColor] & (1ULL << pawnPos)) != 0ULL;
+}
+
+
+
 namespace
 {
   struct Triplet
@@ -33,22 +51,6 @@ namespace
   const int delta_y_[2] = { -8, 8 };
 
   const BitMask FORTRESS_PAWNS[2] = { 35538699416403456ULL, 35604670110137856ULL };
-
-  bool kpkPassed(Board const& board, Figure::Color pawnColor, int pawnPos)
-  {
-    auto loserColor = Figure::otherColor(pawnColor);
-    auto moveColor = board.color();
-    int kw = board.kingPos(pawnColor);
-    int kl = board.kingPos(loserColor);
-    if (pawnColor == Figure::ColorBlack)
-    {
-      pawnPos = Figure::mirrorIndex_[pawnPos];
-      kw = Figure::mirrorIndex_[kw];
-      kl = Figure::mirrorIndex_[kl];
-      moveColor = Figure::otherColor(moveColor);
-    }
-    return (kpk_[kw][kl][moveColor] & (1ULL << pawnPos)) != 0ULL;
-  }
 
   bool kpkPassed(Board const& board, Figure::Color pawnColor)
   {

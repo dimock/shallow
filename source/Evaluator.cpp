@@ -567,14 +567,16 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
     bool opened = ((opmsk| pmask) & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward<color>(idx, pmask, opmsk, fwd_field, finfo[ocolor].pawnAttacks_ & ~finfo[color].pawnAttacks_);
-    bool neighbors = (pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask) != 0ULL;
-    bool doubled = (!guarded) && (pop_count(pawnMasks().mask_column(x) & pmask) > 1) && ((bkw_mask & pmask) != 0ULL);
+    bool neighbors = !guarded && ((pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask) != 0ULL);
+    bool doubled = (!guarded) && few_bits_set(pawnMasks().mask_column(x) & pmask) && ((bkw_mask & pmask) != 0ULL);
+    bool disconnected = !isolated && !backward && !(guarded || neighbors);
 
     info.pwscore_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
     info.pwscore_ += EvalCoefficients::backwardPawn_[cy] * backward;
     info.pwscore_ += EvalCoefficients::protectedPawn_[cy] * guarded;
     info.pwscore_ += EvalCoefficients::hasneighborPawn_[cy] * neighbors;
     info.pwscore_ += EvalCoefficients::doubledPawn_ * doubled;
+    info.pwscore_ += EvalCoefficients::disconnectedPawn_ * disconnected;
 
     // passer pawn - save position for further usage
     if (!(fwd_mask & (opmsk | pmask))) {
@@ -919,12 +921,17 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     pw_attacks = ((pw_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pw_attacks >> 9) & Figure::pawnCutoffMasks_[1]);
   }
   counted_mask |= pw_attacks;
-  if (auto pawn_fork = (o_mask & pw_attacks)) {
+  auto pawn_fork = (o_mask & pw_attacks);
+  if (pawn_fork) {
     int pawnsN = pop_count(pawn_fork);
     attackedN += pawnsN;
     pawnsN--;
     pawnsN = std::min(1, pawnsN);
     attackScore += EvalCoefficients::pawnAttack_[pawnsN];
+  }
+  if(pawn_fork = (o_mask & ~pw_attacks & finfo_[color].pawnAttacks_)) {
+    attackedN++;
+    attackScore += EvalCoefficients::pawnAttack_[0] >> 1;
   }
 
 #ifdef EVAL_EXTENDED_PAWN_ATTACK
