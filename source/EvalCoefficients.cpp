@@ -14,7 +14,7 @@ namespace NEngine
 
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 12, 18 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 17, 22 };
   ScoreType32 EvalCoefficients::pawnPressureWeak_{ 4, 5 };
   ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
 
@@ -23,12 +23,12 @@ namespace NEngine
 
   // forks
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 22 };
+  ScoreType EvalCoefficients::knightAttack_{ 32 };
+  ScoreType EvalCoefficients::pawnAttack_{ 40 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
-  ScoreType EvalCoefficients::knightAttack_[2] = { 20, 70 };
-  ScoreType EvalCoefficients::pawnAttack_[2] = { 20, 70 };
 
   // immobility
   ScoreType32 EvalCoefficients::immobileAttackBonus_[4] = { { 30, 30 }, { 30, 30 }, { 30, 30 }, { 30, 30 } };
@@ -66,8 +66,13 @@ namespace NEngine
   
   int EvalCoefficients::checkMyMoveBonus_{ 10 };
   int EvalCoefficients::possibleMatTreat_{ 50 };
-  int EvalCoefficients::attackedNearKingCoeff_{ 40 };
-  int EvalCoefficients::attackedNearKingCoeffWeak_{ 15 };
+  int EvalCoefficients::attackedNearKingStrong_{ 40 };
+  int EvalCoefficients::attackedNearKingWeak_{ 15 };
+  int EvalCoefficients::attackedNearKingOther_{ 5 };
+  int EvalCoefficients::checkNearKingStrong_{ 30 };
+  int EvalCoefficients::checkNearKingWeak_{ 10 };
+  int EvalCoefficients::checkNearKingOther_{ 3 };
+
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 32, 48, 64, 64, 64, 64, 64 };
   int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0, 16, 32, 48, 56, 60, 62 };
