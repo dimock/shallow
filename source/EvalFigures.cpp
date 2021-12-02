@@ -191,7 +191,7 @@ ScoreType32 Evaluator::evaluateKnights()
       bool qpinned = false;
       if(knight_moves)
       {
-        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor), nst::none)) {
+        if (isPinned(n, color, ocolor, finfo_[color].rq_mask_, fmgr.bishop_mask(ocolor)|fmgr.rook_mask(ocolor), nst::none)) {
           qpinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
         }
@@ -266,7 +266,8 @@ ScoreType32 Evaluator::evaluateBishops()
       bool q_pinned = false;
       if(bishop_moves)
       {
-        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook)) {
+        if (isPinned(n, color, ocolor, fmgr.queen_mask(color)|(fmgr.rook_mask(color) & ~finfo_[color].attack_mask_),
+                     fmgr.rook_mask(ocolor), nst::rook)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
         }

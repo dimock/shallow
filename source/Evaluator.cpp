@@ -687,10 +687,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
   auto const& fmgr = board.fmgr();
   const bool bcolor = board.color() == color;
   const auto pmask = fmgr.pawn_mask(color);
-  const auto mypassers = pmask & pi.passers_;
-  if (!mypassers)
-    return{};
-  auto psmask = mypassers;
+  auto psmask = pmask & pi.passers_;
 
   const int py = Evaluator::promo_y_[color];
   const int dy = Evaluator::delta_y_[color];
@@ -721,7 +718,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     auto pp = Index(x, py);
     auto fwd_field = set_mask_bit(n1);
 
-    bool neighbours = (pawnMasks().mask_neighbor(color, n) & mypassers) != 0ULL;
+    bool neighbours = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
 
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
