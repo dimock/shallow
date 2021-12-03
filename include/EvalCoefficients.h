@@ -22,6 +22,7 @@ struct EvalCoefficients
 
   // outpost
   static ScoreType32 knightOutpost_;
+  static ScoreType32 bishopOutpost_;
 
   // forks & other treats
   static ScoreType bishopsAttackBonus_;

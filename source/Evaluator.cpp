@@ -997,7 +997,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += rqtreatsN;
     attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
     rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 3;
+    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 2;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {

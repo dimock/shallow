@@ -230,6 +230,7 @@ ScoreType32 Evaluator::evaluateBishops()
     auto ocolor = Figure::otherColor(color);
     BitMask mask = fmgr.bishop_mask(color);
     auto const pwmask = fmgr.pawn_mask(color);
+    BitMask outpost_mask = finfo_[color].pawnAttacks_ & ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
 
     // bishop on the same color square as its pawns
     if (mask) {
@@ -251,6 +252,11 @@ ScoreType32 Evaluator::evaluateBishops()
         finfo_[color].multiattack_mask_ |= bishop_moves_x;
       }
       bishop_moves_x |= bishop_moves;
+
+      // outpost
+      const auto nbit = set_mask_bit(n);
+      const bool boutpost = ((nbit | (bishop_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
+      score[color] += EvalCoefficients::knightOutpost_ * boutpost;
 
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
