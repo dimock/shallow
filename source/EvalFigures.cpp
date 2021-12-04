@@ -256,7 +256,7 @@ ScoreType32 Evaluator::evaluateBishops()
       // outpost
       const auto nbit = set_mask_bit(n);
       const bool boutpost = ((nbit | (bishop_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
-      score[color] += EvalCoefficients::knightOutpost_ * boutpost;
+      score[color] += EvalCoefficients::bishopOutpost_ * boutpost;
 
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
