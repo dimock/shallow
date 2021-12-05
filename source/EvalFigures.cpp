@@ -118,7 +118,7 @@ void Evaluator::prepareAttacksMasks()
       finfo_[color].behindPawnAttacks_ |= rook_moves_p;
       finfo_[color].behindOPawnAttacks_ |= rook_moves_op;
     }
-    finfo_[color].rq_treat_ = finfo_[color].r_treat_ = BitMask{};
+    finfo_[color].rq_treat_ = finfo_[color].r_treat_ = finfo_[color].qbi_treat_ = BitMask{};
     finfo_[color].queenMoves_ = BitMask{};
     auto qmask = fmgr.queen_mask(color);
     for (; qmask;)
@@ -129,7 +129,10 @@ void Evaluator::prepareAttacksMasks()
       auto nqr_attacks = ~qr_attacks;
       auto queen_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n) & nqr_attacks;
       auto queen_moves_op = magic_ns::rook_moves(n, mask_all_not_pw[ocolor]) & pawnMasks().mask_forward(ocolor, n) & nqr_attacks;
-      auto queen_moves = magic_ns::queen_moves(n, mask_all_);
+
+      auto queen_moves_r = magic_ns::rook_moves(n, mask_all_);
+      auto queen_moves_bi = magic_ns::bishop_moves(n, mask_all_);
+      auto queen_moves = queen_moves_r | queen_moves_bi;
       finfo_[color].checks_mask_ |= queen_moves;
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
@@ -137,10 +140,12 @@ void Evaluator::prepareAttacksMasks()
         queen_moves &= from_mask;
         queen_moves_p &= from_mask;
         qr_attacks &= from_mask;
+        queen_moves_bi &= from_mask;
         finfo_[color].pinnedFigures_ |= set_mask_bit(n);
       }
       finfo_[color].rq_treat_ |= queen_moves;
       finfo_[color].r_treat_ |= qr_attacks;
+      finfo_[color].qbi_treat_ |= queen_moves_bi;
       moves_masks_[n] = queen_moves;
       finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & queen_moves;
       finfo_[color].attack_mask_ |= queen_moves;

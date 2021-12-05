@@ -28,6 +28,8 @@ struct EvalCoefficients
   static ScoreType bishopsAttackBonus_;
   static ScoreType knightAttack_;
   static ScoreType pawnAttack_;
+  static ScoreType possibleKnightAttack_;
+  static ScoreType possiblePawnAttack_;
   static ScoreType rookQueenAttackedBonus_;
   static ScoreType queenUnderRookAttackBonus_;
   static ScoreType multiattackedBonus_;

@@ -505,8 +505,8 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     check_coeff >>= 3;
   }
 
-  check_coeff -= kscore_o >> 3;
-  attack_coeff -= kscore_o >> 3;
+  check_coeff -= kscore_o >> 4;
+  attack_coeff -= kscore_o >> 4;
 
   check_coeff = std::max(0, check_coeff);
   attack_coeff = std::max(0, attack_coeff);
