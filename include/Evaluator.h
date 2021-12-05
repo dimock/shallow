@@ -42,8 +42,6 @@ public:
     BitMask queenMoves_{};
     BitMask behindPawnAttacks_{};
     BitMask behindOPawnAttacks_{};
-    BitMask bishopTreatAttacks_{};
-    BitMask rookTreatAttacks_{};
     BitMask kingAttacks_{};
     BitMask attack_mask_{};
     BitMask multiattack_mask_{};
@@ -52,8 +50,10 @@ public:
     BitMask mask_xray_r_{};
     BitMask nb_attacked_{};
     BitMask nbr_attacked_{};
-    BitMask rq_attacked_{};
-    BitMask r_attacked_{};
+    BitMask n_treat_{};
+    BitMask bi_treat_{};
+    BitMask r_treat_{};
+    BitMask rq_treat_{};
     BitMask ki_fields_{};
     BitMask ki_fields_no_pw_{};
     BitMask brq_mask_{};

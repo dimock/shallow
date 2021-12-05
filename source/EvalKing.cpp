@@ -518,15 +518,11 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   int king_side = (oki_x > 4) ? 0 : ((oki_x < 3) ? 1 : 2); // 0 = right, 1 = left, 2 = center
 
   auto general_pressure_mask =
-    ((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_) | finfo_[color].pawnAttacks_) &
-    ~finfo_[ocolor].pawnAttacks_ & ~(near_oking_att | near_oking_rem);
+    ((finfo_[color].attack_mask_ & ~finfo_[ocolor].pawnAttacks_) | finfo_[color].multiattack_mask_ | finfo_[color].pawnAttacks_) &
+    ~(near_oking_att | near_oking_rem);
 
   auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
-  int general_king_attacks_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
-
-  auto attacks_opponent_other = general_pressure_mask & Figure::kingAuxBoard_[ocolor][king_side];
-  int general_opponent_pressure = pop_count(attacks_opponent_other) * EvalCoefficients::generalKingAuxPressure_;
-  int general_score = general_king_attacks_score + general_opponent_pressure;
+  int general_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
 
   score += general_score;
 
