@@ -501,6 +501,15 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     check_coeff += rem_king_checks;
   }
 
+  auto oking_pw_attacked = (finfo_[color].pawnAttacks_ & near_oking_pw & ~finfo_[ocolor].pawnAttacks_);
+  if (oking_pw_attacked) {
+    int pawnsN = pop_count(oking_pw_attacked);
+    auto pw_king_attacks = EvalCoefficients::attackedNearKingPawns_ * pawnsN;
+    auto pw_king_checks = EvalCoefficients::checkNearKingPawns_ * pawnsN;
+    attack_coeff += pw_king_attacks;
+    check_coeff += pw_king_checks;
+  }
+
   if (num_attackers == 0) {
     check_coeff >>= 3;
   }

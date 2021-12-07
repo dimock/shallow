@@ -65,14 +65,15 @@ public:
     BitMask discovered_mask_{};
     BitMask attackedByKnightRq_{};
     BitMask pinnedFigures_{};
+#ifdef MOBILITY_EXTENDED
+    BitMask blockedFigures_{};
+#endif
     BitMask checks_mask_{};
     ScoreType32 score_mob_{};
 #ifdef DO_KING_EVAL
     int num_attackers_{};
     int score_king_{};
     bool qkingAttack_{};
-    //int score_opening_{};
-    //bool matTreat_{};
 #endif
     bool discoveredCheck_{};
   } finfo_[2];
@@ -81,8 +82,10 @@ public:
 
   BitMask mask_all_{};
   BitMask inv_mask_all_{};
+
   int alpha_{};
   int betta_{};
+
   Board const* board_{ nullptr };
 
 #ifdef USE_EVAL_HASH_PW

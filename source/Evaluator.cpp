@@ -568,9 +568,10 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
     bool opened = ((opmsk| pmask) & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward<color>(idx, pmask, opmsk, fwd_field, finfo[ocolor].pawnAttacks_ & ~finfo[color].pawnAttacks_);
-    bool neighbors = !guarded && ((pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask) != 0ULL);
+    bool neighbors = ((pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask) != 0ULL);
     bool doubled = (!guarded) && few_bits_set(pawnMasks().mask_column(x) & pmask) && ((bkw_mask & pmask) != 0ULL);
-    bool disconnected = !isolated && !backward && !(guarded || neighbors);
+    bool connected = (movesTable().pawnCaps(color, n) & pmask) != 0ULL;
+    bool disconnected = !isolated && !backward && !(guarded || neighbors || connected);
 
     info.pwscore_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
     info.pwscore_ += EvalCoefficients::backwardPawn_[cy] * backward;
@@ -720,7 +721,9 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     auto n1 = n + (dy << 3);
     auto pp = Index(x, py);
     auto fwd_field = set_mask_bit(n1);
+    auto my_field = set_mask_bit(n);
 
+    bool guarded = (finfo[color].pawnAttacks_ & my_field) != 0ULL;
     bool neighbours = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
 
     ScoreType32 pwscore{};
@@ -730,7 +733,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     int king_dist = distanceCounter().getDistance(board.kingPos(color), n1);
     if (passmsk & opmsk) {
       pwscore = EvalCoefficients::passerPawn2_[cy];
-      pwscore += EvalCoefficients::passerPawnNbs2_[cy] * neighbours;
+      pwscore += EvalCoefficients::passerPawnNbs2_[cy] * (neighbours || guarded);
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus2_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus2_[cy] * king_dist;
@@ -1002,6 +1005,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
+    counted_mask |= king_attacks;
     auto ktreatsN = pop_count(king_attacks);
     attackedN += ktreatsN;
     attackScore += EvalCoefficients::attackedByKingBonus_ * ktreatsN;
@@ -1022,7 +1026,21 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int knightsN = pop_count(kn_fork);
     possibleNN = std::max(possibleNN, knightsN);
   }
-  attackScore += (EvalCoefficients::possibleKnightAttack_ * possibleNN) >> knight_protects;
+  attackScore += (EvalCoefficients::possibleKnightAttack_ * possibleNN) >> ((int)knight_protects);
+
+  attackScore += EvalCoefficients::pinnedFigureBonus_ * pop_count(finfo_[ocolor].pinnedFigures_);
+
+  if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
+    auto attacks_mask = (((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
+      (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_) |
+      (fmgr.rook_mask(ocolor) & (finfo_[color].n_treat_|finfo_[color].bi_treat_)) |
+      (fmgr.queen_mask(ocolor) & (finfo_[color].n_treat_ | finfo_[color].bi_treat_ | finfo_[color].r_treat_));
+    auto blocked_attacked = blocked_mask & (finfo_[color].pawnAttacks_ | attacks_mask);
+    int blockedN = pop_count(blocked_attacked);
+    attackScore += EvalCoefficients::immobileAttackBonus_ * blockedN;
+    attackedN += blockedN;
+  }
+
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
   }

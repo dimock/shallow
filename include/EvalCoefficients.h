@@ -36,7 +36,8 @@ struct EvalCoefficients
   static ScoreType attackedByKingBonus_;
 
   // immobility
-  static ScoreType32 immobileAttackBonus_;
+  static ScoreType immobileAttackBonus_;
+  static ScoreType pinnedFigureBonus_;
 
   // check & mat treat
   static ScoreType32 discoveredCheckBonus_;
@@ -78,9 +79,12 @@ struct EvalCoefficients
   static int attackedNearKingStrong_;
   static int attackedNearKingWeak_;
   static int attackedNearKingOther_;
+  static int attackedNearKingPawns_;
   static int checkNearKingStrong_;
   static int checkNearKingWeak_;
   static int checkNearKingOther_;
+  static int checkNearKingPawns_;
+
   static int kingWeakCheckersCoefficients_;
   static int kingCheckersCoefficients_[8];
   static int kingAttackersCoefficients_[8];
