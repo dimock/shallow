@@ -15,7 +15,7 @@ namespace NEngine
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
   ScoreType32 EvalCoefficients::pawnPressureStrong_{ 17, 22 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 4, 5 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 4, 7 };
   ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
 
   // outpost
@@ -25,9 +25,9 @@ namespace NEngine
   // forks
   ScoreType EvalCoefficients::bishopsAttackBonus_{ 32 };
   ScoreType EvalCoefficients::knightAttack_{ 32 };
-  ScoreType EvalCoefficients::pawnAttack_{ 40 };
+  ScoreType EvalCoefficients::pawnAttack_{ 50 };
   ScoreType EvalCoefficients::possibleKnightAttack_{ 12 };
-  ScoreType EvalCoefficients::possiblePawnAttack_{ 7 };
+  ScoreType EvalCoefficients::possiblePawnAttack_{ 10 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 20 };
@@ -51,17 +51,16 @@ namespace NEngine
   // king attacks
   int EvalCoefficients::pawnKingAttack_{ 15 };
 
-  int EvalCoefficients::knightKingAttack_{ 17 };
-  int EvalCoefficients::bishopKingAttack_{ 17 };
+  int EvalCoefficients::knightKingAttack_{ 20 };
+  int EvalCoefficients::bishopKingAttack_{ 20 };
   int EvalCoefficients::rookKingAttack_{ 18 };
   int EvalCoefficients::queenKingAttack_{ 21 };
-  int EvalCoefficients::basicAttack_{ 3 };
 
   int EvalCoefficients::generalKingPressure_{ 4 };
 
   // king threat
   int EvalCoefficients::knightChecking_{ 60 };
-  int EvalCoefficients::bishopChecking_{ 40 };
+  int EvalCoefficients::bishopChecking_{ 30 };
   int EvalCoefficients::rookChecking_{ 85 };
   int EvalCoefficients::queenChecking_{ 85 };
   int EvalCoefficients::weakChecking_{ 9 };
@@ -69,18 +68,18 @@ namespace NEngine
   
   int EvalCoefficients::checkMyMoveBonus_{ 10 };
   int EvalCoefficients::possibleMatTreat_{ 50 };
-  int EvalCoefficients::attackedNearKingStrong_{ 45 };
-  int EvalCoefficients::attackedNearKingWeak_{ 13 };
+  int EvalCoefficients::attackedNearKingStrong_{ 40 };
+  int EvalCoefficients::attackedNearKingWeak_{ 15 };
   int EvalCoefficients::attackedNearKingOther_{ 4 };
   int EvalCoefficients::attackedNearKingPawns_{ 3 };
-  int EvalCoefficients::checkNearKingStrong_{ 35 };
+  int EvalCoefficients::checkNearKingStrong_{ 30 };
   int EvalCoefficients::checkNearKingWeak_{ 15 };
   int EvalCoefficients::checkNearKingOther_{ 4 };
   int EvalCoefficients::checkNearKingPawns_{ 3 };
 
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 32, 64, 64, 64, 64, 64, 64 };
-  int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0, 16, 24, 48, 56, 60, 62 };
+  int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0, 16, 29, 48, 56, 60, 62 };
   int EvalCoefficients::kingPossibleMovesCoefficients_[10] = { 16,  8, 4, 2, 1, 0, 0, 0, 0, 0 };
 
   // for special cases
@@ -91,11 +90,12 @@ namespace NEngine
 
   // arrays
   ScoreType32 EvalCoefficients::doubledPawn_ = {-11, -9};
-  ScoreType32 EvalCoefficients::disconnectedPawn_ = {-3, -3};
+  ScoreType32 EvalCoefficients::disconnectedPawn_ = {-4, -4};
   ScoreType32 EvalCoefficients::isolatedPawn_[2] = { {-12, -10}, {-16, -13} };
-  ScoreType32 EvalCoefficients::backwardPawn_[8] = { {0, 0}, {-14, -10}, {-13, -9}, {-12, -9}, {-11, -8}, {-11, -8}, {0, 0}, {0, 0} };
-  ScoreType32 EvalCoefficients::protectedPawn_[8] = { {0, 0}, {0, 0}, {4, 3}, {5, 4}, {5, 5}, {6, 6}, {6, 6}, {0, 0} };
-  ScoreType32 EvalCoefficients::hasneighborPawn_[8] = { {0, 0}, {4, 3}, {4, 3}, {5, 4}, {5, 4}, {6, 6}, {6, 6}, {0, 0} };
+  ScoreType32 EvalCoefficients::backwardPawn_ = {-12, -10};
+  ScoreType32 EvalCoefficients::unprotectedPawn_ = {-5, -5};
+  ScoreType32 EvalCoefficients::hasneighborPawn_ = {5, 5};
+  ScoreType32 EvalCoefficients::attackingPawn_[8] = { { 0, 0 }, { 1, 1 }, { 2, 2 }, { 3, 3 }, { 8, 10 }, { 14, 18 }, { 0, 0 }, { 0, 0 } };
 
   int EvalCoefficients::opponentPawnPressure_[8] = { 20, 20, 15, 10, 7, 1, 0, 0 };
 

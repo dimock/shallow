@@ -56,7 +56,6 @@ struct EvalCoefficients
   static int bishopKingAttack_;
   static int rookKingAttack_;
   static int queenKingAttack_;
-  static int basicAttack_;
 
   static int generalKingPressure_;
 
@@ -93,9 +92,10 @@ struct EvalCoefficients
   static ScoreType32 doubledPawn_;
   static ScoreType32 disconnectedPawn_;
   static ScoreType32 isolatedPawn_[2];
-  static ScoreType32 backwardPawn_[8];
-  static ScoreType32 protectedPawn_[8];
-  static ScoreType32 hasneighborPawn_[8];
+  static ScoreType32 backwardPawn_;
+  static ScoreType32 unprotectedPawn_;
+  static ScoreType32 hasneighborPawn_;
+  static ScoreType32 attackingPawn_[8];
   
   static int opponentPawnPressure_[8];
 

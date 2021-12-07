@@ -369,7 +369,7 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   result *= scoreMultip;
   result >>= scoreOffset;
 #else
-  score32 = score_mob;
+  score32 = scoreKing;
   auto result = considerColor(lipolScore(score32, phaseInfo));
 #endif
 
@@ -417,13 +417,12 @@ ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
   auto const& fmgr = board_->fmgr();
   auto const ocolor = Figure::otherColor(color);
   auto const pw_mask = fmgr.pawn_mask(ocolor);
-  auto pw_protected = pw_mask & finfo_[ocolor].pawnAttacks_;
-  auto pw_unprotected = pw_mask ^ pw_protected;
-  auto treats = finfo_[color].pawnAttacks_ | finfo_[color].n_treat_ | finfo_[color].bi_treat_ |
-                finfo_[color].r_treat_ | finfo_[color].queenMoves_ | finfo_[color].kingAttacks_;
-  ScoreType32 score = EvalCoefficients::protectedPawnPressure_ * pop_count(pw_protected   & treats);;
+  auto pw_unprotected = pw_mask & ~finfo_[ocolor].pawnAttacks_;
+  auto treats = finfo_[color].n_treat_ | finfo_[color].bi_treat_ | finfo_[color].r_treat_ |
+                finfo_[color].queenMoves_ | finfo_[color].kingAttacks_;
+  ScoreType32 score{};
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & ~finfo_[ocolor].attack_mask_);
-  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats &  finfo_[ocolor].attack_mask_);
+  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & finfo_[ocolor].attack_mask_);
   return score;
 }
 
@@ -563,6 +562,7 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
     const auto bkw_mask = pawnMasks().mask_forward(ocolor, n);
 
     auto const protectMask = movesTable().pawnCaps(ocolor, n);
+    auto const attackMask = movesTable().pawnCaps(color, n);
     bool guarded = (protectMask & pmask) != 0ULL;
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool opened = ((opmsk| pmask) & fwd_mask) == 0ULL;
@@ -572,13 +572,16 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
     bool doubled = (!guarded) && few_bits_set(pawnMasks().mask_column(x) & pmask) && ((bkw_mask & pmask) != 0ULL);
     bool connected = (movesTable().pawnCaps(color, n) & pmask) != 0ULL;
     bool disconnected = !isolated && !backward && !(guarded || neighbors || connected);
+    bool unprotected = !isolated && !backward && !guarded;
+    bool attack = (opmsk & attackMask) != 0ULL;
 
     info.pwscore_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
-    info.pwscore_ += EvalCoefficients::backwardPawn_[cy] * backward;
-    info.pwscore_ += EvalCoefficients::protectedPawn_[cy] * guarded;
-    info.pwscore_ += EvalCoefficients::hasneighborPawn_[cy] * neighbors;
+    info.pwscore_ += EvalCoefficients::backwardPawn_ * backward;
+    info.pwscore_ += EvalCoefficients::unprotectedPawn_ * unprotected;
+    info.pwscore_ += EvalCoefficients::hasneighborPawn_ * neighbors;
     info.pwscore_ += EvalCoefficients::doubledPawn_ * doubled;
     info.pwscore_ += EvalCoefficients::disconnectedPawn_ * disconnected;
+    info.pwscore_ += EvalCoefficients::attackingPawn_[cy] * attack;
 
     // passer pawn - save position for further usage
     if (!(fwd_mask & (opmsk | pmask))) {
