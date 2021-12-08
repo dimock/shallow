@@ -28,7 +28,7 @@ namespace NEngine
   ScoreType EvalCoefficients::pawnAttack_{ 50 };
   ScoreType EvalCoefficients::possibleKnightAttack_{ 12 };
   ScoreType EvalCoefficients::possiblePawnAttack_{ 10 };
-  ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
+  ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 40 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 20 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
@@ -109,8 +109,8 @@ namespace NEngine
     {0, 32, 25, 15, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
     {0, 32, 10, 3, 2, 1, 0, 0},
-    {0, 12, 6, 2, 1, 0, 0, 0},
-    {0, 12, 6, 2, 1, 0, 0, 0},
+    {0, 25, 20, 2, 1, 0, 0, 0},
+    {0, 25, 20, 2, 1, 0, 0, 0},
     {0, 32, 10, 3, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
     {0, 32, 25, 15, 2, 1, 0, 0}

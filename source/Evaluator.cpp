@@ -919,7 +919,8 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   BitMask o_rq_mask = fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
   BitMask o_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | o_rq_mask;
 
-  auto pw_attacks = fmgr.pawn_mask(color) & (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_);
+  auto pw_attacks = fmgr.pawn_mask(color) & (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_) &
+    ~finfo_[color].pinnedFigures_;
   if (color) {
     pw_attacks = ((pw_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pw_attacks << 7) & Figure::pawnCutoffMasks_[1]);
   }
@@ -939,7 +940,8 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 
 #ifdef EVAL_EXTENDED_PAWN_ATTACK
-  if (auto pfwd_attacks = (finfo_[color].pawns_fwd_ & (finfo_[color].attack_mask_ | finfo_[color].behindPawnAttacks_ | ~finfo_[ocolor].attack_mask_))) {
+  if (auto pfwd_attacks = (finfo_[color].pawns_fwd_ &
+          (finfo_[color].attack_mask_ | finfo_[color].behindPawnAttacks_ | ~finfo_[ocolor].attack_mask_) & ~finfo_[color].pinnedFigures_)) {
     if (color)
       pfwd_attacks = (((pfwd_attacks << 9) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks << 7) & Figure::pawnCutoffMasks_[1])) & 0xffffffffffffff00;
     else
