@@ -957,7 +957,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     counted_mask |= kn_fork;
     int knightsN = pop_count(kn_fork);
     attackedN += knightsN;
-    attackScore += EvalCoefficients::knightAttack_ * knightsN;
+    attackScore += EvalCoefficients::knightAttackRQ_ * knightsN;
   }
 
   const auto stong_bn_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_)
@@ -974,16 +974,16 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     counted_mask |= bi_treat;
     int bishopsN = pop_count(bi_treat);
     attackedN += bishopsN;
-    attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
+    attackScore += EvalCoefficients::bishopsAttackRQ_ * bishopsN;
   }
   
   if (auto bi_treat = (fmgr.knight_mask(ocolor) & finfo_[color].bi_treat_ & ~counted_mask)) {
     counted_mask |= bi_treat;
     int bishopsN = pop_count(bi_treat & stong_bn_attacks);
     attackedN += bishopsN;
-    attackScore += EvalCoefficients::bishopsAttackBonus_ * bishopsN;
+    attackScore += EvalCoefficients::bishopsAttack_ * bishopsN;
     bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
-    attackScore += (EvalCoefficients::bishopsAttackBonus_ * bishopsN) >> 2;
+    attackScore += (EvalCoefficients::bishopsAttack_ * bishopsN) >> 2;
   }
 
   auto qr_possible_mask = ~finfo_[ocolor].attack_mask_ & ~counted_mask;
