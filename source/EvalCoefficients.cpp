@@ -19,8 +19,8 @@ namespace NEngine
   ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
 
   // outpost
-  ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
-  ScoreType32 EvalCoefficients::bishopOutpost_{ 10, 3 };
+  ScoreType32 EvalCoefficients::knightOutpost_{ 12, 6 };
+  ScoreType32 EvalCoefficients::bishopOutpost_{ 12, 6 };
 
   // forks
   ScoreType EvalCoefficients::bishopsAttackRQ_{ 40 };
