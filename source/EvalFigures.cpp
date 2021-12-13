@@ -47,9 +47,7 @@ void Evaluator::prepareAttacksMasks()
   for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
   {
     auto ocolor = Figure::otherColor(color);
-#ifdef MOBILITY_EXTENDED
     finfo_[color].blockedFigures_ = BitMask{};
-#endif
     finfo_[color].knightMoves_ = BitMask{};
     finfo_[color].attackedByKnightRq_ = BitMask{};
     finfo_[color].behindPawnAttacks_ = BitMask{};
@@ -171,11 +169,8 @@ ScoreType32 Evaluator::evaluateKnights()
     finfo_[color].score_mob_ = ScoreType32{};
     finfo_[color].discoveredCheck_ = false;
     finfo_[color].n_treat_ = BitMask{};
-
-#ifdef DO_KING_EVAL
     finfo_[color].num_attackers_ = 0;
     finfo_[color].score_king_ = 0;
-#endif
 
     auto ocolor = Figure::otherColor(color);
     BitMask mask = board_->fmgr().knight_mask(color);
@@ -197,7 +192,6 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].discoveredCheck_ = true;
       }
 
-#ifdef MOBILITY_EXTENDED
       bool qpinned = false;
       if (knight_moves)
       {
@@ -207,30 +201,23 @@ ScoreType32 Evaluator::evaluateKnights()
           finfo_[color].score_mob_ -= EvalCoefficients::knightPinned_;
         }
       }
-#endif // king protection, discovered checks etc...
 
-#ifdef DO_KING_EVAL
       if (knight_moves & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
         finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_;
       }
-#endif
 
       auto n_moves_mask = knight_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
       auto n_moves = pop_count(n_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[n_moves & 15];
 
-#ifdef MOBILITY_EXTENDED
       if (!n_moves || qpinned) {
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
       if (!qpinned) {
-#endif
         finfo_[color].n_treat_ |= knight_moves;
-#ifdef MOBILITY_EXTENDED
       }
-#endif
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
@@ -285,7 +272,6 @@ ScoreType32 Evaluator::evaluateBishops()
         finfo_[color].discoveredCheck_ = true;
       }
 
-#ifdef MOBILITY_EXTENDED
       bool q_pinned = false;
       if(bishop_moves)
       {
@@ -295,26 +281,19 @@ ScoreType32 Evaluator::evaluateBishops()
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
         }
       }
-#endif // king protection, discovered checks etc...
 
-#ifdef DO_KING_EVAL
       if (bishop_moves_x & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
         finfo_[color].score_king_ += EvalCoefficients::bishopKingAttack_;
       }
-#endif
 
       // treat attacks
       if (bishop_moves) {
         auto mask_all_no_orq = mask_all_ & ~(board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor));
-#ifdef MOBILITY_EXTENDED
         if (!q_pinned) {
-#endif
           finfo_[color].bi_treat_ |= magic_ns::bishop_moves(n, mask_all_no_orq);
-#ifdef MOBILITY_EXTENDED
         }
-#endif
       }
 
       // mobility
@@ -322,11 +301,9 @@ ScoreType32 Evaluator::evaluateBishops()
       int n_moves = pop_count(b_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[n_moves & 15];
 
-#ifdef MOBILITY_EXTENDED
       if (!n_moves || q_pinned) {
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
-#endif
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
@@ -369,7 +346,6 @@ ScoreType32 Evaluator::evaluateRook()
         finfo_[color].discoveredCheck_ = true;
       }
 
-#ifdef MOBILITY_EXTENDED
       bool q_pinned = false;
       if(rook_moves)
       {
@@ -378,27 +354,20 @@ ScoreType32 Evaluator::evaluateRook()
           finfo_[color].score_mob_ -= EvalCoefficients::rookPinned_;
         }
       }
-#endif // king protection, discovered checks etc...
 
-#ifdef DO_KING_EVAL
       if (rook_moves_x & finfo_[ocolor].ki_fields_)
       {
         finfo_[color].num_attackers_++;
         finfo_[color].score_king_ += EvalCoefficients::rookKingAttack_;
       }
-#endif
 
       if (rook_moves) {
         auto mask_all_no_oq = mask_all_ & ~board_->fmgr().queen_mask(ocolor);
         auto rook_treat = magic_ns::rook_moves(n, mask_all_no_oq);
-#ifdef MOBILITY_EXTENDED
         if (!q_pinned) {
-#endif
           finfo_[color].r_treat_ |= rook_treat;
           finfo_[color].rq_treat_ |= rook_treat;
-#ifdef MOBILITY_EXTENDED
         }
-#endif
       }
       
       auto r_moves_mask = rook_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_) | finfo_[ocolor].rq_mask_);
@@ -414,11 +383,9 @@ ScoreType32 Evaluator::evaluateRook()
           finfo_[color].score_mob_ -= EvalCoefficients::rookBlocked_;
       }
 
-#ifdef MOBILITY_EXTENDED
       if (!n_moves || q_pinned) {
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
-#endif
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
@@ -451,7 +418,6 @@ ScoreType32 Evaluator::evaluateQueens()
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color] += EvalCoefficients::kingDistanceBonus_[Figure::TypeQueen][ki_dist];
 
-#ifdef DO_KING_EVAL
       bool qkattack = queen_moves_xr & finfo_[ocolor].ki_fields_;
       finfo_[color].qkingAttack_ |= qkattack;
       if (qkattack)
@@ -459,9 +425,7 @@ ScoreType32 Evaluator::evaluateQueens()
         finfo_[color].num_attackers_++;
         finfo_[color].score_king_ += EvalCoefficients::queenKingAttack_;
       }
-#endif
 
-#ifdef MOBILITY_EXTENDED
       bool q_pinned = false;
       if (queen_moves)
       {
@@ -470,17 +434,14 @@ ScoreType32 Evaluator::evaluateQueens()
           finfo_[color].score_mob_ -= EvalCoefficients::queenPinned_;
         }
       }
-#endif // king protection, discovered checks etc...
 
       auto q_moves_mask = queen_moves & ((finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_) | fmgr.queen_mask(ocolor));
       auto n_moves = pop_count(q_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::queenMobility_[n_moves & 31];
 
-#ifdef MOBILITY_EXTENDED
       if (q_pinned || !n_moves) {
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
-#endif
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];

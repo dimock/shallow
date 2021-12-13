@@ -343,12 +343,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   ScoreType32 scoreKingW = ScoreType32{ hashedScore.kscores_[Figure::ColorWhite], 0 };
   ScoreType32 scoreKingB = ScoreType32{ hashedScore.kscores_[Figure::ColorBlack], 0 };
-#ifdef DO_KING_EVAL
   if (phaseInfo.phase_ != GamePhase::EndGame) {
     scoreKingW -= evaluateKingPressure(Figure::ColorBlack, hashedScore.kscores_[Figure::ColorWhite]);
     scoreKingB -= evaluateKingPressure(Figure::ColorWhite, hashedScore.kscores_[Figure::ColorBlack]);
   }
-#endif
   ScoreType32 scoreKing = scoreKingW - scoreKingB;
   score32 += scoreKing;
 
@@ -508,7 +506,7 @@ bool isPawnBackward<Figure::ColorWhite>(Index const idx, BitMask const pmask, Bi
   BitMask pmask_after = betweenMasks().between(idx, Index(idx.x(), closest_y));
   auto blocked_mask = opawnAttacks | opmsk;
   bool blocked = (blocked_mask & pmask_after) != 0ULL;
-  if (!blocked && std::abs(closest_y - idx.y()) < 3 && (idx.y() < 6)) {
+  if (!blocked && (closest_y - idx.y()) < 3 && (idx.y() < 6)) {
     const auto fwd_field2 = fwd_field << 8;
     blocked = (fwd_field & pmask) != 0ULL && (fwd_field2 & blocked_mask) != 0ULL;
   }
@@ -523,7 +521,7 @@ bool isPawnBackward<Figure::ColorBlack>(Index const idx, BitMask const pmask, Bi
   BitMask pmask_after = betweenMasks().between(idx, Index(idx.x(), closest_y));
   auto blocked_mask = opawnAttacks | opmsk;
   bool blocked = (blocked_mask & pmask_after) != 0ULL;
-  if (!blocked && std::abs(closest_y - idx.y()) < 3 && (idx.y() > 3)) {
+  if (!blocked && (idx.y() - closest_y) < 3 && (idx.y() > 3)) {
     const auto fwd_field2 = fwd_field >> 8;
     blocked = (fwd_field & pmask) != 0ULL && (fwd_field2 & blocked_mask) != 0ULL;
   }
@@ -939,7 +937,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::pawnAttack_ >> 2;
   }
 
-#ifdef EVAL_EXTENDED_PAWN_ATTACK
   if (auto pfwd_attacks = (finfo_[color].pawns_fwd_ &
           (finfo_[color].attack_mask_ | finfo_[color].behindPawnAttacks_ | ~finfo_[ocolor].attack_mask_) & ~finfo_[color].pinnedFigures_)) {
     if (color)
@@ -951,7 +948,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
       attackScore += EvalCoefficients::possiblePawnAttack_ * pawnsN;
     }
   }
-#endif // EVAL_EXTENDED_PAWN_ATTACK
 
   if (auto kn_fork = (o_rq_mask & finfo_[color].knightMoves_)) {
     counted_mask |= kn_fork;

@@ -65,16 +65,12 @@ public:
     BitMask discovered_mask_{};
     BitMask attackedByKnightRq_{};
     BitMask pinnedFigures_{};
-#ifdef MOBILITY_EXTENDED
     BitMask blockedFigures_{};
-#endif
     BitMask checks_mask_{};
     ScoreType32 score_mob_{};
-#ifdef DO_KING_EVAL
     int num_attackers_{};
     int score_king_{};
     bool qkingAttack_{};
-#endif
     bool discoveredCheck_{};
   } finfo_[2];
 
@@ -191,9 +187,7 @@ private:
     return (from_mask & finfo_[color].discovered_attackers_ & ~pos_mask) && (from_mask & finfo_[color].discovered_mask_ & pos_mask);
   }
 
-#ifdef DO_KING_EVAL
   ScoreType32 evaluateKingPressure(Figure::Color color, int const kscore_o);
-#endif
 
   bool isPinned(int pos, Figure::Color color, Figure::Color ocolor, BitMask targets, BitMask attackers, nst::bishop_rook_dirs dir) const;
 

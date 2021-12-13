@@ -383,7 +383,6 @@ int Evaluator::evaluateKingsPawn(Figure::Color color, Index const kingPos) const
   return score;
 }
 
-#ifdef DO_KING_EVAL
 ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscore_o)
 {
   const auto& fmgr = board_->fmgr();
@@ -537,6 +536,5 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   return { score, 0 };
 }
-#endif
 
 } // NEngine
