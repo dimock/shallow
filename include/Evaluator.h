@@ -67,6 +67,8 @@ public:
     BitMask pinnedFigures_{};
     BitMask blockedFigures_{};
     BitMask checks_mask_{};
+    BitMask bishopMovesKipos_{};
+    BitMask rookMovesKipos_{};
     ScoreType32 score_mob_{};
     int num_attackers_{};
     int score_king_{};

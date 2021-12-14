@@ -405,11 +405,11 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   finfo_[color].num_attackers_ += (finfo_[color].pawnAttacks_ & near_oking) != 0ULL;
   finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
-  finfo_[color].score_king_ += EvalCoefficients::pawnKingAttack_ * ((finfo_[color].pawnAttacks_ & near_oking_pw) != 0ULL);
+  finfo_[color].score_king_ += EvalCoefficients::pawnKingAttack_ * (!!(finfo_[color].pawnAttacks_ & near_oking_pw));
 
   auto kn_check = movesTable().caps(Figure::TypeKnight, oki_pos) & finfo_[color].knightMoves_ & fmask_no_check;
-  auto bi_check = magic_ns::bishop_moves(oki_pos, mask_all_);
-  auto r_check = magic_ns::rook_moves(oki_pos, mask_all_);
+  auto bi_check = finfo_[ocolor].bishopMovesKipos_;
+  auto r_check = finfo_[ocolor].rookMovesKipos_;
   auto q_check = (bi_check | r_check) & finfo_[color].queenMoves_ & fmask_no_check;
   bi_check &= finfo_[color].bishopMoves_ & fmask_no_check;
   r_check &= finfo_[color].rookMoves_ & fmask_no_check;
@@ -423,7 +423,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   if (!finfo_[color].discoveredCheck_) {
     auto mask_all_npw = mask_all_ & ~fmgr.pawn_mask(color);
     auto bi_check_npw = magic_ns::bishop_moves(oki_pos, mask_all_npw) & (fmgr.bishop_mask(color) | fmgr.queen_mask(color));
-    auto r_check_npw = magic_ns::rook_moves(oki_pos, mask_all_npw) & (fmgr.rook_mask(color) | fmgr.queen_mask(color)) & pawnMasks().mask_row(oki_pos);
+    auto r_check_npw = magic_ns::rook_moves(oki_pos, mask_all_npw) & finfo_[color].rq_mask_ & pawnMasks().mask_row(oki_pos);
     auto check_npw = bi_check_npw | r_check_npw;
     while (check_npw && !finfo_[color].discoveredCheck_) {
       auto n = clear_lsb(check_npw);
@@ -450,17 +450,17 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     }
   }
 
-  bool canCheck = ((kn_check | bi_check | r_check) != 0ULL);
+  bool canCheck = !!(kn_check | bi_check | r_check);
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
   r_check &= can_check_r;
   q_check &= can_check_q;
-  int num_checkers = (kn_check != 0ULL) + (bi_check != 0ULL) + (r_check != 0ULL) + (q_check != 0ULL) + finfo_[color].discoveredCheck_;
+  int num_checkers = (!!kn_check) + (!!bi_check) + (!!r_check) + (!!q_check) + finfo_[color].discoveredCheck_;
 
-  auto check_score = EvalCoefficients::knightChecking_ * (kn_check != 0) +
-    EvalCoefficients::bishopChecking_ * (bi_check != 0) +
-    EvalCoefficients::rookChecking_ * (r_check != 0) +
-    EvalCoefficients::queenChecking_ * (q_check != 0) +
+  auto check_score = EvalCoefficients::knightChecking_ * (!!kn_check) +
+    EvalCoefficients::bishopChecking_ * (!!bi_check) +
+    EvalCoefficients::rookChecking_ * (!!r_check) +
+    EvalCoefficients::queenChecking_ * (!!q_check) +
     EvalCoefficients::discoveredChecking_ * finfo_[color].discoveredCheck_;
 
   int num_attackers = std::min(finfo_[color].num_attackers_, 7);

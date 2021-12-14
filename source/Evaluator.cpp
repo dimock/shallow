@@ -185,25 +185,31 @@ void Evaluator::prepare()
     finfo_[1].pawns_fwd_ |= ((finfo_[1].pawns_fwd_ & Figure::pawns2ndLineMask_[1]) << 8) & inv_mask_all_;
     finfo_[1].pawns_fwd_ &= ~finfo_[Figure::ColorBlack].pawnAttacks_;
 
-    auto const discovered_mask_bi_b = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
+    finfo_[0].bishopMovesKipos_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_);
+    finfo_[0].rookMovesKipos_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_);
+
+    finfo_[1].bishopMovesKipos_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_);
+    finfo_[1].rookMovesKipos_ = magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_);
+
+    auto const discovered_mask_bi_b = finfo_[0].bishopMovesKipos_ &
       (fmgr.knight_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | finfo_[0].nbrq_mask_ | fmgr.king_mask(Figure::ColorWhite));
     finfo_[0].discovered_mask_ = discovered_mask_bi_b;
     finfo_[0].discovered_attackers_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~discovered_mask_bi_b) &
       (fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
     
-    auto const discovered_mask_r_b = magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_) &
+    auto const discovered_mask_r_b = finfo_[0].rookMovesKipos_ &
       (fmgr.knight_mask(Figure::ColorWhite) | fmgr.bishop_mask(Figure::ColorWhite) | finfo_[0].nbrq_mask_ | fmgr.king_mask(Figure::ColorWhite));
     finfo_[0].discovered_mask_ |= discovered_mask_r_b;
     finfo_[0].discovered_attackers_ |= magic_ns::rook_moves(board_->kingPos(Figure::ColorBlack), mask_all_ & ~discovered_mask_r_b) &
       (fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
 
-    auto const discovered_mask_bi_w = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
+    auto const discovered_mask_bi_w = finfo_[1].bishopMovesKipos_ &
       (fmgr.knight_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | finfo_[1].nbrq_mask_ | fmgr.king_mask(Figure::ColorBlack));
     finfo_[1].discovered_mask_ = discovered_mask_bi_w;
     finfo_[1].discovered_attackers_ = magic_ns::bishop_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~discovered_mask_bi_w) &
       (fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
 
-    auto const discovered_mask_r_w = magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_) &
+    auto const discovered_mask_r_w = finfo_[1].rookMovesKipos_ &
       (fmgr.knight_mask(Figure::ColorBlack) | fmgr.bishop_mask(Figure::ColorBlack) | finfo_[1].nbrq_mask_ | fmgr.king_mask(Figure::ColorBlack));
     finfo_[1].discovered_mask_ |= discovered_mask_r_w;
     finfo_[1].discovered_attackers_ |= magic_ns::rook_moves(board_->kingPos(Figure::ColorWhite), mask_all_ & ~discovered_mask_r_w) &

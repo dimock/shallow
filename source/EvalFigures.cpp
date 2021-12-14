@@ -54,7 +54,6 @@ void Evaluator::prepareAttacksMasks()
     finfo_[color].behindOPawnAttacks_ = BitMask{};
     finfo_[color].pinnedFigures_ = BitMask{};
     finfo_[color].checks_mask_ = finfo_[color].attack_mask_;
-
     BitMask nmask = board_->fmgr().knight_mask(color);
     for (; nmask;)
     {
@@ -131,7 +130,6 @@ void Evaluator::prepareAttacksMasks()
       auto nqr_attacks = ~qr_attacks;
       auto queen_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n) & nqr_attacks;
       auto queen_moves_op = magic_ns::rook_moves(n, mask_all_not_pw[ocolor]) & pawnMasks().mask_forward(ocolor, n) & nqr_attacks;
-
       auto queen_moves_r = magic_ns::rook_moves(n, mask_all_);
       auto queen_moves_bi = magic_ns::bishop_moves(n, mask_all_);
       auto queen_moves = queen_moves_r | queen_moves_bi;
@@ -145,10 +143,10 @@ void Evaluator::prepareAttacksMasks()
         queen_moves_bi &= from_mask;
         finfo_[color].pinnedFigures_ |= set_mask_bit(n);
       }
+      moves_masks_[n] = queen_moves;
       finfo_[color].rq_treat_ |= queen_moves;
       finfo_[color].r_treat_ |= qr_attacks;
       finfo_[color].qbi_treat_ |= queen_moves_bi;
-      moves_masks_[n] = queen_moves;
       finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & queen_moves;
       finfo_[color].attack_mask_ |= queen_moves;
       finfo_[color].queenMoves_ |= queen_moves;
