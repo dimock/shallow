@@ -717,13 +717,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       int R = 0;
 #ifdef USE_LMR
       if(!check_escape &&         
-         !danger_pawn &&
-          (sdata.depth_<<4) /* *ONE_PLY*/ > LMR_MinDepthLimit &&
+          (sdata.depth_<<4) > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
-          alpha > -Figure::MatScore-MaxPly &&
-          scontexts_[ictx].board_.canBeReduced(move))
+          alpha > -Figure::MatScore-MaxPly &&          
+          ((!danger_pawn && scontexts_[ictx].board_.canBeReduced(move)) || !move.see_ok())
+        )
       {
-        R = ONE_PLY;
+        R = ONE_PLY * (1 + (counter >> 4));
         curr.mflags_ |= UndoInfo::Reduced;
       }
 #endif
@@ -861,9 +861,9 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
   bool threat{ false };
+#if ((defined USE_LMR) && (defined VERIFY_LMR))
   if(best)
   {
-#if ((defined USE_LMR) && (defined VERIFY_LMR))
     // have to recalculate with full depth, or indicate threat in hash
     if ( !sctx.stop_ && !dont_reduce && (mat_threat || (alpha >= betta && nm_threat && isRealThreat(ictx, best))) )
     {
@@ -872,8 +872,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       else
         threat = true;
     }
-#endif
   }
+#endif
 
 #ifdef PROCESS_MOVES_SEQ
   if (board.fmgr().hashCode() == board.stestHashKey_)
