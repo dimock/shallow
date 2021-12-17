@@ -643,8 +643,61 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 #endif
 
+  bool check_escape = board.underCheck();
+  FastGenerator<Board, SMove> fg(board, hmove, sctx.plystack_[ply].killer_);
+
+#ifdef USE_MULTICUT
+  int bettaN = 0;
+  if (!check_escape && !pv && depth > Multicut_Depth) {
+    for (int cnt = 0; alpha < betta && !checkForStop(ictx); ++cnt) {
+      auto* pmove = fg.next();
+      if (!pmove) {
+        break;
+      }
+      auto& move = *pmove;
+
+#if ((defined USE_HASH) || (defined USE_EVAL_HASH_ALL))
+      auto pfhkey = board.hashAfterMove(move);
+#endif
+
+#ifdef USE_HASH
+      hash_.prefetch(pfhkey);
+#endif
+
+#ifdef USE_EVAL_HASH_ALL
+      ev_hash_.prefetch(pfhkey);
+#endif
+
+      ScoreType score = -ScoreMax;
+      board.makeMove(move);
+      sdata.inc_nc();
+      int depthInc = depthIncrement(ictx, move, pv, false);
+      score = -alphaBetta(ictx, depth + depthInc - ONE_PLY - Multicut_Depth, ply + 1, -betta, -alpha, pv, allow_nm, false);
+      board.unmakeMove(move);
+
+      if (sctx.stop_) {
+        return alpha;
+      }
+
+      if (score > betta) {
+        bettaN++;
+      }
+      
+      if (bettaN >= 3) {
+        return betta;
+      }
+
+      if (cnt > 10) {
+        break;
+      }
+    }
+
+    fg.restart();
+  }
+#endif // USE_MULTICUT
+
   ScoreType scoreBest = -ScoreMax;
-  Move best{true};
+  Move best{ true };
   bool dont_reduce{ false };
   int counter{};
 
@@ -656,8 +709,6 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   bool sequenceFound = false;
 #endif
 
-  bool check_escape = board.underCheck();
-  FastGenerator<Board, SMove> fg(board, hmove, sctx.plystack_[ply].killer_);
   int ngood = 0;
   Move movep{false};
   for (; alpha < betta && !checkForStop(ictx);)
@@ -717,13 +768,13 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
       int R = 0;
 #ifdef USE_LMR
       if(!check_escape &&         
-          (sdata.depth_<<4) > LMR_MinDepthLimit &&
+         !danger_pawn &&
+          (sdata.depth_<<4) /* *ONE_PLY*/ > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
           alpha > -Figure::MatScore-MaxPly &&          
-          ((!danger_pawn && scontexts_[ictx].board_.canBeReduced(move)) || !move.see_ok())
-        )
+          scontexts_[ictx].board_.canBeReduced(move))
       {
-        R = ONE_PLY * (1 + (counter >> 4));
+        R = ONE_PLY;
         curr.mflags_ |= UndoInfo::Reduced;
       }
 #endif

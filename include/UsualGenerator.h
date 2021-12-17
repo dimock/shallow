@@ -18,6 +18,13 @@ struct UsualGenerator
     board_(board)
   {}
 
+  void restart()
+  {
+    if (!moves_.empty()) {
+      iter_ = moves_.begin();
+    }
+  }
+
   MOVE* next()
   {
     while(iter_ != moves_.end())
@@ -82,6 +89,11 @@ struct UsualGenerator
 
   inline void generate()
   {
+    if (!moves_.empty()) {
+      iter_ = moves_.begin();
+      return;
+    }
+
     const auto color = board_.color();
     const auto ocolor = Figure::otherColor(color);
     auto const& fmgr = board_.fmgr();

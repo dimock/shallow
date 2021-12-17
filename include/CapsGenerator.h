@@ -17,6 +17,13 @@ struct CapsGenerator
     board_(board)
   {}
 
+  void restart()
+  {
+    if (!moves_.empty()) {
+      iter_ = moves_.begin();
+    }
+  }
+
   inline void add(int from, int to, Figure::Type new_type)
   {
     insert_sorted(moves_, MOVE{ from, to, new_type, board_.sortValueOfCap(from, to, new_type) });
@@ -36,6 +43,11 @@ struct CapsGenerator
 
   inline void generateCaps()
   {
+    if (!moves_.empty()) {
+      iter_ = moves_.begin();
+      return;
+    }
+
     const auto color = board_.color();
     const auto ocolor = Figure::otherColor(color);
 
