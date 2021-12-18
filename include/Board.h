@@ -488,13 +488,8 @@ struct Board
 
   inline bool canBeReduced(Move const move) const
   {
-    //auto const& hist = history(Figure::otherColor(color()), move.from(), move.to());
     auto const& undo = lastUndo();
-    return  //((hist.good()<<2) <= hist.bad()) &&
-      !(lastUndo().capture()
-       || move.new_type() > 0
-       || undo.castle()
-       || underCheck());
+    return !(undo.capture() || move.new_type() > 0 || undo.castle() || underCheck());
   }
 
   inline bool allowNullMove() const
@@ -518,9 +513,9 @@ struct Board
     ScoreType score = (fmgr().weight(color()) - fmgr().weight(ocolor)).eval0();
     if(score > betta + (Figure::figureWeight_[Figure::TypePawn] << 2) && depth > 7*ONE_PLY)
     {
-      return std::max(1, depth - NullMove_PlyReduce - ONE_PLY);
+      return std::max(0, depth - NullMove_PlyReduce - ONE_PLY);
     }
-    return std::max(1, depth - NullMove_PlyReduce);
+    return std::max(0, depth - NullMove_PlyReduce);
   }
   inline void setNoMoves()
   {

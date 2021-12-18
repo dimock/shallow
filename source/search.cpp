@@ -767,14 +767,14 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
       int R = 0;
 #ifdef USE_LMR
-      if(!check_escape &&         
-         !danger_pawn &&
-          (sdata.depth_<<4) /* *ONE_PLY*/ > LMR_MinDepthLimit &&
+      if(!check_escape &&                  
+          (sdata.depth_<<4) > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
           alpha > -Figure::MatScore-MaxPly &&          
-          scontexts_[ictx].board_.canBeReduced(move))
+          ((!danger_pawn && board.canBeReduced(move)) || !move.see_ok())
+        )
       {
-        R = ONE_PLY;
+        R = ONE_PLY * (1 + (!move.see_ok() && !board.lastUndo().capture()) + (counter >> 4));
         curr.mflags_ |= UndoInfo::Reduced;
       }
 #endif
