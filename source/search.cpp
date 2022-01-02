@@ -774,7 +774,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
           ((!danger_pawn && board.canBeReduced(move)) || !move.see_ok())
         )
       {
-        R = ONE_PLY * (1 + (!move.see_ok() && !board.lastUndo().capture()) + (counter >> 4));
+        R = ONE_PLY * (1 + (counter >> 4));
         curr.mflags_ |= UndoInfo::Reduced;
       }
 #endif

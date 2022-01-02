@@ -848,34 +848,48 @@ void SpecialCasesDetector::initCases()
     return pawnAndHeavy(board, Figure::ColorWhite);
   };
 
-  // queen against figure & queen
-  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
-    { Figure::TypeKnight, Figure::ColorBlack, 1 },
-    { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
-  };
+  // queen + pawns? against figure & queen
+  for (int i = 0; i < 3; ++i) {
+    scases_[format({
+      { Figure::TypeQueen, Figure::ColorBlack, 1 },
+      { Figure::TypeKnight, Figure::ColorBlack, 1 },
+      { Figure::TypeQueen, Figure::ColorWhite, 1 },
+      { Figure::TypePawn, Figure::ColorWhite, i }
+      })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    };
 
-  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
-    { Figure::TypeKnight, Figure::ColorWhite, 1 },
-    { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
-  };
+    scases_[format({
+      { Figure::TypeQueen, Figure::ColorWhite, 1 },
+      { Figure::TypeKnight, Figure::ColorWhite, 1 },
+      { Figure::TypeQueen, Figure::ColorBlack, 1 },
+      { Figure::TypePawn, Figure::ColorBlack, i }
+      })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    };
 
-  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
-  };
+    scases_[format({
+      { Figure::TypeQueen, Figure::ColorBlack, 1 },      
+      { Figure::TypeBishop, Figure::ColorBlack, 1 },
+      { Figure::TypeQueen, Figure::ColorWhite, 1 },
+      { Figure::TypePawn, Figure::ColorWhite, i },
+      })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    };
 
-  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 },
-    { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return { SpecialCaseResult::ALMOST_DRAW, 0 };
-  };
+    scases_[format({
+      { Figure::TypeQueen, Figure::ColorWhite, 1 },      
+      { Figure::TypeBishop, Figure::ColorWhite, 1 },
+      { Figure::TypeQueen, Figure::ColorBlack, 1 },
+      { Figure::TypePawn, Figure::ColorBlack, i },
+      })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    };
+  }
 
   // only 1 pawn
   scases_[format({ { Figure::TypePawn, Figure::ColorBlack, 1 } })] =

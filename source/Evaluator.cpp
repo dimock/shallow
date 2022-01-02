@@ -700,6 +700,8 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
   if (!psmask)
     return{};
 
+  const auto mpassers = psmask;
+
   const int py = Evaluator::promo_y_[color];
   const int dy = Evaluator::delta_y_[color];
 
@@ -730,8 +732,8 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     auto fwd_field = set_mask_bit(n1);
     auto my_field = set_mask_bit(n);
 
-    bool guarded = (finfo[color].pawnAttacks_ & my_field) != 0ULL;
-    bool neighbours = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
+    auto nb_mask = pawnMasks().mask_neighbor(color, n) | pawnMasks().mask_guards(color, n);
+    bool neighbours = (nb_mask & mpassers) != 0ULL;
 
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
@@ -740,7 +742,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     int king_dist = distanceCounter().getDistance(board.kingPos(color), n1);
     if (passmsk & opmsk) {
       pwscore = EvalCoefficients::passerPawn2_[cy];
-      pwscore += EvalCoefficients::passerPawnNbs2_[cy] * (neighbours || guarded);
+      pwscore += EvalCoefficients::passerPawnNbs2_[cy] * neighbours;
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus2_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus2_[cy] * king_dist;

@@ -226,7 +226,7 @@ namespace nst
 #define USE_IID
 #define USE_NULL_MOVE
 #define USE_LMR
-#define USE_MULTICUT
+#undef USE_MULTICUT
 #endif
 
 #define SINGULAR_EXT

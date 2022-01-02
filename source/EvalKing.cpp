@@ -489,24 +489,14 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     check_coeff += near_king_checks;
   }
 
-  const auto near_oking_rem = ((finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_) |
-                               (oki_fields & ~finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].attack_mask_)) &
-      (~near_oking_att & ~fmgr.pawn_mask(color) & finfo_[color].attack_mask_);
+  const auto near_oking_rem =
+    oki_fields & ~finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].attack_mask_ & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_rem) {
     int otherN = pop_count(near_oking_rem);
     auto rem_king_attacks = EvalCoefficients::attackedNearKingOther_ * otherN;
     auto rem_king_checks = EvalCoefficients::checkNearKingOther_ * otherN;
     attack_coeff += rem_king_attacks;
     check_coeff += rem_king_checks;
-  }
-
-  auto oking_pw_attacked = (finfo_[color].pawnAttacks_ & near_oking_pw & ~finfo_[ocolor].pawnAttacks_);
-  if (oking_pw_attacked) {
-    int pawnsN = pop_count(oking_pw_attacked);
-    auto pw_king_attacks = EvalCoefficients::attackedNearKingPawns_ * pawnsN;
-    auto pw_king_checks = EvalCoefficients::checkNearKingPawns_ * pawnsN;
-    attack_coeff += pw_king_attacks;
-    check_coeff += pw_king_checks;
   }
 
   if (num_attackers == 0) {
