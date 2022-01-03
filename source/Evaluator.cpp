@@ -1053,9 +1053,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
   }
-  if (board_->color() == color) {
-    attackScore += attackScore >> 1;
-  }
   return ScoreType32{ attackScore, attackScore };
 }
 

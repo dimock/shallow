@@ -173,7 +173,7 @@ int Evaluator::evaluateKingSafetyW() const
     score = std::max(score, scoreK);
   }
   if (board_->castling(Figure::ColorWhite, 1)) {
-    Index kingPosQ{ 1, promo_y_[Figure::ColorBlack] };
+    Index kingPosQ{ 2, promo_y_[Figure::ColorBlack] };
     int scoreQ = evaluateKingSafety2<Figure::ColorWhite>(board_->fmgr(), finfo_[Figure::ColorWhite].pawnAttacks_, kingPosQ);
     score = std::max(score, scoreQ);
   }
@@ -190,7 +190,7 @@ int Evaluator::evaluateKingSafetyB() const
     score = std::max(score, scoreK);
   }
   if (board_->castling(Figure::ColorBlack, 1)) {
-    Index kingPosQ{ 1, promo_y_[Figure::ColorWhite] };
+    Index kingPosQ{ 2, promo_y_[Figure::ColorWhite] };
     int scoreQ = evaluateKingSafety2<Figure::ColorBlack>(board_->fmgr(), finfo_[Figure::ColorBlack].pawnAttacks_, kingPosQ);
     score = std::max(score, scoreQ);
   }
@@ -487,6 +487,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     near_king_checks += EvalCoefficients::checkNearKingWeak_ * weakN;
     attack_coeff += near_king_attacks;
     check_coeff += near_king_checks;
+  }
+
+  const auto near_oking_all = finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~near_oking_att;
+  if (near_oking_all) {
+    int allN = pop_count(near_oking_all);
+    attack_coeff += EvalCoefficients::attackedNearKingAll_ * allN;
   }
 
   const auto near_oking_rem =

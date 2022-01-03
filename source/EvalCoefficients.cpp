@@ -72,6 +72,7 @@ namespace NEngine
   int EvalCoefficients::possibleMatTreat_{ 50 };
   int EvalCoefficients::attackedNearKingStrong_{ 40 };
   int EvalCoefficients::attackedNearKingWeak_{ 12 };
+  int EvalCoefficients::attackedNearKingAll_{ 8 };
   int EvalCoefficients::attackedNearKingOther_{ 4 };
   int EvalCoefficients::attackedNearKingPawns_{ 3 };
   int EvalCoefficients::checkNearKingStrong_{ 30 };
@@ -108,14 +109,14 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {0, 32, 25, 15, 2, 1, 0, 0},
+    {0, 32, 25, 10, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
     {0, 32, 10, 3, 2, 1, 0, 0},
-    {0, 25, 20, 2, 1, 0, 0, 0},
-    {0, 25, 20, 2, 1, 0, 0, 0},
+    {0, 15, 8, 2, 1, 0, 0, 0},
+    {0, 15, 8, 2, 1, 0, 0, 0},
     {0, 32, 10, 3, 2, 1, 0, 0},
     {0, 35, 30, 3, 2, 1, 0, 0},
-    {0, 32, 25, 15, 2, 1, 0, 0}
+    {0, 32, 25, 10, 2, 1, 0, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},

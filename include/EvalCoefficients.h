@@ -79,6 +79,7 @@ struct EvalCoefficients
   static int possibleMatTreat_;
   static int attackedNearKingStrong_;
   static int attackedNearKingWeak_;
+  static int attackedNearKingAll_;
   static int attackedNearKingOther_;
   static int attackedNearKingPawns_;
   static int checkNearKingStrong_;
