@@ -67,7 +67,6 @@ int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask 
     int py = 0, opy = 0, ay = 7;
     int ay1 = 0, opy1 = 0;
     bool canAttack = false;
-    int odist = 7;
     if (pwmsk) {
       py = Index(_lsb64(pwmsk)).y();
     }
@@ -76,18 +75,18 @@ int evaluateKingSafety2<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask 
       opy1 = opy;
     }
     if (atmsk) {
-      ay = Index(_msb64(atmsk)).y();
+      auto a = _lsb64(atmsk);
+      ay = Index(a).y();
       ay1 = ay - 1;
     }
     if (ay <= opy) {
       int a = Index(x, ay1);
       int o = Index(x, opy1);
       canAttack = (betweenMasks().between(o, a) & pawns_mask) == 0ULL;
-      odist = opy - ay;
     }
+    bool oppisiteKing = (x == kx);
     score += EvalCoefficients::pawnsShields_[x][py];
-    oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
-    oscore += EvalCoefficients::opawnsNearKing_[opy];
+    oscore += EvalCoefficients::opawnsShieldAttack_[oppisiteKing][canAttack][opy];
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
@@ -131,7 +130,6 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
     int py = 0, opy = 0, ay = 7;
     int ay1 = 0, opy1 = 0;
     bool canAttack = false;
-    int odist = 7;
     if (pwmsk) {
       py = 7 - Index(_msb64(pwmsk)).y();
     }
@@ -140,7 +138,8 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
       opy = 7 - opy1;
     }
     if (atmsk) {
-      ay1 = Index(_lsb64(atmsk)).y();
+      auto a = _msb64(atmsk);
+      ay1 = Index(a).y();
       ay = 7 - ay1;
       ay1 += 1;
     }
@@ -148,11 +147,10 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
       int a = Index(x, ay1);
       int o = Index(x, opy1);
       canAttack = (betweenMasks().between(o, a) & pawns_mask) == 0ULL;
-      odist = opy - ay;
     }
+    bool oppisiteKing = (x == kx);
     score += EvalCoefficients::pawnsShields_[x][py];
-    oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
-    oscore += EvalCoefficients::opawnsNearKing_[opy];
+    oscore += EvalCoefficients::opawnsShieldAttack_[oppisiteKing][canAttack][opy];
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
@@ -493,6 +491,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   if (near_oking_all) {
     int allN = pop_count(near_oking_all);
     attack_coeff += EvalCoefficients::attackedNearKingAll_ * allN;
+    check_coeff += EvalCoefficients::checkNearKingAll_ * allN;
   }
 
   const auto near_oking_rem =
