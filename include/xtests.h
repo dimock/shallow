@@ -80,7 +80,7 @@ class FenTest : public std::vector<xEPD<BOARD, MOVE, UNDO>>
 public:
   FenTest(std::string const& ffname, xTestFen_ErrorCallback const& ecbk)
   {
-    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+[\\s])([\\s]*bm[\\s])?([0-9a-hpnulrqkPNBRQKOx+=!_\\s\\-]+[\\s])?([\\s]*dmin[\\s]+)?([0-9]+)?([\\s]*dmax[\\s]+)?([0-9]+)?([\\s]+hash[\\s]+)?([0-9]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?([\\s]*moves[\\s]*)?([0-9a-hprqkPNBRQKOx+=!_\\s\\-]+)?");
+    std::regex r("([0-9a-hpnbrqkPNBRQKw/\\s\\-]+[\\s])([\\s]*bm[\\s])?([0-9a-hpnulrqkPNBRQKOx+=!_\\s\\-]+[\\s]?)?([\\s]*dmin[\\s]+)?([0-9]+)?([\\s]*dmax[\\s]+)?([0-9]+)?([\\s]+hash[\\s]+)?([0-9]+)?([\\s]*;[\\s]*\\\")?([\\w\\-]+)?([\\s]*moves[\\s]*)?([0-9a-hprqkPNBRQKOx+=!_\\s\\-]+)?");
     ::std::ifstream ifs(ffname);
     for(; ifs;)
     {
@@ -135,9 +135,9 @@ public:
         }
       }
 #endif
-      if(m.size() >= 6)
+      if(m.size() >= 13 && ((std::string)m[11]).find("score") != std::string::npos)
       {
-        std::string sscore = m[5];
+        std::string sscore = m[13];
         try
         {
           if(!sscore.empty())

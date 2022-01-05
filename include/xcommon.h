@@ -216,6 +216,7 @@ namespace nst
 #define USE_LAZY_EVAL
 
 #ifndef PROCESS_MOVES_SEQ
+
 #define USE_HASH
 #define USE_EVAL_HASH_PW
 #define USE_EVAL_HASH_MD
@@ -227,6 +228,17 @@ namespace nst
 #define USE_NULL_MOVE
 #define USE_LMR
 #undef USE_MULTICUT
+
+#else
+
+#ifdef RELEASEDEBUGINFO
+#define DO_SEE_TEST
+#endif
+
+#endif // PROCESS_MOVES_SEQ
+
+#ifndef NDEBUG
+#define SEE_TEST_EPD
 #endif
 
 #define SINGULAR_EXT

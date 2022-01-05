@@ -1052,6 +1052,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       continue;
 #endif
 
+#ifdef DO_SEE_TEST
+    bool seeOk = board.see(move, threshold);
+#endif // DO_SEE_TEST
+
 #ifdef USE_HASH
     hash_.prefetch(pfhkey);
 #endif
@@ -1063,6 +1067,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     ScoreType score = -ScoreMax;
 
     board.makeMove(move);
+
+#ifdef DO_SEE_TEST
+    bool willCheck = board.underCheck();
+#endif // DO_SEE_TEST
 
 #ifdef USE_HASH
     eval.prefetch();
@@ -1093,6 +1101,13 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if (score > -Figure::MatScore + MaxPly) {
       thr = threshold;
     }
+
+#ifdef DO_SEE_TEST
+    if (((!seeOk && score >= betta) || (seeOk && score < alpha-200)) && !willCheck && threshold >= 0 && threshold < 50 && !board.underCheck()) {
+      auto sfen = NEngine::toFEN(board);
+      seeOk = board.see(move, threshold);
+    }
+#endif // DO_SEE_TEST
 
     if (!sctx.stop_ && score > scoreBest)
     {

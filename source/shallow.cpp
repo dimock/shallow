@@ -45,10 +45,14 @@ int main(int argn, char *argv[])
 
 #ifndef __ANDROID__
 
-#ifndef NDEBUG
+#if(!defined(NDEBUG) && !defined(PROCESS_MOVES_SEQ))
   if (argn > 1)
   {
+#ifdef SEE_TEST_EPD
+    NEngine::testSee(argv[1]);
+#else
     NEngine::evaluateFen(argv[1], argn > 2 ? argv[2] : "");
+#endif // DO_SEE_TEST
     return 0;
   }
 #endif
