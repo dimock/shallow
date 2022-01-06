@@ -26,6 +26,13 @@ struct SeeCalc
   BitMask qcaps_moveto_[2];
   BitMask kicaps_moveto_;
   BitMask pwmask_moveto_[2];
+  BitMask pwattacks_[2];
+  BitMask battacks_[2];
+  BitMask nattacks_[2];
+  BitMask rattacks_[2];
+  BitMask qattacks_[2];
+  BitMask kiattacks_[2];
+  BitMask aattacks_[2];
   Figure::Color color_;
   Figure::Color ocolor_;
   bool promotion_;
@@ -57,7 +64,7 @@ struct SeeCalc
     promotion_ = (ffield.type() == Figure::TypePawn) && ((move_.to() >> 3) == 0 || (move_.to() >> 3) == 7);
   }
 
-  void setupMovingFigures()
+  inline void setupMovingFigures()
   {
     auto const ncaps_mask = movesTable().caps(Figure::TypeKnight, move_.to()) & all_mask_;
     ncaps_moveto_[0] = ncaps_mask & fmgr_.knight_mask(Figure::ColorBlack);
@@ -72,8 +79,59 @@ struct SeeCalc
     qcaps_moveto_[0] = fmgr_.queen_mask(Figure::ColorBlack) & qcaps_mask;
     qcaps_moveto_[1] = fmgr_.queen_mask(Figure::ColorWhite) & qcaps_mask;
     kicaps_moveto_ = movesTable().caps(Figure::TypeKing, move_.to());
-    pwmask_moveto_[0] = movesTable().pawnCaps(1, move_.to()) & fmgr_.pawn_mask(Figure::ColorBlack) & all_mask_;
-    pwmask_moveto_[1] = movesTable().pawnCaps(0, move_.to()) & fmgr_.pawn_mask(Figure::ColorWhite) & all_mask_;
+    pwmask_moveto_[0] = movesTable().pawnCaps(Figure::ColorWhite, move_.to()) & fmgr_.pawn_mask(Figure::ColorBlack) & all_mask_;
+    pwmask_moveto_[1] = movesTable().pawnCaps(Figure::ColorBlack, move_.to()) & fmgr_.pawn_mask(Figure::ColorWhite) & all_mask_;
+  }
+
+  inline void setupAttacks()
+  {
+    auto const pawn_msk_b = fmgr_.pawn_mask(Figure::ColorBlack);
+    auto const pawn_msk_w = fmgr_.pawn_mask(Figure::ColorWhite);
+    pwattacks_[0] = (((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]));
+    pwattacks_[1] = (((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]));
+    nattacks_[0] = nattacks_[1] = 0ULL;
+    for (auto m = fmgr_.knight_mask(Figure::ColorBlack); m;) {
+      auto n = clear_lsb(m);
+      nattacks_[0] |= movesTable().caps(Figure::TypeKnight, n);
+    }
+    for (auto m = fmgr_.knight_mask(Figure::ColorWhite); m;) {
+      auto n = clear_lsb(m);
+      nattacks_[1] |= movesTable().caps(Figure::TypeKnight, n);
+    }
+    battacks_[0] = battacks_[1] = 0ULL;
+    for (auto m = fmgr_.bishop_mask(Figure::ColorBlack); m;) {
+      auto n = clear_lsb(m);
+      battacks_[0] |= magic_ns::bishop_moves(n, all_mask_);
+    }
+    for (auto m = fmgr_.bishop_mask(Figure::ColorWhite); m;) {
+      auto n = clear_lsb(m);
+      battacks_[1] |= magic_ns::bishop_moves(n, all_mask_);
+    }
+    rattacks_[0] = rattacks_[1] = 0ULL;
+    for (auto m = fmgr_.rook_mask(Figure::ColorBlack); m;) {
+      auto n = clear_lsb(m);
+      rattacks_[0] |= magic_ns::rook_moves(n, all_mask_);
+    }
+    for (auto m = fmgr_.rook_mask(Figure::ColorWhite); m;) {
+      auto n = clear_lsb(m);
+      rattacks_[1] |= magic_ns::rook_moves(n, all_mask_);
+    }
+    qattacks_[0] = qattacks_[1] = 0ULL;
+    for (auto m = fmgr_.queen_mask(Figure::ColorBlack); m;) {
+      auto n = clear_lsb(m);
+      qattacks_[0] |= magic_ns::queen_moves(n, all_mask_);
+    }
+    for (auto m = fmgr_.queen_mask(Figure::ColorWhite); m;) {
+      auto n = clear_lsb(m);
+      qattacks_[1] |= magic_ns::queen_moves(n, all_mask_);
+    }
+    auto kic_b = movesTable().caps(Figure::TypeKing, board_.kingPos(Figure::ColorBlack));
+    auto kic_w = movesTable().caps(Figure::TypeKing, board_.kingPos(Figure::ColorWhite));
+    aattacks_[0] = pwattacks_[0] | nattacks_[0] | battacks_[0] | rattacks_[0] | qattacks_[0] | kic_b;
+    aattacks_[1] = pwattacks_[1] | nattacks_[1] | battacks_[1] | rattacks_[1] | qattacks_[1] | kic_w;
+    kiattacks_[0] = kic_b & ~aattacks_[1];
+    kiattacks_[1] = kic_w & ~aattacks_[0];
+    all_mask_ &= ~set_mask_bit(move_.to());
   }
 
   inline bool next(Figure::Color color, int& from, int& score)
@@ -302,6 +360,73 @@ struct SeeCalc
     auto rq_mask = (fmgr_.rook_mask(ocolor) | fmgr_.queen_mask(ocolor)) & all_mask_;
     return (last_r_[ocolor] & rq_mask) || (magic_ns::rook_moves(move_.to(), all_mask_) & rq_mask);
   }
+
+  inline bool last_move(Figure::Color color, int& score)
+  {
+    auto ocolor = Figure::otherColor(color);
+    if (!(aattacks_[color] & (fmgr_.mask(ocolor) & all_mask_))) {
+      return false;
+    }
+    bool negate = color != color_;
+    auto unprotected = aattacks_[color] & ~aattacks_[ocolor] & all_mask_;
+    if (unprotected & fmgr_.queen_mask(ocolor)) {
+      score = Figure::figureWeight_[Figure::TypeQueen];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (auto a = (pwattacks_[color] & fmgr_.queen_mask(ocolor) & all_mask_)) {
+      bool pr = a & aattacks_[ocolor];
+      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypePawn];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (auto a = (nattacks_[color] & fmgr_.queen_mask(ocolor)& all_mask_)) {
+      bool pr = a & aattacks_[ocolor];
+      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypeKnight];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (auto a = (battacks_[color] & fmgr_.queen_mask(ocolor) & all_mask_)) {
+      bool pr = a & aattacks_[ocolor];
+      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypeBishop];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (auto a = (rattacks_[color] & fmgr_.queen_mask(ocolor) & all_mask_)) {
+      bool pr = a & aattacks_[ocolor];
+      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypeRook];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (unprotected & fmgr_.rook_mask(ocolor)) {
+      score = Figure::figureWeight_[Figure::TypeRook];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (auto a = (pwattacks_[color] & fmgr_.rook_mask(ocolor) & all_mask_)) {
+      bool pr = a & aattacks_[ocolor];
+      score = Figure::figureWeight_[Figure::TypeRook] - pr * Figure::figureWeight_[Figure::TypePawn];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (unprotected & (fmgr_.knight_mask(ocolor) | fmgr_.bishop_mask(ocolor))) {
+      score = Figure::figureWeight_[Figure::TypeKnight];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (auto a = (pwattacks_[color] & (fmgr_.knight_mask(ocolor) | fmgr_.bishop_mask(ocolor)) & all_mask_)) {
+      bool pr = a & aattacks_[ocolor];
+      score = Figure::figureWeight_[Figure::TypeKnight] - pr * Figure::figureWeight_[Figure::TypePawn];
+      score = negate ? -score : score;
+      return true;
+    }
+    if (unprotected & fmgr_.pawn_mask(ocolor)) {
+      score = Figure::figureWeight_[Figure::TypePawn];
+      score = negate ? -score : score;
+      return true;
+    }
+    return false;
+  }
 };
 
 } // end of namespace {} for SeeCalc
@@ -314,20 +439,20 @@ bool Board::see(const Move move, int threshold) const
   const auto tfield = getField(move.to());
   bool en_passant{ false };
 
-  if(tfield)
+  if (tfield)
   {
     // victim >= attacker
     int tgain = Figure::figureWeight_[tfield.type()] - Figure::figureWeight_[ffield.type()];
-    if(tgain >= threshold)
+    if (tgain >= threshold)
       return true;
   }
   // en-passant
-  else if(!tfield && ffield.type() == Figure::TypePawn && move.to() > 0 && move.to() == enpassant())
+  else if (!tfield && ffield.type() == Figure::TypePawn && move.to() > 0 && move.to() == enpassant())
   {
     X_ASSERT(getField(enpassantPos()).type() != Figure::TypePawn
-              || getField(enpassantPos()).color() == color(),
-              "no en-passant pawn");
-    if(Figure::figureWeight_[Figure::TypePawn] >= threshold)
+      || getField(enpassantPos()).color() == color(),
+      "no en-passant pawn");
+    if (Figure::figureWeight_[Figure::TypePawn] >= threshold)
       return true;
     en_passant = true;
   }
@@ -335,18 +460,18 @@ bool Board::see(const Move move, int threshold) const
   SeeCalc see_calc(*this, move, ffield, en_passant);
 
   // assume discovered check is always good
-  if(see_calc.discovered_check_)
+  if (see_calc.discovered_check_)
     return true;
 
   // could be checkmate
-  if(threshold > 0 && see_calc.is_usual_check())
+  if (threshold > 0 && see_calc.is_usual_check())
     threshold = 0;
 
-  if(en_passant)
+  if (en_passant)
     return Figure::figureWeight_[Figure::TypePawn] >= threshold;
 
   int score_gain = 0;
-  if(tfield)
+  if (tfield)
     score_gain = Figure::figureWeight_[tfield.type()];
   int fscore = -Figure::figureWeight_[ffield.type()];
   if (see_calc.promotion_)
@@ -354,48 +479,69 @@ bool Board::see(const Move move, int threshold) const
     score_gain += Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypePawn];
     fscore = -Figure::figureWeight_[Figure::TypeQueen];
   }
-  if(score_gain < threshold)
+  if (score_gain < threshold)
     return false;
 
   auto color = see_calc.ocolor_;
   see_calc.setupMovingFigures();
-  for(;;)
+  for (;;)
   {
     int from{};
     int score{};
-    if(!see_calc.next(color, from, score))
+    if (!see_calc.next(color, from, score))
       break;
     auto ocolor = Figure::otherColor(color);
     see_calc.discovered_check_ = see_calc.discovered_check(from, color, kingPos(ocolor));
     // assume this move is good if it was mine and I discover check
-    if(see_calc.discovered_check_ && color == see_calc.color_)
+    if (see_calc.discovered_check_ && color == see_calc.color_)
       return true;
     score_gain += fscore;
     // king's move always last
-    if(score == 0)
+    if (score == 0)
       break;
     if (color != see_calc.color_)
     {
       // already winner
-      if (score_gain >= threshold)
+      if (score_gain >= threshold) {
         return true;
+      }
       // loose even if take last moved figure
-      if (score_gain + score < threshold)
-        return false;
+      if (score_gain + score < threshold) {
+        break;
+      }
     }
     else
     {
       // already winner even if loose last moved figure
-      if (score_gain + score >= threshold)
+      if (score_gain + score >= threshold) {
         return true;
+      }
       // could not gain something
-      if (score_gain < threshold)
-        return false;
+      if (score_gain < threshold) {
+        break;
+      }
     }
     fscore = score;
     color = ocolor;
   }
 
+  if (score_gain >= threshold) {
+    return true;
+  }
+
+  // opponent's side to move
+  if (color != see_calc.color_) {
+    return false;
+  }
+
+  // may be we have alternative captures on other squares?
+  see_calc.setupAttacks();
+  int score = 0;
+  if (!see_calc.last_move(color, score)) {
+    return false;
+  }
+
+  score_gain += score;
   return score_gain >= threshold;
 }
 
