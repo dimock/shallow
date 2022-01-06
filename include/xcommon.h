@@ -227,7 +227,6 @@ namespace nst
 #define USE_IID
 #define USE_NULL_MOVE
 #define USE_LMR
-#undef USE_MULTICUT
 
 #else
 
@@ -262,7 +261,6 @@ static const int NullMove_DepthMin = 2 * ONE_PLY;
 static const int NullMove_PlyReduce = 5 * ONE_PLY;
 static const int Probcut_Depth = 7 * ONE_PLY;
 static const int Probcut_PlyReduce = 4 * ONE_PLY;
-static const int Multicut_Depth = 4 * ONE_PLY;
 static const int Betta_ThresholdFP = 330;
 static const int Position_GainFP = 330;
 static const int Position_GainThr = 330;

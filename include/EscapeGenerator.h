@@ -28,13 +28,6 @@ struct EscapeGenerator
     mask_all = white | black;
   }
 
-  void restart()
-  {
-    order_ = oHash;
-    weak_.clear();
-    weakUsual_.clear();
-  }
-
   inline void add_caps(int from, int to, Figure::Type new_type)
   {
     insert_sorted(caps_, MOVE{ from, to, new_type, board_.sortValueOfCap(from, to, new_type) });
@@ -363,11 +356,9 @@ struct EscapeGenerator
     }
     if(order_ == oGenCaps)
     {
-      if (caps_.empty()) {
         if (!board_.doubleCheck())
           generateCaps();
         generateKingCaps();
-      }
       order_ = oCaps;
       iter_ = caps_.begin();
     }
@@ -386,11 +377,9 @@ struct EscapeGenerator
     }
     if(order_ == oGenUsual)
     {
-      if (usual_.empty()) {
         generateKingUsual();
         if (!board_.doubleCheck())
           generateUsual();
-      }
       order_ = oUsual;
       iter_ = usual_.begin();
     }
@@ -422,11 +411,9 @@ struct EscapeGenerator
     }
     if(order_ == oGenCaps)
     {
-      if (caps_.empty()) {
         if (!board_.doubleCheck())
           generateCaps();
         generateKingCaps();
-      }
       order_ = oCaps;
       iter_ = caps_.begin();
     }
@@ -466,11 +453,9 @@ struct EscapeGenerator
     }
     if(order_ == oGenUsual)
     {
-      if (usual_.empty()) {
         generateKingUsual();
         if (!board_.doubleCheck())
           generateUsual();
-      }
       order_ = oUsual;
       iter_ = usual_.begin();
     }

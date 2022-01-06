@@ -190,18 +190,6 @@ struct FastGenerator
       order_ = oHash;
   }
 
-  void restart()
-  {
-    if (order_ == oEscape) {
-      eg_.restart();
-      return;
-    }
-    order_ = oHash;
-    cg_.restart();
-    ug_.restart();
-    weak_.clear();
-    weakUsual_.clear();
-  }
 
   MOVE* next()
   {
@@ -231,7 +219,7 @@ struct FastGenerator
           continue;
         if (*move == killer_)
           killer_ = MOVE{ true };
-        if(move->see_ok() || board_.see(*move, 0))
+        if(board_.see(*move, 0))
         {
           move->set_ok();
           return move;
@@ -267,7 +255,7 @@ struct FastGenerator
       {
         if(*move == hmove_ || *move == killer_)
           continue;
-        if(move->see_ok() || board_.see(*move, 0))
+        if(board_.see(*move, 0))
         {
           move->set_ok();
           return move;

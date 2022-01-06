@@ -700,7 +700,6 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
   if (!psmask)
     return{};
 
-  const auto mpassers = psmask;
 
   const int py = Evaluator::promo_y_[color];
   const int dy = Evaluator::delta_y_[color];
@@ -732,8 +731,8 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     auto fwd_field = set_mask_bit(n1);
     auto my_field = set_mask_bit(n);
 
-    auto nb_mask = pawnMasks().mask_neighbor(color, n) | pawnMasks().mask_guards(color, n);
-    bool neighbours = (nb_mask & mpassers) != 0ULL;
+    bool guarded = (finfo[color].pawnAttacks_ & my_field) != 0ULL;
+    bool neighbours = (pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL;
 
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
@@ -742,7 +741,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     int king_dist = distanceCounter().getDistance(board.kingPos(color), n1);
     if (passmsk & opmsk) {
       pwscore = EvalCoefficients::passerPawn2_[cy];
-      pwscore += EvalCoefficients::passerPawnNbs2_[cy] * neighbours;
+      pwscore += EvalCoefficients::passerPawnNbs2_[cy] * (neighbours || guarded);
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus2_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus2_[cy] * king_dist;
@@ -1010,7 +1009,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += rqtreatsN;
     attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
     rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 3;
+    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 2;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
@@ -1052,6 +1051,9 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
+  }
+  if (board_->color() == color) {
+    attackScore += attackScore >> 1;
   }
   return ScoreType32{ attackScore, attackScore };
 }
