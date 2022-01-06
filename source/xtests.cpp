@@ -161,7 +161,7 @@ void testSee(std::string const& ffname)
     {
       for(auto const move : epd.moves_)
       {
-        auto v= epd.board_.see(move, epd.score_);
+        auto v = epd.board_.see(move, epd.score_);
         std::cout << i << ": "
           << toFEN(epd.board_) << "  "
           << printSAN(epd.board_, move)
