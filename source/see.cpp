@@ -530,10 +530,12 @@ bool Board::see(const Move move, int threshold) const
     if (see_calc.discovered_check_ && color == see_calc.color_)
       return true;
     score_gain += fscore;
+    fscore = score;
+    color = ocolor;
     // king's move always last
     if (score == 0)
       break;
-    if (color != see_calc.color_)
+    if (color == see_calc.color_)
     {
       // already winner
       if (score_gain >= threshold) {
@@ -555,17 +557,10 @@ bool Board::see(const Move move, int threshold) const
         break;
       }
     }
-    fscore = score;
-    color = ocolor;
   }
 
-  // my turn - winner
-  if (color == see_calc.color_ && score_gain >= threshold) {
-    return true;
-  }
-  // opponent's turn - loser
-  else if(color != see_calc.color_ && score_gain < threshold) {
-    return false;
+  if (score_gain >= threshold || color != see_calc.color_) {
+    return score_gain >= threshold;
   }
 
   // may be we have alternative captures on other squares?

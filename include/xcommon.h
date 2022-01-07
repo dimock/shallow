@@ -237,7 +237,7 @@ namespace nst
 #endif // PROCESS_MOVES_SEQ
 
 #ifndef NDEBUG
-#define SEE_TEST_EPD
+#undef SEE_TEST_EPD
 #endif
 
 #define SINGULAR_EXT
