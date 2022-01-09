@@ -26,14 +26,6 @@ struct SeeCalc
   BitMask qcaps_moveto_[2];
   BitMask kicaps_moveto_;
   BitMask pwmask_moveto_[2];
-  BitMask pwattacks_[2];
-  BitMask battacks_[2];
-  BitMask nattacks_[2];
-  BitMask rattacks_[2];
-  BitMask qattacks_[2];
-  BitMask kiattacks_[2];
-  BitMask aattacks_[2];
-  BitMask unprotected_[2];
   Figure::Color color_;
   Figure::Color ocolor_;
   bool promotion_;
@@ -80,62 +72,8 @@ struct SeeCalc
     qcaps_moveto_[0] = fmgr_.queen_mask(Figure::ColorBlack) & qcaps_mask;
     qcaps_moveto_[1] = fmgr_.queen_mask(Figure::ColorWhite) & qcaps_mask;
     kicaps_moveto_ = movesTable().caps(Figure::TypeKing, move_.to());
-    pwmask_moveto_[0] = movesTable().pawnCaps(Figure::ColorWhite, move_.to()) & fmgr_.pawn_mask(Figure::ColorBlack) & all_mask_;
-    pwmask_moveto_[1] = movesTable().pawnCaps(Figure::ColorBlack, move_.to()) & fmgr_.pawn_mask(Figure::ColorWhite) & all_mask_;
-  }
-
-  inline void setupAttacks()
-  {
-    auto mask_all = all_mask_ & ~set_mask_bit(move_.to());
-    auto const pawn_msk_b = fmgr_.pawn_mask(Figure::ColorBlack) & mask_all;
-    auto const pawn_msk_w = fmgr_.pawn_mask(Figure::ColorWhite) & mask_all;
-    pwattacks_[0] = (((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]));
-    pwattacks_[1] = (((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]));
-    nattacks_[0] = nattacks_[1] = 0ULL;
-    for (auto m = (fmgr_.knight_mask(Figure::ColorBlack) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      nattacks_[0] |= movesTable().caps(Figure::TypeKnight, n);
-    }
-    for (auto m = (fmgr_.knight_mask(Figure::ColorWhite) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      nattacks_[1] |= movesTable().caps(Figure::TypeKnight, n);
-    }
-    battacks_[0] = battacks_[1] = 0ULL;
-    for (auto m = (fmgr_.bishop_mask(Figure::ColorBlack) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      battacks_[0] |= magic_ns::bishop_moves(n, all_mask_);
-    }
-    for (auto m = (fmgr_.bishop_mask(Figure::ColorWhite) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      battacks_[1] |= magic_ns::bishop_moves(n, all_mask_);
-    }
-    rattacks_[0] = rattacks_[1] = 0ULL;
-    for (auto m = (fmgr_.rook_mask(Figure::ColorBlack) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      rattacks_[0] |= magic_ns::rook_moves(n, all_mask_);
-    }
-    for (auto m = (fmgr_.rook_mask(Figure::ColorWhite) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      rattacks_[1] |= magic_ns::rook_moves(n, all_mask_);
-    }
-    qattacks_[0] = qattacks_[1] = 0ULL;
-    for (auto m = (fmgr_.queen_mask(Figure::ColorBlack) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      qattacks_[0] |= magic_ns::queen_moves(n, all_mask_);
-    }
-    for (auto m = (fmgr_.queen_mask(Figure::ColorWhite) & mask_all); m;) {
-      auto n = clear_lsb(m);
-      qattacks_[1] |= magic_ns::queen_moves(n, all_mask_);
-    }
-    auto kic_b = movesTable().caps(Figure::TypeKing, board_.kingPos(Figure::ColorBlack));
-    auto kic_w = movesTable().caps(Figure::TypeKing, board_.kingPos(Figure::ColorWhite));
-    aattacks_[0] = pwattacks_[0] | nattacks_[0] | battacks_[0] | rattacks_[0] | qattacks_[0] | kic_b;
-    aattacks_[1] = pwattacks_[1] | nattacks_[1] | battacks_[1] | rattacks_[1] | qattacks_[1] | kic_w;
-    kiattacks_[0] = kic_b & ~aattacks_[1];
-    kiattacks_[1] = kic_w & ~aattacks_[0];
-    unprotected_[0] = aattacks_[0] & ~aattacks_[1];
-    unprotected_[1] = aattacks_[1] & ~aattacks_[0];
-    all_mask_ = mask_all;
+    pwmask_moveto_[0] = movesTable().pawnCaps(1, move_.to()) & fmgr_.pawn_mask(Figure::ColorBlack) & all_mask_;
+    pwmask_moveto_[1] = movesTable().pawnCaps(0, move_.to()) & fmgr_.pawn_mask(Figure::ColorWhite) & all_mask_;
   }
 
   inline bool next(Figure::Color color, int& from, int& score)
@@ -365,102 +303,6 @@ struct SeeCalc
     return (last_r_[ocolor] & rq_mask) || (magic_ns::rook_moves(move_.to(), all_mask_) & rq_mask);
   }
 
-  inline bool other_move(Figure::Color color, int& score)
-  {
-    auto ocolor = Figure::otherColor(color);
-    if (!(aattacks_[color] & (fmgr_.mask(ocolor) & all_mask_))) {
-      return false;
-    }
-    bool negate = color != color_;
-    auto unprotected = unprotected_[color] & all_mask_;
-    if (auto a = (unprotected & fmgr_.queen_mask(ocolor) & all_mask_)) {
-      score = Figure::figureWeight_[Figure::TypeQueen];
-      score = negate ? -score : score;
-      aattacks_[ocolor] &= ~qattacks_[ocolor];
-      qattacks_[ocolor] = 0ULL;
-      all_mask_ &= ~a;
-      return true;
-    }
-    if (auto a = ((pwattacks_[color] & fmgr_.queen_mask(ocolor) & all_mask_))) {
-      bool pr = a & aattacks_[ocolor];
-      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypePawn];
-      score = negate ? -score : score;
-      aattacks_[ocolor] &= ~qattacks_[ocolor];
-      qattacks_[ocolor] = 0ULL;
-      all_mask_ &= ~(a | fmgr_.pawn_mask(color));
-      return true;
-    }
-    if (auto a = ((nattacks_[color] & fmgr_.queen_mask(ocolor) & all_mask_))) {
-      bool pr = a & aattacks_[ocolor];
-      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypeKnight];
-      score = negate ? -score : score;
-      aattacks_[ocolor] &= ~qattacks_[ocolor];
-      qattacks_[ocolor] = 0ULL;
-      all_mask_ &= ~(a | fmgr_.knight_mask(color));
-      return true;
-    }
-    if (auto a = ((battacks_[color] & fmgr_.queen_mask(ocolor) & all_mask_))) {
-      bool pr = a & aattacks_[ocolor];
-      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypeBishop];
-      score = negate ? -score : score;
-      aattacks_[ocolor] &= ~qattacks_[ocolor];
-      qattacks_[ocolor] = 0ULL;
-      all_mask_ &= ~(a | fmgr_.bishop_mask(color));
-      return true;
-    }
-    if (auto a = ((rattacks_[color] & fmgr_.queen_mask(ocolor) & all_mask_))) {
-      bool pr = a & aattacks_[ocolor];
-      score = Figure::figureWeight_[Figure::TypeQueen] - pr * Figure::figureWeight_[Figure::TypeRook];
-      score = negate ? -score : score;
-      aattacks_[ocolor] &= ~qattacks_[ocolor];
-      qattacks_[ocolor] = 0ULL;
-      all_mask_ &= ~(a | fmgr_.rook_mask(color));
-      return true;
-    }
-    if (auto a = (unprotected & fmgr_.rook_mask(ocolor))) {
-      score = Figure::figureWeight_[Figure::TypeRook];
-      score = negate ? -score : score;
-      aattacks_[ocolor] &= ~rattacks_[ocolor];
-      rattacks_[ocolor] = 0ULL;
-      all_mask_ &= ~a;
-      return true;
-    }
-    if (auto a = ((pwattacks_[color] & fmgr_.rook_mask(ocolor) & all_mask_))) {
-      bool pr = a & aattacks_[ocolor];
-      score = Figure::figureWeight_[Figure::TypeRook] - pr * Figure::figureWeight_[Figure::TypePawn];
-      score = negate ? -score : score;
-      all_mask_ &= ~(a | fmgr_.pawn_mask(color));
-      aattacks_[ocolor] &= ~rattacks_[ocolor];
-      rattacks_[ocolor] = 0ULL;
-      return true;
-    }
-    if (auto a = (unprotected & (fmgr_.knight_mask(ocolor) | fmgr_.bishop_mask(ocolor)))) {
-      score = Figure::figureWeight_[Figure::TypeKnight];
-      score = negate ? -score : score;
-      all_mask_ &= ~a;
-      aattacks_[ocolor] &= ~(nattacks_[ocolor] | battacks_[ocolor]);
-      nattacks_[ocolor] = battacks_[ocolor] = 0ULL;
-      return true;
-    }
-    if (auto a = ((pwattacks_[color] & (fmgr_.knight_mask(ocolor) | fmgr_.bishop_mask(ocolor)) & all_mask_))) {
-      bool pr = a & aattacks_[ocolor];
-      score = Figure::figureWeight_[Figure::TypeKnight] - pr * Figure::figureWeight_[Figure::TypePawn];
-      score = negate ? -score : score;
-      all_mask_ &= ~(a | fmgr_.pawn_mask(color));
-      aattacks_[ocolor] &= ~(nattacks_[ocolor] | battacks_[ocolor]);
-      nattacks_[ocolor] = battacks_[ocolor] = 0ULL;
-      return true;
-    }
-    if (auto a = (unprotected & fmgr_.pawn_mask(ocolor))) {
-      score = Figure::figureWeight_[Figure::TypePawn];
-      score = negate ? -score : score;
-      all_mask_ &= ~a;
-      aattacks_[ocolor] &= ~pwattacks_[ocolor];
-      pwattacks_[ocolor] = 0ULL;
-      return true;
-    }
-    return false;
-  }
 };
 
 } // end of namespace {} for SeeCalc
@@ -530,60 +372,31 @@ bool Board::see(const Move move, int threshold) const
     if (see_calc.discovered_check_ && color == see_calc.color_)
       return true;
     score_gain += fscore;
-    fscore = score;
-    color = ocolor;
     // king's move always last
     if (score == 0)
       break;
-    if (color == see_calc.color_)
+    if (color != see_calc.color_)
     {
       // already winner
-      if (score_gain >= threshold) {
+      if (score_gain >= threshold)
         return true;
-      }
       // loose even if take last moved figure
-      if (score_gain + score < threshold) {
-        break;
-      }
+      if (score_gain + score < threshold)
+        return false;
     }
     else
     {
       // already winner even if loose last moved figure
-      if (score_gain + score >= threshold) {
+      if (score_gain + score >= threshold)
         return true;
-      }
       // could not gain something
-      if (score_gain < threshold) {
-        break;
+      if (score_gain < threshold)
+        return false;
       }
-    }
+    fscore = score;
+    color = ocolor;
   }
 
-  if (score_gain >= threshold || color != see_calc.color_) {
-    return score_gain >= threshold;
-  }
-
-  // may be we have alternative captures on other squares?
-  see_calc.setupAttacks();
-
-  while (true) {
-    int score = 0;
-    if (!see_calc.other_move(color, score)) {
-      break;
-    }
-
-    score_gain += score;
-    color = Figure::otherColor(color);
-
-    // my turn - winner
-    if (color == see_calc.color_ && score_gain >= threshold) {
-      return true;
-    }
-    // opponent's turn - loser
-    else if (color != see_calc.color_ && score_gain < threshold) {
-      return false;
-    }
-  }
 
   return score_gain >= threshold;
 }

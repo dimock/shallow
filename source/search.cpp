@@ -658,7 +658,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
   bool check_escape = board.underCheck();
-  FastGenerator<Board, SMove> fg(board, hmove, sctx.plystack_[ply].killer_);
+  auto killer = sctx.plystack_[ply].killer_;
+  FastGenerator<Board, SMove> fg(board, hmove, killer);
   int ngood = 0;
   Move movep{false};
   for (; alpha < betta && !checkForStop(ictx);)
@@ -717,11 +718,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 
       int R = 0;
 #ifdef USE_LMR
-      if(!check_escape &&                  
+      if(!check_escape &&
           (sdata.depth_<<4) > LMR_MinDepthLimit &&
           depth >= LMR_DepthLimit &&
-          alpha > -Figure::MatScore-MaxPly &&          
-          ((!danger_pawn && board.canBeReduced(move)) || !move.see_ok())
+          alpha > -Figure::MatScore-MaxPly &&
+          ((move != killer && !danger_pawn && board.canBeReduced(move)) || !move.see_ok())
         )
       {
         R = ONE_PLY * (1 + (counter >> 4));
