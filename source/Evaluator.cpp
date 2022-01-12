@@ -866,6 +866,15 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
 
+  // bonus for 2 knights difference
+  if (knightsDiff >= 2 || knightsDiff <= -2)
+  {
+    int ndiff = sign(knightsDiff);
+    Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
+    const int pawnsN = fmgr.pawns(ncolor);
+    score += EvalCoefficients::twoKnightsBonus_[pawnsN] * ndiff;
+  }
+
   // Figure vs. Pawns
   if (!rooksDiff && figuresDiff)
   {
@@ -1002,14 +1011,14 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
   }
 
-  if (auto treat_mask = ~counted_mask & ~finfo_[ocolor].pawnAttacks_ &
+  if (auto treat_mask = ~counted_mask & ~(finfo_[ocolor].pawnAttacks_ | finfo_[ocolor].multiattack_mask_ | finfo_[ocolor].nb_attacked_) &
         ((finfo_[color].r_treat_ & fmgr.bishop_mask(ocolor)) | (finfo_[color].rq_treat_ & fmgr.knight_mask(ocolor)))) {
     counted_mask |= treat_mask;
     int rqtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
     attackedN += rqtreatsN;
     attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
     rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 2;
+    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 3;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
@@ -1036,8 +1045,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
   attackScore += (EvalCoefficients::possibleKnightAttack_ * possibleNN) >> ((int)knight_protects);
 
-  attackScore += EvalCoefficients::pinnedFigureBonus_ * pop_count(finfo_[ocolor].pinnedFigures_);
-
   if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
     auto attacks_mask = (((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
       (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_) |
@@ -1047,13 +1054,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int blockedN = pop_count(blocked_attacked);
     attackScore += EvalCoefficients::immobileAttackBonus_ * blockedN;
     attackedN += blockedN;
-  }
-
-  if (attackedN > 1) {
-    attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
-  }
-  if (board_->color() == color) {
-    attackScore += attackScore >> 1;
   }
   return ScoreType32{ attackScore, attackScore };
 }

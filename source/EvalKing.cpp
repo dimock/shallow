@@ -442,13 +442,13 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     }
   }
 
-  if (!finfo_[color].discoveredCheck_) {
-    auto mask_opw_att = fmgr.pawn_mask(ocolor) & finfo_[color].pawnAttacks_ & oki_fields;
-    while (mask_opw_att && !finfo_[color].discoveredCheck_) {
-      auto n = clear_lsb(mask_opw_att);      
-      finfo_[color].discoveredCheck_ = board_->discoveredCheck(n, mask_all_, color, oki_pos);
-    }
-  }
+  //if (!finfo_[color].discoveredCheck_) {
+  //  auto mask_opw_att = fmgr.pawn_mask(ocolor) & finfo_[color].pawnAttacks_ & oki_fields;
+  //  while (mask_opw_att && !finfo_[color].discoveredCheck_) {
+  //    auto n = clear_lsb(mask_opw_att);      
+  //    finfo_[color].discoveredCheck_ = board_->discoveredCheck(n, mask_all_, color, oki_pos);
+  //  }
+  //}
 
   bool canCheck = !!(kn_check | bi_check | r_check);
   kn_check &= can_check_nb;

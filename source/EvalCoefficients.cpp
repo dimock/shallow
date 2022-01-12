@@ -14,18 +14,18 @@ namespace NEngine
 
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 13, 22 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 4, 7 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 17, 26 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 7 };
   ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
 
   // outpost
-  ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
-  ScoreType32 EvalCoefficients::bishopOutpost_{ 10, 3 };
+  ScoreType32 EvalCoefficients::knightOutpost_{ 12, 3 };
+  ScoreType32 EvalCoefficients::bishopOutpost_{  5, 2 };
 
   // forks
-  ScoreType EvalCoefficients::bishopsAttackRQ_{ 40 };
+  ScoreType EvalCoefficients::bishopsAttackRQ_{ 50 };
   ScoreType EvalCoefficients::bishopsAttack_{ 30 };
-  ScoreType EvalCoefficients::knightAttackRQ_{ 40 };
+  ScoreType EvalCoefficients::knightAttackRQ_{ 50 };
   ScoreType EvalCoefficients::knightAttack_{ 30 };
   ScoreType EvalCoefficients::pawnAttack_{ 50 };
   ScoreType EvalCoefficients::possibleKnightAttack_{ 12 };
@@ -108,14 +108,14 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {0, 32, 25, 15, 2, 1, 0, 0},
-    {0, 35, 30, 3, 2, 1, 0, 0},
-    {0, 32, 10, 3, 2, 1, 0, 0},
-    {0, 25, 20, 2, 1, 0, 0, 0},
-    {0, 25, 20, 2, 1, 0, 0, 0},
-    {0, 32, 10, 3, 2, 1, 0, 0},
-    {0, 35, 30, 3, 2, 1, 0, 0},
-    {0, 32, 25, 15, 2, 1, 0, 0}
+    {-15, 32, 25, 15, -5, -10, -15, 0},
+    {-15, 35, 30, 0, -10, -10, -15, 0},
+    { -5, 32, 10, 0,  -2,  -3,  -5, 0},
+    { -5, 15, 10, 0,  -2,  -3,  -5, 0},
+    { -5, 15, 10, 0,  -2,  -3,  -5, 0},
+    { -5, 32, 10, 0,  -2,  -3,  -5, 0},
+    {-15, 35, 30, 0, -10, -10, -15, 0},
+    {-15, 32, 25, 15, -5, -10, -15, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
@@ -131,7 +131,7 @@ namespace NEngine
   // opening, endgame
   ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {0, 0}, {10, 10}, {12, 12}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15}, {15, 15} };
   ScoreType32 EvalCoefficients::doubleKnightBonus_[10] = { {0, 0}, {3, 3}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
-  ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5}, {5, 5} };
+  ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {10, 5}, {15, 5}, {20, 5}, {20, 5}, {20, 5}, {20, 5}, {20, 5}, {20, 5}, {20, 5} };
   ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
   ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {25, 10}, {35, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20}, {40, 20} };
@@ -182,15 +182,15 @@ namespace NEngine
   int EvalCoefficients::kingToPawnBonus_[8] = { 0, 6, 5, 4, 3, 2, 1, 0 };
 
   // mobility
-  ScoreType32 EvalCoefficients::knightMobility_[16] = { {-45, -45}, {-22, -22}, {  0,   0}, {  4,   5}, {  8,  10}, { 11,  14}, { 14,  18}, { 17,  21}, { 20,  25} };
-  ScoreType32 EvalCoefficients::bishopMobility_[16] = { {-40, -40}, {-20, -20}, {  0,   0}, {  2,   2}, {  4,   5}, {  5,   7}, {  7,   9}, {  9,  11}, { 10,  13},
+  ScoreType32 EvalCoefficients::knightMobility_[16] = { {-30, -30}, {-15, -15}, {  3,   5}, {  9,  10}, { 14,  15}, { 18,  19}, { 22,  23}, { 26,  26}, { 30,  30} };
+  ScoreType32 EvalCoefficients::bishopMobility_[16] = { {-20, -20}, {-10, -10}, {  0,   0}, {  2,   2}, {  4,   5}, {  5,   7}, {  7,   9}, {  9,  11}, { 10,  13},
                                                         { 12,  15}, { 13,  17}, { 15,  18}, { 16,  20}, { 17,  22}, { 18,  23}, { 20,  25} };
-  ScoreType32 EvalCoefficients::rookMobility_[16]   = { {-25, -45}, {-12, -22}, {  0,   0}, {  4,   6}, {  9,  13}, { 13,  19}, { 17,  25}, { 21,  30}, { 24,  35},
+  ScoreType32 EvalCoefficients::rookMobility_[16] =   { {-20, -45}, {-10, -22}, {  0,   0}, {  4,   6}, {  9,  13}, { 13,  19}, { 17,  25}, { 21,  30}, { 24,  35},
                                                         { 27,  40}, { 31,  44}, { 34,  49}, { 37,  53}, { 39,  57}, { 42,  61}, { 45,  65} };
-  ScoreType32 EvalCoefficients::queenMobility_[32] = { {-55, -55}, {-27, -27}, {  0,   0}, {  2,   3}, {  5,   6}, {  8,   9}, { 11,  13}, { 13,  16}, { 16,  18},
-                                                       { 18,  21}, { 21,  24}, { 23,  27}, { 25,  29}, { 27,  32}, { 29,  34}, { 32,  37}, { 34,  39}, { 36,  42},
-                                                       { 38,  44}, { 39,  46}, { 41,  48}, { 43,  50}, { 45,  52}, { 47,  55}, { 48,  57}, { 50,  58}, { 52,  60},
-                                                       { 53,  62}, { 55,  64}, { 56,  66}, { 58,  68}, { 60,  70} };
+  ScoreType32 EvalCoefficients::queenMobility_[32] =  { {-55, -55}, {-27, -27}, {  0,   0}, {  2,   3}, {  5,   6}, {  8,   9}, { 11,  13}, { 13,  16}, { 16,  18},
+                                                        { 18,  21}, { 21,  24}, { 23,  27}, { 25,  29}, { 27,  32}, { 29,  34}, { 32,  37}, { 34,  39}, { 36,  42},
+                                                        { 38,  44}, { 39,  46}, { 41,  48}, { 43,  50}, { 45,  52}, { 47,  55}, { 48,  57}, { 50,  58}, { 52,  60},
+                                                        { 53,  62}, { 55,  64}, { 56,  66}, { 58,  68}, { 60,  70} };
 
   ScoreType32 EvalCoefficients::knightPinned_ = { 30, 30 };
   ScoreType32 EvalCoefficients::bishopPinned_ = { 20, 20 };
@@ -214,10 +214,10 @@ namespace NEngine
   {
     {},
     {},
-    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
-    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
-    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
-    { {0, 0}, {7, 0}, {6, 0}, {5, 0}, {3, 0}, {1, 0}, {0, 0}, {0, 0} },
+    { {0, 0}, {5, 0}, {4, 0}, {3, 0}, {1, 0}, {0, 0}, {-1, 0}, {-2, 0} },
+    { {0, 0}, {5, 0}, {4, 0}, {3, 0}, {1, 0}, {0, 0}, {-1, 0}, {-2, 0} },
+    { {0, 0}, {5, 0}, {4, 0}, {3, 0}, {1, 0}, {0, 0}, {-1, 0}, {-2, 0} },
+    { {0, 0}, {5, 0}, {4, 0}, {3, 0}, {1, 0}, {0, 0}, {-1, 0}, {-2, 0} },
     {},
     {}
   };

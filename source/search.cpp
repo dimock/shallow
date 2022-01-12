@@ -59,7 +59,10 @@ bool Engine::generateStartposMoves(int ictx)
     else
     {
       board.makeMove(move);
-      move.sort_value = sctx.eval_(-ScoreMax, +ScoreMax);
+      move.sort_value = 0;
+      if (!board.underCheck()) {
+        move.sort_value = sctx.eval_(-ScoreMax, +ScoreMax);
+      }
       if (!move.see_ok())
         move.sort_value -= 10000;
       board.unmakeMove(move);
