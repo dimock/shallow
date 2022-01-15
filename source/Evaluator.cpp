@@ -756,7 +756,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       if (!(fwd_field & mask_all)) {
         if (!(fwd_field & o_attack_mask)) {
           const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
-          pwscore += EvalCoefficients::passerPawnEx_[cy] * unstoppable;
+          pwscore += EvalCoefficients::passerUnstoppable_[cy] * unstoppable;
         }
 
         // all forward fields are not blocked by opponent
@@ -1018,7 +1018,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += rqtreatsN;
     attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
     rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 3;
+    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 4;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
@@ -1046,11 +1046,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   attackScore += (EvalCoefficients::possibleKnightAttack_ * possibleNN) >> ((int)knight_protects);
 
   if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
-    auto attacks_mask = (((finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
-      (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_)) & ~finfo_[ocolor].pawnAttacks_) |
-      (fmgr.rook_mask(ocolor) & (finfo_[color].n_treat_|finfo_[color].bi_treat_)) |
-      (fmgr.queen_mask(ocolor) & (finfo_[color].n_treat_ | finfo_[color].bi_treat_ | finfo_[color].r_treat_));
-    auto blocked_attacked = blocked_mask & (finfo_[color].pawnAttacks_ | attacks_mask);
+    auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
+      ( finfo_[color].pawnAttacks_ | finfo_[color].multiattack_mask_ |
+        (fmgr.rook_mask(ocolor) & (finfo_[color].n_treat_ | finfo_[color].bi_treat_)) |
+        (fmgr.queen_mask(ocolor) & (finfo_[color].n_treat_ | finfo_[color].bi_treat_ | finfo_[color].r_treat_)) );
+    auto blocked_attacked = blocked_mask & attacks_mask;
     int blockedN = pop_count(blocked_attacked);
     attackScore += EvalCoefficients::immobileAttackBonus_ * blockedN;
     attackedN += blockedN;

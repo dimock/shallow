@@ -89,7 +89,6 @@ struct EvalCoefficients
   static int kingWeakCheckersCoefficients_;
   static int kingCheckersCoefficients_[8];
   static int kingAttackersCoefficients_[8];
-  static int kingPossibleMovesCoefficients_[10];
 
   static ScoreType32 doubledPawn_;
   static ScoreType32 disconnectedPawn_;
@@ -134,6 +133,7 @@ struct EvalCoefficients
   static ScoreType32 passerPawn_[8];
   static ScoreType32 passerPawn2_[8];
   static ScoreType32 passerPawnEx_[8];
+  static ScoreType32 passerUnstoppable_[8];
   static ScoreType32 passerPawnExS_[8][8];
   static ScoreType32 passerPawnNbs_[8];
   static ScoreType32 passerPawnNbs2_[8];

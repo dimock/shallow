@@ -442,14 +442,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     }
   }
 
-  //if (!finfo_[color].discoveredCheck_) {
-  //  auto mask_opw_att = fmgr.pawn_mask(ocolor) & finfo_[color].pawnAttacks_ & oki_fields;
-  //  while (mask_opw_att && !finfo_[color].discoveredCheck_) {
-  //    auto n = clear_lsb(mask_opw_att);      
-  //    finfo_[color].discoveredCheck_ = board_->discoveredCheck(n, mask_all_, color, oki_pos);
-  //  }
-  //}
-
   bool canCheck = !!(kn_check | bi_check | r_check);
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
@@ -493,9 +485,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
                                (oki_fields & ~finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].attack_mask_)) &
       (~near_oking_att & ~fmgr.pawn_mask(color) & finfo_[color].attack_mask_);
   if (near_oking_rem) {
-    int otherN = pop_count(near_oking_rem);
-    auto rem_king_attacks = EvalCoefficients::attackedNearKingOther_ * otherN;
-    auto rem_king_checks = EvalCoefficients::checkNearKingOther_ * otherN;
+    int weaksN = pop_count(near_oking_rem & ~finfo_[ocolor].attack_mask_);
+    int otherN = pop_count(near_oking_rem & finfo_[ocolor].attack_mask_);
+    auto rem_king_attacks = EvalCoefficients::attackedNearKingWeak_ * weaksN;
+    auto rem_king_checks = EvalCoefficients::checkNearKingWeak_ * weaksN;
+    rem_king_attacks += EvalCoefficients::attackedNearKingOther_ * otherN;
+    rem_king_checks += EvalCoefficients::checkNearKingOther_ * otherN;
     attack_coeff += rem_king_attacks;
     check_coeff += rem_king_checks;
   }
