@@ -75,8 +75,6 @@ struct EvalCoefficients
   static int discoveredChecking_;
   static int weakChecking_;
 
-  static int checkMyMoveBonus_;
-  static int possibleMatTreat_;
   static int attackedNearKingStrong_;
   static int attackedNearKingWeak_;
   static int attackedNearKingOther_;
@@ -137,6 +135,8 @@ struct EvalCoefficients
   static ScoreType32 passerPawnExS_[8][8];
   static ScoreType32 passerPawnNbs_[8];
   static ScoreType32 passerPawnNbs2_[8];
+  static ScoreType32 passerPawnGrd_[8];
+  static ScoreType32 passerPawnGrd2_[8];
   static ScoreType32 kingToPasserDistanceBonus_[8];
   static ScoreType32 okingToPasserDistanceBonus_[8];
   static ScoreType32 kingToPasserDistanceBonus2_[8];

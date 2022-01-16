@@ -26,7 +26,7 @@ extern const BitMask Figure::pawns2ndLineMask_[2] = { 0x0000ff0000000000, 0x0000
 extern const BitMask Figure::quaterBoard_[2][3]  = { { 0xf0f0f0f0f0000000, 0x0f0f0f0f0f000000, 0x3c3c3c3c3c000000 },
                                                      { 0x000000f0f0f0f0f0, 0x0000000f0f0f0f0f, 0x0000003c3c3c3c3c }};
 
-extern const BitMask Figure::outpostMask_[2] = { 0x000000ffffff0000, 0x0000ffffff000000 };
+extern const BitMask Figure::outpostMask_[2] = { 0x00000000ffff0000, 0x0000ffff00000000 };
 
 extern const ScoreType32 Figure::figureWeight32_[7] = { {0, 0}, {85, 102}, {345, 350}, {360, 360}, {560, 560}, {1120, 1120}, {0, 0} };
 
