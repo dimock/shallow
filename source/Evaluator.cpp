@@ -360,8 +360,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   scoreAttacks -= evaluateAttacks(Figure::ColorBlack);
   score32 += scoreAttacks;
 
-  auto scorePP = evaluatePawnsPressure(Figure::ColorWhite);
-  scorePP -= evaluatePawnsPressure(Figure::ColorBlack);
+  auto scorePP = evaluatePawnsAttacks(Figure::ColorWhite);
+  scorePP -= evaluatePawnsAttacks(Figure::ColorBlack);
   score32 += scorePP;
 
   auto scorePassers = passersEvaluation(hashedScore);
@@ -414,20 +414,6 @@ Evaluator::PhaseInfo Evaluator::detectPhase() const
   phaseInfo.endGame_ = weightOEDiff_ - phaseInfo.opening_;
 
   return phaseInfo;
-}
-
-ScoreType32 Evaluator::evaluatePawnsPressure(Figure::Color color)
-{
-  auto const& fmgr = board_->fmgr();
-  auto const ocolor = Figure::otherColor(color);
-  auto const pw_mask = fmgr.pawn_mask(ocolor);
-  auto pw_unprotected = pw_mask & ~finfo_[ocolor].pawnAttacks_;
-  auto treats = finfo_[color].n_treat_ | finfo_[color].bi_treat_ | finfo_[color].r_treat_ |
-                finfo_[color].queenMoves_ | finfo_[color].kingAttacks_;
-  ScoreType32 score{};
-  score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & ~finfo_[ocolor].attack_mask_);
-  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & finfo_[ocolor].attack_mask_);
-  return score;
 }
 
 Evaluator::PasserInfo Evaluator::hashedEvaluation()
@@ -975,8 +961,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::knightAttackRQ_ * knightsN;
   }
 
-  const auto stong_bn_attacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_)
-    & ~finfo_[ocolor].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_;
+  const auto stong_bn_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
   if (auto kn_fork = (fmgr.bishop_mask(ocolor) & finfo_[color].knightMoves_ & ~counted_mask)) {
     counted_mask |= kn_fork;
     int knightsN = pop_count(kn_fork & stong_bn_attacks);
@@ -990,8 +975,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int bishopsN = pop_count(bi_treat);
     attackedN += bishopsN;
     attackScore += EvalCoefficients::bishopsAttackRQ_ * bishopsN;
-  }
-  
+  }  
   if (auto bi_treat = (fmgr.knight_mask(ocolor) & finfo_[color].bi_treat_ & ~counted_mask)) {
     counted_mask |= bi_treat;
     int bishopsN = pop_count(bi_treat & stong_bn_attacks);
@@ -1060,5 +1044,21 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
   return ScoreType32{ attackScore, attackScore };
 }
+
+ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
+{
+  auto const& fmgr = board_->fmgr();
+  auto const ocolor = Figure::otherColor(color);
+  auto const pw_mask = fmgr.pawn_mask(ocolor);
+  auto pw_unprotected = pw_mask & ~finfo_[ocolor].pawnAttacks_;
+  auto treats = finfo_[color].n_treat_ | finfo_[color].bi_treat_ | finfo_[color].r_treat_ |
+    finfo_[color].queenMoves_ | finfo_[color].kingAttacks_;
+  auto strong_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
+  ScoreType32 score{};
+  score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & strong_attacks);
+  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & ~strong_attacks);
+  return score;
+}
+
 
 } //NEngine

@@ -199,6 +199,7 @@ private:
 
   /// find knight and pawn forks and other attacks
   ScoreType32 evaluateAttacks(Figure::Color color);
+  ScoreType32 evaluatePawnsAttacks(Figure::Color color);
 
   // 0 - short, 1 - long, -1 - no castle
   int getCastleType(Figure::Color color) const;
@@ -213,8 +214,6 @@ private:
   int evaluateKingSafety(Figure::Color color, Index const kingPos) const;
   int opponentPawnsPressure(Figure::Color color, Index const kingPos) const;
   int evaluateKingsPawn(Figure::Color color, Index const kingPos) const;
-
-  ScoreType32 evaluatePawnsPressure(Figure::Color color);
 
   // sum of weights of all figures
   static const int openingWeight_ = 2*(    Figure::figureWeight_[Figure::TypeQueen]
