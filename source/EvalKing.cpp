@@ -389,7 +389,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   const auto ocolor = Figure::otherColor(color);
   const auto  ki_pos = board_->kingPos(color);
   const auto oki_pos = board_->kingPos(ocolor);
-  const auto fmask_no_check = ~fmgr.mask(color);
+  const auto fmask_no_check = ~(fmgr.mask(color) | finfo_[ocolor].pawnAttacks_);
 
   const auto oki_fields = finfo_[ocolor].ki_fields_;
   const auto near_oking = oki_fields & finfo_[ocolor].kingAttacks_;

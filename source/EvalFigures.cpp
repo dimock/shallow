@@ -49,7 +49,7 @@ void Evaluator::prepareAttacksMasks()
     auto ocolor = Figure::otherColor(color);
     finfo_[color].blockedFigures_ = BitMask{};
     finfo_[color].knightMoves_ = BitMask{};
-    finfo_[color].attackedByKnightRq_ = BitMask{};
+    finfo_[color].attackedByKnightBrq_ = BitMask{};
     finfo_[color].behindPawnAttacks_ = BitMask{};
     finfo_[color].behindOPawnAttacks_ = BitMask{};
     finfo_[color].pinnedFigures_ = BitMask{};
@@ -97,7 +97,7 @@ void Evaluator::prepareAttacksMasks()
     for (; rmask;)
     {
       auto n = clear_lsb(rmask);
-      finfo_[color].attackedByKnightRq_ |= movesTable().caps(Figure::TypeKnight, n);
+      finfo_[color].attackedByKnightBrq_ |= movesTable().caps(Figure::TypeKnight, n);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
       finfo_[color].checks_mask_ |= rook_moves;
       auto nrook_moves = ~rook_moves;
@@ -125,7 +125,7 @@ void Evaluator::prepareAttacksMasks()
     for (; qmask;)
     {
       auto n = clear_lsb(qmask);
-      finfo_[color].attackedByKnightRq_ |= movesTable().caps(Figure::TypeKnight, n);
+      finfo_[color].attackedByKnightBrq_ |= movesTable().caps(Figure::TypeKnight, n);
       auto qr_attacks = magic_ns::rook_moves(n, mask_all_);
       auto nqr_attacks = ~qr_attacks;
       auto queen_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n) & nqr_attacks;
@@ -248,6 +248,9 @@ ScoreType32 Evaluator::evaluateBishops()
     for (; mask;)
     {
       int n = clear_lsb(mask);
+      if (!(set_mask_bit(n) & finfo_[color].attack_mask_)) {
+        finfo_[color].attackedByKnightBrq_ |= movesTable().caps(Figure::TypeKnight, n);
+      }
       auto const bishop_moves = moves_masks_[n];
       BitMask bishop_moves_x{};
       if (!(finfo_[color].pinnedFigures_ & set_mask_bit(n))) {
@@ -289,7 +292,8 @@ ScoreType32 Evaluator::evaluateBishops()
 
       // treat attacks
       if (bishop_moves) {
-        auto mask_all_no_orq = mask_all_ & ~(board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor));
+        auto mask_all_no_orq = mask_all_ &
+          ~(board_->fmgr().rook_mask(ocolor) | board_->fmgr().queen_mask(ocolor) | board_->fmgr().queen_mask(color));
         if (!q_pinned) {
           finfo_[color].bi_treat_ |= magic_ns::bishop_moves(n, mask_all_no_orq);
         }

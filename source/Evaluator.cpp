@@ -607,6 +607,25 @@ Evaluator::PasserInfo Evaluator::evaluatePawns() const
 }
 
 template <Figure::Color color>
+bool canPromote(Board const& board, const Evaluator::FieldsInfo(&finfo)[2], BitMask const mask_all, Index const pidx)
+{
+  // next field is not attacked by opponent
+  auto const& fmgr = board.fmgr();
+  bool const bcolor = color == board.color();
+  const Figure::Color ocolor = Figure::otherColor(color);
+  const int py = Evaluator::promo_y_[color];
+  Index pp{ pidx.x(), py };
+  int oking_dist_pp = distanceCounter().getDistance(board.kingPos(ocolor), pp) - (!bcolor);
+  int dist_pp = color ? py - pidx.y() : pidx.y() - py;
+  bool king_far = oking_dist_pp > dist_pp;
+  int king_dist_pp = distanceCounter().getDistance(board.kingPos(color), pp);
+  if (fmgr.queens(ocolor) || fmgr.allFigures(ocolor) > 1 || dist_pp > 1 || king_dist_pp > 1 || oking_dist_pp < 3 || fmgr.pawns(color) == 1) {
+    return false;
+  }
+  return true;
+}
+
+template <Figure::Color color>
 bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2], BitMask const mask_all, Index const pidx)
 {
   // next field is not attacked by opponent
@@ -746,6 +765,9 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
         if (!(fwd_field & o_attack_mask)) {
           const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
           pwscore += EvalCoefficients::passerUnstoppable_[cy] * unstoppable;
+          if (!unstoppable && canPromote<color>(board, finfo, mask_all, idx)) {
+            pwscore += EvalCoefficients::passerPawn_[cy];
+          }
         }
 
         // all forward fields are not blocked by opponent
@@ -920,7 +942,8 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   BitMask counted_mask{};
   Figure::Color ocolor = Figure::otherColor(color);
   BitMask o_rq_mask = fmgr.rook_mask(ocolor) | fmgr.queen_mask(ocolor);
-  BitMask o_mask = fmgr.knight_mask(ocolor) | fmgr.bishop_mask(ocolor) | o_rq_mask;
+  BitMask o_brq_mask = fmgr.bishop_mask(ocolor) | o_rq_mask;
+  BitMask o_mask = fmgr.knight_mask(ocolor) | o_brq_mask;
 
   auto pw_attacks = fmgr.pawn_mask(color) & (~finfo_[ocolor].attack_mask_ | finfo_[color].attack_mask_) &
     ~finfo_[color].pinnedFigures_;
@@ -1018,19 +1041,25 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 
   const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;
   auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
-  auto possible_kn_att = finfo_[ocolor].attackedByKnightRq_ & finfo_[color].n_treat_ &
+  auto possible_kn_att = finfo_[ocolor].attackedByKnightBrq_ & finfo_[color].n_treat_ &
     strong_nattacks & ~fmgr.mask(color) & ~finfo_[ocolor].nb_attacked_;
   int possibleNN = 0;
+  bool with_check = false;
   while (possible_kn_att) {
     int n = clear_lsb(possible_kn_att);
-    auto kn_fork = o_rq_mask & movesTable().caps(Figure::TypeKnight, n) & ~counted_mask;
+    auto n_moves = movesTable().caps(Figure::TypeKnight, n);
+    auto kn_fork = o_brq_mask & n_moves & ~counted_mask;
     if (!kn_fork) {
       continue;
+    }
+    if (n_moves & fmgr.king_mask(ocolor)) {
+      with_check = true;
     }
     int knightsN = pop_count(kn_fork);
     possibleNN = std::max(possibleNN, knightsN);
   }
   attackScore += (EvalCoefficients::possibleKnightAttack_ * possibleNN) >> ((int)knight_protects);
+  attackScore += EvalCoefficients::knightAttack_ * with_check;
 
   if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
     auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |

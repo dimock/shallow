@@ -63,7 +63,7 @@ public:
     BitMask pawns_fwd_{};
     BitMask discovered_attackers_{};
     BitMask discovered_mask_{};
-    BitMask attackedByKnightRq_{};
+    BitMask attackedByKnightBrq_{};
     BitMask pinnedFigures_{};
     BitMask blockedFigures_{};
     BitMask checks_mask_{};
