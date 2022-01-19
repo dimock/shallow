@@ -130,7 +130,8 @@ PawnMasks::PawnMasks()
       BitMask guard_mask = set_mask_bit(Index(0, y));
       if(y > 0 && y < 7)
       {
-        guard_mask |= set_mask_bit(Index(0, y-deltay));
+        guard_mask |= set_mask_bit(Index(0, y - deltay));
+        guard_mask |= set_mask_bit(Index(0, y + deltay));
       }
 
       if(x > 0)
