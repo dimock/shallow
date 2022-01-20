@@ -1057,7 +1057,8 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int knightsN = pop_count(kn_fork);
     possibleNN = std::max(possibleNN, knightsN);
   }
-  attackScore += (EvalCoefficients::possibleKnightAttack_ * possibleNN) >> ((int)knight_protects);
+  possibleNN &= 3;
+  attackScore += (EvalCoefficients::possibleKnightAttack_[possibleNN]) >> ((int)knight_protects);
   attackScore += EvalCoefficients::knightAttack_ * with_check;
 
   if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
@@ -1081,7 +1082,7 @@ ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
   auto pw_unprotected = pw_mask & ~finfo_[ocolor].pawnAttacks_;
   auto treats = finfo_[color].n_treat_ | finfo_[color].bi_treat_ | finfo_[color].r_treat_ |
     finfo_[color].queenMoves_ | finfo_[color].kingAttacks_;
-  auto strong_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
+  auto strong_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & (finfo_[color].n_treat_ | finfo_[color].bi_treat_));
   ScoreType32 score{};
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & strong_attacks);
   score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & ~strong_attacks);
