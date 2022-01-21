@@ -223,7 +223,7 @@ namespace nst
 #define USE_EVAL_HASH_ALL
 #define SEE_PRUNING
 #define USE_FUTILITY_PRUNING
-#undef FUTILITY_PRUNING_BETTA
+#define FUTILITY_PRUNING_BETTA
 #define USE_IID
 #define USE_NULL_MOVE
 #define USE_LMR
