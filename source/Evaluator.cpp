@@ -342,6 +342,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score_nbrq += evaluateRook();
   score_nbrq += evaluateQueens();
   score32 += score_nbrq;
+  
+  if (detectStalemate()) {
+    scoreOffset = 5;
+  }
 
   auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;

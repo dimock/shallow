@@ -74,6 +74,7 @@ public:
     int score_king_{};
     bool qkingAttack_{};
     bool discoveredCheck_{};
+    bool hasMoves_{};
   } finfo_[2];
 
   BitMask moves_masks_[NumOfFields] = {};
@@ -180,6 +181,8 @@ private:
   ScoreType32 evaluateBishops();
   ScoreType32 evaluateRook();
   ScoreType32 evaluateQueens();
+
+  bool detectStalemate() const;
 
   bool discoveredCheck(int pos, Figure::Color color) const
   {

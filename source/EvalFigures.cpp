@@ -54,6 +54,7 @@ void Evaluator::prepareAttacksMasks()
     finfo_[color].behindOPawnAttacks_ = BitMask{};
     finfo_[color].pinnedFigures_ = BitMask{};
     finfo_[color].checks_mask_ = finfo_[color].attack_mask_;
+    finfo_[color].hasMoves_ = false;
     BitMask nmask = board_->fmgr().knight_mask(color);
     for (; nmask;)
     {
@@ -65,6 +66,7 @@ void Evaluator::prepareAttacksMasks()
         knight_moves = 0ULL;
         finfo_[color].pinnedFigures_ |= set_mask_bit(n);
       }
+      finfo_[color].hasMoves_ |= knight_moves > 0;
       finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & knight_moves;
       finfo_[color].attack_mask_ |= knight_moves;      
       moves_masks_[n] = knight_moves;
@@ -86,6 +88,7 @@ void Evaluator::prepareAttacksMasks()
         finfo_[color].pinnedFigures_ |= set_mask_bit(n);
       }
       moves_masks_[n] = bishop_moves;
+      finfo_[color].hasMoves_ |= bishop_moves > 0;
       finfo_[color].nbr_attacked_ |= bishop_moves;
       finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & bishop_moves;
       finfo_[color].attack_mask_ |= bishop_moves;
@@ -112,6 +115,7 @@ void Evaluator::prepareAttacksMasks()
         finfo_[color].pinnedFigures_ |= set_mask_bit(n);
       }
       moves_masks_[n] = rook_moves;
+      finfo_[color].hasMoves_ |= rook_moves > 0;
       finfo_[color].nbr_attacked_ |= rook_moves;
       finfo_[color].multiattack_mask_ |= finfo_[color].attack_mask_ & rook_moves;
       finfo_[color].attack_mask_ |= rook_moves;
@@ -144,6 +148,7 @@ void Evaluator::prepareAttacksMasks()
         finfo_[color].pinnedFigures_ |= set_mask_bit(n);
       }
       moves_masks_[n] = queen_moves;
+      finfo_[color].hasMoves_ |= queen_moves > 0;
       finfo_[color].rq_treat_ |= queen_moves;
       finfo_[color].r_treat_ |= qr_attacks;
       finfo_[color].qbi_treat_ |= queen_moves_bi;
@@ -450,6 +455,28 @@ ScoreType32 Evaluator::evaluateQueens()
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
+}
+
+bool Evaluator::detectStalemate() const
+{
+  if (!board_) {
+    return false;
+  }
+  const auto color = board_->color();
+  const auto ocolor = Figure::otherColor(color);
+  const auto& fmgr = board_->fmgr();
+  if (  finfo_[color].pawns_fwd_ || (finfo_[color].pawnAttacks_ & fmgr.mask(ocolor)) ||
+        (finfo_[color].kingAttacks_ & ~(finfo_[ocolor].attack_mask_ | mask_all_)) ) {
+    return false;
+  }
+  if (finfo_[color].hasMoves_ == 0) {
+    return true;
+  }
+  if (fmgr.rooks(color) == 1 && (finfo_[color].rookMoves_ & finfo_[ocolor].kingAttacks_) &&
+      !(finfo_[color].knightMoves_ | finfo_[color].bishopMoves_ | finfo_[color].queenMoves_)) {
+    return true;
+  }
+  return false;
 }
 
 } // NEngine
