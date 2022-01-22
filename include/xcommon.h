@@ -33,7 +33,7 @@ xcommon.h - Copyright (C) 2016 by Dmitry Sultanov
 
 #elif (defined __GNUC__)
 
-  #define ALIGN_GCC(bytes)__attribute__((aligned(bytes)))
+  #define ALIGN_GCC(bytes) __attribute__((aligned(bytes)))
   #define ALIGN_MSC(bytes) 
 
 
