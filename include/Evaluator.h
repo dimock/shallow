@@ -50,11 +50,8 @@ public:
     BitMask mask_xray_r_{};
     BitMask nb_attacked_{};
     BitMask nbr_attacked_{};
-    BitMask n_treat_{};
-    BitMask bi_treat_{};
-    BitMask r_treat_{};
-    BitMask rq_treat_{};
-    BitMask qbi_treat_{};
+    BitMask qbi_attacked_{};
+    BitMask qr_attacked_{};
     BitMask ki_fields_{};
     BitMask ki_fields_no_pw_{};
     BitMask brq_mask_{};
