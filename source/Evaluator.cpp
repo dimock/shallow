@@ -1066,7 +1066,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   attackScore += (EvalCoefficients::possibleKnightAttack_[possibleNN]) >> ((int)knight_protects);
   attackScore += EvalCoefficients::knightAttack_ * with_check;
 
-  if (auto blocked_mask = ~counted_mask & (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
+  if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
     auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
       finfo_[color].pawnAttacks_ | (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
     auto blocked_attacked = blocked_mask & attacks_mask;

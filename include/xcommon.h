@@ -215,7 +215,7 @@ namespace nst
 #define EXTEND_CHECK_SEE_ONLY
 #define USE_LAZY_EVAL
 
-#ifndef PROCESS_MOVES_SEQ
+#if 0 //ndef PROCESS_MOVES_SEQ
 
 #define USE_HASH
 #define USE_EVAL_HASH_PW
