@@ -234,16 +234,6 @@ ScoreType32 Evaluator::evaluateBishops()
     auto const pwmask = fmgr.pawn_mask(color);
     BitMask outpost_mask = finfo_[color].pawnAttacks_ & ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
 
-    // bishop on the same color square as its pawns
-    if (mask) {
-      auto bi_mask_w = mask &  FiguresCounter::s_whiteMask_;
-      auto bi_mask_b = mask & ~FiguresCounter::s_whiteMask_;
-      if (bi_mask_w)
-        score[color] += EvalCoefficients::pawnsOnBishopSquares_ * pop_count(pwmask &  FiguresCounter::s_whiteMask_);
-      if (bi_mask_b)
-        score[color] += EvalCoefficients::pawnsOnBishopSquares_ * pop_count(pwmask & ~FiguresCounter::s_whiteMask_);
-    }
-
     for (; mask;)
     {
       int n = clear_lsb(mask);

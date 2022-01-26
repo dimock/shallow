@@ -14,9 +14,10 @@ namespace NEngine
 
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 12, 12 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 2, 2 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 13, 22 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 4 };
   ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
+  ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
   // outpost
   ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
@@ -89,10 +90,9 @@ namespace NEngine
 
   // arrays
   ScoreType32 EvalCoefficients::doubledPawn_ = {-10, -8};
-  ScoreType32 EvalCoefficients::disconnectedPawn_ = {-2, -2};
-  ScoreType32 EvalCoefficients::isolatedPawn_[2] = { {-13, -11}, {-17, -15} };
-  ScoreType32 EvalCoefficients::backwardPawn_ = {-11, -9};
-  ScoreType32 EvalCoefficients::unprotectedPawn_ = {-6, -5};
+  ScoreType32 EvalCoefficients::isolatedPawn_[2] = { {-12, -10}, {-17, -12} };
+  ScoreType32 EvalCoefficients::backwardPawn_[2] = { {-12, -10}, {-17, -12} };
+  ScoreType32 EvalCoefficients::unprotectedPawn_ = {-6, -4};
   ScoreType32 EvalCoefficients::hasneighborPawn_ = {4, 4};
   ScoreType32 EvalCoefficients::attackingPawn_[8] = { { 0, 0 }, { 1, 1 }, { 2, 2 }, { 3, 3 }, { 8, 10 }, { 14, 18 }, { 0, 0 }, { 0, 0 } };
 

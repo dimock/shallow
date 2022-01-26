@@ -562,19 +562,16 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
     bool opened = ((opmsk| pmask) & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward<color>(idx, pmask, opmsk, fwd_field, finfo[ocolor].pawnAttacks_ & ~finfo[color].pawnAttacks_);
-    bool neighbors = ((pawnMasks().mask_neighbor(color, n) & ~protectMask & pmask) != 0ULL);
+    bool neighbors = guarded || ((pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL);
     bool doubled = (!guarded) && few_bits_set(pawnMasks().mask_column(x) & pmask) && ((bkw_mask & pmask) != 0ULL);
-    bool connected = (movesTable().pawnCaps(color, n) & pmask) != 0ULL;
-    bool disconnected = !isolated && !backward && !(guarded || neighbors || connected);
     bool unprotected = !isolated && !backward && !guarded;
     bool attack = (opmsk & attackMask) != 0ULL;
 
     info.pwscore_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
-    info.pwscore_ += EvalCoefficients::backwardPawn_ * backward;
+    info.pwscore_ += EvalCoefficients::backwardPawn_[opened] * backward;
     info.pwscore_ += EvalCoefficients::unprotectedPawn_ * unprotected;
     info.pwscore_ += EvalCoefficients::hasneighborPawn_ * neighbors;
     info.pwscore_ += EvalCoefficients::doubledPawn_ * doubled;
-    info.pwscore_ += EvalCoefficients::disconnectedPawn_ * disconnected;
     info.pwscore_ += EvalCoefficients::attackingPawn_[cy] * attack;
 
     // passer pawn - save position for further usage
@@ -1083,11 +1080,22 @@ ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
   auto const ocolor = Figure::otherColor(color);
   auto const pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_unprotected = pw_mask & ~finfo_[ocolor].pawnAttacks_;
-  auto treats = finfo_[color].attack_mask_;
+  auto treats = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
   auto strong_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
   ScoreType32 score{};
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & strong_attacks);
   score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & ~strong_attacks);
+  
+  // bishop treat
+  if (fmgr.bishops(color))
+  {
+    auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
+    auto bi_mask_b = fmgr.bishop_mask(color) & ~FiguresCounter::s_whiteMask_;
+    if (bi_mask_w)
+      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected &  FiguresCounter::s_whiteMask_) & ~treats);
+    if (bi_mask_b)
+      score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~treats);
+  }
   return score;
 }
 
