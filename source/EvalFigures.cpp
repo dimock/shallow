@@ -25,6 +25,24 @@ bool Evaluator::isPinned(int pos, Figure::Color color, Figure::Color ocolor, Bit
   return false;
 }
 
+inline bool attackedThrough(int q, BitMask n_mask, BitMask bi_mask, BitMask r_mask, BitMask qmoves_bi, BitMask qmoves_r, BitMask mask_all)
+{
+  if (auto bi_pin = (n_mask | r_mask) & qmoves_bi) {
+    auto bi_attack = magic_ns::bishop_moves(q, mask_all & ~bi_pin);
+    if (bi_attack & bi_mask) {
+      return true;
+    }
+  }
+  if (auto r_pin = (n_mask | bi_mask) & qmoves_r) {
+    auto r_attack = magic_ns::rook_moves(q, mask_all & ~r_pin);
+    if (r_attack & r_mask) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 bool Evaluator::blockedKnight(Figure::Color color, int n) const
 {
   auto const& fmgr = board_->fmgr();
@@ -48,6 +66,7 @@ void Evaluator::prepareAttacksMasks()
   {
     auto ocolor = Figure::otherColor(color);
     finfo_[color].blockedFigures_ = BitMask{};
+    finfo_[color].attackedThrough_ = BitMask{};
     finfo_[color].knightMoves_ = BitMask{};
     finfo_[color].attackedByKnightBrq_ = BitMask{};
     finfo_[color].behindPawnAttacks_ = BitMask{};
@@ -417,6 +436,12 @@ ScoreType32 Evaluator::evaluateQueens()
 
       if (q_pinned || !n_moves) {
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
+      }
+
+      // queen attacked by BR through opponent's NBR
+      if (attackedThrough(n, fmgr.knight_mask(ocolor), fmgr.bishop_mask(ocolor), fmgr.rook_mask(ocolor),
+        finfo_[color].qbi_attacked_, finfo_[color].qr_attacked_, mask_all_)) {
+        finfo_[color].attackedThrough_ |= set_mask_bit(n);
       }
     }
   }

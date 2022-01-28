@@ -63,6 +63,7 @@ public:
     BitMask attackedByKnightBrq_{};
     BitMask pinnedFigures_{};
     BitMask blockedFigures_{};
+    BitMask attackedThrough_{};
     BitMask checks_mask_{};
     BitMask bishopMovesKipos_{};
     BitMask rookMovesKipos_{};

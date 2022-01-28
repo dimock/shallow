@@ -1071,6 +1071,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::immobileAttackBonus_ * blockedN;
     attackedN += blockedN;
   }
+
+  if (finfo_[ocolor].attackedThrough_) {
+    attackScore += EvalCoefficients::attackedThroughBonus_;
+  }
+  
   return ScoreType32{ attackScore, attackScore };
 }
 
