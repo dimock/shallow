@@ -3,6 +3,27 @@
 namespace NEngine
 {
 
+inline bool checkQTreat(BitMask q_mask, BitMask ki_mask, BitMask mask_all, BitMask bi_check, BitMask r_check)
+{
+  mask_all &= ~ki_mask;
+  while (q_mask) {
+    auto n = clear_lsb(q_mask);
+    if (bi_check) {
+      auto bi_moves = magic_ns::bishop_moves(n, mask_all);
+      if (bi_moves & bi_check) {
+        return true;
+      }
+    }
+    if (r_check) {
+      auto r_moves = magic_ns::rook_moves(n, mask_all);
+      if (r_moves & r_check) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 int Evaluator::getCastleType(Figure::Color color) const
 {
   auto const ki_mask = board_->fmgr().king_mask(color);
@@ -471,6 +492,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   const auto near_oking_att = finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
+    bool byQueen = near_oking_att & finfo_[color].multiattack_mask_ & finfo_[color].queenMoves_;
     int strongN = pop_count(near_oking_att & finfo_[color].multiattack_mask_);
     int weakN = pop_count(near_oking_att & ~finfo_[color].multiattack_mask_);
     auto near_king_attacks = EvalCoefficients::attackedNearKingStrong_ * strongN;
@@ -479,6 +501,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     near_king_checks += EvalCoefficients::checkNearKingWeak_ * weakN;
     attack_coeff += near_king_attacks;
     check_coeff += near_king_checks;
+    check_coeff += EvalCoefficients::checkNearKingStrong_ * byQueen;
   }
 
   const auto near_oking_rem = ((finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_) |
@@ -487,8 +510,8 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   if (near_oking_rem) {
     int weaksN = pop_count(near_oking_rem & ~finfo_[ocolor].attack_mask_);
     int otherN = pop_count(near_oking_rem & finfo_[ocolor].attack_mask_);
-    auto rem_king_attacks = EvalCoefficients::attackedNearKingWeak_ * weaksN;
-    auto rem_king_checks = EvalCoefficients::checkNearKingWeak_ * weaksN;
+    auto rem_king_attacks = EvalCoefficients::attackedNearKingRem_ * weaksN;
+    auto rem_king_checks = EvalCoefficients::checkNearKingRem_ * weaksN;
     rem_king_attacks += EvalCoefficients::attackedNearKingOther_ * otherN;
     rem_king_checks += EvalCoefficients::checkNearKingOther_ * otherN;
     attack_coeff += rem_king_attacks;
@@ -525,6 +548,11 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
   int general_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
+
+  if (bi_check || r_check) {
+    bool b = checkQTreat(fmgr.queen_mask(ocolor), fmgr.king_mask(ocolor), mask_all_, bi_check, r_check);
+    score += EvalCoefficients::queenCheckTreatBonus_ * b;
+  }
 
   score += general_score;
 

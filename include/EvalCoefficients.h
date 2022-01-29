@@ -76,13 +76,16 @@ struct EvalCoefficients
   static int queenChecking_;
   static int discoveredChecking_;
   static int weakChecking_;
+  static int queenCheckTreatBonus_;
 
   static int attackedNearKingStrong_;
   static int attackedNearKingWeak_;
+  static int attackedNearKingRem_;
   static int attackedNearKingOther_;
   static int attackedNearKingPawns_;
   static int checkNearKingStrong_;
   static int checkNearKingWeak_;
+  static int checkNearKingRem_;
   static int checkNearKingOther_;
   static int checkNearKingPawns_;
 

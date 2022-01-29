@@ -67,15 +67,18 @@ namespace NEngine
   int EvalCoefficients::bishopChecking_{ 30 };
   int EvalCoefficients::rookChecking_{ 85 };
   int EvalCoefficients::queenChecking_{ 85 };
-  int EvalCoefficients::weakChecking_{ 9 };
   int EvalCoefficients::discoveredChecking_{ 40 };
+  int EvalCoefficients::weakChecking_{ 5 };
+  int EvalCoefficients::queenCheckTreatBonus_{ 50 };
   
   int EvalCoefficients::attackedNearKingStrong_{ 35 };
-  int EvalCoefficients::attackedNearKingWeak_{ 20 };
+  int EvalCoefficients::attackedNearKingWeak_{ 18 };
+  int EvalCoefficients::attackedNearKingRem_{ 7 };
   int EvalCoefficients::attackedNearKingOther_{ 4 };
   int EvalCoefficients::attackedNearKingPawns_{ 3 };
   int EvalCoefficients::checkNearKingStrong_{ 35 };
-  int EvalCoefficients::checkNearKingWeak_{ 20 };
+  int EvalCoefficients::checkNearKingWeak_{ 16 };
+  int EvalCoefficients::checkNearKingRem_{ 5 };
   int EvalCoefficients::checkNearKingOther_{ 4 };
   int EvalCoefficients::checkNearKingPawns_{ 3 };
 
