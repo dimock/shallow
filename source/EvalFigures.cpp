@@ -25,15 +25,15 @@ bool Evaluator::isPinned(int pos, Figure::Color color, Figure::Color ocolor, Bit
   return false;
 }
 
-inline bool attackedThrough(int q, BitMask n_mask, BitMask bi_mask, BitMask r_mask, BitMask qmoves_bi, BitMask qmoves_r, BitMask mask_all)
+inline bool attackedThrough(int q, BitMask pn_mask, BitMask bi_mask, BitMask r_mask, BitMask qmoves_bi, BitMask qmoves_r, BitMask mask_all)
 {
-  if (auto bi_pin = (n_mask | r_mask) & qmoves_bi) {
+  if (auto bi_pin = (pn_mask | r_mask) & qmoves_bi) {
     auto bi_attack = magic_ns::bishop_moves(q, mask_all & ~bi_pin);
     if (bi_attack & bi_mask) {
       return true;
     }
   }
-  if (auto r_pin = (n_mask | bi_mask) & qmoves_r) {
+  if (auto r_pin = (pn_mask | bi_mask) & qmoves_r) {
     auto r_attack = magic_ns::rook_moves(q, mask_all & ~r_pin);
     if (r_attack & r_mask) {
       return true;
@@ -438,8 +438,9 @@ ScoreType32 Evaluator::evaluateQueens()
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
 
-      // queen attacked by BR through opponent's NBR
-      if (attackedThrough(n, fmgr.knight_mask(ocolor), fmgr.bishop_mask(ocolor), fmgr.rook_mask(ocolor),
+      // queen attacked by BR through opponent's NBR or my P which could be captured
+      auto mpw = fmgr.pawn_mask(color) & (~finfo_[color].pawnAttacks_ | finfo_[ocolor].pawnPossibleAttacks_);
+      if (attackedThrough(n, fmgr.knight_mask(ocolor)|mpw, fmgr.bishop_mask(ocolor), fmgr.rook_mask(ocolor),
         finfo_[color].qbi_attacked_, finfo_[color].qr_attacked_, mask_all_)) {
         finfo_[color].attackedThrough_ |= set_mask_bit(n);
       }

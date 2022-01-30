@@ -15,8 +15,8 @@ namespace NEngine
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
   ScoreType32 EvalCoefficients::pawnPressureStrong_{ 13, 22 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 3, 4 };
-  ScoreType32 EvalCoefficients::pawnsOnBishopSquares_{ -2, -2 };
+  ScoreType32 EvalCoefficients::pawnPressureMedium_{ 2, 5 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 1, 3 };
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
   // outpost
@@ -24,10 +24,12 @@ namespace NEngine
   ScoreType32 EvalCoefficients::bishopOutpost_{ 10, 3 };
 
   // forks
-  ScoreType EvalCoefficients::bishopsAttackRQ_{ 40 };
+  ScoreType EvalCoefficients::bishopsAttackRQ_{ 32 };
   ScoreType EvalCoefficients::bishopsAttack_{ 30 };
-  ScoreType EvalCoefficients::knightAttackRQ_{ 40 };
+  ScoreType EvalCoefficients::bishopsAttackWeak_{ 15 };
+  ScoreType EvalCoefficients::knightAttackRQ_{ 32 };
   ScoreType EvalCoefficients::knightAttack_{ 30 };
+  ScoreType EvalCoefficients::knightAttackWeak_{ 12 };
   ScoreType EvalCoefficients::pawnAttack_{ 50 };
   ScoreType EvalCoefficients::possibleKnightAttack_[4] = { 0, 8, 30, 40 };
   ScoreType EvalCoefficients::possiblePawnAttack_{ 10 };
@@ -68,17 +70,18 @@ namespace NEngine
   int EvalCoefficients::rookChecking_{ 85 };
   int EvalCoefficients::queenChecking_{ 85 };
   int EvalCoefficients::discoveredChecking_{ 40 };
-  int EvalCoefficients::weakChecking_{ 5 };
+  int EvalCoefficients::promotionChecking_{ 40 };
+  int EvalCoefficients::weakChecking_{ 9 };
   int EvalCoefficients::queenCheckTreatBonus_{ 50 };
   
   int EvalCoefficients::attackedNearKingStrong_{ 35 };
-  int EvalCoefficients::attackedNearKingWeak_{ 18 };
-  int EvalCoefficients::attackedNearKingRem_{ 7 };
+  int EvalCoefficients::attackedNearKingWeak_{ 20 };
+  int EvalCoefficients::attackedNearKingRem_{ 10 };
   int EvalCoefficients::attackedNearKingOther_{ 4 };
   int EvalCoefficients::attackedNearKingPawns_{ 3 };
   int EvalCoefficients::checkNearKingStrong_{ 35 };
-  int EvalCoefficients::checkNearKingWeak_{ 16 };
-  int EvalCoefficients::checkNearKingRem_{ 5 };
+  int EvalCoefficients::checkNearKingWeak_{ 20 };
+  int EvalCoefficients::checkNearKingRem_{ 10 };
   int EvalCoefficients::checkNearKingOther_{ 4 };
   int EvalCoefficients::checkNearKingPawns_{ 3 };
 
@@ -109,18 +112,18 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {-20, 32, 30, 10,-15, -20, -20, 0},
-    {-20, 35, 30, 0, -20, -20, -20, 0},
-    {-10, 32, 10, 0, -10, -10, -10, 0},
-    {-10, 15,  5, 0, -10, -10, -10, 0},
-    {-10, 15,  5, 0, -10, -10, -10, 0},
-    {-10, 32, 10, 0, -10, -10, -10, 0},
-    {-20, 35, 30, 0, -20, -20, -20, 0},
-    {-20, 32, 20, 10,-15, -20, -20, 0}
+    {-15, 32, 30, 15,-10, -15, -15, 0},
+    {-15, 35, 30, 0, -15, -15, -15, 0},
+    { -5, 32, 10, 0,  -5,  -5, -10, 0},
+    { -5, 15,  5, 0,  -5,  -5,  -5, 0},
+    { -5, 15,  5, 0,  -5,  -5,  -5, 0},
+    { -5, 32, 10, 0,  -5,  -5,  -5, 0},
+    {-15, 35, 30, 0, -15, -15, -15, 0},
+    {-15, 32, 20, 15,-10, -15, -15, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
-    {30, 15, 6, 5, 3, 2, 1, 0}
+    {30, 12, 6, 5, 3, 2, 1, 0}
   };
   int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 7, 3, 1, 0, 0 };
   int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 16, 8, 4, 0 };

@@ -991,7 +991,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += knightsN;
     attackScore += EvalCoefficients::knightAttack_ * knightsN;
     knightsN = pop_count(kn_fork & ~stong_bn_attacks);
-    attackScore += (EvalCoefficients::knightAttack_ * knightsN) >> 2;
+    attackScore += EvalCoefficients::knightAttackWeak_ * knightsN;
   }
   if (auto bi_treat = (o_rq_mask & finfo_[color].bishopMoves_ & ~counted_mask)) {
     counted_mask |= bi_treat;
@@ -1005,7 +1005,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += bishopsN;
     attackScore += EvalCoefficients::bishopsAttack_ * bishopsN;
     bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
-    attackScore += (EvalCoefficients::bishopsAttack_ * bishopsN) >> 2;
+    attackScore += EvalCoefficients::bishopsAttackWeak_ * bishopsN;
   }
 
   auto qr_possible_mask = ~finfo_[ocolor].attack_mask_ & ~counted_mask;
@@ -1086,10 +1086,14 @@ ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
   auto const pw_mask = fmgr.pawn_mask(ocolor);
   auto pw_unprotected = pw_mask & ~finfo_[ocolor].pawnAttacks_;
   auto treats = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
-  auto strong_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
+  auto strong_attacks = ~finfo_[ocolor].attack_mask_ |
+    (~finfo_[ocolor].multiattack_mask_ & finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
+  auto medium_attacks = ~strong_attacks & (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
+  auto weak_attacks = ~(strong_attacks | medium_attacks);
   ScoreType32 score{};
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & strong_attacks);
-  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & ~strong_attacks);
+  score += EvalCoefficients::pawnPressureMedium_ * pop_count(pw_unprotected & treats & medium_attacks);
+  score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & weak_attacks);
   
   // bishop treat
   if (fmgr.bishops(color))

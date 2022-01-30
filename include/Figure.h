@@ -19,6 +19,7 @@ namespace Figure
   
   extern const BitMask pawnCutoffMasks_[2];
   extern const BitMask pawns2ndLineMask_[2];
+  extern const BitMask pawnPromoteMasks_[2];
   
   // TypePawn, TypeKnight, TypeBishop, TypeRook, TypeQueen, TypeKing
   constexpr ScoreType figureWeight_[7] = { 0, 85, 355, 355, 545, 1090, 0 };

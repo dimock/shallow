@@ -463,18 +463,24 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     }
   }
 
-  bool canCheck = !!(kn_check | bi_check | r_check);
+  // promotion check
+  auto pfwd = finfo_[color].pawns_fwd_ & Figure::pawnPromoteMasks_[color] & (~finfo_[ocolor].attack_mask_ | finfo_[color].pawnAttacks_);
+  auto cfwd = finfo_[color].pawnAttacks_ & Figure::pawnPromoteMasks_[color] & fmgr.mask(ocolor);
+  auto p_check = ((pfwd | cfwd) & (finfo_[ocolor].bishopMovesKipos_ | finfo_[ocolor].rookMovesKipos_));
+
+  bool canCheck = !!(kn_check | bi_check | r_check | p_check);
   kn_check &= can_check_nb;
   bi_check &= can_check_nb;
   r_check &= can_check_r;
   q_check &= can_check_q;
-  int num_checkers = (!!kn_check) + (!!bi_check) + (!!r_check) + (!!q_check) + finfo_[color].discoveredCheck_;
+  int num_checkers = (!!p_check) + (!!kn_check) + (!!bi_check) + (!!r_check) + (!!q_check) + finfo_[color].discoveredCheck_;
 
-  auto check_score = EvalCoefficients::knightChecking_ * (!!kn_check) +
+  int check_score = EvalCoefficients::knightChecking_ * (!!kn_check) +
     EvalCoefficients::bishopChecking_ * (!!bi_check) +
     EvalCoefficients::rookChecking_ * (!!r_check) +
     EvalCoefficients::queenChecking_ * (!!q_check) +
-    EvalCoefficients::discoveredChecking_ * finfo_[color].discoveredCheck_;
+    EvalCoefficients::discoveredChecking_ * finfo_[color].discoveredCheck_ +
+    EvalCoefficients::promotionChecking_ * (!!p_check);
 
   int num_attackers = std::min(finfo_[color].num_attackers_, 7);
   auto attack_coeff = EvalCoefficients::kingAttackersCoefficients_[num_attackers];

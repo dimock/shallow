@@ -23,6 +23,7 @@ extern const uint8 Figure::mirrorIndex_[64] =
 
 extern const BitMask Figure::pawnCutoffMasks_[2] = { 0xfefefefefefefefe /* left */, 0x7f7f7f7f7f7f7f7f /* right */ };
 extern const BitMask Figure::pawns2ndLineMask_[2] = { 0x0000ff0000000000, 0x0000000000ff0000 };
+extern const BitMask Figure::pawnPromoteMasks_[2] = { 0x00000000000000ff, 0xff00000000000000 };
 extern const BitMask Figure::quaterBoard_[2][3]  = { { 0xf0f0f0f0f0000000, 0x0f0f0f0f0f000000, 0x3c3c3c3c3c000000 },
                                                      { 0x000000f0f0f0f0f0, 0x0000000f0f0f0f0f, 0x0000003c3c3c3c3c }};
 
