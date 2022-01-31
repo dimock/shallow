@@ -1065,7 +1065,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 
   if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
     auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
-      finfo_[color].pawnAttacks_ | (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
+      finfo_[color].pawnAttacks_ | (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_ & ~counted_mask);
     auto blocked_attacked = blocked_mask & attacks_mask;
     int blockedN = pop_count(blocked_attacked);
     attackScore += EvalCoefficients::immobileAttackBonus_ * blockedN;

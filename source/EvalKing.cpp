@@ -496,11 +496,14 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     check_coeff += attack_coeff >> 2;
   }
 
-  const auto near_oking_att = finfo_[ocolor].kingAttacks_ & ~attacked_any_but_oking & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
+  auto near_oking_att = finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
-    bool byQueen = near_oking_att & finfo_[color].multiattack_mask_ & finfo_[color].queenMoves_;
-    int strongN = pop_count(near_oking_att & finfo_[color].multiattack_mask_);
-    int weakN = pop_count(near_oking_att & ~finfo_[color].multiattack_mask_);
+    auto strong_msk = near_oking_att & ~attacked_any_but_oking & finfo_[color].multiattack_mask_;
+    auto weak_msk = near_oking_att & ~strong_msk & (~finfo_[ocolor].multiattack_mask_ | finfo_[color].multiattack_mask_);
+    bool byQueen = strong_msk & finfo_[color].queenMoves_;
+    int strongN = pop_count(strong_msk);
+    int weakN = pop_count(weak_msk);
+    near_oking_att = strong_msk | weak_msk;
     auto near_king_attacks = EvalCoefficients::attackedNearKingStrong_ * strongN;
     near_king_attacks += EvalCoefficients::attackedNearKingWeak_ * weakN;
     auto near_king_checks = EvalCoefficients::checkNearKingStrong_ * strongN;
@@ -514,10 +517,10 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
                                (oki_fields & ~finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].attack_mask_)) &
       (~near_oking_att & ~fmgr.pawn_mask(color) & finfo_[color].attack_mask_);
   if (near_oking_rem) {
-    int weaksN = pop_count(near_oking_rem & ~finfo_[ocolor].attack_mask_);
+    int remsN = pop_count(near_oking_rem & ~finfo_[ocolor].attack_mask_);
     int otherN = pop_count(near_oking_rem & finfo_[ocolor].attack_mask_);
-    auto rem_king_attacks = EvalCoefficients::attackedNearKingRem_ * weaksN;
-    auto rem_king_checks = EvalCoefficients::checkNearKingRem_ * weaksN;
+    auto rem_king_attacks = EvalCoefficients::attackedNearKingRem_ * remsN;
+    auto rem_king_checks = EvalCoefficients::checkNearKingRem_ * remsN;
     rem_king_attacks += EvalCoefficients::attackedNearKingOther_ * otherN;
     rem_king_checks += EvalCoefficients::checkNearKingOther_ * otherN;
     attack_coeff += rem_king_attacks;
