@@ -512,17 +512,30 @@ namespace
     if (kl.x() != 0 && kl.x() != 7 && kl.y() != 0 && kl.y() != 7) {
       return { SpecialCaseResult::ALMOST_DRAW, 0 };
     }
-    if (kl.x() == 0 && kl.y() == kw.y() && kw.x() == 2 && bi.x() == 3 && bi.y() == kl.y() && rw.x() == 1) {
-      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    if (kl.x() == 0 && std::abs(kl.y() - kw.y()) < 2 && kw.x() == 2 && bi.x() == 3 && bi.y() == kw.y()) {
+      return { SpecialCaseResult::PROBABLE_DRAW, 0 };
     }
-    if (kl.x() == 7 && kl.y() == kw.y() && kw.x() == 5 && bi.x() == 4 && bi.y() == kl.y() && rw.x() == 6) {
-      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    if (kl.x() == 7 && std::abs(kl.y() - kw.y()) < 2 && kw.x() == 5 && bi.x() == 4 && bi.y() == kw.y()) {
+      return { SpecialCaseResult::PROBABLE_DRAW, 0 };
     }
-    if (kl.y() == 0 && kl.x() == kw.x() && kw.y() == 2 && bi.y() == 3 && bi.x() == kl.x() && rw.y() == 1) {
-      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    if (kl.y() == 0 && std::abs(kl.x() - kw.x()) < 2 && kw.y() == 2 && bi.y() == 3 && bi.x() == kw.x()) {
+      return { SpecialCaseResult::PROBABLE_DRAW, 0 };
     }
-    if (kl.y() == 7 && kl.x() == kw.x() && kw.y() == 5 && bi.y() == 4 && bi.x() == kl.x() && rw.y() == 6) {
-      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    if (kl.y() == 7 && std::abs(kl.x() - kw.x()) < 2 && kw.y() == 5 && bi.y() == 4 && bi.x() == kw.x()) {
+      return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+    }
+
+    if (kl.x() == 0 && (kl.y() == kw.y() || kl.y() == bi.y()) && kw.x() == 2 && bi.x() == 2) {
+      return { SpecialCaseResult::LIKELY_DRAW, 0 };
+    }
+    if (kl.x() == 7 && (kl.y() == kw.y() || kl.y() == bi.y()) && kw.x() == 5 && bi.x() == 5) {
+      return { SpecialCaseResult::LIKELY_DRAW, 0 };
+    }
+    if (kl.y() == 0 && (kl.x() == kw.x() || kl.x() == bi.x()) && kw.y() == 2 && bi.y() == 2) {
+      return { SpecialCaseResult::LIKELY_DRAW, 0 };
+    }
+    if (kl.y() == 7 && (kl.x() == kw.x() || kl.x() == bi.x()) && kw.y() == 5 && bi.y() == 5) {
+      return { SpecialCaseResult::LIKELY_DRAW, 0 };
     }
     return { SpecialCaseResult::ALMOST_DRAW, 0 };
   }

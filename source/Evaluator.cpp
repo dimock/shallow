@@ -268,6 +268,10 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
     scoreOffset = 3;
     break;
   }
+  case SpecialCaseResult::LIKELY_DRAW: {
+    scoreOffset = 2;
+    break;
+  }
   case SpecialCaseResult::PROBABLE_DRAW: {
     scoreOffset = 1;
     break;
@@ -785,6 +789,9 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
           }
         }
       }
+      else if (fwd_field & fmgr.mask(color)) {
+        pwscore += EvalCoefficients::passerPawnMyBefore_[cy];
+      }
     }
 
     pinfo.pwscore_ += pwscore;
@@ -1062,6 +1069,10 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   possibleNN &= 3;
   attackScore += (EvalCoefficients::possibleKnightAttack_[possibleNN]) >> ((int)knight_protects);
   attackScore += EvalCoefficients::knightAttack_ * with_check;
+
+  if (attackedN > 1) {
+    attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
+  }
 
   if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
     auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
