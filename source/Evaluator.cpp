@@ -1024,7 +1024,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::rookQueenAttackedBonus_;
   }
 
-  if (auto r2q_treat = (fmgr.queen_mask(ocolor) & finfo_[color].queenMoves_ & ~counted_mask)) {
+  if (auto r2q_treat = (fmgr.queen_mask(ocolor) & finfo_[color].rookMoves_ & ~counted_mask)) {
     counted_mask |= r2q_treat;
     ++attackedN;
     attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
