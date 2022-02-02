@@ -20,16 +20,16 @@ namespace NEngine
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
   // outpost
-  ScoreType32 EvalCoefficients::knightOutpost_{ 10, 3 };
-  ScoreType32 EvalCoefficients::bishopOutpost_{ 10, 3 };
+  ScoreType32 EvalCoefficients::knightOutpost_[2] = { { 6, 2 }, { 10, 3 } };
+  ScoreType32 EvalCoefficients::bishopOutpost_[2] = { {6, 2},  {10, 3} };
 
   // forks
-  ScoreType EvalCoefficients::bishopsAttackRQ_{ 32 };
+  ScoreType EvalCoefficients::bishopsAttackRQ_{ 40 };
   ScoreType EvalCoefficients::bishopsAttack_{ 30 };
   ScoreType EvalCoefficients::bishopsAttackWeak_{ 15 };
-  ScoreType EvalCoefficients::knightAttackRQ_{ 32 };
+  ScoreType EvalCoefficients::knightAttackRQ_{ 40 };
   ScoreType EvalCoefficients::knightAttack_{ 30 };
-  ScoreType EvalCoefficients::knightAttackWeak_{ 12 };
+  ScoreType EvalCoefficients::knightAttackWeak_{ 15 };
   ScoreType EvalCoefficients::pawnAttack_{ 50 };
   ScoreType EvalCoefficients::possibleKnightAttack_[4] = { 0, 8, 30, 40 };
   ScoreType EvalCoefficients::possiblePawnAttack_{ 10 };
@@ -79,7 +79,7 @@ namespace NEngine
   int EvalCoefficients::attackedNearKingRem_{ 10 };
   int EvalCoefficients::attackedNearKingOther_{ 4 };
   int EvalCoefficients::attackedNearKingPawns_{ 3 };
-  int EvalCoefficients::checkNearKingStrong_{ 30 };
+  int EvalCoefficients::checkNearKingStrong_{ 35 };
   int EvalCoefficients::checkNearKingWeak_{ 20 };
   int EvalCoefficients::checkNearKingRem_{ 10 };
   int EvalCoefficients::checkNearKingOther_{ 4 };
@@ -112,18 +112,18 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {-15, 32, 30, 15,-10, -15, -15, 0},
-    {-15, 35, 30, 0, -15, -15, -15, 0},
-    {-10, 32, 10, 0,  -5, -10, -10, 0},
-    {-10, 15,  5, 0,  -5, -10, -10, 0},
-    {-10, 15,  5, 0,  -5, -10, -10, 0},
-    {-10, 32, 10, 0,  -5, -10, -10, 0},
-    {-15, 35, 30, 0, -15, -15, -15, 0},
-    {-15, 32, 20, 15,-10, -15, -15, 0}
+    {-20, 32, 30, 15,-10, -20, -20, 0},
+    {-20, 35, 30, 0, -15, -20, -20, 0},
+    {-10, 32, 10, 0, -10, -10, -10, 0},
+    {-10, 15,  5, 0, -10, -10, -10, 0},
+    {-10, 15,  5, 0, -10, -10, -10, 0},
+    {-10, 32, 10, 0, -10, -10, -10, 0},
+    {-20, 35, 30, 0, -15, -20, -20, 0},
+    {-20, 32, 20, 15,-10, -20, -20, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
-    {30, 12, 6, 5, 3, 2, 1, 0}
+    {30, 18, 6, 5, 3, 2, 1, 0}
   };
   int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 7, 3, 1, 0, 0 };
   int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 16, 8, 4, 0 };
@@ -163,7 +163,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::passerPawn_[8] = { {  0,   0}, {  1,   1}, {  1,   1}, {  8,   9}, { 24,  27}, { 48,  54}, { 80,  90}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawn2_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  4,   4}, { 12,  13}, { 24,  27}, { 40,  45}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnEx_[8] = { {  0,   0}, {  1,   2}, {  1,   2}, {  8,  10}, { 28,  35}, { 48,  60}, {112, 140}, {  0,   0} };
-  ScoreType32 EvalCoefficients::passerUnstoppable_[8] = { {  0,   0}, {  3,   5}, {  6,  11}, { 18,  31}, { 37,  64}, { 65, 110}, {100, 170}, {  0,   0} };
+  ScoreType32 EvalCoefficients::passerUnstoppable_[8] = { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, { 50,  85}, {100, 170}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnExS_[8][8] = {
     { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
     { {  0,   0}, {  0,   1}, {  1,   1}, {  1,   1}, {  1,   1}, {  1,   1}, {  1,   2}, {  0,   0} },

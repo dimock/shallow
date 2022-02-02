@@ -195,15 +195,17 @@ ScoreType32 Evaluator::evaluateKnights()
 
     auto ocolor = Figure::otherColor(color);
     BitMask mask = board_->fmgr().knight_mask(color);
-    BitMask outpost_mask = finfo_[color].pawnAttacks_ & ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
+    BitMask outpost_mask = ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
     for (; mask;)
     {
       const int n = clear_lsb(mask);
       auto const knight_moves = moves_masks_[n];
       // outpost
       const auto nbit = set_mask_bit(n);
-      const bool boutpost = ((nbit | (knight_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
-      score[color] += EvalCoefficients::knightOutpost_ * boutpost;
+      auto omsk = (nbit | (knight_moves & ~fmgr.mask(color))) & outpost_mask;
+      const bool boutpost = omsk != 0ULL;
+      const bool bprotect = omsk & finfo_[color].pawnAttacks_;
+      score[color] += EvalCoefficients::knightOutpost_[bprotect] * boutpost;
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
       score[color] += EvalCoefficients::kingDistanceBonus_[Figure::TypeKnight][ki_dist];
@@ -251,7 +253,7 @@ ScoreType32 Evaluator::evaluateBishops()
     auto ocolor = Figure::otherColor(color);
     BitMask mask = fmgr.bishop_mask(color);
     auto const pwmask = fmgr.pawn_mask(color);
-    BitMask outpost_mask = finfo_[color].pawnAttacks_ & ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
+    BitMask outpost_mask = ~finfo_[ocolor].pawnPossibleAttacks_ & Figure::outpostMask_[color];
 
     for (; mask;)
     {
@@ -269,8 +271,10 @@ ScoreType32 Evaluator::evaluateBishops()
 
       // outpost
       const auto nbit = set_mask_bit(n);
-      const bool boutpost = ((nbit | (bishop_moves & ~fmgr.mask(color))) & outpost_mask) != 0ULL;
-      score[color] += EvalCoefficients::bishopOutpost_ * boutpost;
+      auto const omsk = (nbit | (bishop_moves & ~fmgr.mask(color))) & outpost_mask;
+      const bool boutpost = omsk != 0ULL;
+      const bool bprotect = omsk & finfo_[color].pawnAttacks_;
+      score[color] += EvalCoefficients::bishopOutpost_[bprotect] * boutpost;
 
       // king protection
       auto ki_dist = distanceCounter().getDistance(n, board_->kingPos(color));
