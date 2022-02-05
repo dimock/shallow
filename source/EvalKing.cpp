@@ -500,7 +500,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   if (near_oking_att) {
     auto strong_msk = near_oking_att & ~attacked_any_but_oking & finfo_[color].multiattack_mask_;
     auto weak_msk = near_oking_att & ~strong_msk & (~finfo_[ocolor].multiattack_mask_ | finfo_[color].multiattack_mask_);
-    bool byQueen = strong_msk & finfo_[color].queenMoves_;
     int strongN = pop_count(strong_msk);
     int weakN = pop_count(weak_msk);
     near_oking_att = strong_msk | weak_msk;
@@ -510,7 +509,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     near_king_checks += EvalCoefficients::checkNearKingWeak_ * weakN;
     attack_coeff += near_king_attacks;
     check_coeff += near_king_checks;
-    check_coeff += EvalCoefficients::checkNearKingStrong_ * byQueen;
   }
 
   const auto near_oking_rem = ((finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_) |
@@ -544,6 +542,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   check_coeff = std::max(0, check_coeff);
   attack_coeff = std::max(0, attack_coeff);
+
+  // mat is possible
+  if((p_check | q_check | r_check) && isMatTreat(color, ocolor, attacked_any_but_oking, p_check|q_check, r_check)) {
+    const bool myMove = (board_->color() == color);
+    check_coeff += EvalCoefficients::possibleMatTreat_ * (1 + (int)myMove);
+  }
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
   score >>= 5;

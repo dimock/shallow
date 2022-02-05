@@ -84,6 +84,7 @@ namespace NEngine
   int EvalCoefficients::checkNearKingRem_{ 10 };
   int EvalCoefficients::checkNearKingOther_{ 4 };
   int EvalCoefficients::checkNearKingPawns_{ 3 };
+  int EvalCoefficients::possibleMatTreat_{ 50 };
 
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 16, 32, 64, 64, 64, 64, 64 };
