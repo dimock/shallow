@@ -460,6 +460,9 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
         mpawn >>= 8;
       }
       finfo_[color].discoveredCheck_ = ((mpawn & mask_all_) == 0ULL);
+      if (finfo_[color].discoveredCheck_) {
+        finfo_[color].discoveredMoves_ |= mpawn;
+      }
     }
   }
 

@@ -67,6 +67,7 @@ public:
     BitMask checks_mask_{};
     BitMask bishopMovesKipos_{};
     BitMask rookMovesKipos_{};
+    BitMask discoveredMoves_{};
     ScoreType32 score_mob_{};
     int num_attackers_{};
     int score_king_{};
@@ -188,10 +189,10 @@ private:
   inline bool isMatTreat(Figure::Color color, Figure::Color ocolor, BitMask attacked_any_but_oking, BitMask q_check, BitMask r_check) const
   {
     const auto& fmgr = board_->fmgr();
+    auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_ | finfo_[ocolor].discoveredMoves_) & ~fmgr.king_mask(ocolor);
     if (q_check) {
       auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
         ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].queenMoves_));
-      auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_) & ~fmgr.king_mask(ocolor);
       q_check &= ~attacked_any_but_oking;
       while (q_check) {
         auto n = clear_lsb(q_check);
@@ -205,7 +206,6 @@ private:
     if (r_check) {
       auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
         ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].rookMoves_));
-      auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_) & ~fmgr.king_mask(ocolor);
       r_check &= ~attacked_any_but_oking;
       while (r_check) {
         auto n = clear_lsb(r_check);

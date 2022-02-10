@@ -23,7 +23,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::knightOutpost_[2] = { { 6, 2 }, { 10, 3 } };
   ScoreType32 EvalCoefficients::bishopOutpost_[2] = { {6, 2},  {10, 3} };
 
-  // forks
+  // attacks
   ScoreType EvalCoefficients::bishopsAttackRQ_{ 40 };
   ScoreType EvalCoefficients::bishopsAttack_{ 30 };
   ScoreType EvalCoefficients::bishopsAttackWeak_{ 15 };
@@ -38,6 +38,7 @@ namespace NEngine
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
   ScoreType EvalCoefficients::attackedThroughBonus_{ 20 };
+  ScoreType EvalCoefficients::discoveredAttackBonus_{ 20 };
 
   // immobility
   ScoreType EvalCoefficients::immobileAttackBonus_ = 30;

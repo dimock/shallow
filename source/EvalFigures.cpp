@@ -188,6 +188,7 @@ ScoreType32 Evaluator::evaluateKnights()
   ScoreType32 score[2];
   for (auto color : { Figure::ColorBlack, Figure::ColorWhite })
   {
+    finfo_[color].discoveredMoves_ = BitMask{};
     finfo_[color].score_mob_ = ScoreType32{};
     finfo_[color].discoveredCheck_ = false;
     finfo_[color].num_attackers_ = 0;
@@ -213,6 +214,7 @@ ScoreType32 Evaluator::evaluateKnights()
       if (knight_moves && discoveredCheck(n, ocolor)) {
         finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
         finfo_[color].discoveredCheck_ = true;
+        finfo_[color].discoveredMoves_ |= knight_moves;
       }
 
       bool qpinned = false;
@@ -284,6 +286,7 @@ ScoreType32 Evaluator::evaluateBishops()
       if (bishop_moves && !finfo_[color].discoveredCheck_ && discoveredCheck(n, ocolor)) {
         finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
         finfo_[color].discoveredCheck_ = true;
+        finfo_[color].discoveredMoves_ |= bishop_moves;
       }
 
       bool q_pinned = false;
@@ -350,6 +353,7 @@ ScoreType32 Evaluator::evaluateRook()
       if (rook_moves && !finfo_[color].discoveredCheck_ && discoveredCheck(n, ocolor)) {
         finfo_[color].score_mob_ += EvalCoefficients::discoveredCheckBonus_;
         finfo_[color].discoveredCheck_ = true;
+        finfo_[color].discoveredMoves_ |= rook_moves;
       }
 
       bool q_pinned = false;
