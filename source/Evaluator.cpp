@@ -308,7 +308,8 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   ScoreType32 score32 = fmgr.weight();
   score32 += fmgr.score();
-  score32 += evaluateMaterialDiff();
+  auto mtdiff = evaluateMaterialDiff();
+  score32 += mtdiff;
 
   /// use lazy evaluation
 #ifdef USE_LAZY_EVAL
@@ -850,6 +851,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   int figuresDiff = knightsDiff + bishopsDiff;
   int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
   int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
+  bool twoBishops = false;
 
   // bonus for double bishop
   if (fmgr.bishops(Figure::ColorWhite) >= 2)
@@ -881,6 +883,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     int bdiff = sign(bishopsDiff);
     Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
     const int pawnsN = fmgr.pawns(bcolor);
+    twoBishops = true;
     score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
 
@@ -894,7 +897,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   }
 
   // Figure vs. Pawns
-  if (!rooksDiff && figuresDiff)
+  if (!rooksDiff && !(twoBishops && figuresDiff*bishopsDiff > 0) && figuresDiff)
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     const int pawnsN = fmgr.pawns(fcolor);

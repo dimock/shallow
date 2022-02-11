@@ -25,18 +25,27 @@ bool Evaluator::isPinned(int pos, Figure::Color color, Figure::Color ocolor, Bit
   return false;
 }
 
-inline bool attackedThrough(int q, BitMask pn_mask, BitMask bi_mask, BitMask r_mask, BitMask qmoves_bi, BitMask qmoves_r, BitMask mask_all)
+inline bool attackedThrough(int q, BitMask pn_mask, BitMask bi_mask, BitMask r_mask, BitMask qmoves_bi, BitMask qmoves_r, BitMask mask_all,
+  BitMask obi_attacks, BitMask or_attacks)
 {
-  if (auto bi_pin = (pn_mask | r_mask) & qmoves_bi) {
-    auto bi_attack = magic_ns::bishop_moves(q, mask_all & ~bi_pin);
-    if (bi_attack & bi_mask) {
-      return true;
+  if (auto bi_pin = (pn_mask | r_mask) & qmoves_bi & obi_attacks) {
+    auto bi_attack = magic_ns::bishop_moves(q, mask_all & ~bi_pin) & bi_mask;
+    while (bi_attack) {
+      auto n = clear_lsb(bi_attack);
+      auto m_btw = betweenMasks().between(q, n);
+      if (m_btw & bi_pin) {
+        return true;
+      }
     }
   }
-  if (auto r_pin = (pn_mask | bi_mask) & qmoves_r) {
-    auto r_attack = magic_ns::rook_moves(q, mask_all & ~r_pin);
-    if (r_attack & r_mask) {
-      return true;
+  if (auto r_pin = (pn_mask | bi_mask) & qmoves_r & or_attacks) {
+    auto r_attack = magic_ns::rook_moves(q, mask_all & ~r_pin) & r_mask;
+    while (r_attack) {
+      auto n = clear_lsb(r_attack);
+      auto m_btw = betweenMasks().between(q, n);
+      if (m_btw & r_pin) {
+        return true;
+      }
     }
   }
   return false;
@@ -449,7 +458,7 @@ ScoreType32 Evaluator::evaluateQueens()
       // queen attacked by BR through opponent's NBR or my P which could be captured
       auto mpw = fmgr.pawn_mask(color) & (~finfo_[color].pawnAttacks_ | finfo_[ocolor].pawnPossibleAttacks_);
       if (attackedThrough(n, fmgr.knight_mask(ocolor)|mpw, fmgr.bishop_mask(ocolor), fmgr.rook_mask(ocolor),
-        finfo_[color].qbi_attacked_, finfo_[color].qr_attacked_, mask_all_)) {
+        finfo_[color].qbi_attacked_, finfo_[color].qr_attacked_, mask_all_, finfo_[ocolor].bishopMoves_, finfo_[ocolor].rookMoves_)) {
         finfo_[color].attackedThrough_ |= set_mask_bit(n);
       }
     }
