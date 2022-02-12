@@ -93,6 +93,7 @@ struct EvalCoefficients
   static int checkNearKingOther_;
   static int checkNearKingPawns_;
   static int possibleMatTreat_;
+  static int possibleMatTreatMyMove_;
 
   static int kingWeakCheckersCoefficients_;
   static int kingCheckersCoefficients_[8];

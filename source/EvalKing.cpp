@@ -549,7 +549,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   // mat is possible
   if((p_check | q_check | r_check) && isMatTreat(color, ocolor, attacked_any_but_oking, p_check|q_check, r_check)) {
     const bool myMove = (board_->color() == color);
-    check_coeff += EvalCoefficients::possibleMatTreat_ * (1 + (int)myMove);
+    check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
   }
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;

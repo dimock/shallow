@@ -34,7 +34,7 @@ namespace NEngine
   ScoreType EvalCoefficients::possibleKnightAttack_[4] = { 0, 8, 30, 40 };
   ScoreType EvalCoefficients::possiblePawnAttack_{ 10 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
-  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
+  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
   ScoreType EvalCoefficients::attackedThroughBonus_{ 20 };
@@ -86,6 +86,7 @@ namespace NEngine
   int EvalCoefficients::checkNearKingOther_{ 4 };
   int EvalCoefficients::checkNearKingPawns_{ 3 };
   int EvalCoefficients::possibleMatTreat_{ 50 };
+  int EvalCoefficients::possibleMatTreatMyMove_{ 50 };
 
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 16, 32, 64, 64, 64, 64, 64 };
@@ -114,20 +115,20 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {-20, 32, 30, 15,-10, -20, -20, 0},
-    {-20, 35, 30, 0, -15, -20, -20, 0},
+    {-20, 32, 28, 14,-10, -20, -20, 0},
+    {-20, 32, 28, 0, -15, -20, -20, 0},
     {-10, 32, 10, 0, -10, -10, -10, 0},
     {-10, 15,  5, 0, -10, -10, -10, 0},
     {-10, 15,  5, 0, -10, -10, -10, 0},
     {-10, 32, 10, 0, -10, -10, -10, 0},
-    {-20, 35, 30, 0, -15, -20, -20, 0},
-    {-20, 32, 20, 15,-10, -20, -20, 0}
+    {-20, 32, 28, 0, -15, -20, -20, 0},
+    {-20, 32, 28, 14,-10, -20, -20, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
-    {30, 18, 6, 5, 3, 2, 1, 0}
+    {30, 12, 6, 5, 3, 2, 1, 0}
   };
-  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 7, 3, 1, 0, 0 };
+  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 10, 5, 3, 1, 0, 0 };
   int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 16, 8, 4, 0 };
   int EvalCoefficients::opawnAboveKing_[8] = { 0, 40, 25, 10, 0, 0, 0, 0 };
   // rook on open column
