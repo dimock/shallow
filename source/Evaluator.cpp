@@ -1089,7 +1089,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += blockedN;
   }
 
-  if (finfo_[color].discoveredMoves_ & finfo_[ocolor].nbrq_mask_) {
+  if (finfo_[color].discoveredMoves_ & finfo_[ocolor].nbrq_mask_ & ~finfo_[ocolor].kingAttacks_) {
     attackScore += EvalCoefficients::discoveredAttackBonus_;
   }
 
