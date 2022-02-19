@@ -34,7 +34,7 @@ namespace NEngine
   ScoreType EvalCoefficients::possibleKnightAttack_[4] = { 0, 8, 30, 40 };
   ScoreType EvalCoefficients::possiblePawnAttack_{ 10 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
-  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 30 };
+  ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
   ScoreType EvalCoefficients::attackedThroughBonus_{ 20 };
@@ -115,14 +115,14 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {-20, 32, 28, 14,-10, -20, -20, 0},
-    {-20, 32, 28, 0, -15, -20, -20, 0},
+    {-20, 32, 25, 15,-10, -20, -20, 0},
+    {-20, 35, 25, 0, -15, -20, -20, 0},
     {-10, 32, 10, 0, -10, -10, -10, 0},
     {-10, 15,  5, 0, -10, -10, -10, 0},
     {-10, 15,  5, 0, -10, -10, -10, 0},
     {-10, 32, 10, 0, -10, -10, -10, 0},
-    {-20, 32, 28, 0, -15, -20, -20, 0},
-    {-20, 32, 28, 14,-10, -20, -20, 0}
+    {-20, 35, 25, 0, -15, -20, -20, 0},
+    {-20, 32, 25, 15,-10, -20, -20, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
