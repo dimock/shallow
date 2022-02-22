@@ -569,14 +569,14 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
       isPawnBackward<color>(idx, pmask, opmsk, fwd_field, finfo[ocolor].pawnAttacks_ & ~finfo[color].pawnAttacks_);
     bool neighbors = guarded || ((pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL);
     bool doubled = (!guarded) && few_bits_set(pawnMasks().mask_column(x) & pmask) && ((bkw_mask & pmask) != 0ULL);
-    bool unprotected = !isolated && !backward && !guarded;
+    bool unprotected = !isolated && !backward && !guarded && !doubled;
     bool attack = (opmsk & attackMask) != 0ULL;
 
     info.pwscore_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
     info.pwscore_ += EvalCoefficients::backwardPawn_[opened] * backward;
+    info.pwscore_ += EvalCoefficients::doubledPawn_ * doubled;
     info.pwscore_ += EvalCoefficients::unprotectedPawn_ * unprotected;
     info.pwscore_ += EvalCoefficients::hasneighborPawn_ * neighbors;
-    info.pwscore_ += EvalCoefficients::doubledPawn_ * doubled;
     info.pwscore_ += EvalCoefficients::attackingPawn_[cy] * attack;
 
     // passer pawn - save position for further usage
@@ -1001,7 +1001,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += knightsN;
     attackScore += EvalCoefficients::knightAttack_ * knightsN;
     knightsN = pop_count(kn_fork & ~stong_bn_attacks);
-    attackedN += knightsN;
     attackScore += EvalCoefficients::knightAttackWeak_ * knightsN;
   }
   if (auto bi_treat = (o_rq_mask & finfo_[color].bishopMoves_ & ~counted_mask)) {
@@ -1016,7 +1015,6 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += bishopsN;
     attackScore += EvalCoefficients::bishopsAttack_ * bishopsN;
     bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
-    attackedN += bishopsN;
     attackScore += EvalCoefficients::bishopsAttackWeak_ * bishopsN;
   }
 
