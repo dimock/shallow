@@ -54,6 +54,8 @@ public:
     BitMask qr_attacked_{};
     BitMask ki_fields_{};
     BitMask ki_fields_no_pw_{};
+    BitMask nb_mask_{};
+    BitMask nbr_mask_{};
     BitMask brq_mask_{};
     BitMask nbrq_mask_{};
     BitMask rq_mask_{};
