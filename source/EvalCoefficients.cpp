@@ -14,10 +14,10 @@ namespace NEngine
 
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
-  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 20, 30 };
-  ScoreType32 EvalCoefficients::pawnPressureMedium_{ 6, 8 };
-  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 2, 3 };
-  ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 2 };
+  ScoreType32 EvalCoefficients::pawnPressureStrong_{ 13, 22 };
+  ScoreType32 EvalCoefficients::pawnPressureMedium_{ 2, 5 };
+  ScoreType32 EvalCoefficients::pawnPressureWeak_{ 1, 3 };
+  ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
   // outpost
   ScoreType32 EvalCoefficients::knightOutpost_[2] = { { 6, 2 }, { 12, 4 } };
@@ -85,8 +85,8 @@ namespace NEngine
   int EvalCoefficients::checkNearKingRem_{ 10 };
   int EvalCoefficients::checkNearKingOther_{ 4 };
   int EvalCoefficients::checkNearKingPawns_{ 3 };
-  int EvalCoefficients::possibleMatTreat_{ 30 };
-  int EvalCoefficients::possibleMatTreatMyMove_{ 90 };
+  int EvalCoefficients::possibleMatTreat_{ 50 };
+  int EvalCoefficients::possibleMatTreatMyMove_{ 50 };
   int EvalCoefficients::attackThroughPawn_{ 15 };
 
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
@@ -116,19 +116,21 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {-20, 32, 25, 10, -5, -10, -15, 0},
-    {-20, 35, 25,  8, -5, -10, -15, 0},
-    {-15, 32, 10,  0, -4,  -8, -12, 0},
-    {-10, 15,  5,  0, -3,  -4,  -8, 0},
-    {-10, 15,  5,  0, -3,  -4,  -8, 0},
-    {-15, 32, 10,  0, -4,  -8, -12, 0},
-    {-20, 35, 25,  8, -5, -10, -15, 0},
-    {-20, 32, 25, 10, -5, -10, -15, 0}
+    {-20, 32, 25, 15, 0, -5, -15, 0},
+    {-20, 35, 25, 10, 0, -5, -15, 0},
+    {-15, 32, 10, 0,  0, -4, -12, 0},
+    {-10, 15,  5, 0,  0, -4,  -8, 0},
+    {-10, 15,  5, 0,  0, -4,  -8, 0},
+    {-15, 32, 10, 0,  0, -4, -12, 0},
+    {-20, 35, 25, 10, 0, -5, -15, 0},
+    {-20, 32, 25, 15, 0, -5, -15, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
-    {0, 20, 15,  5, 0, 0, 0, 0},
-    {0, 30, 30, 22, 8, 2, 1, 0}
+    {0, 3, 1, 0, 0, 0, 0, 0},
+    {30, 20, 8, 5, 3, 2, 1, 0}
   };
+  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 16, 10, 3, 1, 0, 0 };
+  int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 16, 8, 4, 0 };
   int EvalCoefficients::opawnAboveKing_[8] = { 0, 40, 25, 10, 0, 0, 0, 0 };
 
   // rook on open column
