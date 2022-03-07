@@ -556,12 +556,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   check_coeff = std::max(0, check_coeff);
   attack_coeff = std::max(0, attack_coeff);
 
-  p_check &= ~finfo_[ocolor].attack_mask_;
-  q_check &= ~finfo_[ocolor].attack_mask_;
-  r_check &= ~finfo_[ocolor].attack_mask_;
+  p_check &= ~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_;
+  r_check &= ~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_;
+  q_check &= ~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_;
 
   // mat is possible
-  if((p_check | q_check | r_check) && isMatTreat(color, ocolor, attacked_any_but_oking, (p_check|q_check), r_check)) {
+  if((p_check | q_check | r_check) && isMatTreat(color, ocolor, attacked_any_but_oking, p_check|q_check, r_check)) {
     const bool myMove = (board_->color() == color);
     check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
   }
