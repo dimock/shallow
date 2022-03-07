@@ -301,10 +301,8 @@ ScoreType32 Evaluator::evaluateBishops()
       bool q_pinned = false;
       if(bishop_moves)
       {
-        if (isPinned(n, color, ocolor, fmgr.queen_mask(color) | (finfo_[color].nbr_mask_ & ~finfo_[color].attack_mask_), fmgr.rook_mask(ocolor), nst::rook) ||
-            isPinned(n, color, ocolor, fmgr.rook_mask(color) & ~finfo_[color].attack_mask_, fmgr.rook_mask(ocolor), nst::rook) ||
-            isPinned(n, color, ocolor, finfo_[color].nb_mask_ & ~finfo_[color].attack_mask_, finfo_[ocolor].rq_mask_, nst::rook)
-          ) {
+        if (isPinned(n, color, ocolor, fmgr.queen_mask(color), fmgr.rook_mask(ocolor), nst::rook) ||
+            isPinned(n, color, ocolor, fmgr.rook_mask(color) & ~finfo_[color].attack_mask_, fmgr.rook_mask(ocolor), nst::rook)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::bishopPinned_;
         }
@@ -370,8 +368,9 @@ ScoreType32 Evaluator::evaluateRook()
       bool q_pinned = false;
       if(rook_moves)
       {
-        if ( isPinned(n, color, ocolor, finfo_[color].nbrq_mask_, fmgr.bishop_mask(ocolor), nst::bishop) ||
-             isPinned(n, color, ocolor, finfo_[color].nbrq_mask_ & ~finfo_[color].attack_mask_, fmgr.queen_mask(ocolor), nst::bishop)) {
+        if ( isPinned(n, color, ocolor, (fmgr.queen_mask(color) | fmgr.rook_mask(color)), fmgr.bishop_mask(ocolor), nst::bishop) ||
+             isPinned(n, color, ocolor, (fmgr.queen_mask(color) | fmgr.rook_mask(color)) & ~finfo_[color].attack_mask_,
+                      fmgr.queen_mask(ocolor), nst::bishop)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::rookPinned_;
         }

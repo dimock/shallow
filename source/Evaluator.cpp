@@ -657,7 +657,7 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
     return true;
   }
   auto is_orq = fmgr.queens(ocolor) || fmgr.rooks(ocolor);
-  if ((is_orq && fmgr.allFigures(ocolor) > 1) || /*(fmgr.allFigures(ocolor) > 2) || */(is_orq && !bcolor)) {
+  if ((is_orq && fmgr.allFigures(ocolor) > 1) || (fmgr.allFigures(ocolor) > 2) || (is_orq && !bcolor)) {
     return false;
   }
   bool cant_attack_pp = true;
