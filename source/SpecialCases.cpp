@@ -245,15 +245,20 @@ namespace
     ScoreType score = Figure::figureWeight_[Figure::TypeQueen] - Figure::figureWeight_[Figure::TypeRook];
     Index kingW(board.kingPos(winnerColor));
     Index kingL(board.kingPos(ocolor));
-    int queenW = _lsb64(board.fmgr().queen_mask(winnerColor));
-    int rookL = _lsb64(board.fmgr().rook_mask(ocolor));
+    auto queenW = Index{ _lsb64(board.fmgr().queen_mask(winnerColor)) };
+    auto rookL = Index{ _lsb64(board.fmgr().rook_mask(ocolor)) };    
     score -= EvalCoefficients::positionEvaluations_[0][Figure::TypeKing][kingL].eval1();
     score -= distanceCounter().getDistance(kingW, kingL) * 2;
     score -= distanceCounter().getDistance(queenW, kingL) * 2;
     score += distanceCounter().getDistance(rookL, kingL) * 2;
     if (winnerColor == Figure::ColorBlack)
       score = -score;
-    return { SpecialCaseResult::SCORE, score };
+    if ((queenW.x() != rookL.x() && queenW.y() != rookL.y()) && (queenW.x() != kingW.x() && queenW.y() == kingW.y())) {
+      return { SpecialCaseResult::SCORE, score };
+    }
+    else {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    }
   }
   
   std::pair<SpecialCaseResult, ScoreType> evalMatCases(Board const& board, Figure::Color winnerColor)
