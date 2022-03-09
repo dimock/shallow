@@ -557,12 +557,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   attack_coeff = std::max(0, attack_coeff);
 
   auto danger_check_mask = ~attacked_any_but_oking;// | finfo_[color].multiattack_mask_;
-  p_check &= danger_check_mask;
+  bi_check &= danger_check_mask;
   r_check &= danger_check_mask;
   q_check &= danger_check_mask;
 
   // mat is possible
-  if((p_check | q_check | r_check) && isMatTreat(color, ocolor, attacked_any_but_oking, p_check|q_check, r_check)) {
+  if((bi_check | q_check | r_check) && isMatTreat(color, ocolor, attacked_any_but_oking, q_check, r_check, bi_check)) {
     const bool myMove = (board_->color() == color);
     check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
   }
@@ -587,7 +587,8 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   int general_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
 
   if (bi_check || r_check) {
-    bool b = checkQTreat(fmgr.queen_mask(ocolor), fmgr.king_mask(ocolor), mask_all_, bi_check, r_check);
+    bool b = checkQTreat(fmgr.queen_mask(ocolor) | (fmgr.rook_mask(ocolor) & ~finfo_[ocolor].attack_mask_),
+      fmgr.king_mask(ocolor), mask_all_, bi_check, r_check);
     score += EvalCoefficients::queenCheckTreatBonus_ * b;
   }
 

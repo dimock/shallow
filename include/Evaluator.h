@@ -188,7 +188,8 @@ private:
     return (from_mask & finfo_[color].discovered_attackers_ & ~pos_mask) && (from_mask & finfo_[color].discovered_mask_ & pos_mask);
   }
 
-  inline bool isMatTreat(Figure::Color color, Figure::Color ocolor, BitMask attacked_any_but_oking, BitMask q_check, BitMask r_check) const
+  inline bool isMatTreat(Figure::Color color, Figure::Color ocolor, BitMask attacked_any_but_oking,
+    BitMask q_check, BitMask r_check, BitMask bi_check) const
   {
     const auto& fmgr = board_->fmgr();
     auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_ | finfo_[ocolor].discoveredMoves_) & ~fmgr.king_mask(ocolor);
@@ -213,6 +214,18 @@ private:
         auto n = clear_lsb(r_check);
         const auto& rmat_attacks = magic_ns::rook_moves(n, mat_fields_mask);
         if ((rmat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~rmat_attacks)) {
+          return true;
+        }
+      }
+    }
+    if (bi_check) {
+      auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
+        ~(finfo_[color].multiattack_mask_ | mask_all_ | (finfo_[color].attack_mask_ & ~finfo_[color].rookMoves_));
+      bi_check &= ~attacked_any_but_oking;
+      while (bi_check) {
+        auto n = clear_lsb(bi_check);
+        const auto& bimat_attacks = magic_ns::bishop_moves(n, mat_fields_mask);
+        if ((bimat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~bimat_attacks)) {
           return true;
         }
       }
