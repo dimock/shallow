@@ -35,6 +35,7 @@ public:
   struct FieldsInfo
   {
     BitMask pawnAttacks_{};
+    BitMask pawnAttacksForCheck_{};
     BitMask pawnPossibleAttacks_{};
     BitMask knightMoves_{};
     BitMask bishopMoves_{};

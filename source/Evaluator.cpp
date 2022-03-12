@@ -110,11 +110,62 @@ void Evaluator::prepare()
 
   // pawns attacks
   {
-    const BitMask pawn_msk_w = fmgr.pawn_mask(Figure::ColorWhite);
-    const BitMask pawn_msk_b = fmgr.pawn_mask(Figure::ColorBlack);
+    BitMask pawn_msk_w = fmgr.pawn_mask(Figure::ColorWhite);
+    BitMask pawn_msk_b = fmgr.pawn_mask(Figure::ColorBlack);
 
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
+
+
+    {
+      auto bkpos = board_->kingPos(Figure::ColorBlack);
+      auto wkpos = board_->kingPos(Figure::ColorWhite);
+
+      auto qattb = magic_ns::queen_moves(bkpos, mask_all_);
+      auto qattw = magic_ns::queen_moves(wkpos, mask_all_);
+
+      auto mask_all_b = mask_all_ & ~(pawn_msk_b & qattb);
+      auto mask_all_w = mask_all_ & ~(pawn_msk_w & qattw);
+
+      auto rkattb = magic_ns::rook_moves(bkpos, mask_all_b);
+      auto rkattw = magic_ns::rook_moves(wkpos, mask_all_w);
+
+      auto bikattb = magic_ns::bishop_moves(bkpos, mask_all_b);
+      auto bikattw = magic_ns::bishop_moves(wkpos, mask_all_w);
+
+      auto rqb = rkattb & (fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+      auto rqw = rkattw & (fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+
+      auto bqb = bikattb & (fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+      auto bqw = bikattw & (fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+
+      while (rqb) {
+        auto n = clear_lsb(rqb);
+        auto msk = betweenMasks().between(n, bkpos);
+        pawn_msk_b &= ~msk;
+      }
+
+      while (rqw) {
+        auto n = clear_lsb(rqw);
+        auto msk = betweenMasks().between(n, wkpos);
+        pawn_msk_w &= ~msk;
+      }
+
+      while (bqb) {
+        auto n = clear_lsb(bqb);
+        auto msk = betweenMasks().between(n, bkpos);
+        pawn_msk_b &= ~msk;
+      }
+
+      while (bqw) {
+        auto n = clear_lsb(bqw);
+        auto msk = betweenMasks().between(n, wkpos);
+        pawn_msk_w &= ~msk;
+      }
+    }
+
+    finfo_[Figure::ColorWhite].pawnAttacksForCheck_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
+    finfo_[Figure::ColorBlack].pawnAttacksForCheck_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
 
     finfo_[Figure::ColorWhite].pawnPossibleAttacks_ = finfo_[Figure::ColorWhite].pawnAttacks_ |
       (finfo_[Figure::ColorWhite].pawnAttacks_ & ~0xff00000000000000) << 8;
