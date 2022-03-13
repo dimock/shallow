@@ -121,17 +121,23 @@ void Evaluator::prepare()
       auto bkpos = board_->kingPos(Figure::ColorBlack);
       auto wkpos = board_->kingPos(Figure::ColorWhite);
 
-      auto rattb = magic_ns::rook_moves(bkpos, mask_all_);
-      auto rattw = magic_ns::rook_moves(wkpos, mask_all_);
+      auto qattb = magic_ns::queen_moves(bkpos, mask_all_);
+      auto qattw = magic_ns::queen_moves(wkpos, mask_all_);
 
-      auto mask_all_b = mask_all_ & ~(pawn_msk_b & rattb);
-      auto mask_all_w = mask_all_ & ~(pawn_msk_w & rattw);
+      auto mask_all_b = mask_all_ & ~(pawn_msk_b & qattb);
+      auto mask_all_w = mask_all_ & ~(pawn_msk_w & qattw);
 
       auto rkattb = magic_ns::rook_moves(bkpos, mask_all_b);
       auto rkattw = magic_ns::rook_moves(wkpos, mask_all_w);
 
+      auto bikattb = magic_ns::bishop_moves(bkpos, mask_all_b);
+      auto bikattw = magic_ns::bishop_moves(wkpos, mask_all_w);
+
       auto rqb = rkattb & (fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
       auto rqw = rkattw & (fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
+
+      auto bqb = bikattb & (fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
+      auto bqw = bikattw & (fmgr.bishop_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack));
 
       while (rqb) {
         auto n = clear_lsb(rqb);
@@ -141,6 +147,18 @@ void Evaluator::prepare()
 
       while (rqw) {
         auto n = clear_lsb(rqw);
+        auto msk = betweenMasks().between(n, wkpos);
+        pawn_msk_w &= ~msk;
+      }
+
+      while (bqb) {
+        auto n = clear_lsb(bqb);
+        auto msk = betweenMasks().between(n, bkpos);
+        pawn_msk_b &= ~msk;
+      }
+
+      while (bqw) {
+        auto n = clear_lsb(bqw);
         auto msk = betweenMasks().between(n, wkpos);
         pawn_msk_w &= ~msk;
       }
