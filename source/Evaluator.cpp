@@ -116,7 +116,6 @@ void Evaluator::prepare()
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
 
-
     {
       auto bkpos = board_->kingPos(Figure::ColorBlack);
       auto wkpos = board_->kingPos(Figure::ColorWhite);
@@ -166,7 +165,6 @@ void Evaluator::prepare()
 
     finfo_[Figure::ColorWhite].pawnAttacksForCheck_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacksForCheck_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
-
     finfo_[Figure::ColorWhite].pawnPossibleAttacks_ = finfo_[Figure::ColorWhite].pawnAttacks_ |
       (finfo_[Figure::ColorWhite].pawnAttacks_ & ~0xff00000000000000) << 8;
     finfo_[Figure::ColorWhite].pawnPossibleAttacks_ = finfo_[Figure::ColorWhite].pawnPossibleAttacks_ |
@@ -219,14 +217,10 @@ void Evaluator::prepare()
     finfo_[1].mask_xray_b_ = mask_all_ & ~(fmgr.bishop_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
     finfo_[1].mask_xray_r_ = mask_all_ & ~(fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite));
 
-    finfo_[0].nb_mask_ = fmgr.knight_mask(Figure::ColorBlack) | fmgr.bishop_mask(Figure::ColorBlack);
-    finfo_[0].nbr_mask_ = finfo_[0].nb_mask_ | fmgr.rook_mask(Figure::ColorBlack);
     finfo_[0].brq_mask_ = fmgr.bishop_mask(Figure::ColorBlack) | fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
     finfo_[0].nbrq_mask_ = finfo_[0].brq_mask_ | fmgr.knight_mask(Figure::ColorBlack);
     finfo_[0].rq_mask_ = fmgr.rook_mask(Figure::ColorBlack) | fmgr.queen_mask(Figure::ColorBlack);
 
-    finfo_[1].nb_mask_ = fmgr.knight_mask(Figure::ColorWhite) | fmgr.bishop_mask(Figure::ColorWhite);
-    finfo_[1].nbr_mask_ = finfo_[1].nb_mask_ | fmgr.rook_mask(Figure::ColorWhite);
     finfo_[1].brq_mask_ = fmgr.bishop_mask(Figure::ColorWhite) | fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
     finfo_[1].nbrq_mask_ = finfo_[1].brq_mask_ | fmgr.knight_mask(Figure::ColorWhite);
     finfo_[1].rq_mask_ = fmgr.rook_mask(Figure::ColorWhite) | fmgr.queen_mask(Figure::ColorWhite);
