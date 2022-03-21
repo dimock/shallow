@@ -410,21 +410,19 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   const auto ocolor = Figure::otherColor(color);
   const auto  ki_pos = board_->kingPos(color);
   const auto oki_pos = board_->kingPos(ocolor);
-  const auto fmask_no_check = ~(fmgr.mask(color) | finfo_[ocolor].pawnAttacksForCheck_);
+  const auto fmask_no_check = ~(fmgr.mask(color) | finfo_[ocolor].pawnAttacks_);
 
   const auto oki_fields = finfo_[ocolor].ki_fields_;
   const auto near_oking = oki_fields & finfo_[ocolor].kingAttacks_;
   const auto near_oking_pw = near_oking | (oki_fields & fmgr.pawn_mask(ocolor));
-  const auto opinned_pw_attacked = ~finfo_[ocolor].pawnAttacksForCheck_ & finfo_[ocolor].pawnAttacks_;
-  const auto onot_pw_attacked = finfo_[ocolor].attack_mask_ & ~finfo_[ocolor].multiattack_mask_ & ~opinned_pw_attacked;
-  const auto attacked_any_but_oking = finfo_[ocolor].multiattack_mask_ | (onot_pw_attacked & ~finfo_[ocolor].kingAttacks_);
+  const auto attacked_any_but_oking = finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[ocolor].kingAttacks_);
   const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_;
 
-  const auto onbrp_attacked = finfo_[ocolor].nbr_attacked_ | finfo_[ocolor].pawnAttacksForCheck_;
-  const auto onbp_attacked = finfo_[ocolor].nb_attacked_ | finfo_[ocolor].pawnAttacksForCheck_;
+  const auto onbrp_attacked = finfo_[ocolor].nbr_attacked_ | finfo_[ocolor].pawnAttacks_;
+  const auto onbp_attacked = finfo_[ocolor].nb_attacked_ | finfo_[ocolor].pawnAttacks_;
   const auto can_check_q = ~(attacked_any_but_oking | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
-  const auto can_check_r = ~(onbrp_attacked | finfo_[ocolor].multiattack_mask_ | (onot_pw_attacked & ~finfo_[color].multiattack_mask_));
-  const auto can_check_nb = ~(onbp_attacked | finfo_[ocolor].multiattack_mask_ | (onot_pw_attacked & ~finfo_[color].multiattack_mask_));
+  const auto can_check_r = ~(onbrp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
+  const auto can_check_nb = ~(onbp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
 
   finfo_[color].num_attackers_ += (finfo_[color].pawnAttacks_ & near_oking) != 0ULL;
   finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
@@ -573,7 +571,6 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   // could be attacked through unprotected pawn in front of king
   if (attackTroughPawn) {
     attack_coeff += EvalCoefficients::attackThroughPawn_;
-    check_coeff += EvalCoefficients::attackThroughPawn_;
   }
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
