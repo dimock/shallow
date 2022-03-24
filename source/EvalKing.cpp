@@ -571,6 +571,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   // could be attacked through unprotected pawn in front of king
   if (attackTroughPawn) {
     attack_coeff += EvalCoefficients::attackThroughPawn_;
+    check_coeff += EvalCoefficients::attackThroughPawn_;
   }
 
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
