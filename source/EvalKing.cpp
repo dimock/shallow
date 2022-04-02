@@ -466,6 +466,15 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     }
   }
 
+  bool attackTroughPawn = false;
+  if (!finfo_[color].discoveredCheck_) {
+    auto attacked = finfo_[color].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_;
+    auto mask_opw_att = fmgr.pawn_mask(ocolor) & attacked;
+    while (mask_opw_att && !attackTroughPawn) {
+      auto n = clear_lsb(mask_opw_att);      
+      attackTroughPawn = board_->discoveredCheck(n, mask_all_, color, oki_pos);
+    }
+  }
   // promotion check
   auto pfwd = finfo_[color].pawns_fwd_ & Figure::pawnPromoteMasks_[color] & (~finfo_[ocolor].attack_mask_ | finfo_[color].pawnAttacks_);
   auto cfwd = finfo_[color].pawnAttacks_ & Figure::pawnPromoteMasks_[color] & fmgr.mask(ocolor);
@@ -558,6 +567,10 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
   }
 
+  // could be attacked through unprotected pawn in front of king
+  if (attackTroughPawn) {
+    attack_coeff += EvalCoefficients::attackThroughPawn_;
+  }
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
   score >>= 5;
 
