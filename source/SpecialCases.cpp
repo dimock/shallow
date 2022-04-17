@@ -426,7 +426,7 @@ namespace
     int dist_w = distanceCounter().getDistance(kw, pp);
     int dist_l = distanceCounter().getDistance(kl, pp);
     int y = pawn_colored_y_[pawnColor][p.y()];
-    ScoreType score = (7 - dist_w + dist_l) * EvalCoefficients::kingToPawnDistanceMulti_ + EvalCoefficients::passerPawnSc_[y];
+    ScoreType score = (7 - dist_w + dist_l) + EvalCoefficients::passerPawnSc_[y];
     auto kn_mask = board.fmgr().knight_mask(ocolor);
     for (; kn_mask;)
     {
@@ -446,7 +446,7 @@ namespace
       if (kpkPassed(board, pawnColor))
         return (pawnColor ? 50 : -50) + score;
     }
-    return (pawnColor ? 20 : -20) + score / 2;
+    return (pawnColor ? 5 : -5) + score / 2;
   };
 
   ScoreType knightVsPawn(Board const& board, Figure::Color pawnColor)
@@ -457,7 +457,7 @@ namespace
       if (kpkPassed(board, pawnColor))
         return (pawnColor ? 50 : -50) + score;
     }
-    return (pawnColor ? 20 : -20) + score / 2;
+    return (pawnColor ? 5 : -5) + score / 2;
   };
 
   ScoreType figureVsPawns(Board const& board, Figure::Color winnerColor)
