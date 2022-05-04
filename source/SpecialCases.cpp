@@ -1001,21 +1001,28 @@ void SpecialCasesDetector::initCases()
   }
 
   // bishops and pawns. may be draw
-  for (int w = 0; w <= 8; ++w)
+  for (int pw = 0; pw <= 8; ++pw)
   {
-    for (int b = 0; b <= 8; ++b)
+    for (int pb = 0; pb <= 8; ++pb)
     {
       scases_[format({
         { Figure::TypeBishop, Figure::ColorWhite, 1 },
         { Figure::TypeBishop, Figure::ColorBlack, 1 },
-        { Figure::TypePawn, Figure::ColorWhite, w },
-        { Figure::TypePawn, Figure::ColorBlack, b } })] =
+        { Figure::TypePawn, Figure::ColorWhite, pw },
+        { Figure::TypePawn, Figure::ColorBlack, pb } })] =
         [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
       {
         auto const& fmgr = board.fmgr();
-        bool w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
-        bool b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
-        return { (b != w) ? SpecialCaseResult::MAYBE_DRAW : SpecialCaseResult::NO_RESULT, 0 };
+        bool bw = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
+        bool bb = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
+        int pw = fmgr.pawns(Figure::ColorWhite);
+        int pb = fmgr.pawns(Figure::ColorBlack);
+        if ((pw == 0 && pb < 2) || (pb == 0 && pw < 2)) {
+          return { SpecialCaseResult::PROBABLE_DRAW , 0 };
+        }
+        else {
+          return { (bb != bw) ? SpecialCaseResult::MAYBE_DRAW : SpecialCaseResult::NO_RESULT, 0 };
+        }
       };
     }
   }
