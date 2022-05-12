@@ -236,6 +236,20 @@ namespace
           ((py == 5 || py == 6) && ((kingW.x()-rookL.x())*(pawn.x()-rookL.x()) < 0));
       }
     }
+    if (!fortress) {
+      bool possible = false;
+      auto pwm = board.fmgr().pawn_mask(ocolor);
+      while (!possible && pwm) {
+        int n = clear_lsb(pwm);
+        Index pawn{ n };
+        bool okingNoAttack = (pawn.x() - rookL.x()) * (kingW.x() - rookL.x()) < 0 || (pawn.y() - rookL.y()) * (kingW.y() - rookL.y()) < 0;
+        bool kingProtect = distanceCounter().getDistance(kingL, n) == 1;
+        possible = okingNoAttack && kingProtect;
+      }
+      if (possible) {
+        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+      }
+    }
     return { fortress ? SpecialCaseResult::ALMOST_DRAW : SpecialCaseResult::NO_RESULT, 0 };
   }
   
