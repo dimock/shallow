@@ -212,7 +212,7 @@ namespace nst
 #endif
 
 #define SORT_MOVES_0_HIST
-#undef EXTEND_CHECK_SEE_ONLY
+#define EXTEND_CHECK_SEE_ONLY
 #define USE_LAZY_EVAL
 
 #ifndef PROCESS_MOVES_SEQ
@@ -244,7 +244,7 @@ namespace nst
 #undef VERIFY_LMR
 
 #undef SYNCHRONIZE_LAST_ITER
-#define GENERATE_MAT_CHECK_AFTER_HORIZON
+#undef GENERATE_MAT_CHECK_AFTER_HORIZON
 #undef AT_LEAST_ONE_MAT_MOVE
 
 static const SortValueType CaptureRecentlyBonus = 10;
