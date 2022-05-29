@@ -580,16 +580,13 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
       if (!(passmsk & opmsk)) {
         info.passers_ |= set_mask_bit(n);
       }
-      else {
-        auto attacks = movesTable().pawnCaps(color, n) & opmsk;
-        auto attacks1 = movesTable().pawnCaps(color, n1) & opmsk;
-        auto protects1 = movesTable().pawnCaps(ocolor, n1) & pmask;
-        int attacksN = pop_count(attacks);
-        auto protectsN = pop_count(protectMask & pmask);
-        int attacksN1 = pop_count(attacks1);
-        int protectsN1 = pop_count(protects1);
-        if (protectsN >= attacksN && protectsN1 >= attacksN1) {
-          info.passers_ |= set_mask_bit(n);
+      else if (auto lrmask = (pmask & pawnMasks().mask_isolated(x))) {        
+        for (; lrmask;) {
+          auto m = clear_lsb(lrmask);
+          if (opmsk & pawnMasks().mask_forward(color, m)) {
+            info.passers_ |= set_mask_bit(n);
+            break;
+          }
         }
       }
     }
@@ -741,7 +738,6 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     auto my_field = set_mask_bit(n);
 
     bool pguards  = (pawnMasks().mask_guards(color, n) & pmask & pi.passers_) != 0ULL;
-    bool npguards = !pguards && ((pawnMasks().mask_guards(color, n) & pmask & ~pi.passers_) != 0ULL);
 
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
@@ -751,7 +747,6 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     if (passmsk & opmsk) {
       pwscore = EvalCoefficients::passerPawn2_[cy];
       pwscore += EvalCoefficients::passerPawnPGrds2_[cy] * pguards;
-      pwscore += EvalCoefficients::passerPawnNPGrds2_[cy] * npguards;
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus2_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus2_[cy] * king_dist;
@@ -759,7 +754,6 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     else {
       pwscore = EvalCoefficients::passerPawn_[cy];
       pwscore += EvalCoefficients::passerPawnPGrds_[cy] * pguards;
-      pwscore += EvalCoefficients::passerPawnNPGrds_[cy] * npguards;
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
@@ -1038,8 +1032,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     int rqtreatsN = pop_count(treat_mask & ~finfo_[ocolor].attack_mask_);
     attackedN += rqtreatsN;
     attackScore += EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN;
-    rqtreatsN = pop_count(treat_mask & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 4;
+    const auto protected_oking_only = ~finfo_[ocolor].multiattack_mask_ & finfo_[ocolor].kingAttacks_;
+    rqtreatsN = pop_count(treat_mask & protected_oking_only & finfo_[ocolor].pinnedFigures_);
+    const auto protected_any_but_oking = finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[ocolor].kingAttacks_);
+    rqtreatsN = pop_count(treat_mask & protected_any_but_oking);
+    attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 3;
   }
 
   if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
