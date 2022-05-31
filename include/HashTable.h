@@ -17,15 +17,21 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
   operator bool () const { return hkey_ != 0; }
 
   HKeyType   hkey_{};
-  ScoreType  score_{};
 
-  int16      depth_   : 11,
-             xflag_   : 2,
-             threat_  : 1,
-             singular_: 1,
-             pv_      : 1;
-
-  Move       move_;
+  union {
+    struct {
+      ScoreType  score_;
+      int16      depth_ : 11,
+                 xflag_ : 2,
+                 threat_ : 1,
+                 singular_ : 1,
+                 pv_ : 1;
+      Move       move_;
+    };
+    struct {
+      uint32 tail_[2];
+    };
+  };
 
   HItem() {}
 
@@ -39,6 +45,16 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
     threat_ = threat;
     singular_ = singular;
     pv_ = pv;
+  }
+
+  void encode()
+  {
+    hkey_ ^= tail_[1];
+  }
+
+  void decode()
+  {
+    hkey_ ^= tail_[1];
   }
 
   Flag flag() const
@@ -155,9 +171,9 @@ public:
   GHashTable(int size) : HashTable<HItem>(size)
   {}
 
-  inline HItem* get(const uint64 hkey)
+  inline HItem& get(const uint64 hkey)
   {
-    return &(operator [] (hkey));
+    return operator [] (hkey);
   }
 };
 

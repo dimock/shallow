@@ -26,12 +26,12 @@ bool Engine::generateStartposMoves(int ictx)
   Move hmove{ true };
 
 #ifdef USE_HASH
-  auto * hitem = hash_.get(board.fmgr().hashCode());
-  X_ASSERT(hitem == nullptr, "HItem not found in Hash table");
+  auto hitem = hash_.get(board.fmgr().hashCode());
+  hitem.decode();
   HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(BitMask) - sizeof(HKeyType)) * 8);
-  if (hitem->hkey_ == hk && hitem->move_ && board.validateMoveExpress(hitem->move_))
+  if (hitem.hkey_ == hk && hitem.move_ && board.validateMoveExpress(hitem.move_))
   {
-    hmove = hitem->move_;
+    hmove = hitem.move_;
     X_ASSERT(!board.possibleMove(hmove), "move from hash is impossible");
     X_ASSERT(!board.validateMoveBruteforce(hmove), "move from hash is invalid");
   }
@@ -148,12 +148,12 @@ bool Engine::mainThreadSearch(int ictx)
     sdata.restart();
     
     ScoreType score = alphaBetta0(ictx);
+    auto t = NTime::now();
 
     if(sdata.best_)
     {
       if ((sdata.counter_ == sdata.numOfMoves_) || (score >= sres.score_))
       {
-        auto t = NTime::now();
         auto dt = t - sdata.tstart_;
         sdata.tprev_ = t;
 
@@ -312,9 +312,9 @@ bool Engine::threadSearch(const int ictx, const int depth0)
             break;
         }
       }
-#endif // SYNCHRONIZE_LAST_ITER
 
       X_ASSERT(sres.pv_[0] != sdata.best_, "invalid PV found");
+#endif // SYNCHRONIZE_LAST_ITER
     }
 
     if (!sdata.best_ ||
@@ -537,8 +537,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   }
 
 #ifdef USE_HASH
-  HItem *pitem = nullptr;
-  Flag flag = getHash(ictx, depth>>4 /* /ONE_PLY */, ply, alpha, betta, hmove, hscore, pv, singular, pitem);
+  Flag flag = getHash(ictx, depth>>4 /* /ONE_PLY */, ply, alpha, betta, hmove, hscore, pv, singular);
   if (flag == Alpha || flag == Betta)
   {
     return hscore;
@@ -636,12 +635,11 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
   if(!hmove && depth >= (ONE_PLY<<2))
   {
     alphaBetta(ictx, depth - 3*ONE_PLY, ply, alpha, betta, pv, allow_nm, signular_count);
-    if(const auto* hitem = hash_.get(board.fmgr().hashCode()))
-    {
-      if (hitem->hkey_ == board.fmgr().hashKey()) {
-        (Move&)hmove = hitem->move_;
-        singular = hitem->singular_;
-      }
+    auto hitem = hash_.get(board.fmgr().hashCode());
+    hitem.decode();
+    if (hitem.hkey_ == board.fmgr().hashKey()) {
+      (Move&)hmove = hitem.move_;
+      singular = hitem.singular_;
     }
   }
 #endif
@@ -888,7 +886,7 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
 #endif
 
 #ifdef USE_HASH
-  putHash(ictx, best, alpha0, betta, scoreBest, depth>>4 /* /ONE_PLY */, ply, threat, singular, pv, pitem);
+  putHash(ictx, best, alpha0, betta, scoreBest, depth>>4 /* /ONE_PLY */, ply, threat, singular, pv);
 #endif
 
   X_ASSERT(scoreBest < -Figure::MatScore || scoreBest > +Figure::MatScore, "invalid score");
@@ -914,11 +912,10 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
   SMove hmove{ true };
 
 #ifdef USE_HASH
-  HItem* pitem = nullptr;
   ScoreType hscore = -ScoreMax;
   bool singular = false;
   int cdepth = depth < 0 ? -1 : 0;
-  Flag flag = getHash(ictx, cdepth, ply, alpha, betta, hmove, hscore, pv, singular, pitem);
+  Flag flag = getHash(ictx, cdepth, ply, alpha, betta, hmove, hscore, pv, singular);
   if (flag == Alpha || flag == Betta)
   {
     return hscore;
@@ -950,7 +947,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
     if (score0 >= betta) {
 #ifdef USE_HASH
-      putHash(ictx, hmove, alpha, betta, score0, cdepth, ply, false, false, pv, pitem);
+      putHash(ictx, hmove, alpha, betta, score0, cdepth, ply, false, false, pv);
 #endif
       return score0;
     }
@@ -1099,7 +1096,7 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
 
 #ifdef USE_HASH
   else {
-    putHash(ictx, best, alpha, betta, scoreBest, cdepth, ply, false, false, pv, pitem);
+    putHash(ictx, best, alpha, betta, scoreBest, cdepth, ply, false, false, pv);
   }
 #endif
 

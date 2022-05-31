@@ -548,12 +548,12 @@ void xProtocolMgr::uciOutputOptions()
     std::ostringstream oss;
     oss << "option name " << oinfo.name
       << " type " << oinfo.type;
+    if (!oinfo.def_val.empty())
+      oss << " default " << oinfo.def_val;
     if(!oinfo.min_val.empty())
       oss << " min " << oinfo.min_val;
     if(!oinfo.max_val.empty())
       oss << " max " << oinfo.max_val;
-    if(!oinfo.def_val.empty())
-      oss << " default " << oinfo.def_val;
     if(!oinfo.vars.empty())
     {
       std::vector<std::string> temp;

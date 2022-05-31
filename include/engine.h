@@ -215,14 +215,14 @@ private:
 #ifdef USE_HASH
   // we should return alpha if flag is Alpha, or Betta if flag is Betta
   inline Flag getHash(int ictx, int depth, int ply, ScoreType alpha, ScoreType betta,
-    Move & hmove, ScoreType & hscore, bool pv, bool& singular, HItem*& pitem)
+    Move & hmove, ScoreType & hscore, bool pv, bool& singular)
   {
     X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
     auto& sctx = scontexts_[ictx];
 
     auto& board = sctx.board_;
-    pitem = hash_.get(board.fmgr().hashCode());
-    auto const hitem = *pitem;
+    auto hitem = hash_.get(board.fmgr().hashCode());
+    hitem.encode();
     if (hitem.hkey_ == board.fmgr().hashKey())
     {
       singular = hitem.singular_;
@@ -255,11 +255,10 @@ private:
 
   /// insert data to hash table
   inline void putHash(int ictx, const Move move, ScoreType alpha, ScoreType betta, ScoreType score,
-    int depth, int ply, bool threat, bool singular, bool pv, HItem* pitem)
+    int depth, int ply, bool threat, bool singular, bool pv)
   {
     X_ASSERT((size_t)ictx >= scontexts_.size(), "Invalid context index");
     auto& sctx = scontexts_[ictx];
-
     auto& board = sctx.board_;
 
     Flag flag = NoFlag;
@@ -278,7 +277,8 @@ private:
       score -= ply;
     {
       const auto hk = board.fmgr().hashKey();
-      auto& hitem = *pitem;
+      auto hitem = hash_.get(board.fmgr().hashCode());
+      hitem.decode();
       if (
         (hitem.hkey_ != hk) ||
         (depth > hitem.depth_) ||
@@ -286,7 +286,9 @@ private:
         )
       {
         X_ASSERT(score > 32760, "write wrong value to the hash");
-        hitem = HItem{ hk, score, depth, flag, move, threat, singular, pv};
+        HItem hitem{ hk, score, depth, flag, move, threat, singular, pv};
+        hitem.encode();
+        hash_.get(board.fmgr().hashCode()) = hitem;
       }
 
     }

@@ -23,15 +23,15 @@ std::vector<xOptionInfo> all_options()
 #endif
       {},
     }
-    //,
-    //{
-    //  "Threads",
-    //  "spin",
-    //  "1",
-    //  "8",
-    //  "1",
-    //  {},
-    //}
+    ,
+    {
+      "Threads",
+      "spin",
+      "1",
+      "4",
+      "1",
+      {},
+    }
   };
 }
 

@@ -218,9 +218,10 @@ namespace nst
 #ifndef PROCESS_MOVES_SEQ
 
 #define USE_HASH
+#define USE_EVAL_HASH_ALL
 #define USE_EVAL_HASH_PW
 #define USE_EVAL_HASH_MD
-#define USE_EVAL_HASH_ALL
+
 #define SEE_PRUNING
 #define USE_FUTILITY_PRUNING
 #define FUTILITY_PRUNING_BETTA
@@ -266,7 +267,7 @@ static const int Position_GainFP = 250;
 static const int Position_GainThr = 250;
 static const int AlphaProbCutThreshold = 200;
 
-static const size_t N_THREADS_MAX = 1;
+static const size_t N_THREADS_MAX = 4;
 static const size_t N_THREADS_DEFAULT = 1;
 
 #ifdef __ANDROID__
