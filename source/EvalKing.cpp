@@ -2,6 +2,16 @@
 
 namespace NEngine
 {
+  inline int kingToPawnsScore(const int kpos, BitMask pmsk)
+  {
+    int score = 0;
+    while (pmsk) {
+      auto n = clear_lsb(pmsk);
+      auto dist = distanceCounter().getDistance(kpos, n);
+      score -= EvalCoefficients::kingToPawnBonus_[dist];
+    }
+    return score;
+  }
 
 inline bool checkQTreat(BitMask q_mask, BitMask ki_mask, BitMask mask_all, BitMask bi_check, BitMask r_check)
 {
@@ -184,7 +194,7 @@ int evaluateKingSafety2<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask 
   return score;
 }
 
-int Evaluator::evaluateKingSafetyW() const
+ScoreType32 Evaluator::evaluateKingSafetyW() const
 {
   Index kingPos(board_->kingPos(Figure::ColorWhite));
   auto score = evaluateKingSafety2<Figure::ColorWhite>(board_->fmgr(), finfo_[Figure::ColorWhite].pawnAttacks_, kingPos);
@@ -198,10 +208,11 @@ int Evaluator::evaluateKingSafetyW() const
     int scoreQ = evaluateKingSafety2<Figure::ColorWhite>(board_->fmgr(), finfo_[Figure::ColorWhite].pawnAttacks_, kingPosQ);
     score = std::max(score, scoreQ);
   }
-  return score;
+  auto kpwscore = kingToPawnsScore(board_->kingPos(Figure::ColorWhite), board_->fmgr().pawn_mask(Figure::ColorWhite));
+  return ScoreType32{ score, kpwscore };
 }
 
-int Evaluator::evaluateKingSafetyB() const
+ScoreType32 Evaluator::evaluateKingSafetyB() const
 {
   Index kingPos(board_->kingPos(Figure::ColorBlack));
   auto score = evaluateKingSafety2<Figure::ColorBlack>(board_->fmgr(), finfo_[Figure::ColorBlack].pawnAttacks_, kingPos);
@@ -215,7 +226,8 @@ int Evaluator::evaluateKingSafetyB() const
     int scoreQ = evaluateKingSafety2<Figure::ColorBlack>(board_->fmgr(), finfo_[Figure::ColorBlack].pawnAttacks_, kingPosQ);
     score = std::max(score, scoreQ);
   }
-  return score;
+  auto kpwscore = kingToPawnsScore(board_->kingPos(Figure::ColorBlack), board_->fmgr().pawn_mask(Figure::ColorBlack));
+  return ScoreType32{ score, kpwscore };
 }
 
 int Evaluator::evaluateKingSafety(Figure::Color color) const

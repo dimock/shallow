@@ -356,11 +356,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;
   score32 += score_mob;
 
-  ScoreType32 scoreKingW = ScoreType32{ hashedScore.kscores_[Figure::ColorWhite], 0 };
-  ScoreType32 scoreKingB = ScoreType32{ hashedScore.kscores_[Figure::ColorBlack], 0 };
+  ScoreType32 scoreKingW = hashedScore.kscores_[Figure::ColorWhite];
+  ScoreType32 scoreKingB = hashedScore.kscores_[Figure::ColorBlack];
   if (phaseInfo.phase_ != GamePhase::EndGame) {
-    scoreKingW -= evaluateKingPressure(Figure::ColorBlack, hashedScore.kscores_[Figure::ColorWhite]);
-    scoreKingB -= evaluateKingPressure(Figure::ColorWhite, hashedScore.kscores_[Figure::ColorBlack]);
+    scoreKingW -= evaluateKingPressure(Figure::ColorBlack, hashedScore.kscores_[Figure::ColorWhite].eval0());
+    scoreKingB -= evaluateKingPressure(Figure::ColorWhite, hashedScore.kscores_[Figure::ColorBlack].eval0());
   }
   ScoreType32 scoreKing = scoreKingW - scoreKingB;
   score32 += scoreKing;
@@ -742,8 +742,8 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
     BitMask attackers = passmsk & opmsk;
-    int oking_dist = distanceCounter().getDistance(board.kingPos(ocolor), n1);
-    int king_dist = distanceCounter().getDistance(board.kingPos(color), n1);
+    int oking_dist = distanceCounter().getDistance(board.kingPos(ocolor), pp);
+    int king_dist = distanceCounter().getDistance(board.kingPos(color), pp);
     if (passmsk & opmsk) {
       pwscore = EvalCoefficients::passerPawn2_[cy];
       pwscore += EvalCoefficients::passerPawnPGrds2_[cy] * pguards;
@@ -1074,15 +1074,15 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
   }
 
-  if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
-    auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
-      finfo_[color].pawnAttacks_ |
-      (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
-    auto blocked_attacked = blocked_mask & attacks_mask;
-    int blockedN = pop_count(blocked_attacked);
-    attackScore += EvalCoefficients::immobileAttackBonus_ * blockedN;
-    attackedN += blockedN;
-  }
+  //if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
+  //  auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
+  //    finfo_[color].pawnAttacks_ |
+  //    (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
+  //  auto blocked_attacked = blocked_mask & attacks_mask;
+  //  int blockedN = pop_count(blocked_attacked);
+  //  attackScore += EvalCoefficients::immobileAttackBonus_ * blockedN;
+  //  attackedN += blockedN;
+  //}
 
   if (finfo_[color].discoveredMoves_ & finfo_[ocolor].nbrq_mask_) {
     attackScore += EvalCoefficients::discoveredAttackBonus_;

@@ -181,7 +181,7 @@ ALIGN_MSC(8) struct ALIGN_GCC(8) PHEval
 {
   uint32      hkey_{};
   ScoreType32 pwscore_;
-  int16       kscores_[2];
+  ScoreType32 kscores_[2];
   BitMask     passers_;
 };
 

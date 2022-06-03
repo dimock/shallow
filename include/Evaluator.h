@@ -28,7 +28,7 @@ public:
   struct PasserInfo
   {
     ScoreType32 pwscore_;
-    int16       kscores_[2];
+    ScoreType32 kscores_[2];
     BitMask     passers_{};
   };
 
@@ -250,8 +250,8 @@ private:
 
   bool fakeCastle(Figure::Color color, int rpos, BitMask rmask) const;
 
-  int evaluateKingSafetyW() const;
-  int evaluateKingSafetyB() const;
+  ScoreType32 evaluateKingSafetyW() const;
+  ScoreType32 evaluateKingSafetyB() const;
 
   int evaluateKingSafety(Figure::Color color) const;
   int evaluateKingSafety(Figure::Color color, Index const kingPos) const;
