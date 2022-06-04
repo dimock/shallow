@@ -247,6 +247,12 @@ public:
     return pmasks_backward_[color][pos];
   }
 
+  inline const BitMask mask_attackers(int color, int pos) const
+  {
+    X_ASSERT((unsigned)color > 1 || (unsigned)pos > 63, "invalid pawn pos or color");
+    return pmasks_attackers_[color][pos];
+  }
+
   inline const BitMask mask_isolated(int x) const
   {
     X_ASSERT((unsigned)x > 7, "invalid pawn x");
@@ -286,6 +292,7 @@ private:
   BitMask pmasks_neighbor_[2][64] = {};
   BitMask pmasks_guards_[2][64] = {};
   BitMask pmasks_backward_[2][64] = {};
+  BitMask pmasks_attackers_[2][64] = {};
   BitMask pmask_isolated_[8] = {};
   BitMask pmask_column_[8] = {};
   BitMask pmask_row_[64] = {};

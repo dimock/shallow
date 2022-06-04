@@ -580,13 +580,12 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
       if (!(passmsk & opmsk)) {
         info.passers_ |= set_mask_bit(n);
       }
-      else if (auto lrmask = (pmask & pawnMasks().mask_isolated(x))) {        
-        for (; lrmask;) {
-          auto m = clear_lsb(lrmask);
-          if (opmsk & pawnMasks().mask_forward(color, m)) {
+      else if(auto guards = pawnMasks().mask_backward(color, n) & pmask) {
+        auto attacks = pawnMasks().mask_attackers(color, n) & opmsk;
+        int attacksN = pop_count(attacks);
+        auto guardsN = pop_count(guards);
+        if (guardsN >= attacksN) {
             info.passers_ |= set_mask_bit(n);
-            break;
-          }
         }
       }
     }
@@ -1088,9 +1087,9 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::discoveredAttackBonus_;
   }
 
-  if (finfo_[ocolor].attackedThrough_) {
-    attackScore += EvalCoefficients::attackedThroughBonus_;
-  }
+  //if (finfo_[ocolor].attackedThrough_) {
+  //  attackScore += EvalCoefficients::attackedThroughBonus_;
+  //}
   
   return ScoreType32{ attackScore, attackScore };
 }

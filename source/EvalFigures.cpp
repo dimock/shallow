@@ -75,7 +75,7 @@ void Evaluator::prepareAttacksMasks()
   {
     auto ocolor = Figure::otherColor(color);
     finfo_[color].blockedFigures_ = BitMask{};
-    finfo_[color].attackedThrough_ = BitMask{};
+    //finfo_[color].attackedThrough_ = BitMask{};
     finfo_[color].knightMoves_ = BitMask{};
     finfo_[color].attackedByKnightBrq_ = BitMask{};
     finfo_[color].behindPawnAttacks_ = BitMask{};
@@ -455,12 +455,12 @@ ScoreType32 Evaluator::evaluateQueens()
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
 
-      // queen attacked by BR through opponent's NBR or my P which could be captured
-      auto mpw = fmgr.pawn_mask(color) & (~finfo_[color].pawnAttacks_ | finfo_[ocolor].pawnPossibleAttacks_);
-      if (attackedThrough(n, fmgr.knight_mask(ocolor)|mpw, fmgr.bishop_mask(ocolor), fmgr.rook_mask(ocolor),
-        finfo_[color].qbi_attacked_, finfo_[color].qr_attacked_, mask_all_, finfo_[ocolor].bishopMoves_, finfo_[ocolor].rookMoves_)) {
-        finfo_[color].attackedThrough_ |= set_mask_bit(n);
-      }
+      //// queen attacked by BR through opponent's NBR or my P which could be captured
+      //auto mpw = fmgr.pawn_mask(color) & (~finfo_[color].pawnAttacks_ | finfo_[ocolor].pawnPossibleAttacks_);
+      //if (attackedThrough(n, fmgr.knight_mask(ocolor)|mpw, fmgr.bishop_mask(ocolor), fmgr.rook_mask(ocolor),
+      //  finfo_[color].qbi_attacked_, finfo_[color].qr_attacked_, mask_all_, finfo_[ocolor].bishopMoves_, finfo_[ocolor].rookMoves_)) {
+      //  finfo_[color].attackedThrough_ |= set_mask_bit(n);
+      //}
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];

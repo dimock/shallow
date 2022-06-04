@@ -141,6 +141,7 @@ PawnMasks::PawnMasks()
         pmasks_neighbor_[color][i] |= neighbor_mask << (x-1);
         pmasks_guards_[color][i] |= guard_mask << (x-1);
         pmasks_backward_[color][i] |= backward_msk << (x-1);
+        pmasks_attackers_[color][i] |= forward_msk << (x-1);
       }
       if(x < 7)
       {
@@ -149,6 +150,7 @@ PawnMasks::PawnMasks()
         pmasks_neighbor_[color][i] |= neighbor_mask << (x+1);
         pmasks_guards_[color][i] |= guard_mask << (x+1);
         pmasks_backward_[color][i] |= backward_msk << (x+1);
+        pmasks_attackers_[color][i] |= forward_msk << (x+1);
       }
     }
   }
