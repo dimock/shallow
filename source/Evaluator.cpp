@@ -629,22 +629,15 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   auto const& fmgr = board.fmgr();
   bool const bcolor = color == board.color();
   const Figure::Color ocolor = Figure::otherColor(color);
+  if (fmgr.queens(ocolor) || fmgr.rooks(ocolor)) {
+    return false;
+  }
   const int py = Evaluator::promo_y_[color];
   Index pp{ pidx.x(), py };
   int oking_dist_pp = distanceCounter().getDistance(board.kingPos(ocolor), pp) - (!bcolor);
   int dist_pp = color ? py - pidx.y() : pidx.y() - py;
   bool king_far = oking_dist_pp > dist_pp;
   if (!king_far) {
-    return false;
-  }
-  auto pp_mask = set_mask_bit(pp);
-  auto pp_protected = ~finfo[ocolor].attack_mask_ | (~finfo[ocolor].multiattack_mask_ & finfo[color].attack_mask_);
-  // next move is promotion
-  if (bcolor && dist_pp == 1 && (pp_mask & pp_protected)) {
-    return true;
-  }
-  auto is_orq = fmgr.queens(ocolor) || fmgr.rooks(ocolor);
-  if ((is_orq && fmgr.allFigures(ocolor) > 1) || (fmgr.allFigures(ocolor) > 2) || (is_orq && !bcolor)) {
     return false;
   }
   bool cant_attack_pp = true;

@@ -111,7 +111,7 @@ namespace
         return { SpecialCaseResult::ALMOST_DRAW, 0 };
       }
       else {
-        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+        return { SpecialCaseResult::LIKELY_DRAW, 0 };
       }
     }
     bool kpk = kpkPassed(board, pawnColor);
@@ -120,13 +120,13 @@ namespace
         return { SpecialCaseResult::ALMOST_DRAW, 0 };
       }
       else {
-        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+        return { SpecialCaseResult::LIKELY_DRAW, 0 };
       }
     }
     if (!kpk) {
-      return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+      return { SpecialCaseResult::LIKELY_DRAW, 0 };
     }
-    return { SpecialCaseResult::NO_RESULT, 0 };
+    return { SpecialCaseResult::PROBABLE_DRAW, 0 };
   }
 
   std::pair<SpecialCaseResult, ScoreType> pawnsAndRook(Board const& board, Figure::Color pawnColor)
