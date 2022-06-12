@@ -283,12 +283,6 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
     break;
   }
 
-  case SpecialCaseResult::POSSIBLE_WIN: {
-    scoreMultip = 3;
-    scoreOffset = 1;
-    break;
-  }
-
   default: {
     break;
   }
