@@ -30,9 +30,9 @@ namespace NEngine
   ScoreType EvalCoefficients::knightAttackRQ_{ 40 };
   ScoreType EvalCoefficients::knightAttack_{ 30 };
   ScoreType EvalCoefficients::knightAttackWeak_{ 15 };
-  ScoreType EvalCoefficients::pawnAttack_{ 50 };
+  ScoreType EvalCoefficients::pawnAttack_{ 60 };
   ScoreType EvalCoefficients::possibleKnightAttack_[4] = { 0, 8, 30, 40 };
-  ScoreType EvalCoefficients::possiblePawnAttack_{ 10 };
+  ScoreType EvalCoefficients::possiblePawnAttack_{ 12 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
@@ -127,10 +127,10 @@ namespace NEngine
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
-    {30, 18, 6, 5, 3, 2, 1, 0}
+    {30, 20, 12, 8, 3, 2, 1, 0}
   };
-  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 7, 3, 1, 0, 0 };
-  int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 16, 8, 4, 0 };
+  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 10, 6, 1, 0, 0 };
+  int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 24, 16, 4, 0 };
   int EvalCoefficients::opawnAboveKing_[8] = { 0, 40, 25, 10, 0, 0, 0, 0 };
 
   // rook on open column

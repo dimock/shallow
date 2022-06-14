@@ -253,11 +253,6 @@ private:
   ScoreType32 evaluateKingSafetyW() const;
   ScoreType32 evaluateKingSafetyB() const;
 
-  int evaluateKingSafety(Figure::Color color) const;
-  int evaluateKingSafety(Figure::Color color, Index const kingPos) const;
-  int opponentPawnsPressure(Figure::Color color, Index const kingPos) const;
-  int evaluateKingsPawn(Figure::Color color, Index const kingPos) const;
-
   // sum of weights of all figures
   static const int openingWeight_ = 2*(    Figure::figureWeight_[Figure::TypeQueen]
                                 + 2*Figure::figureWeight_[Figure::TypeRook]
