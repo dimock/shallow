@@ -634,6 +634,15 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   if (!king_far) {
     return false;
   }
+  auto pp_mask = set_mask_bit(pp);
+  auto pp_protected = ~finfo[ocolor].attack_mask_ | (~finfo[ocolor].multiattack_mask_ & finfo[color].attack_mask_);
+  // next move is promotion
+  if (bcolor && dist_pp == 1 && (pp_mask & pp_protected)) {
+    return true;
+  }
+  if (fmgr.allFigures(ocolor) > 2) {
+    return false;
+  }
   bool cant_attack_pp = true;
   if (fmgr.knights(ocolor)) {
     cant_attack_pp = (movesTable().caps(Figure::TypeKnight, pp) & finfo[ocolor].knightMoves_ & ~finfo[color].attack_mask_) == 0ULL;
