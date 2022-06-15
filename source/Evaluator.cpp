@@ -623,7 +623,7 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   auto const& fmgr = board.fmgr();
   bool const bcolor = color == board.color();
   const Figure::Color ocolor = Figure::otherColor(color);
-  if (fmgr.queens(ocolor) || fmgr.rooks(ocolor)) {
+  if (fmgr.queens(ocolor)) {
     return false;
   }
   const int py = Evaluator::promo_y_[color];
@@ -640,7 +640,7 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   if (bcolor && dist_pp == 1 && (pp_mask & pp_protected)) {
     return true;
   }
-  if (fmgr.allFigures(ocolor) > 2) {
+  if (fmgr.allFigures(ocolor) > 2 || fmgr.rooks(ocolor)) {
     return false;
   }
   bool cant_attack_pp = true;
