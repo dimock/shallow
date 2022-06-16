@@ -628,10 +628,11 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   }
   const int py = Evaluator::promo_y_[color];
   Index pp{ pidx.x(), py };
-  int oking_dist_pp = distanceCounter().getDistance(board.kingPos(ocolor), pp) - (!bcolor);
+  int oking_dist_pp_real = distanceCounter().getDistance(board.kingPos(ocolor), pp);
+  int oking_dist_pp = oking_dist_pp_real - (!bcolor);
   int dist_pp = color ? py - pidx.y() : pidx.y() - py;
   bool king_far = oking_dist_pp > dist_pp;
-  if (!king_far) {
+  if (!king_far && couldIntercept(board, ~mask_all, finfo[color].attack_mask_, color, pidx, pp, oking_dist_pp_real)) {
     return false;
   }
   auto pp_mask = set_mask_bit(pp);
@@ -665,10 +666,10 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
       auto n1 = pidx + (dy << 3);
       bool cant_attack_n1 = true;
       if (fmgr.knights(ocolor)) {
-        cant_attack_n1 = (movesTable().caps(Figure::TypeKnight, pp) & finfo[ocolor].knightMoves_ & ~finfo[color].attack_mask_) == 0ULL;
+        cant_attack_n1 = (movesTable().caps(Figure::TypeKnight, n1) & finfo[ocolor].knightMoves_ & ~finfo[color].attack_mask_) == 0ULL;
       }
       if (cant_attack_n1 && fmgr.bishops(ocolor)) {
-        cant_attack_n1 = (magic_ns::bishop_moves(pp, mask_all) & finfo[ocolor].bishopMoves_ & ~finfo[color].attack_mask_) == 0ULL;
+        cant_attack_n1 = (magic_ns::bishop_moves(n1, mask_all) & finfo[ocolor].bishopMoves_ & ~finfo[color].attack_mask_) == 0ULL;
       }
       if (!cant_attack_n1) {
         return false;
@@ -716,6 +717,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
   auto o_attack_mask = finfo[ocolor].attack_mask_ | finfo[ocolor].behindOPawnAttacks_;
   auto multiattack_mask = finfo[color].multiattack_mask_ | (finfo[color].behindPawnAttacks_ & finfo[color].attack_mask_);
   auto o_multiattack_mask = finfo[ocolor].multiattack_mask_ | (finfo[ocolor].behindOPawnAttacks_ & finfo[ocolor].attack_mask_);
+  const auto attacked_any_but_oking = finfo[ocolor].multiattack_mask_ | (finfo[ocolor].attack_mask_ & ~finfo[ocolor].kingAttacks_);
   auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo[color].pawnAttacks_;
   blockers_mask |= mask_all;
 
@@ -754,8 +756,8 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
     
       if (!(fwd_field & mask_all)) {
-        if (!(fwd_field & o_attack_mask)) {
-          const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
+        if (!(fwd_field & attacked_any_but_oking)) {
+          bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
           pwscore += EvalCoefficients::passerUnstoppable_[cy] * unstoppable;
           if (!unstoppable && canPromote<color>(board, finfo, mask_all, idx)) {
             pwscore += EvalCoefficients::passerPawn_[cy];
