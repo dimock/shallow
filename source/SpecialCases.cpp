@@ -1148,6 +1148,64 @@ void SpecialCasesDetector::initCases()
       return { SpecialCaseResult::NO_RESULT, 0 };
     }
   };
+
+  // Rook + 2 Figures vs. Rook + 1 Figure + 0..1 Pawns
+  for (Figure::Color color : {Figure::ColorBlack, Figure::ColorWhite}) {
+    auto ocolor = Figure::otherColor(color);
+    for (int pawns = 0; pawns < 2; ++pawns) {
+      for (int knights = 0; knights < 2; ++knights) {
+        for (int bishops = 0; bishops < 2; ++bishops) {
+          if (knights + bishops != 1) {
+            continue;
+          }
+          for (int obishops = 1; obishops < 3; ++obishops) {
+            for (int oknights = 1; oknights < 3; ++oknights) {
+              if (oknights + obishops != 2) {
+                continue;
+              }
+              scases_[format({
+                { Figure::TypeRook, color, 1 },
+                { Figure::TypeBishop, color, bishops},
+                { Figure::TypeKnight, color, knights},
+                { Figure::TypePawn, color, pawns },
+                { Figure::TypeRook, ocolor, 1 },
+                { Figure::TypeBishop, ocolor, obishops },
+                { Figure::TypeKnight, ocolor, oknights } })] =
+                [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+              {
+                return { SpecialCaseResult::LIKELY_DRAW, 0 };
+              };
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  // Figure vs. 2 Rooks vs. 2 Rooks + 0..1 Pawns
+  for (Figure::Color color : {Figure::ColorBlack, Figure::ColorWhite}) {
+    auto ocolor = Figure::otherColor(color);
+    for (int opawns = 0; opawns < 2; ++opawns) {
+      for (int knights = 0; knights < 2; ++knights) {
+        for (int bishops = 0; bishops < 2; ++bishops) {
+          if (bishops + knights != 1) {
+            continue;
+          }
+          scases_[format({
+                { Figure::TypeRook, color, 2 },
+                { Figure::TypeBishop, color, bishops},
+                { Figure::TypeKnight, color, knights},
+                { Figure::TypeRook, ocolor, 2 },
+                { Figure::TypePawn, ocolor, opawns } })] =
+                [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+          {
+            return { SpecialCaseResult::MAYBE_DRAW, 0 };
+          };
+        }
+      }
+    }
+  }
 }
 
 } // NEngine
