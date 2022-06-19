@@ -840,6 +840,8 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   int figuresDiff = knightsDiff + bishopsDiff;
   int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
   int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
+  bool figures_b = (fmgr.knights(Figure::ColorBlack) + fmgr.bishops(Figure::ColorBlack)) > 0;
+  bool figures_w = (fmgr.knights(Figure::ColorWhite) + fmgr.bishops(Figure::ColorWhite)) > 0;
   bool twoBishops = false;
 
   // bonus for double bishop
@@ -867,7 +869,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   }
 
   // bonus for 2 bishops difference
-  if (bishopsDiff >= 2 || bishopsDiff <= -2)
+  if ((bishopsDiff >= 2 && !figures_b) || (bishopsDiff <= -2 && !figures_w))
   {
     int bdiff = sign(bishopsDiff);
     Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
@@ -877,7 +879,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   }
 
   // bonus for 2 knights difference
-  if (knightsDiff >= 2 || knightsDiff <= -2)
+  if ((knightsDiff >= 2 && !figures_b) || (knightsDiff <= -2 && !figures_w))
   {
     int ndiff = sign(knightsDiff);
     Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);

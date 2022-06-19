@@ -135,9 +135,7 @@ struct EvalCoefficients
 
   static int opawnAboveKing_[8];
   static int pawnsShields_[8][8];
-  static int opawnsShieldAttack_[2][8];
-  static int opawnsAttackCoeffs_[8];
-  static int opawnsNearKing_[8];
+  static int opawnsNearKing_[2][8];
   // arrays
   static ScoreType32 passerPawn_[8];
   static ScoreType32 passerPawn2_[8];
