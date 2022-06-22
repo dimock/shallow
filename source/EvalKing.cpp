@@ -89,21 +89,36 @@ int evaluateKingSafety<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask c
   auto opawns_mask = fmgr.pawn_mask(Figure::ColorBlack);
   for (int x = x0; x <= x1; ++x) {
     int p = Index(x, ky);
+    int ap = Index(x, ky1);
     auto fwdmsk = pawnMasks().mask_forward_plus(Figure::ColorWhite, p);
     auto pwmsk = fwdmsk & pawns_mask;
     auto opmsk = fwdmsk & opawns_mask;
-    int py = 0, opy = 0;
-    bool canFwd = false;
+    auto afmsk = pawnMasks().mask_forward(Figure::ColorWhite, ap);
+    auto atmsk = afmsk & pawnAttacks;
+    int py = 0, opy = 0, ay = 7;
+    int ay1 = 0, opy1 = 0;
+    bool canAttack = false;
+    int odist = 7;
     if (pwmsk) {
       py = Index(_lsb64(pwmsk)).y();
     }
     if (opmsk) {
       opy = Index(_lsb64(opmsk)).y();
-      int ofwd = Index(x, opy - 1);
-      canFwd = (set_mask_bit(ofwd) & pwmsk) == 0ULL;
+      opy1 = opy;
+    }
+    if (atmsk) {
+      ay = Index(_msb64(atmsk)).y();
+      ay1 = ay - 1;
+    }
+    if (ay <= opy) {
+      int a = Index(x, ay1);
+      int o = Index(x, opy1);
+      canAttack = (betweenMasks().between(o, a) & pawns_mask) == 0ULL;
+      odist = opy - ay;
     }
     score += EvalCoefficients::pawnsShields_[x][py];
-    oscore += EvalCoefficients::opawnsNearKing_[canFwd][opy];
+    oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
+    oscore += EvalCoefficients::opawnsNearKing_[opy];
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
@@ -138,22 +153,37 @@ int evaluateKingSafety<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask c
   auto opawns_mask = fmgr.pawn_mask(Figure::ColorWhite);
   for (int x = x0; x <= x1; ++x) {
     int p = Index(x, ky);
+    int ap = Index(x, ky1);
     auto fwdmsk = pawnMasks().mask_forward_plus(Figure::ColorBlack, p);
     auto pwmsk = fwdmsk & pawns_mask;
     auto opmsk = fwdmsk & opawns_mask;
-    int py = 0, opy = 0;
-    bool canFwd = false;
+    auto afmsk = pawnMasks().mask_forward(Figure::ColorBlack, ap);
+    auto atmsk = afmsk & pawnAttacks;
+    int py = 0, opy = 0, ay = 7;
+    int ay1 = 0, opy1 = 0;
+    bool canAttack = false;
+    int odist = 7;
     if (pwmsk) {
       py = 7 - Index(_msb64(pwmsk)).y();
     }
     if (opmsk) {
-      opy = Index(_msb64(opmsk)).y();
-      int ofwd = Index(x, opy + 1);
-      opy = 7 - opy;
-      canFwd = (set_mask_bit(ofwd) & pwmsk) == 0ULL;
+      opy1 = Index(_msb64(opmsk)).y();
+      opy = 7 - opy1;
+    }
+    if (atmsk) {
+      ay1 = Index(_lsb64(atmsk)).y();
+      ay = 7 - ay1;
+      ay1 += 1;
+    }
+    if (ay <= opy) {
+      int a = Index(x, ay1);
+      int o = Index(x, opy1);
+      canAttack = (betweenMasks().between(o, a) & pawns_mask) == 0ULL;
+      odist = opy - ay;
     }
     score += EvalCoefficients::pawnsShields_[x][py];
-    oscore += EvalCoefficients::opawnsNearKing_[canFwd][opy];
+    oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
+    oscore += EvalCoefficients::opawnsNearKing_[opy];
   }
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {

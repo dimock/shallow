@@ -20,7 +20,7 @@ namespace NEngine
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
   // outpost
-  ScoreType32 EvalCoefficients::knightOutpost_[2] = { { 6, 2 }, { 12, 3 } };
+  ScoreType32 EvalCoefficients::knightOutpost_[2] = { { 6, 2 }, { 10, 3 } };
   ScoreType32 EvalCoefficients::bishopOutpost_[2] = { {6, 2},  {10, 3} };
 
   // attacks
@@ -35,7 +35,7 @@ namespace NEngine
   ScoreType EvalCoefficients::possiblePawnAttack_{ 12 };
   ScoreType EvalCoefficients::rookQueenAttackedBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
-  ScoreType EvalCoefficients::multiattackedBonus_{ 30 };
+  ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
   ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
   ScoreType EvalCoefficients::attackedThroughBonus_{ 20 };
   ScoreType EvalCoefficients::discoveredAttackBonus_{ 20 };
@@ -116,16 +116,21 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {-20, 32, 30, 10, -5, -10, -20, 0},
-    {-20, 35, 26, 3,  -5, -10, -20, 0},
-    {-10, 32, 12, 3,  -3, -10, -10, 0},
-    {-10, 15,  5, 0,  -5, -10, -10, 0},
-    {-10, 15,  5, 0,  -5, -10, -10, 0},
-    {-10, 32, 12, 3,  -3, -10, -10, 0},
-    {-20, 35, 26, 3,  -5, -10, -20, 0},
-    {-20, 32, 30, 10, -5, -10, -20, 0}
+    {-20, 32, 30, 15,-10, -20, -20, 0},
+    {-20, 35, 30, 0, -15, -20, -20, 0},
+    {-10, 32, 10, 0, -10, -10, -10, 0},
+    {-10, 15,  5, 0, -10, -10, -10, 0},
+    {-10, 15,  5, 0, -10, -10, -10, 0},
+    {-10, 32, 10, 0, -10, -10, -10, 0},
+    {-20, 35, 30, 0, -15, -20, -20, 0},
+    {-20, 32, 30, 15,-10, -20, -20, 0}
   };
-  int EvalCoefficients::opawnsNearKing_[2][8] = { { 0, 20, 15, 3, 0, 0, 0, 0 }, { 0, 25, 25, 20, 10, 2, 0, 0 } };
+  int EvalCoefficients::opawnsShieldAttack_[2][8] = {
+    {0, 3, 1, 0, 0, 0, 0, 0},
+    {30, 20, 12, 8, 3, 2, 1, 0}
+  };
+  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 10, 6, 1, 0, 0 };
+  int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 24, 16, 4, 0 };
   int EvalCoefficients::opawnAboveKing_[8] = { 0, 40, 25, 10, 0, 0, 0, 0 };
 
   // rook on open column
