@@ -840,8 +840,6 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   int figuresDiff = knightsDiff + bishopsDiff;
   int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
   int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
-  bool figures_b = (fmgr.knights(Figure::ColorBlack) + fmgr.bishops(Figure::ColorBlack)) > 0;
-  bool figures_w = (fmgr.knights(Figure::ColorWhite) + fmgr.bishops(Figure::ColorWhite)) > 0;
   bool twoBishops = false;
 
   // bonus for double bishop
@@ -869,7 +867,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   }
 
   // bonus for 2 bishops difference
-  if ((bishopsDiff >= 2 && !figures_b) || (bishopsDiff <= -2 && !figures_w))
+  if (bishopsDiff >= 2 || bishopsDiff <= -2)
   {
     int bdiff = sign(bishopsDiff);
     Figure::Color bcolor = static_cast<Figure::Color>(bishopsDiff > 0);
@@ -879,7 +877,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   }
 
   // bonus for 2 knights difference
-  if ((knightsDiff >= 2 && !figures_b) || (knightsDiff <= -2 && !figures_w))
+  if (knightsDiff >= 2 || knightsDiff <= -2)
   {
     int ndiff = sign(knightsDiff);
     Figure::Color ncolor = static_cast<Figure::Color>(knightsDiff > 0);
@@ -985,7 +983,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::knightAttackRQ_ * knightsN;
   }
 
-  const auto stong_bn_attacks = ~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_;
+  const auto stong_bn_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
   if (auto kn_fork = (fmgr.bishop_mask(ocolor) & finfo_[color].knightMoves_ & ~counted_mask)) {
     counted_mask |= kn_fork;
     int knightsN = pop_count(kn_fork & stong_bn_attacks);
