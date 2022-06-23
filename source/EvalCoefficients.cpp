@@ -140,7 +140,7 @@ namespace NEngine
   // opening, endgame
   ScoreType32 EvalCoefficients::doubleBishopBonus_[10] = { {0, 0}, {10, 10}, {12, 12}, {12, 12}, {12, 12}, {12, 12}, {12, 12}, {12, 12}, {12, 12}, {12, 12} };
   ScoreType32 EvalCoefficients::doubleKnightBonus_[10] = { {0, 0}, {3, 3}, {8, 8}, {8, 8}, {8, 8}, {8, 8}, {8, 8}, {8, 8}, {8, 8}, {8, 8} };
-  ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {15, 10}, {20, 10}, {25, 15}, {25, 15}, {25, 15}, {25, 15}, {25, 15}, {25, 15}, {25, 15} };
+  ScoreType32 EvalCoefficients::twoKnightsBonus_[10] = { {0, 0}, {15, 0}, {20, 0}, {25, 0}, {25, 0}, {25, 0}, {25, 0}, {25, 0}, {25, 0}, {25, 0} };
   ScoreType32 EvalCoefficients::twoBishopsBonus_[10] = { {5, 5}, {25, 25}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35}, {35, 35} };
   ScoreType32 EvalCoefficients::twoRooksBonus_[10] = { {0, 0}, {5, 5}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10}, {10, 10} };
   ScoreType32 EvalCoefficients::figureAgainstPawnBonus_[10] = { {0, 0}, {25, 15}, {40, 25}, {45, 25}, {45, 25}, {45, 25}, {45, 25}, {45, 25}, {45, 25}, {45, 25} };
