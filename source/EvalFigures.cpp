@@ -81,6 +81,7 @@ void Evaluator::prepareAttacksMasks()
     finfo_[color].behindPawnAttacks_ = BitMask{};
     finfo_[color].behindOPawnAttacks_ = BitMask{};
     finfo_[color].pinnedFigures_ = BitMask{};
+    finfo_[color].multichecks_mask_ = BitMask{};
     finfo_[color].checks_mask_ = finfo_[color].attack_mask_;
     finfo_[color].hasMoves_ = false;
     finfo_[color].qbi_attacked_ = BitMask{};
@@ -90,6 +91,7 @@ void Evaluator::prepareAttacksMasks()
     {
       const int n = clear_lsb(nmask);
       auto knight_moves = movesTable().caps(Figure::TypeKnight, n);
+      finfo_[color].multichecks_mask_ |= finfo_[color].checks_mask_ & knight_moves;
       finfo_[color].checks_mask_ |= knight_moves;
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
@@ -110,7 +112,9 @@ void Evaluator::prepareAttacksMasks()
     {
       int n = clear_lsb(bimask);
       auto bishop_moves = magic_ns::bishop_moves(n, mask_all_);
-      finfo_[color].checks_mask_ |= bishop_moves;
+      auto const x_bishop_moves = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_);
+      finfo_[color].multichecks_mask_ |= finfo_[color].checks_mask_ & x_bishop_moves;
+      finfo_[color].checks_mask_ |= x_bishop_moves;
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
         auto const from_mask = betweenMasks().from(board_->kingPos(color), n);
@@ -132,7 +136,9 @@ void Evaluator::prepareAttacksMasks()
       auto n = clear_lsb(rmask);
       finfo_[color].attackedByKnightBrq_ |= movesTable().caps(Figure::TypeKnight, n);
       auto rook_moves = magic_ns::rook_moves(n, mask_all_);
-      finfo_[color].checks_mask_ |= rook_moves;
+      auto const x_rook_moves = magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
+      finfo_[color].multichecks_mask_ |= finfo_[color].checks_mask_ & x_rook_moves;
+      finfo_[color].checks_mask_ |= x_rook_moves;
       auto nrook_moves = ~rook_moves;
       auto rook_moves_p = magic_ns::rook_moves(n, mask_all_not_pw[color]) & pawnMasks().mask_forward(color, n) & nrook_moves;
       auto rook_moves_op = magic_ns::rook_moves(n, mask_all_not_pw[ocolor]) & pawnMasks().mask_forward(ocolor, n) & nrook_moves;
@@ -166,7 +172,9 @@ void Evaluator::prepareAttacksMasks()
       auto queen_moves_r = magic_ns::rook_moves(n, mask_all_);
       auto queen_moves_bi = magic_ns::bishop_moves(n, mask_all_);
       auto queen_moves = queen_moves_r | queen_moves_bi;
-      finfo_[color].checks_mask_ |= queen_moves;
+      auto const x_queen_moves = magic_ns::bishop_moves(n, finfo_[color].mask_xray_b_) | magic_ns::rook_moves(n, finfo_[color].mask_xray_r_);
+      finfo_[color].multichecks_mask_ |= finfo_[color].checks_mask_ & x_queen_moves;
+      finfo_[color].checks_mask_ |= x_queen_moves;
       X_ASSERT_R(board_->discoveredCheck(n, mask_all_, ocolor, board_->kingPos(color)) != discoveredCheck(n, color), "discovered check not detected");
       if (discoveredCheck(n, color)) {
         auto const from_mask = betweenMasks().from(board_->kingPos(color), n);
@@ -368,9 +376,7 @@ ScoreType32 Evaluator::evaluateRook()
       bool q_pinned = false;
       if(rook_moves)
       {
-        if ( isPinned(n, color, ocolor, (fmgr.queen_mask(color) | fmgr.rook_mask(color)), fmgr.bishop_mask(ocolor), nst::bishop) ||
-             isPinned(n, color, ocolor, (fmgr.queen_mask(color) | fmgr.rook_mask(color)) & ~finfo_[color].attack_mask_,
-                      fmgr.queen_mask(ocolor), nst::bishop)) {
+        if (isPinned(n, color, ocolor, (fmgr.queen_mask(color) | fmgr.rook_mask(color)), fmgr.bishop_mask(ocolor), nst::bishop)) {
           q_pinned = true;
           finfo_[color].score_mob_ -= EvalCoefficients::rookPinned_;
         }
@@ -454,13 +460,6 @@ ScoreType32 Evaluator::evaluateQueens()
       if (q_pinned || !n_moves) {
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
-
-      //// queen attacked by BR through opponent's NBR or my P which could be captured
-      //auto mpw = fmgr.pawn_mask(color) & (~finfo_[color].pawnAttacks_ | finfo_[ocolor].pawnPossibleAttacks_);
-      //if (attackedThrough(n, fmgr.knight_mask(ocolor)|mpw, fmgr.bishop_mask(ocolor), fmgr.rook_mask(ocolor),
-      //  finfo_[color].qbi_attacked_, finfo_[color].qr_attacked_, mask_all_, finfo_[ocolor].bishopMoves_, finfo_[ocolor].rookMoves_)) {
-      //  finfo_[color].attackedThrough_ |= set_mask_bit(n);
-      //}
     }
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];

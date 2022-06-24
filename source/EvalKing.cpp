@@ -2,16 +2,16 @@
 
 namespace NEngine
 {
-  inline int kingToPawnsScore(const int kpos, BitMask pmsk)
-  {
-    int score = 0;
-    while (pmsk) {
-      auto n = clear_lsb(pmsk);
-      auto dist = distanceCounter().getDistance(kpos, n);
-      score -= EvalCoefficients::kingToPawnBonus_[dist];
-    }
-    return score;
+inline int kingToPawnsScore(const int kpos, BitMask pmsk)
+{
+  int score = 0;
+  while (pmsk) {
+    auto n = clear_lsb(pmsk);
+    auto dist = distanceCounter().getDistance(kpos, n);
+    score -= EvalCoefficients::kingToPawnBonus_[dist];
   }
+  return score;
+}
 
 inline bool checkQTreat(BitMask q_mask, BitMask ki_mask, BitMask mask_all, BitMask bi_check, BitMask r_check)
 {
@@ -230,6 +230,56 @@ ScoreType32 Evaluator::evaluateKingSafetyB() const
   return ScoreType32{ score, kpwscore };
 }
 
+bool Evaluator::isMatTreat(
+  Figure::Color color,
+  Figure::Color ocolor,
+  BitMask attacked_any_but_oking,
+  BitMask q_check,
+  BitMask r_check,
+  BitMask bi_check) const
+{
+  const auto& fmgr = board_->fmgr();
+  auto mat_fields_mask = (mask_all_ | finfo_[ocolor].multiattack_mask_ | finfo_[ocolor].discoveredMoves_) & ~fmgr.king_mask(ocolor);
+  if (q_check) {
+    auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
+      ~(finfo_[color].multichecks_mask_ | mask_all_ | (finfo_[color].checks_mask_ & ~finfo_[color].queenMoves_));
+    q_check &= ~attacked_any_but_oking;
+    while (q_check) {
+      auto n = clear_lsb(q_check);
+      const auto& qmat_attacks = magic_ns::queen_moves(n, mat_fields_mask);
+      const auto attacked_ok_field = qmat_attacks & fmgr.king_mask(ocolor);
+      if (attacked_ok_field && !(oking_possible_moves & ~qmat_attacks)) {
+        return true;
+      }
+    }
+  }
+  if (r_check) {
+    auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
+      ~(finfo_[color].multichecks_mask_ | mask_all_ | (finfo_[color].checks_mask_ & ~finfo_[color].rookMoves_));
+    r_check &= ~attacked_any_but_oking;
+    while (r_check) {
+      auto n = clear_lsb(r_check);
+      const auto& rmat_attacks = magic_ns::rook_moves(n, mat_fields_mask);
+      if ((rmat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~rmat_attacks)) {
+        return true;
+      }
+    }
+  }
+  if (bi_check) {
+    auto oking_possible_moves = finfo_[ocolor].kingAttacks_ &
+      ~(finfo_[color].multichecks_mask_ | mask_all_ | (finfo_[color].checks_mask_ & ~finfo_[color].rookMoves_));
+    bi_check &= ~attacked_any_but_oking;
+    while (bi_check) {
+      auto n = clear_lsb(bi_check);
+      const auto& bimat_attacks = magic_ns::bishop_moves(n, mat_fields_mask);
+      if ((bimat_attacks & fmgr.king_mask(ocolor)) && !(oking_possible_moves & ~bimat_attacks)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscore_o)
 {
   const auto& fmgr = board_->fmgr();
@@ -334,10 +384,10 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     check_coeff += attack_coeff >> 2;
   }
 
-  auto near_oking_att = finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
+  auto near_oking_att = finfo_[ocolor].kingAttacks_ & finfo_[color].checks_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
-    auto strong_msk = near_oking_att & ~attacked_any_but_oking & finfo_[color].multiattack_mask_;
-    auto weak_msk = near_oking_att & ~strong_msk & (~finfo_[ocolor].multiattack_mask_ | finfo_[color].multiattack_mask_);
+    auto strong_msk = near_oking_att & ~attacked_any_but_oking & finfo_[color].multichecks_mask_;
+    auto weak_msk = near_oking_att & ~strong_msk & (~finfo_[ocolor].multiattack_mask_ | finfo_[color].multichecks_mask_);
     int strongN = pop_count(strong_msk);
     int weakN = pop_count(weak_msk);
     near_oking_att = strong_msk | weak_msk;
@@ -351,7 +401,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   const auto near_oking_rem = ((finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].pawnAttacks_) |
                                (oki_fields & ~finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].attack_mask_)) &
-      (~near_oking_att & ~fmgr.pawn_mask(color) & finfo_[color].attack_mask_);
+      (~near_oking_att & ~fmgr.pawn_mask(color) & finfo_[color].checks_mask_);
   if (near_oking_rem) {
     int remsN = pop_count(near_oking_rem & ~finfo_[ocolor].attack_mask_);
     int otherN = pop_count(near_oking_rem & finfo_[ocolor].attack_mask_);
@@ -381,7 +431,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   check_coeff = std::max(0, check_coeff);
   attack_coeff = std::max(0, attack_coeff);
 
-  auto danger_check_mask = ~attacked_any_but_oking;// | finfo_[color].multiattack_mask_;
+  auto danger_check_mask = ~attacked_any_but_oking;
   bi_check &= danger_check_mask;
   r_check &= danger_check_mask;
   q_check &= danger_check_mask;
@@ -404,7 +454,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   int king_side = (oki_x > 4) ? 0 : ((oki_x < 3) ? 1 : 2); // 0 = right, 1 = left, 2 = center
 
   auto general_pressure_mask =
-    ((finfo_[color].attack_mask_ & ~finfo_[ocolor].pawnAttacks_) | finfo_[color].multiattack_mask_ | finfo_[color].pawnAttacks_) &
+    ((finfo_[color].checks_mask_ & ~finfo_[ocolor].pawnAttacks_) | finfo_[color].multichecks_mask_ | finfo_[color].pawnAttacks_) &
     ~(near_oking_att | near_oking_rem);
 
   auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
