@@ -551,12 +551,13 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
 
     auto const protectMask = movesTable().pawnCaps(ocolor, n);
     auto const attackMask = movesTable().pawnCaps(color, n);
+    auto const neighborMask = pawnMasks().mask_neighbor(color, n);
     bool guarded = (protectMask & pmask) != 0ULL;
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool opened = ((opmsk| pmask) & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward<color>(idx, pmask, opmsk, fwd_field, finfo[ocolor].pawnAttacks_ & ~finfo[color].pawnAttacks_);
-    bool neighbors = guarded || ((pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL);
+    bool neighbors = guarded || ((neighborMask & pmask) != 0ULL);
     bool doubled = (!guarded) && few_bits_set(pawnMasks().mask_column(x) & pmask) && ((bkw_mask & pmask) != 0ULL);
     bool unprotected = !isolated && !backward && !guarded;
     bool attack = (opmsk & attackMask) != 0ULL;
@@ -574,11 +575,16 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
       if (!(passmsk & opmsk)) {
         info.passers_ |= set_mask_bit(n);
       }
-      else if(auto guards = pawnMasks().mask_backward(color, n) & pmask) {
-        auto attacks = pawnMasks().mask_attackers(color, n) & opmsk;
-        int attacksN = pop_count(attacks);
-        auto guardsN = pop_count(guards);
-        if (guardsN >= attacksN) {
+      else {
+        auto const protcts = protectMask & pmask;
+        auto const attacks = attackMask & opmsk;
+        auto const neighbrs = neighborMask & pmask;
+        auto const stoppers = pawnMasks().mask_attackers(color, n1) & opmsk;
+        auto const attacksN = pop_count(attacks);
+        auto const protctsN = pop_count(protcts);
+        auto const neighbrsN = pop_count(neighbrs);
+        auto const stoppersN = pop_count(stoppers);
+        if (protctsN >= attacksN && neighbrsN >= stoppersN) {
             info.passers_ |= set_mask_bit(n);
         }
       }
