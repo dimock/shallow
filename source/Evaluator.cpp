@@ -989,7 +989,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += EvalCoefficients::knightAttackRQ_ * knightsN;
   }
 
-  const auto stong_bn_attacks = ~finfo_[ocolor].attack_mask_ | (finfo_[color].multiattack_mask_ & ~finfo_[ocolor].multiattack_mask_);
+  const auto stong_bn_attacks = ~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_;
   if (auto kn_fork = (fmgr.bishop_mask(ocolor) & finfo_[color].knightMoves_ & ~counted_mask)) {
     counted_mask |= kn_fork;
     int knightsN = pop_count(kn_fork & stong_bn_attacks);
