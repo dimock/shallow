@@ -75,7 +75,7 @@ void Evaluator::prepareAttacksMasks()
   {
     auto ocolor = Figure::otherColor(color);
     finfo_[color].blockedFigures_ = BitMask{};
-    //finfo_[color].attackedThrough_ = BitMask{};
+    finfo_[color].attack_any_but_king_ = BitMask{};
     finfo_[color].knightMoves_ = BitMask{};
     finfo_[color].attackedByKnightBrq_ = BitMask{};
     finfo_[color].behindPawnAttacks_ = BitMask{};
@@ -461,6 +461,7 @@ ScoreType32 Evaluator::evaluateQueens()
         finfo_[color].blockedFigures_ |= set_mask_bit(n);
       }
     }
+    finfo_[color].attack_any_but_king_ = finfo_[color].multiattack_mask_ | (finfo_[color].attack_mask_ & ~finfo_[color].kingAttacks_);
   }
   return score[Figure::ColorWhite] - score[Figure::ColorBlack];
 }

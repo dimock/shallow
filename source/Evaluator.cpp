@@ -723,7 +723,6 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
   auto o_attack_mask = finfo[ocolor].attack_mask_ | finfo[ocolor].behindOPawnAttacks_;
   auto multiattack_mask = finfo[color].multiattack_mask_ | (finfo[color].behindPawnAttacks_ & finfo[color].attack_mask_);
   auto o_multiattack_mask = finfo[ocolor].multiattack_mask_ | (finfo[ocolor].behindOPawnAttacks_ & finfo[ocolor].attack_mask_);
-  const auto attacked_any_but_oking = finfo[ocolor].multiattack_mask_ | (finfo[ocolor].attack_mask_ & ~finfo[ocolor].kingAttacks_);
   auto blockers_mask = ((o_attack_mask & ~attack_mask) | (o_multiattack_mask & ~multiattack_mask)) & ~finfo[color].pawnAttacks_;
   blockers_mask |= mask_all;
 
@@ -762,7 +761,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
     
       if (!(fwd_field & mask_all)) {
-        if (!(fwd_field & attacked_any_but_oking)) {
+        if (!(fwd_field & finfo[ocolor].attack_any_but_king_)) {
           bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
           pwscore += EvalCoefficients::passerUnstoppable_[cy] * unstoppable;
           if (!unstoppable && canPromote<color>(board, finfo, mask_all, idx)) {
@@ -1042,12 +1041,13 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += (EvalCoefficients::rookQueenAttackedBonus_ * rqtreatsN) >> 3;
   }
 
-  if (auto king_attacks = (~finfo_[ocolor].attack_mask_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
+  if (auto king_attacks = (~finfo_[ocolor].attack_any_but_king_ & finfo_[color].kingAttacks_ & fmgr.mask(ocolor) & ~fmgr.pawn_mask(ocolor) & ~counted_mask)) {
     counted_mask |= king_attacks;
-    auto ktreatsN = pop_count(king_attacks);
+    auto ktreatsN = pop_count(king_attacks & ~finfo_[ocolor].attack_mask_);
     attackedN += ktreatsN;
     attackScore += EvalCoefficients::attackedByKingBonus_ * ktreatsN;
-    counted_mask |= king_attacks;
+    ktreatsN = pop_count(king_attacks & finfo_[ocolor].attack_mask_);
+    attackScore += (EvalCoefficients::attackedByKingBonus_ * ktreatsN) >> 1;
   }
 
   const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;

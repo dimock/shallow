@@ -291,12 +291,11 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   const auto oki_fields = finfo_[ocolor].ki_fields_;
   const auto near_oking = oki_fields & finfo_[ocolor].kingAttacks_;
   const auto near_oking_pw = near_oking | (oki_fields & fmgr.pawn_mask(ocolor));
-  const auto attacked_any_but_oking = finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[ocolor].kingAttacks_);
   const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_;
 
   const auto onbrp_attacked = finfo_[ocolor].nbr_attacked_ | finfo_[ocolor].pawnAttacks_;
   const auto onbp_attacked = finfo_[ocolor].nb_attacked_ | finfo_[ocolor].pawnAttacks_;
-  const auto can_check_q = ~(attacked_any_but_oking | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
+  const auto can_check_q = ~(finfo_[ocolor].attack_any_but_king_ | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
   const auto can_check_r = ~(onbrp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
   const auto can_check_nb = ~(onbp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
 
@@ -386,7 +385,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   auto near_oking_att = finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
-    auto strong_msk = near_oking_att & ~attacked_any_but_oking & finfo_[color].multiattack_mask_;
+    auto strong_msk = near_oking_att & ~finfo_[ocolor].attack_any_but_king_ & finfo_[color].multiattack_mask_;
     auto weak_msk = near_oking_att & ~strong_msk & (~finfo_[ocolor].multiattack_mask_ | finfo_[color].multiattack_mask_);
     int strongN = pop_count(strong_msk);
     int weakN = pop_count(weak_msk);
@@ -431,14 +430,14 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   check_coeff = std::max(0, check_coeff);
   attack_coeff = std::max(0, attack_coeff);
 
-  auto danger_check_mask = ~attacked_any_but_oking;
+  auto danger_check_mask = ~finfo_[ocolor].attack_any_but_king_;
   bi_check &= danger_check_mask;
   r_check &= danger_check_mask;
   q_check &= danger_check_mask;
   p_check &= danger_check_mask;
 
   // mat is possible
-  if((p_check | bi_check | q_check | r_check) && isMatTreat(color, ocolor, attacked_any_but_oking, p_check|q_check, r_check, bi_check)) {
+  if((p_check | bi_check | q_check | r_check) && isMatTreat(color, ocolor, finfo_[ocolor].attack_any_but_king_, p_check|q_check, r_check, bi_check)) {
     const bool myMove = (board_->color() == color);
     check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
   }
