@@ -154,7 +154,7 @@ struct EvalCoefficients
   static int passerPawnSc_[8]; // special cases only
   // distance between forwards
   static int closeToPromotion_[8];
-  static int kingToPawnBonus_[8];
+  static int kingToPawnBonus_[10];
 
   // mobility
   static ScoreType32 knightMobility_[16];

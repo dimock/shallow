@@ -190,7 +190,7 @@ namespace NEngine
 
   int EvalCoefficients::passerPawnSc_[8] = { 0, 1, 2, 4, 6, 8, 12, 0 };
   int EvalCoefficients::closeToPromotion_[8] = { 0, 2, 4, 6, 8, 10, 12, 16 };
-  int EvalCoefficients::kingToPawnBonus_[8] = { 0, 0, 1, 2, 3, 4, 5, 6 };
+  int EvalCoefficients::kingToPawnBonus_[10] = { 0, 1, 3, 6, 9, 12, 15, 18, 0, 0 };
 
   // mobility
   ScoreType32 EvalCoefficients::knightMobility_[16] = { {-45, -45}, {-19, -18}, {  6,   8}, {  9,  11}, { 11,  15}, { 14,  17}, { 16,  20}, { 18,  22}, { 20,  25} };

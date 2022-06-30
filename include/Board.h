@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "magicbb.h"
 #include "History.h"
+#include "kpk.h"
 
 namespace NEngine
 {
@@ -565,6 +566,22 @@ struct Board
 
   bool isDangerPawn(Move & move) const;
 
+
+  inline bool kpkPassed(Figure::Color pawnColor, int pawnPos) const
+  {
+    auto loserColor = Figure::otherColor(pawnColor);
+    auto moveColor = color();
+    int kw = kingPos(pawnColor);
+    int kl = kingPos(loserColor);
+    if (pawnColor == Figure::ColorBlack)
+    {
+      pawnPos = Figure::mirrorIndex_[pawnPos];
+      kw = Figure::mirrorIndex_[kw];
+      kl = Figure::mirrorIndex_[kl];
+      moveColor = Figure::otherColor(moveColor);
+    }
+    return (kpk_[kw][kl][moveColor] & (1ULL << pawnPos)) != 0ULL;
+  }
 
 private:
   // for initialization only

@@ -4,13 +4,12 @@ namespace NEngine
 {
 inline int kingToPawnsScore(const int kpos, BitMask pmsk)
 {
-  int score = 0;
+  int dist = 8;
   while (pmsk) {
     auto n = clear_lsb(pmsk);
-    auto dist = distanceCounter().getDistance(kpos, n);
-    score -= EvalCoefficients::kingToPawnBonus_[dist];
+    dist = std::min(dist, distanceCounter().getDistance(kpos, n));
   }
-  return score;
+  return -EvalCoefficients::kingToPawnBonus_[dist];
 }
 
 inline bool checkQTreat(BitMask q_mask, BitMask ki_mask, BitMask mask_all, BitMask bi_check, BitMask r_check)
