@@ -760,9 +760,9 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
         EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
     
-      if (fmgr.allFigures(ocolor) == 0 && board.kpkPassed(color, n)) {
-        pwscore += ScoreType32{ 0, 10 } *cy;
-      }
+      //if (fmgr.allFigures(ocolor) == 0 && board.kpkPassed(color, n)) {
+      //  pwscore += ScoreType32{ 0, 10 } *cy;
+      //}
 
       if (!(fwd_field & mask_all)) {
         // all forward fields are not blocked by opponent
