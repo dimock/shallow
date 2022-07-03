@@ -634,11 +634,10 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   }
   const int py = Evaluator::promo_y_[color];
   Index pp{ pidx.x(), py };
-  int oking_dist_pp_real = distanceCounter().getDistance(board.kingPos(ocolor), pp);
-  int oking_dist_pp = oking_dist_pp_real - (!bcolor);
+  int oking_dist_pp = distanceCounter().getDistance(board.kingPos(ocolor), pp) - (!bcolor);
   int dist_pp = color ? py - pidx.y() : pidx.y() - py;
   bool king_far = oking_dist_pp > dist_pp;
-  if (!king_far && couldIntercept(board, ~mask_all, finfo[color].attack_mask_, color, pidx, pp, oking_dist_pp_real)) {
+  if (!king_far) {
     return false;
   }
   auto pp_mask = set_mask_bit(pp);
@@ -655,7 +654,7 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
     cant_attack_pp = (movesTable().caps(Figure::TypeKnight, pp) & finfo[ocolor].knightMoves_ & ~finfo[color].attack_mask_) == 0ULL;
   }
   if (cant_attack_pp && fmgr.bishops(ocolor)) {
-    cant_attack_pp = (magic_ns::bishop_moves(pp, mask_all) & finfo[ocolor].bishopMoves_ & ~finfo[color].attack_mask_) == 0ULL;
+    cant_attack_pp = (magic_ns::bishop_moves(pp, mask_all & ~fmgr.king_mask(color)) & finfo[ocolor].bishopMoves_ & ~finfo[color].attack_mask_) == 0ULL;
   }
   if (dist_pp == 1) {
     return cant_attack_pp;
@@ -675,7 +674,7 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
         cant_attack_n1 = (movesTable().caps(Figure::TypeKnight, n1) & finfo[ocolor].knightMoves_ & ~finfo[color].attack_mask_) == 0ULL;
       }
       if (cant_attack_n1 && fmgr.bishops(ocolor)) {
-        cant_attack_n1 = (magic_ns::bishop_moves(n1, mask_all) & finfo[ocolor].bishopMoves_ & ~finfo[color].attack_mask_) == 0ULL;
+        cant_attack_n1 = (magic_ns::bishop_moves(n1, mask_all & ~fmgr.king_mask(color)) & finfo[ocolor].bishopMoves_ & ~finfo[color].attack_mask_) == 0ULL;
       }
       if (!cant_attack_n1) {
         return false;
@@ -765,6 +764,13 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       //}
 
       if (!(fwd_field & mask_all)) {
+        if (!(fwd_field & o_attack_mask)) {
+          const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
+          pwscore += EvalCoefficients::passerUnstoppable_[cy] * unstoppable;
+          if (!unstoppable && canPromote<color>(board, finfo, mask_all, idx)) {
+            pwscore += EvalCoefficients::passerPawn_[cy];
+          }
+        }
         // all forward fields are not blocked by opponent
         auto fwd_mask = fwd_fields & blockers_mask;
         if (!fwd_mask) {
