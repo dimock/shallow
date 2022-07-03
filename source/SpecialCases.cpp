@@ -1188,6 +1188,32 @@ void SpecialCasesDetector::initCases()
       }
     }
   }
+
+  // 2 Figures vs. 1Figure + 1..2 Pawns
+  for (Figure::Color color : {Figure::ColorBlack, Figure::ColorWhite}) {
+    auto ocolor = Figure::otherColor(color);
+    for (int opawns = 1; opawns <= 2; ++opawns) {
+      for (Figure::Type otype : {Figure::TypeKnight, Figure::TypeBishop}) {
+        for (int knights = 0; knights <= 2; ++knights) {
+          for (int bishops = 0; bishops <= 2; ++bishops) {
+            if (bishops + knights != 2) {
+              continue;
+            }
+            scases_[format({
+                  { otype, ocolor, 1 },
+                  { Figure::TypePawn, ocolor, opawns },
+                  { Figure::TypeBishop, color, bishops},
+                  { Figure::TypeKnight, color, knights} })] =
+                  [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+            {
+              return { SpecialCaseResult::ALMOST_DRAW, 0 };
+            };
+          }
+        }
+      }
+    }
+  }
+
 }
 
 } // NEngine
