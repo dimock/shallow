@@ -1131,17 +1131,17 @@ void SpecialCasesDetector::initCases()
     }
   };
 
-  // Rook + 2 Figures vs. Rook + 1 Figure + 0..1 Pawns
+  // Rook + 2 Figures vs. Rook + 1 Figure + 0..2 Pawns
   for (Figure::Color color : {Figure::ColorBlack, Figure::ColorWhite}) {
     auto ocolor = Figure::otherColor(color);
-    for (int pawns = 0; pawns < 2; ++pawns) {
+    for (int pawns = 0; pawns <= 2; ++pawns) {
       for (int knights = 0; knights < 2; ++knights) {
         for (int bishops = 0; bishops < 2; ++bishops) {
           if (knights + bishops != 1) {
             continue;
           }
-          for (int obishops = 1; obishops < 3; ++obishops) {
-            for (int oknights = 1; oknights < 3; ++oknights) {
+          for (int obishops = 1; obishops <= 2; ++obishops) {
+            for (int oknights = 1; oknights <= 2; ++oknights) {
               if (oknights + obishops != 2) {
                 continue;
               }
