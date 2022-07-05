@@ -758,19 +758,8 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
-    
-      //if (fmgr.allFigures(ocolor) == 0 && board.kpkPassed(color, n)) {
-      //  pwscore += ScoreType32{ 0, 10 } *cy;
-      //}
 
       if (!(fwd_field & mask_all)) {
-        if (!(fwd_field & o_attack_mask)) {
-          const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
-          pwscore += EvalCoefficients::passerUnstoppable_[cy] * unstoppable;
-          if (!unstoppable && canPromote<color>(board, finfo, mask_all, idx)) {
-            pwscore += EvalCoefficients::passerPawn_[cy];
-          }
-        }
         // all forward fields are not blocked by opponent
         auto fwd_mask = fwd_fields & blockers_mask;
         if (!fwd_mask) {
