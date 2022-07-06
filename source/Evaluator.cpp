@@ -1098,7 +1098,8 @@ ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
   auto treats = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
   auto strong_attacks = ~finfo_[ocolor].attack_mask_ |
     (~finfo_[ocolor].multiattack_mask_ & finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
-  auto medium_attacks = ~strong_attacks & (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
+  auto medium_attacks = ~strong_attacks &
+    ((finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_) | (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_any_but_king_));
   auto weak_attacks = ~(strong_attacks | medium_attacks);
   ScoreType32 score{};
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & strong_attacks);

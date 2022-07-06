@@ -15,7 +15,7 @@ namespace NEngine
   // pawns
   ScoreType32 EvalCoefficients::protectedPawnPressure_{ 1, 2 };
   ScoreType32 EvalCoefficients::pawnPressureStrong_{ 13, 22 };
-  ScoreType32 EvalCoefficients::pawnPressureMedium_{ 2, 5 };
+  ScoreType32 EvalCoefficients::pawnPressureMedium_{ 5, 10 };
   ScoreType32 EvalCoefficients::pawnPressureWeak_{ 1, 3 };
   ScoreType32 EvalCoefficients::pawnBishopTreat_{ 0, 3 };
 
@@ -171,11 +171,11 @@ namespace NEngine
   ScoreType32 EvalCoefficients::passerUnstoppable_[8] = { {  0,   0}, {  2,   3}, {  5,   8}, { 10,  17}, { 25,  42}, { 50,  85}, {100, 170}, {  0,   0} };
   ScoreType32 EvalCoefficients::passerPawnExS_[8][8] = {
     { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, {  0,   1}, {  1,   1}, {  1,   1}, {  1,   1}, {  1,   1}, {  1,   2}, {  0,   0} },
-    { {  0,   0}, {  0,   1}, {  1,   1}, {  1,   1}, {  1,   1}, {  1,   2}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, {  2,   3}, {  3,   3}, {  3,   4}, {  4,   5}, {  0,   0}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, { 13,  16}, { 16,  20}, { 20,  25}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
-    { {  0,   0}, { 36,  45}, { 48,  60}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  1,   1}, {  1,   2}, {  0,   0} },
+    { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  1,   1}, {  1,   2}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, {  0,   0}, {  1,   1}, {  2,   2}, {  4,   5}, {  0,   0}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, {  2,   2}, {  8,  11}, { 20,  25}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
+    { {  0,   0}, { 12,  15}, { 48,  60}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
     { {  0,   0}, {112, 140}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} },
     { {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0}, {  0,   0} }
   };
