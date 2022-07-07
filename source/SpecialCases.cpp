@@ -112,6 +112,34 @@ namespace
     return { SpecialCaseResult::MAYBE_DRAW, 0 };
   }
 
+  std::pair<SpecialCaseResult, ScoreType> twoPawnsAndHeavy(Board const& board, Figure::Color pawnColor)
+  {
+    auto ocolor = Figure::otherColor(pawnColor);
+    auto pwmask = board.fmgr().pawn_mask(pawnColor);
+    int pcy_max = 0;
+    int pcy_min = 7;
+    while (pwmask) {
+      auto n = clear_lsb(pwmask);
+      Index index(n);
+      auto y = pawn_colored_y_[pawnColor][index.y()];
+      pcy_max = std::max(y, pcy_max);
+      pcy_min = std::min(y, pcy_min);
+    }
+    Index kingP(board.kingPos(pawnColor));
+    Index kingO(board.kingPos(ocolor));
+    auto cpky = pawn_colored_y_[pawnColor][kingP.y()];
+    auto coky = pawn_colored_y_[pawnColor][kingO.y()];
+    if (coky >= pcy_max) {
+      if (cpky <= pcy_min) {
+        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+      }
+      else {
+        return { SpecialCaseResult::MAYBE_DRAW, 0 };
+      }
+    }
+    return { SpecialCaseResult::NO_RESULT, 0 };
+  }
+
   std::pair<SpecialCaseResult, ScoreType> pawnsAndRook(Board const& board, Figure::Color pawnColor)
   {
     auto const& fmgr = board.fmgr();
@@ -833,35 +861,37 @@ void SpecialCasesDetector::initCases()
     return pawnsAndRook(board, Figure::ColorWhite);
   };
   
-  // rook against pawn & rook
-  scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 },
-  { Figure::TypePawn, Figure::ColorBlack, 1 },
-  { Figure::TypeRook, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return pawnAndHeavy(board, Figure::ColorBlack);
-  };
-
-  scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return pawnAndHeavy(board, Figure::ColorWhite);
-  };
-
-  // queen against pawn & queen
-  scases_[format({ { Figure::TypeQueen, Figure::ColorBlack, 1 },
-    { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeQueen, Figure::ColorWhite, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return pawnAndHeavy(board, Figure::ColorBlack);
-  };
-
-  scases_[format({ { Figure::TypeQueen, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeQueen, Figure::ColorBlack, 1 } })] = [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    return pawnAndHeavy(board, Figure::ColorWhite);
-  };
+  for (auto color : { Figure::ColorBlack, Figure::ColorWhite }) {
+    // rook against pawn & rook
+    auto ocolor = Figure::otherColor(color);
+    scases_[format({ { Figure::TypeRook, color, 1 },
+    { Figure::TypePawn, color, 1 },
+    { Figure::TypeRook, ocolor, 1 } })] = [color](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return pawnAndHeavy(board, color);
+    };
+    // queen against pawn & queen
+    scases_[format({ { Figure::TypeQueen, color, 1 },
+      { Figure::TypePawn, color, 1 },
+      { Figure::TypeQueen, ocolor, 1 } })] = [color](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return pawnAndHeavy(board, color);
+    };
+    // rook against 2 pawns & rook
+    scases_[format({ { Figure::TypeRook, color, 1 },
+      { Figure::TypePawn, color, 2 },
+      { Figure::TypeRook, ocolor, 1 } })] = [color](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return twoPawnsAndHeavy(board, color);
+    };
+    // queen against 2 pawns & queen
+    scases_[format({ { Figure::TypeQueen, color, 1 },
+      { Figure::TypePawn, color, 2 },
+      { Figure::TypeQueen, ocolor, 1 } })] = [color](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+    {
+      return twoPawnsAndHeavy(board, color);
+    };
+  }
 
   // queen + pawns? against figure & queen
   for (int i = 0; i < 3; ++i) {
@@ -1070,8 +1100,16 @@ void SpecialCasesDetector::initCases()
           { Figure::TypePawn, wfc, 1 },
           { Figure::TypeRook, lfc, 1 },
           { lft, lfc, 1 } })] =
-          [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+          [wfc, lfc](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
         {
+          auto const& fmgr = board.fmgr();
+          if (fmgr.bishop_mask(wfc) && fmgr.bishop_mask(lfc)) {
+            auto bi_mask_w = (fmgr.bishop_mask(wfc) & FiguresCounter::s_whiteMask_) != 0ULL;
+            auto bi_mask_b = (fmgr.bishop_mask(lfc) & FiguresCounter::s_whiteMask_) != 0ULL;
+            if (bi_mask_w == bi_mask_b) {
+              return { SpecialCaseResult::MAYBE_DRAW, 0 };
+            }
+          }
           return { SpecialCaseResult::LIKELY_DRAW, 0 };
         };
       }
@@ -1114,6 +1152,7 @@ void SpecialCasesDetector::initCases()
     }
   }
 
+  // rook vs. pawn -> sometimes could be draw
   scases_[format({ { Figure::TypeRook, Figure::ColorBlack, 1 }, { Figure::TypePawn, Figure::ColorWhite, 1 } })] = [](Board const& board)
   {
     return evalRookPawn(board, Figure::ColorBlack);
@@ -1121,44 +1160,6 @@ void SpecialCasesDetector::initCases()
   scases_[format({ { Figure::TypeRook, Figure::ColorWhite, 1 }, { Figure::TypePawn, Figure::ColorBlack, 1 } })] = [](Board const& board)
   {
     return evalRookPawn(board, Figure::ColorWhite);
-  };
-
-  scases_[format({
-    { Figure::TypeBishop, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 },
-    { Figure::TypePawn, Figure::ColorWhite, 1 },
-    { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 } })] =
-    [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    auto const& fmgr = board.fmgr();
-    auto bi_mask_w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
-    auto bi_mask_b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
-    if (bi_mask_w != bi_mask_b) {
-      return { SpecialCaseResult::MAYBE_DRAW, 0 };
-    }
-    else {
-      return { SpecialCaseResult::NO_RESULT, 0 };
-    }
-  };
-
-  scases_[format({
-    { Figure::TypeBishop, Figure::ColorBlack, 1 },
-    { Figure::TypeRook, Figure::ColorBlack, 1 },
-    { Figure::TypePawn, Figure::ColorBlack, 1 },
-    { Figure::TypeBishop, Figure::ColorWhite, 1 },
-    { Figure::TypeRook, Figure::ColorWhite, 1 } })] =
-    [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-  {
-    auto const& fmgr = board.fmgr();
-    auto bi_mask_w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
-    auto bi_mask_b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
-    if (bi_mask_w != bi_mask_b) {
-      return { SpecialCaseResult::MAYBE_DRAW, 0 };
-    }
-    else {
-      return { SpecialCaseResult::NO_RESULT, 0 };
-    }
   };
 
   // Rook + 2 Figures vs. Rook + 1 Figure + 0..2 Pawns
