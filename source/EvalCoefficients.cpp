@@ -118,10 +118,10 @@ namespace NEngine
   int EvalCoefficients::pawnsShields_[8][8] = {
     {-20, 32, 30, 15,-10, -20, -20, 0},
     {-20, 35, 30, 0, -15, -20, -20, 0},
-    {-10, 32, 10, 0, -10, -10, -10, 0},
-    {-10, 15,  5, 0, -10, -10, -10, 0},
-    {-10, 15,  5, 0, -10, -10, -10, 0},
-    {-10, 32, 10, 0, -10, -10, -10, 0},
+    {-10, 32, 20, 0, -10, -10, -10, 0},
+    {-10, 15, 15, 0, -10, -10, -10, 0},
+    {-10, 15, 15, 0, -10, -10, -10, 0},
+    {-10, 32, 20, 0, -10, -10, -10, 0},
     {-20, 35, 30, 0, -15, -20, -20, 0},
     {-20, 32, 30, 15,-10, -20, -20, 0}
   };
@@ -131,7 +131,7 @@ namespace NEngine
   };
   int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 10, 6, 1, 0, 0 };
   int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 24, 16, 4, 0 };
-  int EvalCoefficients::opawnAboveKing_[8] = { 0, 40, 25, 10, 0, 0, 0, 0 };
+  int EvalCoefficients::opawnAboveKing_[8] = { 0, 45, 40, 15, 0, 0, 0, 0 };
 
   // rook on open column
   ScoreType32 EvalCoefficients::openRook_[2] = { {20, 8}, {10, 4} };
