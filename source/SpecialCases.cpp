@@ -130,7 +130,7 @@ namespace
     auto cpky = pawn_colored_y_[pawnColor][kingP.y()];
     auto coky = pawn_colored_y_[pawnColor][kingO.y()];
     if (coky >= pcy_max) {
-      if (cpky <= pcy_min) {
+      if (cpky < pcy_min) {
         return { SpecialCaseResult::PROBABLE_DRAW, 0 };
       }
       else {
@@ -1214,6 +1214,30 @@ void SpecialCasesDetector::initCases()
                 [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
           {
             return { SpecialCaseResult::MAYBE_DRAW, 0 };
+          };
+        }
+      }
+    }
+  }
+
+  // Figure vs. Rook  + 0..1 Pawns vs. 2 Rooks
+  for (Figure::Color color : {Figure::ColorBlack, Figure::ColorWhite}) {
+    auto ocolor = Figure::otherColor(color);
+    for (int pawns = 0; pawns <= 1; ++pawns) {
+      for (int knights = 0; knights <= 1; ++knights) {
+        for (int bishops = 0; bishops <= 1; ++bishops) {
+          if (bishops + knights != 1) {
+            continue;
+          }
+          scases_[format({
+                { Figure::TypeRook, color, 1 },
+                { Figure::TypeBishop, color, bishops},
+                { Figure::TypeKnight, color, knights},
+                { Figure::TypePawn, color, pawns },
+                { Figure::TypeRook, ocolor, 2 } })] =
+                [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+          {
+            return { SpecialCaseResult::LIKELY_DRAW, 0 };
           };
         }
       }
