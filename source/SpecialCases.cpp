@@ -115,27 +115,22 @@ namespace
   std::pair<SpecialCaseResult, ScoreType> twoPawnsAndHeavy(Board const& board, Figure::Color pawnColor)
   {
     auto ocolor = Figure::otherColor(pawnColor);
+    Index kingO(board.kingPos(ocolor));
     auto pwmask = board.fmgr().pawn_mask(pawnColor);
     int pcy_max = 0;
-    int pcy_min = 7;
     while (pwmask) {
       auto n = clear_lsb(pwmask);
       Index index(n);
       auto y = pawn_colored_y_[pawnColor][index.y()];
+      auto x = index.x();
+      if (std::abs(x - kingO.x()) > 1) {
+        return { SpecialCaseResult::NO_RESULT, 0 };
+      }
       pcy_max = std::max(y, pcy_max);
-      pcy_min = std::min(y, pcy_min);
     }
-    Index kingP(board.kingPos(pawnColor));
-    Index kingO(board.kingPos(ocolor));
-    auto cpky = pawn_colored_y_[pawnColor][kingP.y()];
-    auto coky = pawn_colored_y_[pawnColor][kingO.y()];
-    if (coky >= pcy_max) {
-      if (cpky < pcy_min) {
-        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
-      }
-      else {
-        return { SpecialCaseResult::MAYBE_DRAW, 0 };
-      }
+    int oky = pawn_colored_y_[pawnColor][kingO.y()];
+    if (pcy_max <= oky) {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
     }
     return { SpecialCaseResult::NO_RESULT, 0 };
   }
