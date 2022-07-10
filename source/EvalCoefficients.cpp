@@ -118,21 +118,21 @@ namespace NEngine
 
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
-    {-20, 32, 30, 15,-10, -20, -20, 0},
+    {-20, 32, 28, 15,-10, -20, -20, 0},
     {-20, 35, 30, 10,-15, -20, -20, 0},
-    {-10, 32, 20, 8, -10, -10, -10, 0},
+    {-10, 32, 15, 8, -10, -10, -10, 0},
     {-10, 15, 15, 6, -10, -10, -10, 0},
     {-10, 15, 15, 6, -10, -10, -10, 0},
-    {-10, 32, 20, 8, -10, -10, -10, 0},
+    {-10, 32, 15, 8, -10, -10, -10, 0},
     {-20, 35, 30, 10,-15, -20, -20, 0},
-    {-20, 32, 30, 15,-10, -20, -20, 0}
+    {-20, 32, 28, 15,-10, -20, -20, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {
     {0, 3, 1, 0, 0, 0, 0, 0},
     {30, 20, 12, 8, 3, 2, 1, 0}
   };
-  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 10, 6, 1, 0, 0 };
-  int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 32, 24, 16, 4, 0 };
+  int EvalCoefficients::opawnsNearKing_[8] = { 0, 20, 15, 9, 4, 1, 0, 0 };
+  int EvalCoefficients::opawnsAttackCoeffs_[8] = { 0, 32, 32, 30, 22, 12, 4, 0 };
   int EvalCoefficients::opawnAboveKing_[8] = { 0, 45, 40, 15, 0, 0, 0, 0 };
 
   // rook on open column
