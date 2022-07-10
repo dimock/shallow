@@ -379,7 +379,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   else {
     num_checkers = std::min(num_checkers, 4);
     check_coeff = EvalCoefficients::kingCheckersCoefficients_[num_checkers];
-    check_coeff += attack_coeff >> 2;
+    check_coeff += attack_coeff;
   }
 
   auto near_oking_att = finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
