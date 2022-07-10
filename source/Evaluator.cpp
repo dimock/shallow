@@ -743,8 +743,10 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
     ScoreType32 pwscore{};
     const auto passmsk = pawnMasks().mask_passed(color, n);
     BitMask attackers = passmsk & opmsk;
-    int oking_dist = distanceCounter().getDistance(board.kingPos(ocolor), pp);
-    int king_dist = distanceCounter().getDistance(board.kingPos(color), pp);
+    int oking_dist = std::min(distanceCounter().getDistance(board.kingPos(ocolor), pp),
+      distanceCounter().getDistance(board.kingPos(ocolor), n1));
+    int king_dist = std::min(distanceCounter().getDistance(board.kingPos(color), pp),
+      distanceCounter().getDistance(board.kingPos(color), n1));
     if (passmsk & opmsk) {
       pwscore = EvalCoefficients::passerPawn2_[cy];
       pwscore += EvalCoefficients::passerPawnPGrds2_[cy] * pguards;
@@ -1042,7 +1044,8 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 
   const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;
-  auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
+  auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) &
+    ~finfo_[ocolor].pawnAttacks_ & ~finfo_[ocolor].multiattack_mask_;
   auto possible_kn_att = finfo_[ocolor].attackedByKnightBrq_ & finfo_[color].knightMoves_ &
     strong_nattacks & ~fmgr.mask(color) & ~finfo_[ocolor].nb_attacked_;
   int possibleNN = 0;

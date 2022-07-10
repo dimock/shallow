@@ -76,12 +76,14 @@ namespace NEngine
   int EvalCoefficients::queenCheckTreatBonus_{ 50 };
   
   int EvalCoefficients::attackedNearKingStrong_{ 35 };
-  int EvalCoefficients::attackedNearKingWeak_{ 20 };
+  int EvalCoefficients::attackedNearKingMedium_{ 20 };
+  int EvalCoefficients::attackedNearKingWeak_{ 8 };
   int EvalCoefficients::attackedNearKingRem_{ 10 };
   int EvalCoefficients::attackedNearKingOther_{ 4 };
   int EvalCoefficients::attackedNearKingPawns_{ 3 };
   int EvalCoefficients::checkNearKingStrong_{ 35 };
-  int EvalCoefficients::checkNearKingWeak_{ 20 };
+  int EvalCoefficients::checkNearKingMedium_{ 20 };
+  int EvalCoefficients::checkNearKingWeak_{ 8 };
   int EvalCoefficients::checkNearKingRem_{ 10 };
   int EvalCoefficients::checkNearKingOther_{ 4 };
   int EvalCoefficients::checkNearKingPawns_{ 3 };
@@ -117,12 +119,12 @@ namespace NEngine
   // new shield
   int EvalCoefficients::pawnsShields_[8][8] = {
     {-20, 32, 30, 15,-10, -20, -20, 0},
-    {-20, 35, 30, 0, -15, -20, -20, 0},
-    {-10, 32, 20, 0, -10, -10, -10, 0},
-    {-10, 15, 15, 0, -10, -10, -10, 0},
-    {-10, 15, 15, 0, -10, -10, -10, 0},
-    {-10, 32, 20, 0, -10, -10, -10, 0},
-    {-20, 35, 30, 0, -15, -20, -20, 0},
+    {-20, 35, 30, 10,-15, -20, -20, 0},
+    {-10, 32, 20, 8, -10, -10, -10, 0},
+    {-10, 15, 15, 6, -10, -10, -10, 0},
+    {-10, 15, 15, 6, -10, -10, -10, 0},
+    {-10, 32, 20, 8, -10, -10, -10, 0},
+    {-20, 35, 30, 10,-15, -20, -20, 0},
     {-20, 32, 30, 15,-10, -20, -20, 0}
   };
   int EvalCoefficients::opawnsShieldAttack_[2][8] = {

@@ -384,14 +384,19 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   auto near_oking_att = finfo_[ocolor].kingAttacks_ & finfo_[color].attack_mask_ & ~fmgr.pawn_mask(color);
   if (near_oking_att) {
-    auto strong_msk = near_oking_att & ~finfo_[ocolor].attack_any_but_king_ & finfo_[color].multiattack_mask_;
-    auto weak_msk = near_oking_att & ~strong_msk & (~finfo_[ocolor].multiattack_mask_ | finfo_[color].multiattack_mask_);
+    auto candidates_msk = near_oking_att & ~finfo_[ocolor].attack_any_but_king_;
+    auto strong_msk = candidates_msk & finfo_[color].multiattack_mask_;
+    auto medium_msk = candidates_msk & ~finfo_[color].multiattack_mask_;;
+    auto weak_msk = near_oking_att & finfo_[ocolor].attack_any_but_king_ & finfo_[color].multiattack_mask_;
     int strongN = pop_count(strong_msk);
+    int mediumN = pop_count(medium_msk);
     int weakN = pop_count(weak_msk);
-    near_oking_att = strong_msk | weak_msk;
+    near_oking_att = candidates_msk | weak_msk;
     auto near_king_attacks = EvalCoefficients::attackedNearKingStrong_ * strongN;
+    near_king_attacks += EvalCoefficients::attackedNearKingMedium_ * mediumN;
     near_king_attacks += EvalCoefficients::attackedNearKingWeak_ * weakN;
     auto near_king_checks = EvalCoefficients::checkNearKingStrong_ * strongN;
+    near_king_checks += EvalCoefficients::checkNearKingMedium_ * mediumN;
     near_king_checks += EvalCoefficients::checkNearKingWeak_ * weakN;
     attack_coeff += near_king_attacks;
     check_coeff += near_king_checks;
