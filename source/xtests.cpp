@@ -272,7 +272,7 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
       t = static_cast<float>(std::abs(diff)) / 100.f;// (std::abs(refEvals[i]) + std::abs(score)) / 2.0f;
       totalError += t;
     }
-    std::cout << i+1 << ": " << score << ", " << refScore << ", " << diff << ", " << std::setprecision(2) << t << std::endl;
+    std::cout << i+1 << ": " << score << ", " << refScore << ", " << diff << ", " << std::setprecision(5) << t << std::endl;
   },
   [](std::string const& err_str)
   {
