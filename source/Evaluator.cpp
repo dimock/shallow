@@ -623,7 +623,7 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   auto const& fmgr = board.fmgr();
   bool const bcolor = color == board.color();
   const Figure::Color ocolor = Figure::otherColor(color);
-  if (fmgr.queens(ocolor)) {
+  if (fmgr.queens(ocolor) || fmgr.rooks(ocolor)) {
     return false;
   }
   const int py = Evaluator::promo_y_[color];
@@ -632,15 +632,6 @@ bool pawnUnstoppable(Board const& board, const Evaluator::FieldsInfo(&finfo)[2],
   int dist_pp = color ? py - pidx.y() : pidx.y() - py;
   bool king_far = oking_dist_pp > dist_pp;
   if (!king_far) {
-    return false;
-  }
-  auto pp_mask = set_mask_bit(pp);
-  auto pp_protected = ~finfo[ocolor].attack_mask_ | (~finfo[ocolor].multiattack_mask_ & finfo[color].attack_mask_);
-  // next move is promotion
-  if (bcolor && dist_pp == 1 && (pp_mask & pp_protected)) {
-    return true;
-  }
-  if (fmgr.allFigures(ocolor) > 2 || fmgr.rooks(ocolor)) {
     return false;
   }
   bool cant_attack_pp = true;
@@ -1101,8 +1092,7 @@ ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
   auto treats = finfo_[color].attack_mask_ & ~finfo_[color].pawnAttacks_;
   auto strong_attacks = ~finfo_[ocolor].attack_mask_ |
     (~finfo_[ocolor].multiattack_mask_ & finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
-  auto medium_attacks = ~strong_attacks &
-    ((finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_) | (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_any_but_king_));
+  auto medium_attacks = ~strong_attacks & (finfo_[color].multiattack_mask_ & finfo_[color].nb_attacked_);
   auto weak_attacks = ~(strong_attacks | medium_attacks);
   ScoreType32 score{};
   score += EvalCoefficients::pawnPressureStrong_ * pop_count(pw_unprotected & treats & strong_attacks);
