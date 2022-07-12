@@ -233,6 +233,11 @@ void saveFen(std::string const& ffname, std::string const& refname)
     });
 }
 
+double logisticFunc(const double value, const double alpha)
+{
+  return 1.0 / (1.0 + std::exp(-alpha * value));
+}
+
 void evaluateFen(std::string const& ffname, std::string const& refname)
 {
   std::vector<int> refEvals;
@@ -247,7 +252,7 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
     }
   }
   std::cout << "N: score, refScore, diff, cp" << std::endl;
-  float totalError = 0.0f;
+  double totalError = 0.0f;
 
   testFen<Board, Move, UndoInfo>(
     ffname,
@@ -264,15 +269,20 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
     ck.generate();
 
     int diff = -100000;
-    float t = 0.0f;
+    double dt = 0.0f;
+    const double alpha = 0.7;
     int refScore = -10000;
     if (i < refEvals.size()) {
       refScore = refEvals[i];
       diff = score - refEvals[i];
-      t = static_cast<float>(std::abs(diff)) / 100.f;// (std::abs(refEvals[i]) + std::abs(score)) / 2.0f;
-      totalError += t;
+      double refV = refScore / 100.0;
+      double scoreV = score / 100.0;
+      double refL = logisticFunc(refV, alpha);
+      double scoreL = logisticFunc(scoreV, alpha);
+      dt = std::abs(refL - scoreL);
+      totalError += dt;
     }
-    std::cout << i+1 << ": " << score << ", " << refScore << ", " << diff << ", " << std::setprecision(5) << t << std::endl;
+    std::cout << i+1 << ": " << score << ", " << refScore << ", " << diff << ", " << std::setprecision(6) << dt << std::endl;
   },
   [](std::string const& err_str)
   {
