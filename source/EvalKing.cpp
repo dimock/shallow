@@ -4,12 +4,13 @@ namespace NEngine
 {
 inline int kingToPawnsScore(const int kpos, BitMask pmsk)
 {
-  int dist = 8;
+    int score = 0;
   while (pmsk) {
     auto n = clear_lsb(pmsk);
-    dist = std::min(dist, distanceCounter().getDistance(kpos, n));
+      auto dist = distanceCounter().getDistance(kpos, n);
+      score -= EvalCoefficients::kingToPawnBonus_[dist];
   }
-  return -EvalCoefficients::kingToPawnBonus_[dist];
+    return score;
 }
 
 inline bool checkQTreat(BitMask q_mask, BitMask ki_mask, BitMask mask_all, BitMask bi_check, BitMask r_check)
@@ -440,11 +441,11 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   q_check &= danger_check_mask;
   p_check &= danger_check_mask;
 
-  //// mat is possible
-  //if((p_check | bi_check | q_check | r_check) && isMatTreat(color, ocolor, finfo_[ocolor].attack_any_but_king_, p_check|q_check, r_check, bi_check)) {
-  //  const bool myMove = (board_->color() == color);
-  //  check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
-  //}
+  // mat is possible
+  if((p_check | bi_check | q_check | r_check) && isMatTreat(color, ocolor, finfo_[ocolor].attack_any_but_king_, p_check|q_check, r_check, bi_check)) {
+    const bool myMove = (board_->color() == color);
+    check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
+  }
 
   // could be attacked through unprotected pawn in front of king
   if (attackTroughPawn) {

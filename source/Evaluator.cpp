@@ -551,13 +551,12 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
 
     auto const protectMask = movesTable().pawnCaps(ocolor, n);
     auto const attackMask = movesTable().pawnCaps(color, n);
-    auto const neighborMask = pawnMasks().mask_neighbor(color, n);
     bool guarded = (protectMask & pmask) != 0ULL;
     bool isolated = (pmask & pawnMasks().mask_isolated(x)) == 0ULL;
     bool opened = ((opmsk| pmask) & fwd_mask) == 0ULL;
     bool backward = !isolated && ((pawnMasks().mask_backward(color, n) & pmask) == 0ULL) &&
       isPawnBackward<color>(idx, pmask, opmsk, fwd_field, finfo[ocolor].pawnAttacks_ & ~finfo[color].pawnAttacks_);
-    bool neighbors = guarded || ((neighborMask & pmask) != 0ULL);
+    bool neighbors = guarded || ((pawnMasks().mask_neighbor(color, n) & pmask) != 0ULL);
     bool doubled = (!guarded) && few_bits_set(pawnMasks().mask_column(x) & pmask) && ((bkw_mask & pmask) != 0ULL);
     bool unprotected = !isolated && !backward && !guarded;
     bool attack = (opmsk & attackMask) != 0ULL;
@@ -575,16 +574,11 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
       if (!(passmsk & opmsk)) {
         info.passers_ |= set_mask_bit(n);
       }
-      else {
-        auto const protcts = protectMask & pmask;
-        auto const attacks = attackMask & opmsk;
-        auto const neighbrs = neighborMask & pmask;
-        auto const stoppers = pawnMasks().mask_attackers(color, n1) & opmsk;
-        auto const attacksN = pop_count(attacks);
-        auto const protctsN = pop_count(protcts);
-        auto const neighbrsN = pop_count(neighbrs);
-        auto const stoppersN = pop_count(stoppers);
-        if (protctsN >= attacksN && neighbrsN >= stoppersN) {
+      else if(auto guards = pawnMasks().mask_backward(color, n) & pmask) {
+        auto attacks = pawnMasks().mask_attackers(color, n) & opmsk;
+        int attacksN = pop_count(attacks);
+        auto guardsN = pop_count(guards);
+        if (guardsN >= attacksN) {
             info.passers_ |= set_mask_bit(n);
         }
       }
@@ -762,6 +756,13 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
 
       if (!(fwd_field & mask_all)) {
+        if (!(fwd_field & o_attack_mask)) {
+          const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
+          pwscore += EvalCoefficients::passerUnstoppable_[cy] * unstoppable;
+          if (!unstoppable && canPromote<color>(board, finfo, mask_all, idx)) {
+            pwscore += EvalCoefficients::passerPawn_[cy];
+          }
+        }
         // all forward fields are not blocked by opponent
         auto fwd_mask = fwd_fields & blockers_mask;
         if (!fwd_mask) {
@@ -1044,8 +1045,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   }
 
   const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;
-  auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) &
-    ~finfo_[ocolor].pawnAttacks_ & ~finfo_[ocolor].multiattack_mask_;
+  auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
   auto possible_kn_att = finfo_[ocolor].attackedByKnightBrq_ & finfo_[color].knightMoves_ &
     strong_nattacks & ~fmgr.mask(color) & ~finfo_[ocolor].nb_attacked_;
   int possibleNN = 0;
