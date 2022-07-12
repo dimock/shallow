@@ -264,6 +264,7 @@ void evaluateFen(std::string const& ffname, std::string const& refname)
     ,nullptr
 #endif
     );
+    std::string fen = toFEN(e.board_);
     auto score = eval(-NEngine::Figure::MatScore, NEngine::Figure::MatScore);
     ChecksGenerator<Board, SMove> ck{ e.board_ };
     ck.generate();

@@ -6,6 +6,7 @@ Helpers.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include "xindex.h"
 #include "MovesGenerator.h"
 #include "locale"
+#include "regex"
 
 #ifdef _USE_LOG
 #include "fstream"
@@ -13,6 +14,8 @@ Helpers.cpp - Copyright (C) 2016 by Dmitry Sultanov
 
 
 // TODO: refactore with std::regex
+static std::regex rfen_{"([a-h1-8pnbrqkPNBRQK/]*)([ \\t]+)([bwKQkqa-h0-9 \\t\\-]*)"};
+static std::regex rafen_{"([bw]+)([ \\t]+)?([\\-KQkq]+)?([ \\t]+)?([\\-a-h\\d]+)?([ \\t]*)?([\\d]*)?([ \\t]*)?([\\d]*)?"};
 
 namespace NEngine
 {
@@ -438,166 +441,95 @@ bool fromFEN(std::string const& i_fen, Board& board)
   std::string fen = i_fen.empty() ? stdFEN_ : i_fen;
   trim(fen);
 
-  const char* s = fen.c_str();
-  int x = 0, y = 7;
-  for(; *s && y >= 0; ++s)
-  {
-    char c = *s;
-    if('/' == c)
-      continue;
-    else if(isdigit(c))
-    {
-      int dx = c - '0';
-      x += dx;
-      if(x > 7)
-      {
-        --y;
-        x = 0;
+  std::smatch m;
+  if (!std::regex_search(fen, m, rfen_) || m.size() < 3) {
+    return false;
+  }
+  std::string fstr = m[1];
+  std::string astr = m[3];
+  auto lines = split(fstr, [](char c) { return c == '/'; });
+  for (int y = 7; y >= 0; --y) {
+    auto const& line = lines[7 - y];
+    int x = 0;
+    for (char c : line) {
+      if (x > 7) {
+        break;
       }
-    }
-    else
-    {
-      Figure::Type  ftype = Figure::TypeNone;
-      Figure::Color color = Figure::ColorBlack;
-
-      if(isupper(c))
-        color = Figure::ColorWhite;
-
-      ftype = Figure::toFtype(toupper(c));
-
-      if(Figure::TypeNone == ftype)
-        return false;
-
-      board.addFigure(color, ftype, Index(x, y));
-
-      if(++x > 7)
-      {
-        --y;
-        x = 0;
+      if (isdigit(c)) {
+        int dx = c - '0';
+        x += dx;
+        continue;
+      }
+      else if (isalpha(c)) {
+        Figure::Type  ftype = Figure::TypeNone;
+        Figure::Color color = Figure::ColorBlack;
+        if (isupper(c))
+          color = Figure::ColorWhite;
+        ftype = Figure::toFtype(toupper(c));
+        if (Figure::TypeNone == ftype)
+          return false;
+        board.addFigure(color, ftype, Index(x, y));
+        ++x;
       }
     }
   }
-
-  int i = 0;
-  for(; *s;)
-  {
-    char c = *s;
-    if(c <= ' ')
+  std::smatch sr;
+  if (!std::regex_search(astr, sr, rafen_) || sr.size() < 10) {
+    return false;
+  }
+  std::string scolor = sr[1];
+  std::string scastle = sr[3];
+  std::string senpass = sr[5];
+  std::string sfifty = sr[7];
+  std::string shalf = sr[9];
+  if (!scolor.empty()) {
+    char c = scolor[0];
+    if ('w' == c)
+      board.setColor(Figure::ColorWhite);
+    else if ('b' == c)
     {
-      ++s;
-      continue;
+      board.setColor(Figure::ColorBlack);
+      board.hashColor();
     }
-
-    if(0 == i) // process move color
-    {
-      if('w' == c)
-        board.setColor(Figure::ColorWhite);
-      else if('b' == c)
-      {
-        board.setColor(Figure::ColorBlack);
-        board.hashColor();
-      }
-      else
-        return false;
-      ++i;
-      ++s;
-      continue;
-    }
-
-    if(1 == i) // process castling possibility
-    {
-      if('-' == c)
-      {
-        ++i;
-        ++s;
-        continue;
-      }
-
-      for(; *s && *s > 32; ++s)
-      {
-        Field fk, fr;
-
-        switch(*s)
-        {
-        case 'k':
-          board.set_castling(Figure::ColorBlack, 0);
-          break;
-
-        case 'K':
-          board.set_castling(Figure::ColorWhite, 0);
-          break;
-
-        case 'q':
-          board.set_castling(Figure::ColorBlack, 1);
-          break;
-
-        case 'Q':
-          board.set_castling(Figure::ColorWhite, 1);
-          break;
-
-        default:
-          return false;
-        }
-      }
-
-      ++i;
-      continue;
-    }
-
-    if(2 == i)
-    {
-      ++i;
-      char cx = *s++;
-      if('-' == cx) // no en-passant pawn
-        continue;
-
-      if(!*s)
-        return false;
-
-      char cy = *s++;
-
-      Index enpassant(cx, cy);
-
-      if(board.color())
-        cy--;
-      else
-        cy++;
-
-      Index pawn_pos(cx, cy);
-
-      const Field fp = board.getField(pawn_pos);
-      if(fp.type() != Figure::TypePawn || fp.color() == board.color())
-        return false;
-
-      board.setEnpassant(enpassant, fp.color());
-      continue;
-    }
-
-    if(3 == i) // fifty moves rule
-    {
-      char str[4];
-      str[0] = 0;
-      for(int j = 0; *s && j < 4; ++j, ++s)
-      {
-        if(*s > 32)
-          str[j] = *s;
-        else
-        {
-          str[j] = 0;
-          break;
-        }
-      }
-
-      board.setFiftyMovesCount(atoi(str));
-      ++i;
-      continue;
-    }
-
-    if(4 == i) // moves counter
-    {
-      board.setMovesCounter(atoi(s));
+  }
+  for (char c : scastle) {
+    switch (c) {
+    case 'k':
+      board.set_castling(Figure::ColorBlack, 0);
+      break;
+    case 'K':
+      board.set_castling(Figure::ColorWhite, 0);
+      break;
+    case 'q':
+      board.set_castling(Figure::ColorBlack, 1);
+      break;
+    case 'Q':
+      board.set_castling(Figure::ColorWhite, 1);
+      break;
+    default:
       break;
     }
+  }
+  if (senpass.size() >= 2 && senpass[0] != '-') {
+    char cx = senpass[0];
+    char cy = senpass[1];
+    Index enpassant(cx, cy);
+    if (board.color())
+      cy--;
+    else
+      cy++;
+    Index pwpos(cx, cy);
+    const Field fp = board.getField(pwpos);
+    if (fp.type() != Figure::TypePawn || fp.color() == board.color()) {
+      return false;
+    }
+    board.setEnpassant(enpassant, fp.color());
+  }
+  if (!sfifty.empty() && isdigit(sfifty[0])) {
+    board.setFiftyMovesCount(std::stoi(sfifty));
+  }
+  if (!shalf.empty() && isdigit(shalf[0])) {
+    board.setMovesCounter(std::stoi(shalf));
   }
 
   if(!board.invalidate())
