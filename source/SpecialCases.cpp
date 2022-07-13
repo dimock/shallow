@@ -89,27 +89,18 @@ namespace
     Index kingO(board.kingPos(ocolor));
     int pcy = pawn_colored_y_[pawnColor][index.y()];
     auto dist_okp = std::abs(kingO.x() - index.x());
-    if (dist_okp < 2 && pawn_colored_y_[pawnColor][kingO.y()] > pcy) {
-      if (pawn_colored_y_[pawnColor][kingP.y()] < pcy) {
-        return { SpecialCaseResult::ALMOST_DRAW, 0 };
+    if (dist_okp <= 1 && pawn_colored_y_[pawnColor][kingO.y()] > pcy) {
+      if (pawn_colored_y_[pawnColor][kingP.y()] <= pcy) {
+        return { SpecialCaseResult::LIKELY_DRAW, 0 };
       }
       else {
         return { SpecialCaseResult::PROBABLE_DRAW, 0 };
       }
     }
-    bool kpk = kpkPassed(board, pawnColor);
-    if (index.x() == 0 || index.x() == 7) {
-      if (!kpk) {
-        return { SpecialCaseResult::ALMOST_DRAW, 0 };
-      }
-      else {
-        return { SpecialCaseResult::PROBABLE_DRAW, 0 };
-      }
+    if (kpkPassed(board, pawnColor)) {
+      return { SpecialCaseResult::NO_RESULT, 0 };
     }
-    if (!kpk) {
-      return { SpecialCaseResult::PROBABLE_DRAW, 0 };
-    }
-    return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    return { (index.x() == 0 || index.x() == 7) ? SpecialCaseResult::PROBABLE_DRAW : SpecialCaseResult::MAYBE_DRAW, 0 };
   }
 
   std::pair<SpecialCaseResult, ScoreType> twoPawnsAndHeavy(Board const& board, Figure::Color pawnColor)
