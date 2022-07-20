@@ -1053,7 +1053,7 @@ void SpecialCasesDetector::initCases()
             { Figure::TypePawn, Figure::otherColor(fc), rp } })] =
             [fp](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
           {
-            return { fp ? SpecialCaseResult::MAYBE_DRAW : SpecialCaseResult::ALMOST_DRAW, 0 };
+            return { fp ? SpecialCaseResult::PROBABLE_DRAW : SpecialCaseResult::ALMOST_DRAW, 0 };
           };
         }
       }
