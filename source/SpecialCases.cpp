@@ -1075,48 +1075,33 @@ void SpecialCasesDetector::initCases()
     }
   }
 
-  // rook+bishop|knight vs. rook+bishop|knight + pawn -> probable draw
-  for (Figure::Type wft : {Figure::TypeKnight, Figure::TypeBishop}) {
-    for (Figure::Type lft : {Figure::TypeKnight, Figure::TypeBishop}) {
-      for (Figure::Color wfc : {Figure::ColorBlack, Figure::ColorWhite}) {
-        auto lfc = Figure::otherColor(wfc);
-        scases_[format({
-          { Figure::TypeRook, wfc, 1 },
-          { wft, wfc, 1 },
-          { Figure::TypePawn, wfc, 1 },
-          { Figure::TypeRook, lfc, 1 },
-          { lft, lfc, 1 } })] =
-          [wfc, lfc](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-        {
-          auto const& fmgr = board.fmgr();
-          if (fmgr.bishop_mask(wfc) && fmgr.bishop_mask(lfc)) {
-            auto bi_mask_w = (fmgr.bishop_mask(wfc) & FiguresCounter::s_whiteMask_) != 0ULL;
-            auto bi_mask_b = (fmgr.bishop_mask(lfc) & FiguresCounter::s_whiteMask_) != 0ULL;
-            if (bi_mask_w == bi_mask_b) {
+  // rook|queen+bishop|knight + 1..2 pawns vs. rook|queen+bishop|knight + 1..2 pawns -> probable draw
+  for (Figure::Type sft : {Figure::TypeRook, Figure::TypeQueen}) {
+    for (Figure::Type ftw : {Figure::TypeKnight, Figure::TypeBishop}) {
+      for (Figure::Type ftb : {Figure::TypeKnight, Figure::TypeBishop}) {
+        for (int npw = 0; npw <= 2; ++npw) {
+          for (int npb = 0; npb <= 2; ++npb) {
+            scases_[format({
+              { sft, Figure::ColorWhite, 1 },
+              { ftw, Figure::ColorWhite, 1 },
+              { Figure::TypePawn, Figure::ColorWhite, npw },
+              { sft, Figure::ColorBlack, 1 },
+              { ftb, Figure::ColorBlack, 1 },
+              { Figure::TypePawn, Figure::ColorBlack, npb } })] =
+              [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
+            {
+              auto const& fmgr = board.fmgr();
+              if (fmgr.bishop_mask(Figure::ColorWhite) && fmgr.bishop_mask(Figure::ColorBlack)) {
+                auto bi_mask_w = (fmgr.bishop_mask(Figure::ColorWhite) & FiguresCounter::s_whiteMask_) != 0ULL;
+                auto bi_mask_b = (fmgr.bishop_mask(Figure::ColorBlack) & FiguresCounter::s_whiteMask_) != 0ULL;
+                if (bi_mask_w != bi_mask_b) {
+                  return { SpecialCaseResult::PROBABLE_DRAW, 0 };
+                }
+              }
               return { SpecialCaseResult::MAYBE_DRAW, 0 };
-            }
+            };
           }
-          return { SpecialCaseResult::LIKELY_DRAW, 0 };
-        };
-      }
-    }
-  }
-
-  // queen+bishop|knight vs. queen+bishop|knight + pawn -> probable draw
-  for (Figure::Type wft : {Figure::TypeKnight, Figure::TypeBishop}) {
-    for (Figure::Type lft : {Figure::TypeKnight, Figure::TypeBishop}) {
-      for (Figure::Color wfc : {Figure::ColorBlack, Figure::ColorWhite}) {
-        auto lfc = Figure::otherColor(wfc);
-        scases_[format({
-          { Figure::TypeQueen, wfc, 1 },
-          { wft, wfc, 1 },
-          { Figure::TypePawn, wfc, 1 },
-          { Figure::TypeQueen, lfc, 1 },
-          { lft, lfc, 1 } })] =
-          [](Board const& board) -> std::pair<SpecialCaseResult, ScoreType>
-        {
-          return { SpecialCaseResult::PROBABLE_DRAW, 0 };
-        };
+        }
       }
     }
   }
@@ -1255,6 +1240,20 @@ void SpecialCasesDetector::initCases()
     }
   }
 
-}
+  // R|Q + pawn vs. R|Q + pawn -> may be draw
+  for (Figure::Type ft : {Figure::TypeRook, Figure::TypeQueen}) {
+    scases_[format({
+        { ft, Figure::ColorWhite, 1 },
+        { Figure::TypePawn, Figure::ColorWhite, 1 },
+        { ft, Figure::ColorBlack, 1 },
+        { Figure::TypePawn, Figure::ColorBlack, 1 }
+      })] =
+      [](Board const& board)->std::pair<SpecialCaseResult, ScoreType>
+    {
+      return { SpecialCaseResult::MAYBE_DRAW, 0 };
+    };
+  }
+
+} // initCases
 
 } // NEngine
