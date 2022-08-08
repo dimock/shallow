@@ -246,7 +246,7 @@ namespace nst
 
 #undef SYNCHRONIZE_LAST_ITER
 #define GENERATE_MAT_CHECK_AFTER_HORIZON
-#undef AT_LEAST_ONE_MAT_MOVE
+#define AT_LEAST_ONE_MAT_MOVE
 
 static const SortValueType CaptureRecentlyBonus = 10;
 static const SortValueType PromotionBonus = 10;
