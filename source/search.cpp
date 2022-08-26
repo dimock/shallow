@@ -940,15 +940,12 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
       hmove = SMove{ true };
     }
 
-    bool omatTreat = false;
     // not initialized yet
     if (score0 == -ScoreMax) {
       score0 = eval(alpha, betta);
-      auto ocolor = Figure::otherColor(board.color());
-      omatTreat = eval.matTreat(ocolor);
     }
 
-    if (score0 >= betta && !omatTreat) {
+    if (score0 >= betta) {
 #ifdef USE_HASH
       putHash(ictx, hmove, alpha, betta, score0, cdepth, ply, false, false, pv);
 #endif
@@ -959,12 +956,8 @@ ScoreType Engine::captures(int ictx, int depth, int ply, ScoreType alpha, ScoreT
     if (score0 > mscore)
       mscore = score0;
     threshold = (int)alpha - (int)mscore - Position_GainThr;
-    if (threshold > Figure::figureWeight_[Figure::TypePawn] && !board.allowNullMove()) {
+    if(threshold > Figure::figureWeight_[Figure::TypePawn] && !board.allowNullMove())
       threshold = Figure::figureWeight_[Figure::TypePawn];
-    }
-    if (threshold < 0) {
-      threshold = 0;
-    }
     
     {
       if (score0 > alpha)

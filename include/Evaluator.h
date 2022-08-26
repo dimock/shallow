@@ -76,7 +76,6 @@ public:
     bool qkingAttack_{};
     bool discoveredCheck_{};
     bool hasMoves_{};
-    bool matTreat_{};
   } finfo_[2];
 
   BitMask moves_masks_[NumOfFields] = {};
@@ -117,8 +116,6 @@ public:
 
   ScoreType operator () (ScoreType alpha, ScoreType betta);
   ScoreType materialScore() const;
-
-  bool matTreat(Figure::Color color) const;
 
   inline void prefetch()
   {

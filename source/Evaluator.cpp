@@ -113,8 +113,6 @@ void Evaluator::prepare()
     const BitMask pawn_msk_w = fmgr.pawn_mask(Figure::ColorWhite);
     const BitMask pawn_msk_b = fmgr.pawn_mask(Figure::ColorBlack);
 
-    finfo_[Figure::ColorBlack].matTreat_ = finfo_[Figure::ColorWhite].matTreat_ = false;
-
     finfo_[Figure::ColorWhite].pawnAttacks_ = ((pawn_msk_w << 9) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_w << 7) & Figure::pawnCutoffMasks_[1]);
     finfo_[Figure::ColorBlack].pawnAttacks_ = ((pawn_msk_b >> 7) & Figure::pawnCutoffMasks_[0]) | ((pawn_msk_b >> 9) & Figure::pawnCutoffMasks_[1]);
 
@@ -245,11 +243,6 @@ ScoreType Evaluator::materialScore() const
   const FiguresManager& fmgr = board_->fmgr();
   auto result = considerColor(fmgr.weight().eval0());
   return result;
-}
-
-bool Evaluator::matTreat(Figure::Color color) const
-{
-  return finfo_[color].matTreat_;
 }
 
 ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
