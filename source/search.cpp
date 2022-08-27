@@ -29,9 +29,9 @@ bool Engine::generateStartposMoves(int ictx)
   auto hitem = hash_.get(board.fmgr().hashCode());
   hitem.decode();
   HKeyType hk = (HKeyType)(board.fmgr().hashCode() >> (sizeof(BitMask) - sizeof(HKeyType)) * 8);
-  if (hitem.hkey_ == hk && hitem.move_ && board.validateMoveExpress(hitem.move_))
+  if (hitem.hkey_ == hk && hitem.move() && board.validateMoveExpress(hitem.move()))
   {
-    hmove = hitem.move_;
+    hmove = hitem.move();
     X_ASSERT(!board.possibleMove(hmove), "move from hash is impossible");
     X_ASSERT(!board.validateMoveBruteforce(hmove), "move from hash is invalid");
   }
@@ -638,8 +638,8 @@ ScoreType Engine::alphaBetta(int ictx, int depth, int ply, ScoreType alpha, Scor
     auto hitem = hash_.get(board.fmgr().hashCode());
     hitem.decode();
     if (hitem.hkey_ == board.fmgr().hashKey()) {
-      (Move&)hmove = hitem.move_;
-      singular = hitem.singular_;
+      (Move&)hmove = hitem.move();
+      singular = hitem.singular();
     }
   }
 #endif

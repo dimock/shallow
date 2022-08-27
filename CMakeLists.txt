@@ -12,7 +12,10 @@ if(UNIX)
   message(status " Executable name: " ${OUTPUT_EXEC_NAME})
   message(status " Git hash commit: " ${VERSION})
   message(status " Executable file name: " ${OUTPUT_EXEC_NAME})
-  
+ 
+  set(Boost_USE_STATIC_LIBS OFF)
+  set(Boost_USE_STATIC_RUNTIME OFF)
+ 
 elseif(MSVC)
   message(status " Setting MSVC flags")
   #log -1 --format=%H
@@ -57,12 +60,12 @@ elseif(MSVC)
 
   add_definitions(-D_SBCS)
 
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+
 endif()
 
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_STATIC_RUNTIME ON)
-
-find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(Boost COMPONENTS filesystem system REQUIRED)
 if(Boost_FOUND)
     message(STATUS "Boost success!")
 endif()
@@ -78,9 +81,12 @@ file(GLOB_RECURSE SOURCE_FILES source/*)
 file(GLOB_RECURSE INCLUDE_FILES include/*)
 
 add_executable(${OUTPUT_EXEC_NAME} ${SOURCE_FILES} ${INCLUDE_FILES})
-target_link_libraries(${OUTPUT_EXEC_NAME})
-set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASE ${MSVC_TARGET_NAME_POSTFIX})
-set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_DEBUG ${MSVC_TARGET_NAME_DEBUG})
-set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASEDEBUGINFO ${MSVC_TARGET_NAME_RELEASDEBUGINFO})
-set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASESPECIAL ${MSVC_TARGET_NAME_RELEASESPECIAL})
-set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASEDEPLOY ${MSVC_TARGET_NAME_RELEASEDEPLOY})
+target_link_libraries( ${OUTPUT_EXEC_NAME} ${Boost_FILESYSTEM_LIBRARY}  ${Boost_SYSTEM_LIBRARY} )
+
+if(MSVC)
+  set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASE ${MSVC_TARGET_NAME_POSTFIX})
+  set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_DEBUG ${MSVC_TARGET_NAME_DEBUG})
+  set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASEDEBUGINFO ${MSVC_TARGET_NAME_RELEASDEBUGINFO})
+  set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASESPECIAL ${MSVC_TARGET_NAME_RELEASESPECIAL})
+  set_target_properties(${OUTPUT_EXEC_NAME} PROPERTIES OUTPUT_NAME_RELEASEDEPLOY ${MSVC_TARGET_NAME_RELEASEDEPLOY})
+endif()

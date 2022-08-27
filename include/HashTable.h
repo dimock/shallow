@@ -18,8 +18,8 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
 
   HKeyType   hkey_{};
 
-  union {
-    struct {
+  union _UN {
+    struct _SR {
       ScoreType  score_;
       int16      depth_ : 11,
                  xflag_ : 2,
@@ -27,39 +27,59 @@ ALIGN_MSC(2) struct ALIGN_GCC(2) HItem
                  singular_ : 1,
                  pv_ : 1;
       Move       move_;
-    };
+    } _s;
     struct {
       uint32 tail_[2];
     };
-  };
+  } _v;
 
   HItem() {}
 
   inline HItem(HKeyType hkey, ScoreType score, int depth, Flag xflag, const Move move, bool threat, bool singular, bool pv)
   {
     hkey_ = hkey;
-    score_ = score;
-    depth_ = depth;
-    xflag_ = xflag;
-    move_ = move;
-    threat_ = threat;
-    singular_ = singular;
-    pv_ = pv;
+    _v._s.score_ = score;
+    _v._s.depth_ = depth;
+    _v._s.xflag_ = xflag;
+    _v._s.move_ = move;
+    _v._s.threat_ = threat;
+    _v._s.singular_ = singular;
+    _v._s.pv_ = pv;
   }
 
   void encode()
   {
-    hkey_ ^= tail_[1];
+    hkey_ ^= _v.tail_[1];
   }
 
   void decode()
   {
-    hkey_ ^= tail_[1];
+    hkey_ ^= _v.tail_[1];
   }
 
   Flag flag() const
   {
-    return (Flag)(((uint8)xflag_) & 3);
+    return (Flag)(((uint8)_v._s.xflag_) & 3);
+  }
+
+  Move move() const
+  {
+    return _v._s.move_;
+  }
+
+  ScoreType score() const
+  {
+    return _v._s.score_;
+  }
+
+  int16 depth() const
+  {
+    return _v._s.depth_;
+  }
+
+  int16 singular() const
+  {
+    return _v._s.singular_;
   }
 };
 #pragma pack(pop)
@@ -140,7 +160,7 @@ public:
     return (bool)ofs;
   }
 
-#ifndef __ANDROID__
+#if !(defined __ANDROID__ || defined __GNUC__)
   inline void prefetch(const uint64 code)
   {
     _mm_prefetch((char*)&buffer_[code & szMask_], _MM_HINT_T0);

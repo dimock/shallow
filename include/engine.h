@@ -225,13 +225,13 @@ private:
     hitem.encode();
     if (hitem.hkey_ == board.fmgr().hashKey())
     {
-      singular = hitem.singular_;
+      singular = hitem.singular();
       auto hflag = hitem.flag();
       if (!pv && board.fmgr().weight(Figure::ColorBlack).eval32_ && board.fmgr().weight(Figure::ColorWhite).eval32_)
       {
-        if (hflag != NoFlag && (int)hitem.depth_ >= depth && ply > 0)
+        if (hflag != NoFlag && (int)hitem.depth() >= depth && ply > 0)
         {
-          hscore = hitem.score_;
+          hscore = hitem.score();
           X_ASSERT((hscore > 32760 || hscore < -32760), "invalid value in hash");
           if (hscore >= Figure::MatScore - MaxPly)
             hscore = hscore - ply;
@@ -244,8 +244,8 @@ private:
             return Alpha;
         }
       }
-      if (hitem.move_ && board.validateMoveExpress(hitem.move_)) {
-        hmove = hitem.move_;
+      if (hitem.move() && board.validateMoveExpress(hitem.move())) {
+        hmove = hitem.move();
         return AlphaBetta;
       }
     }
@@ -281,7 +281,7 @@ private:
       hitem.decode();
       if (
         (hitem.hkey_ != hk) ||
-        (depth > hitem.depth_) ||
+        (depth > hitem.depth()) ||
         (AlphaBetta == flag)
         )
       {
