@@ -20,7 +20,7 @@ elseif(MSVC)
   execute_process(COMMAND "git.exe" "log" "-1" "--format=%H" WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE FULLHASHCOMMIT OUTPUT_STRIP_TRAILING_WHITESPACE)
   message(status " Commit: " ${FULLHASHCOMMIT})
   string(SUBSTRING ${FULLHASHCOMMIT} 0 4 HASHCOMMIT)
-  execute_process(COMMAND "git.exe" "describe" "--abbrev=0" WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE FULLTAG OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND "git.exe" "describe" "--tags" "--abbrev=0" WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE FULLTAG OUTPUT_STRIP_TRAILING_WHITESPACE)
   message(status " Version: " ${FULLTAG})
   
   if (FULLTAG MATCHES "^([a-zA-Z]*)([0-9])([.]*)$")
