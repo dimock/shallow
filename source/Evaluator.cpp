@@ -12,6 +12,25 @@
 #include "xalgorithm.h"
 #include "SpecialCases.h"
 
+#define EVALUATE_KNIGHTS
+#define EVALUATE_BISHOPS
+#define EVALUATE_ROOKS
+#define EVALUATE_QUEENS
+#define EVALUATE_MOBILITY
+
+#define  EVALUATE_KING_PRESSURE
+#define  EVALUATE_ATTACKS
+#define  EVALUATE_PAWN_ATTACKS
+#define  EVALUATE_PASSER_PAWNS
+
+#define EVALUATE_KING_SAFETY
+#define EVALUATE_ISOLATED_PAWN
+#define macro() EVALUATE_BACKWARD_PAWN
+#define EVALUATE_DOUBLED_PAWN
+#define EVALUATE_NEIGHBORS_PAWN
+#define EVALUATE_UNPROTECTED_PAWN
+#define EVALUATE_ATTACKING_PAWN
+
 namespace NEngine
 {
 
@@ -336,10 +355,23 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   prepareAttacksMasks();
 
-  auto score_nbrq = evaluateKnights();
+  ScoreType32 score_nbrq;
+#ifdef EVALUATE_KNIGHTS
+  score_nbrq = evaluateKnights();
+#endif
+
+#ifdef EVALUATE_BISHOPS
   score_nbrq += evaluateBishops();
+#endif
+
+#ifdef EVALUATE_ROOKS
   score_nbrq += evaluateRook();
+#endif
+  
+#ifdef EVALUATE_QUEENS
   score_nbrq += evaluateQueens();
+#endif
+  
   score32 += score_nbrq;
   
   if (detectStalemate()) {
@@ -348,33 +380,45 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   auto score_mob = finfo_[Figure::ColorWhite].score_mob_;
   score_mob -= finfo_[Figure::ColorBlack].score_mob_;
+
+#ifdef EVALUATE_MOBILITY
   score32 += score_mob;
+#endif
 
   ScoreType32 scoreKingW = hashedScore.kscores_[Figure::ColorWhite];
   ScoreType32 scoreKingB = hashedScore.kscores_[Figure::ColorBlack];
+
+#ifdef EVALUATE_KING_PRESSURE
   if (phaseInfo.phase_ != GamePhase::EndGame) {
     scoreKingW -= evaluateKingPressure(Figure::ColorBlack, hashedScore.kscores_[Figure::ColorWhite].eval0());
     scoreKingB -= evaluateKingPressure(Figure::ColorWhite, hashedScore.kscores_[Figure::ColorBlack].eval0());
   }
+#endif
+
   ScoreType32 scoreKing = scoreKingW - scoreKingB;
   score32 += scoreKing;
 
+#ifdef EVALUATE_ATTACKS
   auto scoreAttacks = evaluateAttacks(Figure::ColorWhite);
   scoreAttacks -= evaluateAttacks(Figure::ColorBlack);
   score32 += scoreAttacks;
+#endif
 
+#ifdef EVALUATE_PAWN_ATTACKS
   auto scorePP = evaluatePawnsAttacks(Figure::ColorWhite);
   scorePP -= evaluatePawnsAttacks(Figure::ColorBlack);
   score32 += scorePP;
+#endif
 
+#ifdef EVALUATE_PASSER_PAWNS
   auto scorePassers = passersEvaluation(hashedScore);
-
   score32 += scorePassers;
+#endif
 
   auto result = considerColor(lipolScore(score32, phaseInfo));
   result *= scoreMultip;
   result >>= scoreOffset;
-  result += 5;
+//  result += 5;
 
 #ifdef USE_EVAL_HASH_ALL
   if (heval) {
@@ -441,10 +485,14 @@ Evaluator::PasserInfo Evaluator::hashedEvaluation()
 #endif
 
   PasserInfo info = evaluatePawns();
-  auto kscorew = evaluateKingSafetyW();
-  auto kscoreb = evaluateKingSafetyB();
+
+  ScoreType32  kscorew, kscoreb;
+#ifdef EVALUATE_KING_SAFETY
+  kscorew = evaluateKingSafetyW();
+  kscoreb = evaluateKingSafetyB();
   info.kscores_[Figure::ColorWhite] = kscorew;
   info.kscores_[Figure::ColorBlack] = kscoreb;
+#endif
 
 #ifdef USE_EVAL_HASH_PW
   heval->hkey_ = hkey;
@@ -561,12 +609,29 @@ Evaluator::PasserInfo evaluatePawn(FiguresManager const& fmgr, Evaluator::Fields
     bool unprotected = !isolated && !backward && !guarded;
     bool attack = (opmsk & attackMask) != 0ULL;
 
+#ifdef EVALUATE_ISOLATED_PAWN
     info.pwscore_ += EvalCoefficients::isolatedPawn_[opened] * isolated;
+#endif
+
+#ifdef EVALUATE_BACKWARD_PAWN
     info.pwscore_ += EvalCoefficients::backwardPawn_[opened] * backward;
+#endif
+
+#ifdef EVALUATE_DOUBLED_PAWN
     info.pwscore_ += EvalCoefficients::doubledPawn_ * doubled;
+#endif
+
+#ifdef EVALUATE_UNPROTECTED_PAWN
     info.pwscore_ += EvalCoefficients::unprotectedPawn_ * unprotected;
+#endif
+
+#ifdef EVALUATE_NEIGHBORS_PAWN
     info.pwscore_ += EvalCoefficients::hasneighborPawn_ * neighbors;
+#endif
+
+#ifdef EVALUATE_ATTACKING_PAWN
     info.pwscore_ += EvalCoefficients::attackingPawn_[cy] * attack;
+#endif
 
     // passer pawn - save position for further usage
     if (!(fwd_mask & (opmsk | pmask))) {
