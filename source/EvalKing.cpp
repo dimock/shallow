@@ -1,5 +1,10 @@
 #include "Evaluator.h"
 
+#define KING_PAWN_SHIELD
+#undef KING_PAWN_SHIELD_ATTACK
+#undef KING_PAWN_NEAR_KING
+#undef KING_PAWN_ABOVE_KING
+
 namespace NEngine
 {
 inline int kingToPawnsScore(const int kpos, BitMask pmsk)
@@ -116,15 +121,26 @@ int evaluateKingSafety<Figure::ColorWhite>(FiguresManager const& fmgr, BitMask c
       canAttack = (betweenMasks().between(o, a) & pawns_mask) == 0ULL;
       odist = opy - ay;
     }
+#ifdef KING_PAWN_SHIELD
     score += EvalCoefficients::pawnsShields_[x][py];
+#endif
+
+#ifdef KING_PAWN_SHIELD_ATTACK
     oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
+#endif
+
+#ifdef KING_PAWN_NEAR_KING
     oscore += EvalCoefficients::opawnsNearKing_[opy];
+#endif
   }
+  
+#ifdef KING_PAWN_ABOVE_KING
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
     int oy = Index(_lsb64(kifwdmsk)).y();
     score += EvalCoefficients::opawnAboveKing_[oy];
   }
+#endif
   score -= oscore;
   return score;
 }
@@ -181,15 +197,27 @@ int evaluateKingSafety<Figure::ColorBlack>(FiguresManager const& fmgr, BitMask c
       canAttack = (betweenMasks().between(o, a) & pawns_mask) == 0ULL;
       odist = opy - ay;
     }
+
+#ifdef KING_PAWN_SHIELD
     score += EvalCoefficients::pawnsShields_[x][py];
+#endif
+
+#ifdef KING_PAWN_SHIELD_ATTACK
     oscore += (EvalCoefficients::opawnsShieldAttack_[canAttack][odist] * EvalCoefficients::opawnsAttackCoeffs_[opy]) >> 5;
+#endif
+
+#ifdef KING_PAWN_NEAR_KING
     oscore += EvalCoefficients::opawnsNearKing_[opy];
+#endif
   }
+
+#ifdef KING_PAWN_ABOVE_KING
   auto kifwdmsk = set_mask_bit(Index(kx, ky1)) & opawns_mask & ~pawnAttacks;
   if (kifwdmsk) {
     int oy = 7 - Index(_msb64(kifwdmsk)).y();
     score += EvalCoefficients::opawnAboveKing_[oy];
   }
+#endif
   score -= oscore;
   return score;
 }
