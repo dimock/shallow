@@ -21,7 +21,10 @@
 #undef  EVALUATE_KING_PRESSURE
 #undef  EVALUATE_ATTACKS
 #undef  EVALUATE_PAWN_ATTACKS
-#undef  EVALUATE_PASSER_PAWNS
+
+#define EVALUATE_PASSER_PAWNS
+#undef  EVALUATE_PASSER_PAWNS_EXTENDED
+#undef  EVALUATE_PASSER_PAWNS_UNSTOPPABLE
 
 #define EVALUATE_ISOLATED_PAWN
 #define EVALUATE_DOUBLED_PAWN
@@ -800,18 +803,25 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       distanceCounter().getDistance(board.kingPos(color), n1));
     if (passmsk & opmsk) {
       pwscore = EvalCoefficients::passerPawn2_[cy];
+
+#ifdef EVALUATE_PASSER_PAWNS_EXTENDED
       pwscore += EvalCoefficients::passerPawnPGrds2_[cy] * pguards;
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus2_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus2_[cy] * king_dist;
+#endif
     }
     else {
       pwscore = EvalCoefficients::passerPawn_[cy];
+
+#ifdef EVALUATE_PASSER_PAWNS_EXTENDED
       pwscore += EvalCoefficients::passerPawnPGrds_[cy] * pguards;
       pwscore +=
         EvalCoefficients::okingToPasserDistanceBonus_[cy] * oking_dist -
         EvalCoefficients::kingToPasserDistanceBonus_[cy] * king_dist;
+#endif
 
+#ifdef EVALUATE_PASSER_PAWNS_UNSTOPPABLE
       if (!(fwd_field & mask_all)) {
         if (!(fwd_field & o_attack_mask)) {
           const bool unstoppable = pawnUnstoppable<color>(board, finfo, mask_all, idx);
@@ -838,6 +848,7 @@ Evaluator::PasserInfo passerEvaluation(Board const& board, const Evaluator::Fiel
       else if (fwd_field & fmgr.mask(color)) {
         pwscore += EvalCoefficients::passerPawnMyBefore_[cy];
       }
+#endif
     }
 
     pinfo.pwscore_ += pwscore;
