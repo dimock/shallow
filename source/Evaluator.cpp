@@ -12,6 +12,8 @@
 #include "xalgorithm.h"
 #include "SpecialCases.h"
 
+#undef EVALUATE_MATERIAL_DIFFERENCE
+
 #define EVALUATE_KNIGHTS
 #define EVALUATE_BISHOPS
 #define EVALUATE_ROOKS
@@ -325,8 +327,11 @@ ScoreType Evaluator::evaluate(ScoreType alpha, ScoreType betta)
 
   ScoreType32 score32 = fmgr.weight();
   score32 += fmgr.score();
+
+#ifdef EVALUATE_MATERIAL_DIFFERENCE
   auto mtdiff = evaluateMaterialDiff();
   score32 += mtdiff;
+#endif
 
   /// use lazy evaluation
 #ifdef USE_LAZY_EVAL
