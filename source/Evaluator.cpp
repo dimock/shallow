@@ -12,7 +12,17 @@
 #include "xalgorithm.h"
 #include "SpecialCases.h"
 
-#undef EVALUATE_MATERIAL_DIFFERENCE
+#define EVALUATE_MATERIAL_DIFFERENCE
+
+#undef DOUBLE_BISHOP_BONUS
+#undef DOUBLE_KNIGHT_BONUS
+#define TWO_BISHOPS_DIFFERENCE_BONUS
+#undef TWO_KNIGHTS_DIFFERENCE_BONUS
+#undef TWO_ROOKS_AS_QUEEN
+#undef TWO_FIGURES_WITH_ROOK_BONUS
+#undef FIGURE_WITH_PAWN_BONUS
+#undef FIGURE_WITH_ROOK_BONUS
+
 
 #define EVALUATE_KNIGHTS
 #define EVALUATE_BISHOPS
@@ -914,6 +924,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
   int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
   bool twoBishops = false;
 
+#ifdef DOUBLE_BISHOP_BONUS
   // bonus for double bishop
   if (fmgr.bishops(Figure::ColorWhite) >= 2)
   {
@@ -925,7 +936,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int pawnsN = fmgr.pawns(Figure::ColorBlack);
     score -= EvalCoefficients::doubleBishopBonus_[pawnsN];
   }
+#endif
 
+#ifdef DOUBLE_KNIGHT_BONUS
   // bonus for double knight
   if (fmgr.knights(Figure::ColorWhite) >= 2)
   {
@@ -937,7 +950,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int pawnsN = fmgr.pawns(Figure::ColorBlack);
     score -= EvalCoefficients::doubleKnightBonus_[pawnsN];
   }
+#endif
 
+#ifdef TWO_BISHOPS_DIFFERENCE_BONUS
   // bonus for 2 bishops difference
   if (bishopsDiff >= 2 || bishopsDiff <= -2)
   {
@@ -947,7 +962,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     twoBishops = true;
     score += EvalCoefficients::twoBishopsBonus_[pawnsN] * bdiff;
   }
+#endif
 
+#ifdef TWO_KNIGHTS_DIFFERENCE_BONUS
   // bonus for 2 knights difference
   if (knightsDiff >= 2 || knightsDiff <= -2)
   {
@@ -956,7 +973,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int pawnsN = fmgr.pawns(ncolor);
     score += EvalCoefficients::twoKnightsBonus_[pawnsN] * ndiff;
   }
+#endif
 
+#ifdef FIGURE_WITH_PAWN_BONUS
   // Figure vs. Pawns
   if (!rooksDiff && !(twoBishops && figuresDiff*bishopsDiff > 0) && figuresDiff)
   {
@@ -965,13 +984,17 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     int fdiff = sign(figuresDiff);
     score += EvalCoefficients::figureAgainstPawnBonus_[pawnsN] * fdiff;
   }
+#endif
 
+#ifdef TWO_ROOKS_AS_QUEEN
   // Then evaluate 2 rooks as 1 queen
   if (queensDiff*rooksDiff < 0) {
     rooksDiff += 2 * queensDiff;
     queensDiff = 0;
   }
+#endif
 
+#ifdef FIGURE_WITH_ROOK_BONUS
   // Knight|Bishop vs. Rook
   if (rooksDiff*figuresDiff == -1 && bishopsDiff != 2*figuresDiff)
   {
@@ -981,6 +1004,9 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     const int fpawnsN = fmgr.pawns(fcolor);
     score -= EvalCoefficients::rookAgainstFigureBonus_[rpawnsN][fpawnsN] * rooksDiff;
   }
+#endif
+
+#ifdef TWO_FIGURES_WITH_ROOK_BONUS
   // 2 figures vs. Rook
   if ((rooksDiff*figuresDiff <= -2) && (rooksDiff == 1 || rooksDiff == -1))
   {
@@ -996,6 +1022,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
     if(fmgr.bishops(fcolor) >= 2)
       score -= EvalCoefficients::doubleBishopBonus_[fpawnsN] * rooksDiff;
   }
+#endif
 
 #ifdef USE_EVAL_HASH_MD
     heval->hkey_ = hkey;
