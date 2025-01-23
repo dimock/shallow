@@ -14,14 +14,14 @@
 
 #define EVALUATE_MATERIAL_DIFFERENCE
 
-#undef DOUBLE_BISHOP_BONUS
+#define DOUBLE_BISHOP_BONUS
 #define DOUBLE_KNIGHT_BONUS
-#undef TWO_BISHOPS_DIFFERENCE_BONUS
-#undef TWO_KNIGHTS_DIFFERENCE_BONUS
+#define TWO_BISHOPS_DIFFERENCE_BONUS
+#define TWO_KNIGHTS_DIFFERENCE_BONUS
 #undef TWO_ROOKS_AS_QUEEN
-#undef TWO_FIGURES_WITH_ROOK_BONUS
-#undef FIGURE_WITH_PAWN_BONUS
-#undef FIGURE_WITH_ROOK_BONUS
+#define TWO_FIGURES_WITH_ROOK_BONUS
+#define FIGURE_WITH_PAWN_BONUS
+#define FIGURE_WITH_ROOK_BONUS
 
 
 #define EVALUATE_KNIGHTS
@@ -977,7 +977,7 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
 
 #ifdef FIGURE_WITH_PAWN_BONUS
   // Figure vs. Pawns
-  if (!rooksDiff /*&& !(twoBishops && figuresDiff*bishopsDiff > 0)*/ && figuresDiff)
+  if (!rooksDiff && !(twoBishops && figuresDiff*bishopsDiff > 0) && figuresDiff)
   {
     Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
     const int pawnsN = fmgr.pawns(fcolor);
