@@ -213,7 +213,7 @@ namespace nst
 
 #define SORT_MOVES_0_HIST
 #define EXTEND_CHECK_SEE_ONLY
-#undef USE_LAZY_EVAL
+#define USE_LAZY_EVAL
 
 #ifndef PROCESS_MOVES_SEQ
 

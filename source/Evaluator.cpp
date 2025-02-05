@@ -47,7 +47,7 @@
 #define EVALUATE_UNPROTECTED_PAWN
 #define EVALUATE_ATTACKING_PAWN
 
-#define RESULT_PLUS_5
+#undef RESULT_PLUS_5
 
 namespace NEngine
 {
