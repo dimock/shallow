@@ -1,7 +1,7 @@
 #include "Evaluator.h"
 
 #define KING_PAWN_SHIELD
-#define KING_PAWN_SHIELD_ATTACK
+#undef KING_PAWN_SHIELD_ATTACK
 #define KING_PAWN_NEAR_KING
 #define KING_PAWN_ABOVE_KING
 
