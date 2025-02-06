@@ -2,8 +2,8 @@
 
 #define KING_PAWN_SHIELD
 #define KING_PAWN_SHIELD_ATTACK
-#undef KING_PAWN_NEAR_KING
-#define KING_PAWN_ABOVE_KING
+#define KING_PAWN_NEAR_KING
+#undef KING_PAWN_ABOVE_KING
 
 namespace NEngine
 {
