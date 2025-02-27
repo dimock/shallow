@@ -5,6 +5,11 @@
 #define KING_PAWN_NEAR_KING
 #define KING_PAWN_ABOVE_KING
 
+#define KING_MAT_TREAT_POSSIBILITY
+#define QUEEN_CHECK_TREAT
+#define ATTACK_THROUGH_PAWN
+
+
 namespace NEngine
 {
 inline int kingToPawnsScore(const int kpos, BitMask pmsk)
@@ -470,15 +475,20 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   p_check &= danger_check_mask;
 
   // mat is possible
+#ifdef KING_MAT_TREAT_POSSIBILITY
   if((p_check | bi_check | q_check | r_check) && isMatTreat(color, ocolor, finfo_[ocolor].attack_any_but_king_, p_check|q_check, r_check, bi_check)) {
     const bool myMove = (board_->color() == color);
     check_coeff += EvalCoefficients::possibleMatTreat_ + EvalCoefficients::possibleMatTreatMyMove_ * myMove;
   }
+#endif
 
   // could be attacked through unprotected pawn in front of king
+#ifdef ATTACK_THROUGH_PAWN
   if (attackTroughPawn) {
     attack_coeff += EvalCoefficients::attackThroughPawn_;
   }
+#endif
+
   auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
   score >>= 5;
 
@@ -492,10 +502,12 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
   auto attacks_king_side = general_pressure_mask & Figure::quaterBoard_[ocolor][king_side];
   int general_score = pop_count(attacks_king_side) * EvalCoefficients::generalKingPressure_;
 
+#ifdef QUEEN_CHECK_TREAT
   if (bi_check || r_check) {
     bool b = checkQTreat(fmgr.queen_mask(ocolor), fmgr.king_mask(ocolor), mask_all_, bi_check, r_check);
     score += EvalCoefficients::queenCheckTreatBonus_ * b;
   }
+#endif
 
   score += general_score;
 
