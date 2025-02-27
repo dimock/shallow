@@ -30,7 +30,7 @@
 #define EVALUATE_QUEENS
 #define EVALUATE_MOBILITY
 
-#undef EVALUATE_KING_PRESSURE
+#define EVALUATE_KING_PRESSURE
 #define EVALUATE_ATTACKS
 #define EVALUATE_PAWN_ATTACKS
 
@@ -40,6 +40,10 @@
 
 #define EVALUATE_ISOLATED_PAWN
 #define EVALUATE_DOUBLED_PAWN
+
+#undef EVALUATE_POSSIBLE_KNIGHT_ATTACKS
+#define EVALUATE_MULTIATTACKS
+#define EVALUATE_DISCOVERED_ATTACKS
 
 #define EVALUATE_KING_SAFETY
 #define EVALUATE_BACKWARD_PAWN
@@ -1160,6 +1164,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackScore += (EvalCoefficients::attackedByKingBonus_ * ktreatsN) >> 2;
   }
 
+#ifdef EVALUATE_POSSIBLE_KNIGHT_ATTACKS
   const bool knight_protects = finfo_[color].knightMoves_ & fmgr.mask(color) & ~finfo_[color].multiattack_mask_ & finfo_[ocolor].attack_mask_;
   auto strong_nattacks = (~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_) & ~finfo_[ocolor].pawnAttacks_;
   auto possible_kn_att = finfo_[ocolor].attackedByKnightBrq_ & finfo_[color].knightMoves_ &
@@ -1182,10 +1187,13 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   possibleNN &= 3;
   attackScore += (EvalCoefficients::possibleKnightAttack_[possibleNN]) >> ((int)knight_protects);
   attackScore += EvalCoefficients::knightAttack_ * with_check;
+#endif
 
+#ifdef EVALUATE_MULTIATTACKS
   if (attackedN > 1) {
     attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
   }
+#endif
 
   //if (auto blocked_mask = (finfo_[ocolor].blockedFigures_ | finfo_[ocolor].pinnedFigures_)) {
   //  auto attacks_mask = (finfo_[color].attack_mask_ & ~finfo_[ocolor].attack_mask_) |
@@ -1197,9 +1205,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   //  attackedN += blockedN;
   //}
 
+#ifdef EVALUATE_DISCOVERED_ATTACKS
   if (finfo_[color].discoveredMoves_ & finfo_[ocolor].nbrq_mask_) {
     attackScore += EvalCoefficients::discoveredAttackBonus_;
   }
+#endif
 
   //if (finfo_[ocolor].attackedThrough_) {
   //  attackScore += EvalCoefficients::attackedThroughBonus_;
