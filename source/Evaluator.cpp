@@ -33,6 +33,7 @@
 #define EVALUATE_KING_PRESSURE
 #define EVALUATE_ATTACKS
 #define EVALUATE_PAWN_ATTACKS
+#undef EVALUATE_PAWN_BISHOP_TREAT
 
 #define EVALUATE_PASSER_PAWNS
 #define EVALUATE_PASSER_PAWNS_EXTENDED
@@ -43,7 +44,7 @@
 
 #define EVALUATE_POSSIBLE_KNIGHT_ATTACKS
 #define EVALUATE_MULTIATTACKS
-#undef EVALUATE_DISCOVERED_ATTACKS
+#define EVALUATE_DISCOVERED_ATTACKS
 
 #define EVALUATE_KING_SAFETY
 #define EVALUATE_BACKWARD_PAWN
@@ -1235,6 +1236,7 @@ ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
   score += EvalCoefficients::pawnPressureWeak_ * pop_count(pw_unprotected & treats & weak_attacks);
   
   // bishop treat
+#ifdef EVALUATE_PAWN_BISHOP_TREAT
   if (fmgr.bishops(color))
   {
     auto bi_mask_w = fmgr.bishop_mask(color) &  FiguresCounter::s_whiteMask_;
@@ -1244,6 +1246,7 @@ ScoreType32 Evaluator::evaluatePawnsAttacks(Figure::Color color)
     if (bi_mask_b)
       score += EvalCoefficients::pawnBishopTreat_ * pop_count((pw_unprotected & ~FiguresCounter::s_whiteMask_) & ~treats);
   }
+#endif
   return score;
 }
 
