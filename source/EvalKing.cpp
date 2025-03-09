@@ -7,7 +7,7 @@
 
 #define KING_MAT_TREAT_POSSIBILITY
 #define QUEEN_CHECK_TREAT
-#undef ATTACK_THROUGH_PAWN
+#define ATTACK_THROUGH_PAWN
 
 
 namespace NEngine
