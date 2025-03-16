@@ -6,7 +6,7 @@
 #undef KING_PAWN_ABOVE_KING
 
 #define KING_MAT_TREAT_POSSIBILITY
-#undef QUEEN_CHECK_TREAT
+#define QUEEN_CHECK_TREAT
 #undef ATTACK_THROUGH_PAWN
 
 
@@ -374,15 +374,18 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     }
   }
 
-  bool attackTroughPawn = false;
+#ifdef ATTACK_THROUGH_PAWN
+  bool attackThroughPawn = false;
   if (!finfo_[color].discoveredCheck_) {
     auto attacked = finfo_[color].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_;
     auto mask_opw_att = fmgr.pawn_mask(ocolor) & attacked;
-    while (mask_opw_att && !attackTroughPawn) {
+    while (mask_opw_att && !attackThroughPawn) {
       auto n = clear_lsb(mask_opw_att);      
-      attackTroughPawn = board_->discoveredCheck(n, mask_all_, color, oki_pos);
+      attackThroughPawn = board_->discoveredCheck(n, mask_all_, color, oki_pos);
     }
   }
+#endif
+
   // promotion check
   auto pfwd = finfo_[color].pawns_fwd_ & Figure::pawnPromoteMasks_[color] & (~finfo_[ocolor].attack_mask_ | finfo_[color].pawnAttacks_);
   auto cfwd = finfo_[color].pawnAttacks_ & Figure::pawnPromoteMasks_[color] & fmgr.mask(ocolor);
@@ -484,7 +487,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   // could be attacked through unprotected pawn in front of king
 #ifdef ATTACK_THROUGH_PAWN
-  if (attackTroughPawn) {
+  if (attackThroughPawn) {
     attack_coeff += EvalCoefficients::attackThroughPawn_;
   }
 #endif
