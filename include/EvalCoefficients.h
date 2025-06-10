@@ -159,11 +159,23 @@ struct EvalCoefficients
   static int closeToPromotion_[8];
   static int kingToPawnBonus_[8];
 
-  // mobility
-  static ScoreType32 knightMobility_[16];
-  static ScoreType32 bishopMobility_[16];
-  static ScoreType32 rookMobility_[16];
-  static ScoreType32 queenMobility_[32];
+  // real mobility
+  static ScoreType32 knightMobilityReal_;//[16];
+  static ScoreType32 bishopMobilityReal_;//[16];
+  static ScoreType32 rookMobilityReal_;//[16];
+  static ScoreType32 queenMobilityReal_;//[32];
+
+  // potential mobility
+  static ScoreType32 knightMobilityPotential_;
+  static ScoreType32 bishopMobilityPotential_;
+  static ScoreType32 rookMobilityPotential_;
+  static ScoreType32 queenMobilityPotential_;
+
+  // no moves at all
+  static ScoreType32 knightMobilityZero_;
+  static ScoreType32 bishopMobilityZero_;
+  static ScoreType32 rookMobilityZero_;
+  static ScoreType32 queenMobilityZero_;
 
   static ScoreType32 knightPinned_;
   static ScoreType32 bishopPinned_;
