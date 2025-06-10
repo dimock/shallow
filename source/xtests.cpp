@@ -15,7 +15,7 @@ xtests.cpp - Copyright (C) 2016 by Dmitry Sultanov
 #include "iomanip"
 #include "sstream"
 #include "unordered_set"
-#include "boost/filesystem.hpp"
+// #include "boost/filesystem.hpp"
 
 namespace NEngine
 {
@@ -495,38 +495,38 @@ std::vector<std::string> board2Test(std::string const& epdfile)
   return errors;
 }
 
-void epdFolder(std::string const& folder)
-{
-  std::vector<std::string> errors;
-  boost::filesystem::path p(folder);
-  if(boost::filesystem::is_regular_file(boost::filesystem::status(p)))
-  {
-    auto errs = board2Test(folder);
-    errors.insert(errors.end(), errs.begin(), errs.end());
-  }
-  else if(boost::filesystem::is_directory(boost::filesystem::status(p)))
-  {
-    boost::filesystem::directory_iterator i{ p };
-    for(; i != boost::filesystem::directory_iterator{}; i++)
-    {
-      boost::filesystem::path pp{ *i };
-      std::string e = pp.extension().string();
-      NEngine::to_lower(e);
-      if(e != ".epd")
-        continue;
-      auto errs = board2Test(pp.string());
-      errors.insert(errors.end(), errs.begin(), errs.end());
-    }
-  }
-  std::cout << "errors count: " << errors.size() << std::endl;
-  std::ofstream ofs("errors.log");
-  ofs << "errors count: " << errors.size() << std::endl;
-  for(auto const& e : errors)
-  {
-    std::cout << e << std::endl;
-    ofs << e << std::endl;
-  }
-}
+// void epdFolder(std::string const& folder)
+// {
+//   std::vector<std::string> errors;
+//   boost::filesystem::path p(folder);
+//   if(boost::filesystem::is_regular_file(boost::filesystem::status(p)))
+//   {
+//     auto errs = board2Test(folder);
+//     errors.insert(errors.end(), errs.begin(), errs.end());
+//   }
+//   else if(boost::filesystem::is_directory(boost::filesystem::status(p)))
+//   {
+//     boost::filesystem::directory_iterator i{ p };
+//     for(; i != boost::filesystem::directory_iterator{}; i++)
+//     {
+//       boost::filesystem::path pp{ *i };
+//       std::string e = pp.extension().string();
+//       NEngine::to_lower(e);
+//       if(e != ".epd")
+//         continue;
+//       auto errs = board2Test(pp.string());
+//       errors.insert(errors.end(), errs.begin(), errs.end());
+//     }
+//   }
+//   std::cout << "errors count: " << errors.size() << std::endl;
+//   std::ofstream ofs("errors.log");
+//   ofs << "errors count: " << errors.size() << std::endl;
+//   for(auto const& e : errors)
+//   {
+//     std::cout << e << std::endl;
+//     ofs << e << std::endl;
+//   }
+// }
 
 void appendEPD(std::string const& fen, std::string const& bm, int score)
 {
@@ -616,28 +616,28 @@ void processBoardPGN(std::string const& pgn_file)
   }
 }
 
-void pgnFolder(std::string const& folder)
-{
-  std::vector<std::string> errors;
-  boost::filesystem::path p(folder);
-  if(boost::filesystem::is_regular_file(boost::filesystem::status(p)))
-  {
-    std::string e = p.extension().string();
-    NEngine::to_lower(e);
-    if(e != ".pgn")
-      return;
-    processBoardPGN(folder);
-  }
-  else if(boost::filesystem::is_directory(boost::filesystem::status(p)))
-  {
-    boost::filesystem::directory_iterator i{ p };
-    for(; i != boost::filesystem::directory_iterator{}; i++)
-    {
-      boost::filesystem::path pp{ *i };
-      pgnFolder(pp.string());
-    }
-  }
-}
+// void pgnFolder(std::string const& folder)
+// {
+//   std::vector<std::string> errors;
+//   boost::filesystem::path p(folder);
+//   if(boost::filesystem::is_regular_file(boost::filesystem::status(p)))
+//   {
+//     std::string e = p.extension().string();
+//     NEngine::to_lower(e);
+//     if(e != ".pgn")
+//       return;
+//     processBoardPGN(folder);
+//   }
+//   else if(boost::filesystem::is_directory(boost::filesystem::status(p)))
+//   {
+//     boost::filesystem::directory_iterator i{ p };
+//     for(; i != boost::filesystem::directory_iterator{}; i++)
+//     {
+//       boost::filesystem::path pp{ *i };
+//       pgnFolder(pp.string());
+//     }
+//   }
+// }
 
 } // NEngine
 
