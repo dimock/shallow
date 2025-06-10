@@ -180,8 +180,8 @@ void see_perf_test(std::string const& fname);
 void kpkTable(std::string const& fname);
 void speedTest();
 std::vector<std::string> board2Test(std::string const& epdfile);
-void epdFolder(std::string const& folder);
-void pgnFolder(std::string const& folder);
+// void epdFolder(std::string const& folder);
+// void pgnFolder(std::string const& folder);
 void generateMoves(std::string const& ffname, std::string const& ofname);
 void analyzeFen(std::string const& fname, std::string const& bestfname, std::string const& seqfname);
 
