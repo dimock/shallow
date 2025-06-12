@@ -255,8 +255,8 @@ ScoreType32 Evaluator::evaluateKnights()
       auto n_moves_mask_potential = knight_moves & finfo_[color].nbrq_mask_ & ~n_moves_mask_real;
       auto n_moves_real = pop_count(n_moves_mask_real);
       auto n_moves_potential = pop_count(n_moves_mask_potential);
-      finfo_[color].score_mob_ += EvalCoefficients::knightMobilityZero_ * (!(n_moves_real + n_moves_mask_potential));
-      finfo_[color].score_mob_ += EvalCoefficients::knightMobilityReal_ * n_moves_real;
+      // finfo_[color].score_mob_ += EvalCoefficients::knightMobilityZero_ * (!(n_moves_real));
+      finfo_[color].score_mob_ += EvalCoefficients::knightMobilityReal_[n_moves_real & 15];
       finfo_[color].score_mob_ += EvalCoefficients::knightMobilityPotential_ * n_moves_potential;
 
       if ((n_moves_real + n_moves_mask_potential) == 0 || qpinned) {
@@ -331,8 +331,8 @@ ScoreType32 Evaluator::evaluateBishops()
       auto b_moves_mask_potential = bishop_moves & finfo_[color].nbrq_mask_ & ~b_moves_mask_real;
       auto n_moves_real = pop_count(b_moves_mask_real);
       auto n_moves_potential = pop_count(b_moves_mask_potential);
-      finfo_[color].score_mob_ += EvalCoefficients::bishopMobilityZero_ * (!(n_moves_real + n_moves_potential));
-      finfo_[color].score_mob_ += EvalCoefficients::bishopMobilityReal_ * n_moves_real;
+      // finfo_[color].score_mob_ += EvalCoefficients::bishopMobilityZero_ * (!(n_moves_real + n_moves_potential));
+      finfo_[color].score_mob_ += EvalCoefficients::bishopMobilityReal_[n_moves_real & 15];
       finfo_[color].score_mob_ += EvalCoefficients::bishopMobilityPotential_ * n_moves_potential;
 
       if ((n_moves_real + n_moves_potential) == 0 || q_pinned) {
@@ -401,8 +401,8 @@ ScoreType32 Evaluator::evaluateRook()
       auto r_moves_mask_potential = rook_moves & finfo_[color].rq_mask_ & ~r_moves_mask_real;
       auto n_moves_real = pop_count(r_moves_mask_real);
       auto n_moves_potential = pop_count(r_moves_mask_potential);
-      finfo_[color].score_mob_ += EvalCoefficients::rookMobilityZero_ * (!(n_moves_real + n_moves_potential));
-      finfo_[color].score_mob_ += EvalCoefficients::rookMobilityReal_ * n_moves_real;
+      // finfo_[color].score_mob_ += EvalCoefficients::rookMobilityZero_ * (!(n_moves_real + n_moves_potential));
+      finfo_[color].score_mob_ += EvalCoefficients::rookMobilityReal_[n_moves_real & 15];
       finfo_[color].score_mob_ += EvalCoefficients::rookMobilityPotential_ * n_moves_potential;
 
       // fake castle possible
@@ -471,8 +471,8 @@ ScoreType32 Evaluator::evaluateQueens()
       auto q_moves_mask_potential =queen_moves & fmgr.queen_mask(color) & ~q_moves_mask_real;
       auto n_moves_real = pop_count(q_moves_mask_real);
       auto n_moves_potential = pop_count(q_moves_mask_potential);
-      finfo_[color].score_mob_ += EvalCoefficients::queenMobilityZero_ * (!(n_moves_real + n_moves_potential));
-      finfo_[color].score_mob_ += EvalCoefficients::queenMobilityReal_ * n_moves_real;
+      // finfo_[color].score_mob_ += EvalCoefficients::queenMobilityZero_ * (!(n_moves_real + n_moves_potential));
+      finfo_[color].score_mob_ += EvalCoefficients::queenMobilityReal_[n_moves_real & 31];
       finfo_[color].score_mob_ += EvalCoefficients::queenMobilityPotential_ * n_moves_potential;
 
       if ((n_moves_real + n_moves_potential) == 0 || q_pinned) {
