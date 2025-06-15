@@ -26,6 +26,7 @@ extern const BitMask Figure::pawns2ndLineMask_[2] = { 0x0000ff0000000000, 0x0000
 extern const BitMask Figure::pawnPromoteMasks_[2] = { 0x00000000000000ff, 0xff00000000000000 };
 extern const BitMask Figure::quaterBoard_[2][3]  = { { 0xf0f0f0f0f0000000, 0x0f0f0f0f0f000000, 0x3c3c3c3c3c000000 },
                                                      { 0x000000f0f0f0f0f0, 0x0000000f0f0f0f0f, 0x0000003c3c3c3c3c }};
+extern const BitMask Figure::halfBoard_[2] = { 0xffffffff00000000, 0x00000000ffffffff };
 
 extern const BitMask Figure::outpostMask_[2] = { 0x000000ffffff0000, 0x0000ffffff000000 };
 

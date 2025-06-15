@@ -206,6 +206,10 @@ namespace NEngine
                                                         { 41,  48}, { 43,  50}, { 44,  52}, { 46,  54}, { 47,  55}, { 49,  57}, { 50,  59}, { 52,  60}, { 53,  62},
                                                         { 54,  64}, { 56,  65}, { 57,  67}, { 58,  68}, { 60,  70} };
 
+  ScoreType32 EvalCoefficients::knightMobilityOhalf_ = {6, 2};
+  ScoreType32 EvalCoefficients::bishopMobilityOhalf_ = {6, 2};
+  ScoreType32 EvalCoefficients::rookMobilityOhalf_ = {6, 2};
+  ScoreType32 EvalCoefficients::queenMobilityOhalf_ = {7, 2};
 
   ScoreType32 EvalCoefficients::knightPinned_ = { 15, 15 };
   ScoreType32 EvalCoefficients::bishopPinned_ = { 10, 10 };

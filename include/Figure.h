@@ -29,6 +29,7 @@ namespace Figure
   // color, castle (K = 0, Q = 1)
   extern const BitMask   quaterBoard_[2][3];
   extern const BitMask   outpostMask_[2];
+  extern const BitMask   halfBoard_[2];
 
   inline Figure::Color otherColor(Figure::Color color)
   {
