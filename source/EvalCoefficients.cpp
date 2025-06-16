@@ -24,26 +24,23 @@ namespace NEngine
   ScoreType32 EvalCoefficients::bishopOutpost_[2] = { {6, 2},  {10, 3} };
 
   // attacks
-  ScoreType EvalCoefficients::bishopsAttackRQ_{ 40 };
-  ScoreType EvalCoefficients::bishopsAttack_{ 30 };
   ScoreType EvalCoefficients::bishopsAttackWeak_{ 15 };
-  ScoreType EvalCoefficients::knightAttackRQ_{ 40 };
-  ScoreType EvalCoefficients::knightAttack_{ 30 };
   ScoreType EvalCoefficients::knightAttackWeak_{ 15 };
-  ScoreType EvalCoefficients::pawnAttack_{ 60 };
   ScoreType EvalCoefficients::possibleKnightAttack_[4] = { 0, 8, 30, 40 };
   ScoreType EvalCoefficients::possiblePawnAttack_{ 12 };
-  ScoreType EvalCoefficients::rookAttackBonus_{ 30 };
-  ScoreType EvalCoefficients::queenAttackBonus_{ 30 };
+  ScoreType EvalCoefficients::queenRookAttackBonus_{ 30 };
   ScoreType EvalCoefficients::queenUnderRookAttackBonus_{ 20 };
   ScoreType EvalCoefficients::multiattackedBonus_{ 25 };
-  ScoreType EvalCoefficients::attackedByKingBonus_{ 20 };
-  ScoreType EvalCoefficients::attackedThroughBonus_{ 20 };
   ScoreType EvalCoefficients::discoveredAttackBonus_{ 20 };
 
-  // immobility
-  ScoreType EvalCoefficients::immobileAttackBonus_ = 30;
-  ScoreType EvalCoefficients::pinnedFigureBonus_ = 15;
+  ScoreType EvalCoefficients::attackedByKingBonus_[4] = {0, 10, 20, 30 };
+  ScoreType EvalCoefficients::pawnAttacks_[4] = {0, 15, 60, 100};
+  ScoreType EvalCoefficients::knightAttacksRQ_[4] = { 0, 15, 40, 60 };
+  ScoreType EvalCoefficients::knightBishopAttacks_[4] = {0, 10, 30, 50 };
+  ScoreType EvalCoefficients::bishopsAttacksRQ_[4] = {0, 15, 40, 50 };
+  ScoreType EvalCoefficients::bishopsKnightAttacks_[4] = {0, 15, 30, 40 };
+  ScoreType EvalCoefficients::rookNbAttacksBonus_[4] = { 0, 15, 30, 40 };
+  ScoreType EvalCoefficients::queenNbAttackBonus_[4] = {0, 15, 30, 40};
 
   // check & mat treat
   ScoreType32 EvalCoefficients::discoveredCheckBonus_{ 20, 20 };
