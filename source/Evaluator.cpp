@@ -50,7 +50,7 @@
 #define EVALUATE_ISOLATED_PAWN
 #define EVALUATE_DOUBLED_PAWN
 
-#undef  EVALUATE_POSSIBLE_KNIGHT_ATTACKS
+#define  EVALUATE_POSSIBLE_KNIGHT_ATTACKS
 #undef  EVALUATE_MULTIATTACKS
 #define EVALUATE_DISCOVERED_ATTACKS
 
@@ -1262,11 +1262,10 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
       with_check = true;
     }
     int knightsN = pop_count(kn_fork);
-    possibleNN = std::max(possibleNN, knightsN);
+    possibleNN = std::max(3, std::max(possibleNN, knightsN));
   }
-  possibleNN &= 3;
   attackScore += (EvalCoefficients::possibleKnightAttack_[possibleNN]) >> ((int)knight_protects);
-  attackScore += EvalCoefficients::knightAttack_ * with_check;
+  attackScore += EvalCoefficients::knightBishopAttacks_[2] * with_check;
 #endif
 
 #ifdef EVALUATE_MULTIATTACKS
