@@ -36,7 +36,7 @@
 
 #undef  EVALUATE_PAWN_BISHOP_TREAT
 #undef  EVALUATE_PINNED_PAWN_ATTACKS
-#undef  EVALUATE_FORWARD_PAWN_ATTACKS
+#define EVALUATE_FORWARD_PAWN_ATTACKS
 #undef  EVALUATE_KNIGHT_ATTACKS_WEAK
 #undef  EVALUATE_BISHOP_ATTACKS_WEAK
 #undef  EVALUATE_ROOK_ATTACKS_WEAK
@@ -50,7 +50,7 @@
 #define EVALUATE_ISOLATED_PAWN
 #define EVALUATE_DOUBLED_PAWN
 
-#define  EVALUATE_POSSIBLE_KNIGHT_ATTACKS
+#undef  EVALUATE_POSSIBLE_KNIGHT_ATTACKS
 #undef  EVALUATE_MULTIATTACKS
 #define EVALUATE_DISCOVERED_ATTACKS
 
@@ -1103,7 +1103,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
       pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
     if (auto pawn_fork = (o_mask & pfwd_attacks)) {
       int pawnsN = pop_count(pawn_fork);
-      attackScore += EvalCoefficients::possiblePawnAttack_ * pawnsN;
+      attackScore += EvalCoefficients::possiblePawnAttack_[pawnsN & 3];
     }
   }
 #endif // FORWARD_PAWN_ATTACKS

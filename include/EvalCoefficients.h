@@ -34,7 +34,7 @@ struct EvalCoefficients
   static ScoreType knightAttackWeak_;
   static ScoreType pawnAttacks_[4];
   static ScoreType possibleKnightAttack_[4];
-  static ScoreType possiblePawnAttack_;
+  static ScoreType possiblePawnAttack_[4];
   static ScoreType rookNbAttacksBonus_[4];
   static ScoreType queenNbAttackBonus_[4];
   static ScoreType queenRookAttackBonus_;
