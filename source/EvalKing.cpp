@@ -9,6 +9,7 @@
 #define QUEEN_CHECK_TREAT
 #define ATTACK_THROUGH_PAWN
 
+#undef  EVALUATE_KING_PRESSURE_V5
 
 namespace NEngine
 {
@@ -313,6 +314,7 @@ bool Evaluator::isMatTreat(
   return false;
 }
 
+#ifdef EVALUATE_KING_PRESSURE_V5
 ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscore_o)
 {
   const auto& fmgr = board_->fmgr();
@@ -380,7 +382,7 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
     auto attacked = finfo_[color].multiattack_mask_ & ~finfo_[ocolor].pawnAttacks_;
     auto mask_opw_att = fmgr.pawn_mask(ocolor) & attacked;
     while (mask_opw_att && !attackThroughPawn) {
-      auto n = clear_lsb(mask_opw_att);      
+      auto n = clear_lsb(mask_opw_att);
       attackThroughPawn = board_->discoveredCheck(n, mask_all_, color, oki_pos);
     }
   }
@@ -516,5 +518,81 @@ ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscor
 
   return { score, 0 };
 }
+#else
+ScoreType32 Evaluator::evaluateKingPressure(Figure::Color color, int const kscore_o)
+{
+  const auto& fmgr = board_->fmgr();
+  const auto ocolor = Figure::otherColor(color);
+  const auto  ki_pos = board_->kingPos(color);
+  const auto oki_pos = board_->kingPos(ocolor);
+  const auto fmask_no_check = ~(fmgr.mask(color) | finfo_[ocolor].pawnAttacks_);
 
+  const auto near_oking = finfo_[ocolor].ki_fields_ & finfo_[ocolor].kingAttacks_;
+  const auto attacked_oking_only = finfo_[ocolor].kingAttacks_ & ~finfo_[ocolor].multiattack_mask_;
+
+  const auto onbrp_attacked = finfo_[ocolor].nbr_attacked_ | finfo_[ocolor].pawnAttacks_;
+  const auto onbp_attacked = finfo_[ocolor].nb_attacked_ | finfo_[ocolor].pawnAttacks_;
+  const auto can_check_q = ~(finfo_[ocolor].attack_any_but_king_ | (attacked_oking_only & ~finfo_[color].multiattack_mask_));
+  const auto can_check_r = ~(onbrp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
+  const auto can_check_nb = ~(onbp_attacked | finfo_[ocolor].multiattack_mask_ | (finfo_[ocolor].attack_mask_ & ~finfo_[color].multiattack_mask_));
+
+  finfo_[color].num_attackers_ += (finfo_[color].pawnAttacks_ & near_oking) != 0ULL;
+  finfo_[color].num_attackers_ += (finfo_[color].kingAttacks_ & near_oking) != 0ULL;
+  finfo_[color].score_king_ += EvalCoefficients::pawnKingAttack_ * (!!(finfo_[color].pawnAttacks_ & near_oking));
+
+  auto kn_check = movesTable().caps(Figure::TypeKnight, oki_pos) & finfo_[color].knightMoves_ & fmask_no_check;
+  auto bi_check = finfo_[ocolor].bishopMovesKipos_;
+  auto r_check = finfo_[ocolor].rookMovesKipos_;
+  auto q_check = (bi_check | r_check) & finfo_[color].queenMoves_ & fmask_no_check;
+  bi_check &= finfo_[color].bishopMoves_ & fmask_no_check;
+  r_check &= finfo_[color].rookMoves_ & fmask_no_check;
+
+  kn_check &= can_check_nb;
+  bi_check &= can_check_nb;
+  r_check &= can_check_r;
+  q_check &= can_check_q;
+
+  if (!finfo_[color].discoveredCheck_) {
+    X_ASSERT_R(board_->discoveredCheck(ki_pos, mask_all_, color, board_->kingPos(ocolor)) != discoveredCheck(ki_pos, ocolor), "discovered check not detected");
+    X_ASSERT(board_->discoveredCheck(ki_pos, mask_all_, color, board_->kingPos(ocolor)) != discoveredCheck(ki_pos, ocolor), "discovered check not detected");
+    finfo_[color].discoveredCheck_ = discoveredCheck(ki_pos, ocolor);
+  }
+
+  // promotion check
+  auto pfwd = finfo_[color].pawns_fwd_ & Figure::pawnPromoteMasks_[color] & (~finfo_[ocolor].attack_mask_ | finfo_[color].pawnAttacks_);
+  auto cfwd = finfo_[color].pawnAttacks_ & Figure::pawnPromoteMasks_[color] & fmgr.mask(ocolor);
+  auto p_check = ((pfwd | cfwd) & (finfo_[ocolor].bishopMovesKipos_ | finfo_[ocolor].rookMovesKipos_));
+
+  int num_checkers = (!!p_check) + (!!kn_check) + (!!bi_check) + (!!r_check) + (!!q_check) + finfo_[color].discoveredCheck_;
+
+  int check_score = EvalCoefficients::knightChecking_ * (!!kn_check) +
+    EvalCoefficients::bishopChecking_ * (!!bi_check) +
+    EvalCoefficients::rookChecking_ * (!!r_check) +
+    EvalCoefficients::queenChecking_ * (!!q_check) +
+    EvalCoefficients::discoveredChecking_ * finfo_[color].discoveredCheck_ +
+    EvalCoefficients::promotionChecking_ * (!!p_check);
+
+  int num_attackers = std::min(finfo_[color].num_attackers_, 7);
+  auto attack_coeff = EvalCoefficients::kingAttackersCoefficients_[num_attackers];
+  auto check_coeff = 0;
+  num_checkers = std::min(num_checkers, 4);
+  check_coeff = EvalCoefficients::kingCheckersCoefficients_[num_checkers];
+  check_coeff += attack_coeff;
+
+  if (num_attackers == 0) {
+    check_coeff >>= 3;
+  }
+
+  check_coeff -= kscore_o >> 4;
+  attack_coeff -= kscore_o >> 4;
+
+  check_coeff = std::max(0, check_coeff);
+  attack_coeff = std::max(0, attack_coeff);
+
+  auto score = finfo_[color].score_king_ * attack_coeff + check_score * check_coeff;
+  score >>= 5;
+
+  return { score, 0 };
+}
+#endif // EVALUATE_KING_PRESSURE_V5
 } // NEngine

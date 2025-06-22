@@ -14,6 +14,8 @@
 
 #define EVALUATE_MATERIAL_DIFFERENCE
 
+#undef  EVALUATE_MATERIAL_DIFFERENCE_V5
+
 #define DOUBLE_BISHOP_BONUS
 #define DOUBLE_KNIGHT_BONUS
 #define TWO_BISHOPS_DIFFERENCE_BONUS
@@ -33,8 +35,8 @@
 #define EVALUATE_KING_PRESSURE
 #define EVALUATE_ATTACKS
 #define EVALUATE_PAWN_ATTACKS
-#define EVALUATE_FORWARD_PAWN_ATTACKS
-#define EVALUATE_POSSIBLE_KNIGHT_ATTACKS
+#undef  EVALUATE_FORWARD_PAWN_ATTACKS
+#undef  EVALUATE_POSSIBLE_KNIGHT_ATTACKS
 #define EVALUATE_DISCOVERED_ATTACKS
 
 #undef  EVALUATE_PAWN_BISHOP_TREAT
@@ -58,7 +60,7 @@
 #define EVALUATE_BACKWARD_PAWN
 #define EVALUATE_NEIGHBORS_PAWN
 #define EVALUATE_UNPROTECTED_PAWN
-#define EVALUATE_ATTACKING_PAWN
+#undef  EVALUATE_ATTACKING_PAWN
 
 #define RESULT_PLUS_5
 
@@ -200,8 +202,8 @@ void Evaluator::prepare()
     finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
 
 
-    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
-    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+    // finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
+    // finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
 
     finfo_[0].ki_fields_no_pw_ = finfo_[0].ki_fields_ & ~finfo_[0].pawnAttacks_;
     finfo_[1].ki_fields_no_pw_ = finfo_[1].ki_fields_ & ~finfo_[1].pawnAttacks_;
@@ -920,6 +922,7 @@ bool Evaluator::blockedRook(Figure::Color color, Index rpos, BitMask rmask) cons
   return ((blocked_rook_mask_[color][ctype] & set_mask_bit(rpos)) != 0ULL) && ((rmask & ~blocked_rook_mask_[color][ctype]) == 0ULL);
 }
 
+#ifdef EVALUATE_MATERIAL_DIFFERENCE_V5
 ScoreType32 Evaluator::evaluateMaterialDiff()
 {
 #ifdef USE_EVAL_HASH_MD
@@ -1049,6 +1052,75 @@ ScoreType32 Evaluator::evaluateMaterialDiff()
 
   return score;
 }
+#else
+
+ScoreType32 Evaluator::evaluateMaterialDiff()
+{
+#ifdef USE_EVAL_HASH_MD
+  const BitMask code = board_->fmgr().fgrsCode();
+  auto * heval = fhash_.get(code);
+  uint32 hkey = (uint32)(code >> 32);
+  if (heval->hkey_ == hkey)
+  {
+    return heval->score_;
+  }
+#endif
+
+  const FiguresManager & fmgr = board_->fmgr();
+  ScoreType32 score;
+
+  int knightsDiff = fmgr.knights(Figure::ColorWhite) - fmgr.knights(Figure::ColorBlack);
+  int bishopsDiff = fmgr.bishops(Figure::ColorWhite) - fmgr.bishops(Figure::ColorBlack);
+  int figuresDiff = knightsDiff + bishopsDiff;
+  int rooksDiff  = fmgr.rooks(Figure::ColorWhite)  - fmgr.rooks(Figure::ColorBlack);
+  int queensDiff = fmgr.queens(Figure::ColorWhite) - fmgr.queens(Figure::ColorBlack);
+
+#ifdef TWO_ROOKS_AS_QUEEN
+  // Then evaluate 2 rooks as 1 queen
+  if (queensDiff*rooksDiff < 0) {
+    rooksDiff += 2 * queensDiff;
+    queensDiff = 0;
+  }
+#endif
+
+  Figure::Color fcolor = static_cast<Figure::Color>(figuresDiff > 0);
+  const int fpawnsN = fmgr.pawns(fcolor);
+  int fdiff = sign(figuresDiff);
+
+  // Figure vs. Pawns
+  if (!rooksDiff && figuresDiff)
+  {
+    score += EvalCoefficients::figureAgainstPawnBonus_[fpawnsN] * fdiff;
+  }
+  // Figure vs. Rook
+  else if ((rooksDiff == 1 || rooksDiff == -1) && (rooksDiff * figuresDiff) == -1)
+  {
+    score += EvalCoefficients::figureAgainstRookBonus_[fpawnsN] * fdiff;
+  }
+  // 2 Figures vs. Rook
+  else if ((rooksDiff == 1 || rooksDiff == -1) && (rooksDiff * figuresDiff) == -2)
+  {
+    if (knightsDiff == 2 || knightsDiff == -2)
+    {}
+    else if ((knightsDiff + bishopsDiff) == 2 || (knightsDiff + bishopsDiff) == -2)
+    {
+      score += EvalCoefficients::figuresAgainstRookBonus_[fpawnsN] * fdiff;
+    }
+    else if (bishopsDiff == 2 || bishopsDiff == -2)
+    {
+      score += EvalCoefficients::bishopsAgainstRookBonus_[fpawnsN] * fdiff;
+    }
+  }
+
+#ifdef USE_EVAL_HASH_MD
+  heval->hkey_ = hkey;
+  heval->score_ = score;
+#endif
+
+  return score;
+}
+
+#endif // EVALUATE_MATERIAL_DIFFERENCE_V5
 
 ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 {
