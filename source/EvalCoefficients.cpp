@@ -91,7 +91,7 @@ namespace NEngine
 
   int EvalCoefficients::kingWeakCheckersCoefficients_{ 16 };
   int EvalCoefficients::kingCheckersCoefficients_[8]  = { 0, 16, 32, 64, 64, 64, 64, 64 };
-  int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0,  4,  8, 16, 32, 56, 64 };
+  int EvalCoefficients::kingAttackersCoefficients_[8] = { 0,  0,  8,  16, 24, 32, 56, 64 };
 
   // for special cases
   int EvalCoefficients::kingToPawnDistanceMulti_{ 3 };
