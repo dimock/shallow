@@ -1,6 +1,6 @@
 #include "Evaluator.h"
 
-#define EVALUATE_MOVES_OHALF
+#undef EVALUATE_MOVES_OHALF
 
 namespace NEngine
 {

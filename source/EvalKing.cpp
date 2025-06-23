@@ -9,7 +9,7 @@
 #define QUEEN_CHECK_TREAT
 #define ATTACK_THROUGH_PAWN
 
-#undef  EVALUATE_KING_PRESSURE_V5
+#define EVALUATE_KING_PRESSURE_V5
 
 namespace NEngine
 {

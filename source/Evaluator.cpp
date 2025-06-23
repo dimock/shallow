@@ -35,17 +35,17 @@
 #define EVALUATE_KING_PRESSURE
 #define EVALUATE_ATTACKS
 #define EVALUATE_PAWN_ATTACKS
-#undef  EVALUATE_FORWARD_PAWN_ATTACKS
-#undef  EVALUATE_POSSIBLE_KNIGHT_ATTACKS
+#define EVALUATE_FORWARD_PAWN_ATTACKS
+#define EVALUATE_POSSIBLE_KNIGHT_ATTACKS
 #define EVALUATE_DISCOVERED_ATTACKS
 
-#undef  EVALUATE_PAWN_BISHOP_TREAT
-#undef  EVALUATE_PINNED_PAWN_ATTACKS
-#undef  EVALUATE_KNIGHT_ATTACKS_WEAK
-#undef  EVALUATE_BISHOP_ATTACKS_WEAK
-#undef  EVALUATE_ROOK_ATTACKS_WEAK
-#undef  EVALUATE_QUEEN_ATTACKS_WEAK
-#undef  EVALUATE_KING_ATTACKS_WEAK
+#define EVALUATE_PAWN_BISHOP_TREAT
+#define EVALUATE_PINNED_PAWN_ATTACKS
+#define EVALUATE_KNIGHT_ATTACKS_WEAK
+#define EVALUATE_BISHOP_ATTACKS_WEAK
+#define EVALUATE_ROOK_ATTACKS_WEAK
+#define EVALUATE_QUEEN_ATTACKS_WEAK
+#define EVALUATE_KING_ATTACKS_WEAK
 
 #define EVALUATE_PASSER_PAWNS
 #define EVALUATE_PASSER_PAWNS_EXTENDED
@@ -54,13 +54,13 @@
 #define EVALUATE_ISOLATED_PAWN
 #define EVALUATE_DOUBLED_PAWN
 
-#undef  EVALUATE_MULTIATTACKS
+#define EVALUATE_MULTIATTACKS
 
 #define EVALUATE_KING_SAFETY
 #define EVALUATE_BACKWARD_PAWN
 #define EVALUATE_NEIGHBORS_PAWN
 #define EVALUATE_UNPROTECTED_PAWN
-#undef  EVALUATE_ATTACKING_PAWN
+#define EVALUATE_ATTACKING_PAWN
 
 #define RESULT_PLUS_5
 
@@ -1162,7 +1162,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 #ifdef EVALUATE_MULTIATTACKS
     attackedN++;
 #endif // EVALUATE_MULTIATTACKS
-    attackScore += EvalCoefficients::pawnAttack_ >> 2;
+    attackScore += EvalCoefficients::pawnAttacks_[1] >> 2;
   }
 #endif // EVALUATE_PINNED_PAWN_ATTACKS
 
@@ -1278,7 +1278,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 
 #ifdef EVALUATE_ROOK_ATTACKS_WEAK
     rtreatsN = pop_count(rtreat_mask & ~strong_qr_att);
-    attackScore += (EvalCoefficients::rookAttackBonus_ * rtreatsN) >> 2;
+    attackScore += (EvalCoefficients::rookNbAttacksBonus_[rtreatsN & 3]) >> 2;
 #endif // EVALUATE_ROOK_ATTACKS_WEAK
   }
 
@@ -1296,7 +1296,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 
 #ifdef EVALUATE_QUEEN_ATTACKS_WEAK
     qtreatsN = pop_count(qtreat_mask & ~strong_qr_att);
-    attackScore += (EvalCoefficients::queenNbAttackBonus_ * qtreatsN) >> 2;
+    attackScore += (EvalCoefficients::queenNbAttackBonus_[qtreatsN & 3]) >> 2;
 #endif // EVALUATE_QUEEN_ATTACKS_WEAK
   }
 
@@ -1312,7 +1312,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 
 #ifdef EVALUATE_KING_ATTACKS_WEAK
     ktreatsN = pop_count(king_attacks & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::attackedByKingBonus_ * ktreatsN) >> 2;
+    attackScore += (EvalCoefficients::attackedByKingBonus_[ktreatsN & 3]) >> 2;
 #endif // EVALUATE_KING_ATTACKS_WEAK
   }
 
