@@ -26,22 +26,22 @@ struct EvalCoefficients
   static ScoreType32 bishopOutpost_[2];
 
   // forks & other treats
-  static ScoreType bishopsAttacksRQ_[4];
-  static ScoreType bishopsKnightAttacks_[4];
-  static ScoreType bishopsAttackWeak_;
-  static ScoreType knightAttacksRQ_[4];
-  static ScoreType knightBishopAttacks_[4];
-  static ScoreType knightAttackWeak_;
-  static ScoreType pawnAttacks_[4];
-  static ScoreType possibleKnightAttack_[4];
-  static ScoreType possiblePawnAttack_[4];
-  static ScoreType rookNbAttacksBonus_[4];
-  static ScoreType queenNbAttackBonus_[4];
-  static ScoreType queenRookAttackBonus_;
-  static ScoreType queenUnderRookAttackBonus_;
-  static ScoreType multiattackedBonus_;
-  static ScoreType attackedByKingBonus_[4];
-  static ScoreType discoveredAttackBonus_;
+  static ScoreType bishopsRqAttacks_;
+  static ScoreType bishopsKnightsAttacks_;
+  static ScoreType bishopsKnightsAttacksWeak_;
+  static ScoreType knightsRqAttacks_;
+  static ScoreType knightsBishopsAttacks_;
+  static ScoreType knightsBishopsAttacksWeak_;
+  static ScoreType possibleKnightsAttacks_[4];
+  static ScoreType pawnsAttacks_;
+  static ScoreType possiblePawnsAttacks_;
+  static ScoreType rooksNbAttacks_;
+  static ScoreType rooksQueensAttacks_;
+  static ScoreType queensNbAttacks_;
+  static ScoreType queensRooksAttacks_;
+  static ScoreType multiAttacks_;
+  static ScoreType kingAttacks_;
+  static ScoreType discoveredAttacks_;
 
   // check & mat treat
   static ScoreType32 discoveredCheckBonus_;
@@ -112,18 +112,20 @@ struct EvalCoefficients
   static ScoreType32 openRook_[2];
 
   // material diff
-  // static ScoreType32 doubleBishopBonus_[10];
-  // static ScoreType32 doubleKnightBonus_[10];
-  // static ScoreType32 twoKnightsBonus_[10];
-  // static ScoreType32 twoBishopsBonus_[10];
-  // static ScoreType32 twoRooksBonus_[10];
-  // static ScoreType32 knightsAgainstRookBonus_[10];
-  // static ScoreType32 rookAgainstFigureBonus_[10][10];
-
   static ScoreType32 figureAgainstPawnBonus_[10];
   static ScoreType32 figuresAgainstRookBonus_[10];
+#ifdef EVALUATE_MATERIAL_DIFFERENCE_V5
+  static ScoreType32 doubleBishopBonus_[10];
+  static ScoreType32 doubleKnightBonus_[10];
+  static ScoreType32 twoKnightsBonus_[10];
+  static ScoreType32 twoBishopsBonus_[10];
+  static ScoreType32 twoRooksBonus_[10];
+  static ScoreType32 knightsAgainstRookBonus_[10];
+  static ScoreType32 rookAgainstFigureBonus_[10][10];
+#else
   static ScoreType32 bishopsAgainstRookBonus_[10];
   static ScoreType32 figureAgainstRookBonus_[10];
+#endif // EVALUATE_MATERIAL_DIFFERENCE_V5
 
   static ScoreType32 noKnightsPenalty_;
   static ScoreType32 noBishopsPenalty_;

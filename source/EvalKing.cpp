@@ -9,8 +9,6 @@
 #define QUEEN_CHECK_TREAT
 #define ATTACK_THROUGH_PAWN
 
-#define EVALUATE_KING_PRESSURE_V5
-
 namespace NEngine
 {
 inline int kingToPawnsScore(const int kpos, BitMask pmsk)

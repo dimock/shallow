@@ -253,7 +253,7 @@ ScoreType32 Evaluator::evaluateKnights()
         finfo_[color].score_king_ += EvalCoefficients::knightKingAttack_;
       }
 
-      auto n_moves_mask  = knight_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
+      auto n_moves_mask = knight_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_ | finfo_[color].nbrq_mask_);
       auto n_moves = pop_count(n_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::knightMobility_[n_moves & 15];
 
@@ -331,8 +331,8 @@ ScoreType32 Evaluator::evaluateBishops()
       }
 
       // mobility
-      auto b_moves_mask = bishop_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_);
-      auto n_moves = pop_count(b_moves_mask);
+      auto b_moves_mask = bishop_moves & (finfo_[color].cango_mask_ | finfo_[ocolor].nbrq_mask_ | finfo_[color].nbrq_mask_);
+      int n_moves = pop_count(b_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::bishopMobility_[n_moves & 15];
 
 #ifdef EVALUATE_MOVES_OHALF
@@ -403,7 +403,7 @@ ScoreType32 Evaluator::evaluateRook()
       }
 
       auto r_cango_mask = finfo_[color].cango_mask_ & ~finfo_[ocolor].nb_attacked_;
-      auto r_moves_mask = rook_moves & (r_cango_mask | finfo_[ocolor].rq_mask_);
+      auto r_moves_mask = rook_moves & (r_cango_mask | finfo_[ocolor].rq_mask_ | finfo_[color].rq_mask_);
       auto n_moves = pop_count(r_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::rookMobility_[n_moves & 15];
 
@@ -475,7 +475,7 @@ ScoreType32 Evaluator::evaluateQueens()
       }
 
       auto q_cango_mask = finfo_[color].cango_mask_ & ~finfo_[ocolor].nbr_attacked_;
-      auto q_moves_mask = queen_moves & (q_cango_mask | fmgr.queen_mask(ocolor));
+      auto q_moves_mask = queen_moves & (q_cango_mask | fmgr.queen_mask(ocolor) | fmgr.queen_mask(color));
       auto n_moves = pop_count(q_moves_mask);
       finfo_[color].score_mob_ += EvalCoefficients::queenMobility_[n_moves & 31];
 

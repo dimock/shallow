@@ -14,8 +14,6 @@
 
 #define EVALUATE_MATERIAL_DIFFERENCE
 
-#undef  EVALUATE_MATERIAL_DIFFERENCE_V5
-
 #define DOUBLE_BISHOP_BONUS
 #define DOUBLE_KNIGHT_BONUS
 #define TWO_BISHOPS_DIFFERENCE_BONUS
@@ -202,8 +200,8 @@ void Evaluator::prepare()
     finfo_[1].attack_mask_ |= finfo_[1].kingAttacks_;
 
 
-    // finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
-    // finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
+    finfo_[0].ki_fields_ |= (finfo_[0].ki_fields_ >> 8);
+    finfo_[1].ki_fields_ |= (finfo_[1].ki_fields_ << 8);
 
     finfo_[0].ki_fields_no_pw_ = finfo_[0].ki_fields_ & ~finfo_[0].pawnAttacks_;
     finfo_[1].ki_fields_no_pw_ = finfo_[1].ki_fields_ & ~finfo_[1].pawnAttacks_;
@@ -1150,11 +1148,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
   if (pawn_fork) {
     int pawnsN = pop_count(pawn_fork);
     attackedN += pawnsN;
-    attackScore += EvalCoefficients::pawnAttacks_[pawnsN & 3];
+    attackScore += EvalCoefficients::pawnsAttacks_ * pawnsN;
   }
 #else
   int pawnsN = pop_count(pawn_fork);
-  attackScore += EvalCoefficients::pawnAttacks_[pawnsN & 3];
+  attackScore += EvalCoefficients::pawnsAttacks_ * pawnsN;
 #endif // EVALUATE_MULTIATTACKS
 
 #ifdef EVALUATE_PINNED_PAWN_ATTACKS
@@ -1162,7 +1160,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 #ifdef EVALUATE_MULTIATTACKS
     attackedN++;
 #endif // EVALUATE_MULTIATTACKS
-    attackScore += EvalCoefficients::pawnAttacks_[1] >> 2;
+    attackScore += EvalCoefficients::pawnsAttacks_ >> 2;
   }
 #endif // EVALUATE_PINNED_PAWN_ATTACKS
 
@@ -1175,7 +1173,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
       pfwd_attacks = (((pfwd_attacks >> 7) & Figure::pawnCutoffMasks_[0]) | ((pfwd_attacks >> 9) & Figure::pawnCutoffMasks_[1])) & 0x00ffffffffffffff;
     if (auto pawn_fork = (o_mask & pfwd_attacks)) {
       int pawnsN = pop_count(pawn_fork);
-      attackScore += EvalCoefficients::possiblePawnAttack_[pawnsN & 3];
+      attackScore += EvalCoefficients::possiblePawnsAttacks_ * pawnsN;
     }
   }
 #endif // FORWARD_PAWN_ATTACKS
@@ -1188,7 +1186,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += knightsN;
 #endif // EVALUATE_MULTIATTACKS
 
-    attackScore += EvalCoefficients::knightAttacksRQ_[knightsN & 3];
+    attackScore += EvalCoefficients::knightsRqAttacks_ * knightsN;
   }
 
   const auto stong_bn_attacks = ~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_;
@@ -1200,15 +1198,15 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += knightsN;
 #endif // EVALUATE_MULTIATTACKS
 
-    attackScore += EvalCoefficients::knightBishopAttacks_[knightsN & 3];
+    attackScore += EvalCoefficients::knightsBishopsAttacks_ * knightsN;
+    knightsN = pop_count(kn_fork & ~stong_bn_attacks);
 
 #ifdef EVALUATE_MULTIATTACKS
-    knightsN = pop_count(kn_fork & ~stong_bn_attacks);
     attackedN += knightsN;
 #endif // EVALUATE_MULTIATTACKS
 
 #ifdef EVALUATE_KNIGHT_ATTACKS_WEAK
-    attackScore += EvalCoefficients::knightAttackWeak_ * knightsN;
+    attackScore += EvalCoefficients::knightsBishopsAttacksWeak_ * knightsN;
 #endif // EVALUATE_KNIGHT_ATTACKS_WEAK
   }
 
@@ -1220,7 +1218,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += bishopsN;
 #endif // EVALUATE_MULTIATTACKS
 
-    attackScore += EvalCoefficients::bishopsAttacksRQ_[bishopsN & 3];
+    attackScore += EvalCoefficients::bishopsRqAttacks_ * bishopsN;
   }  
   if (auto bi_treat = (fmgr.knight_mask(ocolor) & finfo_[color].bishopMoves_ & ~counted_mask)) {
     counted_mask |= bi_treat;
@@ -1230,15 +1228,14 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += bishopsN;
 #endif // EVALUATE_MULTIATTACKS
 
-    attackScore += EvalCoefficients::bishopsKnightAttacks_[bishopsN & 3];
-
-#ifdef EVALUATE_MULTIATTACKS
-    bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
-    attackedN += bishopsN;
-#endif // EVALUATE_MULTIATTACKS
+    attackScore += EvalCoefficients::bishopsKnightsAttacks_ * bishopsN;
 
 #ifdef EVALUATE_BISHOP_ATTACKS_WEAK
-    attackScore += EvalCoefficients::bishopsAttackWeak_ * bishopsN;
+    bishopsN = pop_count(bi_treat & ~stong_bn_attacks);
+#ifdef EVALUATE_MULTIATTACKS
+    attackedN += bishopsN;
+#endif // EVALUATE_MULTIATTACKS
+    attackScore += EvalCoefficients::bishopsKnightsAttacksWeak_ * bishopsN;
 #endif // EVALUATE_BISHOP_ATTACKS_WEAK
   }
 
@@ -1250,7 +1247,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     ++attackedN;
 #endif // EVALUATE_MULTIATTACKS
 
-    attackScore += EvalCoefficients::queenRookAttackBonus_;
+    attackScore += EvalCoefficients::queensRooksAttacks_;
   }
 
   if (auto r2q_treat = (fmgr.queen_mask(ocolor) & finfo_[color].rookMoves_ & ~counted_mask)) {
@@ -1260,7 +1257,7 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     ++attackedN;
 #endif // EVALUATE_MULTIATTACKS
 
-    attackScore += EvalCoefficients::queenUnderRookAttackBonus_;
+    attackScore += EvalCoefficients::rooksQueensAttacks_;
   }
 
   const auto strong_qr_att = ~finfo_[ocolor].attack_mask_ | finfo_[color].multiattack_mask_;
@@ -1274,11 +1271,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 #ifdef EVALUATE_MULTIATTACKS
     attackedN += rtreatsN;
 #endif // EVALUATE_MULTIATTACKS
-    attackScore += EvalCoefficients::rookNbAttacksBonus_[rtreatsN & 3];
+    attackScore += EvalCoefficients::rooksNbAttacks_ * rtreatsN;
 
 #ifdef EVALUATE_ROOK_ATTACKS_WEAK
     rtreatsN = pop_count(rtreat_mask & ~strong_qr_att);
-    attackScore += (EvalCoefficients::rookNbAttacksBonus_[rtreatsN & 3]) >> 2;
+    attackScore += (EvalCoefficients::rooksNbAttacks_ * rtreatsN) >> 2;
 #endif // EVALUATE_ROOK_ATTACKS_WEAK
   }
 
@@ -1292,11 +1289,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
 #ifdef EVALUATE_MULTIATTACKS
     attackedN += qtreatsN;
 #endif // EVALUATE_MULTIATTACKS
-    attackScore += EvalCoefficients::queenNbAttackBonus_[qtreatsN & 3];
+    attackScore += EvalCoefficients::queensNbAttacks_ * qtreatsN;
 
 #ifdef EVALUATE_QUEEN_ATTACKS_WEAK
     qtreatsN = pop_count(qtreat_mask & ~strong_qr_att);
-    attackScore += (EvalCoefficients::queenNbAttackBonus_[qtreatsN & 3]) >> 2;
+    attackScore += (EvalCoefficients::queensNbAttacks_ * qtreatsN) >> 2;
 #endif // EVALUATE_QUEEN_ATTACKS_WEAK
   }
 
@@ -1308,11 +1305,11 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
     attackedN += ktreatsN;
 #endif // EVALUATE_MULTIATTACKS
 
-    attackScore += EvalCoefficients::attackedByKingBonus_[ktreatsN & 3];
+    attackScore += EvalCoefficients::kingAttacks_ * ktreatsN;
 
 #ifdef EVALUATE_KING_ATTACKS_WEAK
     ktreatsN = pop_count(king_attacks & finfo_[ocolor].attack_mask_);
-    attackScore += (EvalCoefficients::attackedByKingBonus_[ktreatsN & 3]) >> 2;
+    attackScore += (EvalCoefficients::kingAttacks_ * ktreatsN) >> 2;
 #endif // EVALUATE_KING_ATTACKS_WEAK
   }
 
@@ -1334,21 +1331,22 @@ ScoreType32 Evaluator::evaluateAttacks(Figure::Color color)
       with_check = true;
     }
     int knightsN = pop_count(kn_fork);
-    possibleNN = std::max(3, std::max(possibleNN, knightsN));
+    possibleNN = std::max(possibleNN, knightsN);
   }
-  attackScore += (EvalCoefficients::possibleKnightAttack_[possibleNN]) >> ((int)knight_protects);
-  attackScore += EvalCoefficients::knightBishopAttacks_[2] * with_check;
+  possibleNN &= 3;
+  attackScore += (EvalCoefficients::possibleKnightsAttacks_[possibleNN]) >> ((int)knight_protects);
+  attackScore += EvalCoefficients::knightsBishopsAttacks_ * with_check;
 #endif
 
 #ifdef EVALUATE_MULTIATTACKS
   if (attackedN > 1) {
-    attackScore += EvalCoefficients::multiattackedBonus_ * (attackedN - 1);
+    attackScore += EvalCoefficients::multiAttacks_ * (attackedN - 1);
   }
 #endif
 
 #ifdef EVALUATE_DISCOVERED_ATTACKS
   if (finfo_[color].discoveredMoves_ & finfo_[ocolor].nbrq_mask_) {
-    attackScore += EvalCoefficients::discoveredAttackBonus_;
+    attackScore += EvalCoefficients::discoveredAttacks_;
   }
 #endif
 
